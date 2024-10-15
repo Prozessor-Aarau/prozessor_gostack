@@ -1,0 +1,128 @@
+{{define "navigation"}}
+{{$usr := index .Data "user"}}
+<div class="mb-5">
+  <div class="text-xl font-medium px-6 py-3 grid grid-cols-3 bg-base-100 content-between items-center">
+
+
+    <div role="button" id="menubutton" class="btn btn-accent btn-circle collapse-close" onclick="menuToggle()">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7" />
+      </svg>
+    </div>
+
+    <div tabindex="0" class="justify-self-center">
+      <a class="btn btn-ghost text-xl">prozessor_db</a>
+    </div>
+
+    <div class="flex items-center gap-2 justify-self-end">
+      <div class="dropdown dropdown-end z-30">
+        <div tabindex="0" role="button" class="btn btn-circle avatar placeholder">
+          {{if $usr.Avatar}}
+          <div class="w-10 rounded-full">
+            <img src="/static/uploads/{{$usr.Avatar}}" alt="User Avatar">
+          </div>
+          {{else}}
+          <div class="avatar placeholder">
+            <div class="bg-neutral text-neutral-content w-12 rounded-full">
+              <span>{{initials $usr.FirstName $usr.FamilyName}}</span>
+            </div>
+          </div>
+          {{end}}
+        </div>
+        <ul tabindex="1" class="menu menu-sm dropdown-content mt-3 p-2 shadow bg-base-100 rounded-box w-52">
+          <li>
+            <a class="justify-between" href="/admin/profile">
+              Profil
+            </a>
+          </li>
+          <li><a href="/admin/logout">Logout</a></li>
+        </ul>
+      </div>
+    </div>
+
+  </div>
+  <div class="transition p-0 m-0 border border-base-100 bg-base-100 border-b-base-content border-opacity-20 hidden">
+    <ul class="menu menu-lg">
+      <li>
+        <a href="/admin">Homepage</a>
+      </li>
+      <li>
+        <a href="/admin/checkin">Check-In</a>
+      </li>
+      <!-- <li> -->
+      <!--   <a href="/admin/checkout">Kasse</a> -->
+      <!-- </li> -->
+      {{if ge $usr.RoleID 2}}
+      <li>
+        <a href="/admin/visitors">Benutzende</a>
+      </li>
+      <!-- <li> -->
+      <!--   <a>Newsletter</a> -->
+      <!-- </li> -->
+      {{end}}
+      {{if ge $usr.RoleID 3}}
+      <li>
+        <details>
+          <summary>Abonnements</summary>
+          <ul>
+            <li>
+              <a href="/admin/l3/badges">Badges</a>
+            </li>
+            <li>
+              <a href="/admin/l3/abonnements">Abonnements verwalten</a>
+            </li>
+            <li>
+              <a href="/admin/l3/abonnements/reminder">Reminder</a>
+            </li>
+          </ul>
+        </details>
+      </li>
+      <li>
+        <!-- <details> -->
+        <!--   <summary>Buchhaltung</summary> -->
+        <!--   <ul> -->
+        <!--     <li> -->
+        <!--       <a href="/admin/">Tagesabrechnungen</a> -->
+        <!--     </li> -->
+        <!--     <li> -->
+        <!--       <a href="/admin/">Rechnungen</a> -->
+        <!--     </li> -->
+        <!--   </ul> -->
+        <!-- </details> -->
+      </li>
+      <!-- <li> -->
+      <!--   <a href="/admin/">Statistik</a> -->
+      <!-- </li> -->
+      {{end}}
+      {{if ge $usr.RoleID 4}}
+      <li>
+        <details>
+          <summary>Admin</summary>
+          <ul>
+            <li>
+              <a href="/admin/">Stammdaten</a>
+            </li>
+            <li>
+              <a href="/admin/">Log</a>
+            </li>
+          </ul>
+        </details>
+      </li>
+      {{end}}
+    </ul>
+  </div>
+</div>
+
+
+<script>
+  // using classList.toggle() method
+  const para = document.querySelector('.hidden');
+  const menubutton = document.querySelector('#menubutton');
+
+  function menuToggle() {
+    // toggle class
+    para.classList.toggle('hidden');
+    menubutton.classList.toggle('rotate-45');
+  }
+</script>
+{{end}}

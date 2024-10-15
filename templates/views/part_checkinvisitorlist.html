@@ -1,0 +1,70 @@
+{{$list := index .Data "visitorlist"}}
+{{$count := index .Data "count"}}
+
+{{if gt $count 0}}
+
+{{range $list}}
+{{template "checkinListEntry" .}}
+{{end}}
+
+{{template "checkinPagination" .}}
+
+{{else}}
+{{$warning := mkSlice "keine Suchergebnisse"}}
+
+{{template "warningMessage" $warning}}
+
+{{end}}
+
+{{define "checkinPagination"}}
+{{$pages := index .Data "pages"}}
+{{$onpage := index .Data "onPage"}}
+{{$filter := index .Data "filter"}}
+
+{{if gt $pages 1}}
+<div class="grid justify-items-center">
+  <div class="join pt-6">
+    <button class="join-item btn {{if eq $onpage 1}}btn-disabled{{end}}" hx-target="#visitorList"
+      hx-get='/admin/checkinvisitorlist?page={{sub $onpage 1}}{{with $filter.SearchString}}&search={{.}}{{end}}'>«</button>
+    {{range $i := iterate $pages}}
+    {{if or (eq $i 1) (eq $i $pages)}}
+    <button class='btn join-item {{if eq $onpage $i}} btn-primary {{end}}' hx-target="#visitorList"
+      hx-get="/admin/checkinvisitorlist?page={{$i}}{{with $filter.SearchString}}&search={{.}}{{end}}&sort={{$filter.Sort}}">{{$i}}</button>
+    {{else}}
+    {{if gt $onpage (add $i 1)}}
+    {{if gt $onpage (add $i 2)}}
+    {{else}}
+    <button class="join-item btn btn-disabled">.</button>
+    {{end}}
+    {{else}}
+    {{if gt $i (add $onpage 1)}}
+    {{if gt $i (add $onpage 2)}}
+    {{else}}
+    <button class="join-item btn btn-disabled">.</button>
+    {{end}}
+    {{else}}
+    <button class='btn join-item {{if eq $onpage $i}} btn-primary {{end}}' hx-target="#visitorList"
+      hx-get='/admin/checkinvisitorlist?page={{$i}}{{with $filter.SearchString}}&search={{.}}{{end}}'>{{$i}}</button>
+    {{end}}
+    {{end}}
+    {{end}}
+    {{end}}
+    <button class="join-item btn {{if eq $onpage $pages}}btn-disabled{{end}}" hx-target="#visitorList"
+      hx-get='/admin/checkinvisitorlist?page={{add $onpage 1}}{{with $filter.SearchString}}&search={{.}}{{end}}'>»</button>
+  </div>
+</div>
+{{end}}
+{{end}}
+
+{{define "checkinListEntry"}}
+<div
+  class="hover:bg-base-200 cursor-pointer grid grid-cols-3 text-sm p-3 py-4 items-center gap-3 border-dashed border-b border-base-content border-opacity-50">
+  <div class="col-span-1">{{ .FirstName }} {{ .FamilyName }}</div>
+  <div class="col-span-1">{{ .City }}</div>
+  <div class="col-span-1 flex gap-2 justify-center md:justify-end">
+    <button class="btn btn-sm btn-circle btn-primary" hx-get="/admin/checkin/{{.ID}}" hx-target="#addVisit">
+      <span class="i-mdi-login"></span>
+    </button>
+  </div>
+</div>
+{{end}}

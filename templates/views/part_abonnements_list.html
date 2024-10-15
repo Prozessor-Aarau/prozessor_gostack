@@ -1,0 +1,78 @@
+{{$abos := index .Data "abonnements"}}
+{{$count := index .Data "count"}}
+
+{{if gt $count 0}}
+
+{{range $abos}}
+{{template "listEntry" .}}
+{{end}}
+
+{{template "pagination" .}}
+
+{{else}}
+{{$warning := mkSlice "keine Suchergebnisse"}}
+
+{{template "warningMessage" $warning}}
+
+{{end}}
+
+{{define "pagination"}}
+{{$pages := index .Data "pages"}}
+{{$onpage := index .Data "onPage"}}
+{{$filter := index .Data "filter"}}
+{{if gt $pages 1}}
+<div class="grid justify-items-center">
+  <div class="join pt-6">
+    <button class="join-item btn {{if eq $onpage 1}}btn-disabled{{end}}" hx-target="#aboList"
+      hx-get='/admin/l3/abonnements/list?page={{sub $onpage 1}}'>«</button>
+    {{range $i := iterate $pages}}
+    {{if or (eq $i 1) (eq $i $pages)}}
+    <button class='btn join-item {{if eq $onpage $i}} btn-primary {{end}}' hx-target="#aboList"
+      hx-get="/admin/l3/abonnements/list?page={{$i}}">{{$i}}</button>
+    {{else}}
+    {{if gt $onpage (add $i 1)}}
+    {{if gt $onpage (add $i 2)}}
+    {{else}}
+    <button class="join-item btn btn-disabled">.</button>
+    {{end}}
+    {{else}}
+    {{if gt $i (add $onpage 1)}}
+    {{if gt $i (add $onpage 2)}}
+    {{else}}
+    <button class="join-item btn btn-disabled">.</button>
+    {{end}}
+    {{else}}
+    <button class='btn join-item {{if eq $onpage $i}} btn-primary {{end}}' hx-target="#aboList"
+      hx-get='/admin/l3/abonnements/list?page={{$i}}'>{{$i}}</button>
+    {{end}}
+    {{end}}
+    {{end}}
+    {{end}}
+    <button class="join-item btn {{if eq $onpage $pages}}btn-disabled{{end}}" hx-target="#aboList"
+      hx-get='/admin/l3/abonnements/list?page={{add $onpage 1}}'>»</button>
+  </div>
+</div>
+{{end}}
+{{end}}
+
+{{define "listEntry"}}
+<div
+  class="hover:bg-base-200 cursor-pointer grid grid-cols-6 text-sm p-3 py-4 items-center gap-3 border-dashed border-b border-base-content border-opacity-50">
+  <div class="col-span-1"><span
+      class='mr-5 {{ if lt (toToday .BuyDate) 0 }} text-error {{else if lt (toToday .BuyDate) 45 }} text-warning {{else}} text-success {{end}}'>{{toToday
+      .BuyDate }}
+      Tage</span></div>
+  <div class="col-span-1 text-2xl flex items-center">
+    {{if .Member }}<span class="i-mdi-account-group"></span>{{end}}
+  </div>
+  <div class="col-span-4 md:col-span-1">CHF {{ .Price }}.- {{if .PartialPayment}} <span
+      class="text-xl i-mdi-payment-clock"></span>{{end}}</div>
+  <div class="col-span-5 md:col-span-2 text-right md:text-left">{{.VisitorFirstName}}
+    {{.VisitorFamilyName}}</div>
+  <div class="col-span-1 flex justify-end items-center">
+    <a class="btn btn-sm btn-circle btn-primary" hx-get="/admin/l3/abonnements/{{.ID}}" hx-target="#main">
+      <span class="i-mdi-lead-pencil"></span>
+    </a>
+  </div>
+</div>
+{{end}}

@@ -1,0 +1,46 @@
+package repository
+
+import (
+	"context"
+	"time"
+
+	"github.com/faebut/prozessor_gostack/internal/models"
+)
+
+// AllRessorts gets all ressorts
+func (m *postgresDBRepo) AllRessorts() ([]models.Ressort, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	var ressorts []models.Ressort
+
+	query := `SELECT id, ressort_name, created_on, updated_on FROM ressorts`
+	rows, err := m.DB.QueryContext(ctx, query)
+	if err != nil {
+		return ressorts, err
+	}
+
+	defer rows.Close()
+
+	for rows.Next() {
+		var r models.Ressort
+
+		err := rows.Scan(
+			&r.ID,
+			&r.RessortName,
+			&r.CreatedOn,
+			&r.UpdatedOn,
+		)
+
+		if err != nil {
+			return ressorts, err
+		}
+		ressorts = append(ressorts, r)
+	}
+
+	if err = rows.Err(); err != nil {
+		return ressorts, err
+	}
+
+	return ressorts, nil
+}

@@ -1,0 +1,100 @@
+{{template "base" .}}
+
+{{define "content"}}
+<div class="prose mb-10">
+  <h1>Abonnements</h1>
+</div>
+
+<div id="content">
+  {{template "aboFilter" .}}
+
+  <div id="aboList" hx-get="/admin/l3/abonnements/list" hx-trigger="load"></div>
+  {{end}}
+</div>
+
+
+{{define "aboFilter"}}
+<div class="border-base-content border-opacity-20 border rounded-md dark:rounded-lg bg-base-100 my-4 p-4">
+  <h2 class="font-bold text-xl mb-3">Suchfilter</h2>
+  <form id="filterForm" novalidate>
+    <div class="grid grid-cols-4 gap-5">
+      <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+      <label class="input input-bordered flex items-center gap-2 col-span-4">
+        <span class="text-3xl i-mdi-magnify"></span>
+        <input type="text" id="search_term" name="search_term" class="grow" placeholder="Suche nach Name, Vorname..." />
+
+        <!-- how to implement this button? should reset field -->
+        <button id="fieldreset" class="ml-3 btn btn-neutral btn-outline btn-xs btn-circle"> <span
+            class="i-mdi-close"></span></button>
+
+      </label>
+      <div class="col-span-2 md:col-span-1">
+        <label class="form-control" id="abooptions">
+          <div class="label">
+            <span class="label-text">Gültigkeit:</span>
+          </div>
+          <select name="abovalidity" id="sort" class="select select-bordered">
+            <option value="all">alle</option>
+            <option value="valid">nur gültig</option>
+            <option value="invalid">nur abgelaufen</option>
+          </select>
+        </label>
+      </div>
+      <div class="col-span-2 md:col-span-1 flex flex-col justify-end">
+        <label class="label cursor-pointer gap-4 col-span-2 md:col-span-1 justify-start">
+          <input name="member" type="checkbox" class="checkbox checkbox-sm" />
+          <span>Mitglied</span>
+        </label>
+        <label class="label cursor-pointer gap-4 col-span-2 md:col-span-1 pb-0 justify-start">
+          <input name="badge" type="checkbox" class="checkbox checkbox-sm" />
+          <span>Badge</span>
+        </label>
+      </div>
+      <div class="col-span-full md:col-span-2 flex flex-col justify-end ">
+        <label class="label cursor-pointer gap-4 col-span-2 md:col-span-1 pb-0 justify-start">
+          <input name="unique" type="checkbox" class="checkbox checkbox-sm" />
+          <span>nur aktuellstes Abo anzeigen</span>
+        </label>
+      </div>
+      <label class="form-control w-full max-w-xs col-span-4 md:col-span-2 pb-0">
+        <div class="label">
+          <span class="label-text">Sortieren nach:</span>
+        </div>
+        <select name="sort" id="sort" class="select select-bordered">
+          <option value="buydate">Ablaufdatum</option>
+          <option value="family_name">Name</option>
+        </select>
+      </label>
+      <label class="form-control w-full max-w-xs col-span-4 md:col-span-2">
+        <div class="label">
+          <span class="label-text">Richtung:</span>
+        </div>
+        <select name="sort_dir" id="sort_dir" class="select select-bordered">
+          <option value="DESC">absteigend</option>
+          <option value="ASC">aufsteigend</option>
+        </select>
+      </label>
+      <div class="col-span-4 grid grid-cols-2 justify-items-center gap-3">
+        <button type="submit" hx-post="/admin/visitorlist" hx-target="#visitorList"
+          class="btn btn-success btn-outline"><span class="i-mdi-magnify"></span> suchen</button>
+        <a hx-get="/admin/visitorlist" hx-target="#visitorList" class="btn btn-error btn-outline"><span
+            class="i-mdi-close"></span> zurücksetzen</a>
+      </div>
+    </div>
+  </form>
+
+  <div class="border-base-content border-opacity-50 border-dashed border-t mt-4 pt-4">
+    <button type="button" class="btn btn-secondary" hx-get="/admin/l3/abonnements/create" hx-target="#content">Neues Abo
+      hinzufügen</button>
+  </div>
+</div>
+
+<script>
+  searchField = document.querySelector("#search_term")
+
+  document.getElementById("fieldreset").addEventListener("click", function (event) {
+    event.preventDefault();
+    searchField.value = "";
+  });
+</script>
+{{end}}

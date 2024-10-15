@@ -1,0 +1,156 @@
+{{$vis := index .Data "visitor"}}
+{{$ate := index .Data "ateliers"}}
+{{$cate := index .Data "ateliers_checked"}}
+{{$edit := index .Data "edit"}}
+{{$v := index .Data "visit"}}
+
+<div class="prose">
+  <h2>{{$vis.FirstName}}{{if eq $edit true}}'s Check-in{{else}} {{$vis.FamilyName}} einchecken{{end}}</h2>
+
+  <!-- here infos for the visitor -->
+  <div class="collapse collapse-plus bg-base-100 border border-base-content border-opacity-20">
+    <input type="checkbox" {{if ne $edit true }}checked{{end}} />
+    <div class="collapse-title text-xl font-medium">Details</div>
+    <div class="collapse-content">
+      <div class="grid grid-cols-2 gap-5">
+        <div class="flex flex-col">
+          <span class="label-text">Adresse:</span>
+          <span>{{$vis.FirstName}} {{$vis.FamilyName}}</span>
+          <span>{{$vis.Address}}</span>
+          <span>{{$vis.Postcode}} {{$vis.City}}</span>
+        </div>
+
+        <div class="flex flex-col">
+          <span class="label-text">Geburtstag:</span>
+          <span>{{formatDate $vis.Birthdate "2 Jan 2006"}}</span>
+        </div>
+
+        <div class="flex flex-col">
+          <span class="label-text">Kontakt:</span>
+          {{with $vis.Phone}}
+          <span>{{.}}</span>
+          {{end}}
+          {{with $vis.Email}}
+          <span>{{.}}</span>
+          {{end}}
+        </div>
+
+        <div class="flex flex-col">
+          <span class="label-text">Abonnement:</span>
+          {{with $vis.AboLast.BuyDate}}
+          <span
+            class='mr-5 {{ if lt (toToday .) 0 }} text-error {{else if lt (toToday .) 45 }} text-warning {{else}} text-success {{end}}'>gültig:
+            {{toToday
+            . }}
+            Tage</span>
+          {{else}}
+          <span>kein Abonnement</span>
+          {{end}}
+          {{with $vis.Badge.Number}}
+          <span class="text-primary flex gap-1 items-center"><span class="i-mdi-key"></span> {{.}}</span>
+          {{end}}
+        </div>
+
+        <div class="flex flex-col">
+          <span class="label-text">Vereinsmitglied:</span>
+          {{with $vis.Ressort.RessortName}}
+          <span>{{.}}</span>
+          {{else}}
+          <span>kein Vereinsmitglied</span>
+          {{end}}
+        </div>
+
+        <div class="flex flex-col">
+          <span class="label-text">Partnerschaft:</span>
+          {{with $vis.Partner}}
+          {{range .}}
+          <span>{{.PartnerName}}</span>
+          {{end}}
+          {{else}}
+          <span>keine Partnerschaft</span>
+          {{end}}
+        </div>
+
+        <div class="col-span-2 grid justify-items-end">
+          <a class="btn btn-secondary btn-circle btn-outline" href="/admin/visitors/{{$vis.ID}}?ref=checkin"><span
+              class="i-mdi-pen text-2xl"></span></a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- here starts the checkin form -->
+  <div class="mt-6 collapse collapse-plus bg-base-100 border border-base-content border-opacity-20">
+    <input type="checkbox" checked />
+    <div class="collapse-title text-xl font-medium">{{if eq $edit true}}Check-in anpassen{{else}}Einchecken{{end}}</div>
+    <div class="collapse-content">
+      <form class="grid grid-cols-2 gap-5" hx-post="/admin/checkin/{{$vis.ID}}{{if eq $edit true}}/{{$v.ID}}{{end}}"
+        hx-target="#addVisit" novalidate>
+        <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+        <input type="hidden" name="ressort" value="{{$vis.Ressort.ID}}">
+        <div class="col-span-2 flex flex-col">
+
+          <span class="label-text">Ateliers auswählen:</span>
+          <div class="grid grid-cols-2 gap-5">
+            {{range $ate}}
+            <div class="form-control">
+              <label class="label cursor-pointer justify-start gap-3">
+                <input name="{{.ID}}" type="checkbox" class="checkbox" {{if contains .ID $cate}}checked{{end}} />
+                <span class="label-text">{{.AtelierName}}</span>
+              </label>
+            </div>
+            {{end}}
+          </div>
+
+          {{with $vis.Partner}}
+          <span class="label-text mt-4 mb-2">als Partner einloggen</span>
+          <select name="partner" class="mb-4 select select-bordered">
+            <option value="0">ohne Partner</option>
+            {{range .}}
+            <option value="{{.ID}}" {{if eq $v.Partner.ID .ID}} selected {{end}}>{{.PartnerName}}</option>
+            {{end}}
+          </select>
+          {{end}}
+
+
+          {{with .Form.Errors.Get "ateliers"}}
+          <div class="my-6">
+            {{template "errorMessage" .}}
+          </div>
+          {{end}}
+
+        </div>
+
+        <div
+          class="col-span-2 grid gap-3 grid-cols-2 {{if eq $edit true}}sm:grid-cols-3{{end}} justify-around place-items-center">
+          {{if eq $edit true}}
+          <input type="submit" class="btn btn-primary" value="Anpassen">
+          {{else}}
+          <input type="submit" class="btn btn-success" value="Einchecken">
+          {{end}}
+          <a class="btn btn-warning" href="/admin/checkin">Abbrechen</a>
+          {{if eq $edit true}}
+          <div id="deleteButton" class="col-span-2 sm:col-span-1">
+            <a class="btn btn-error btn-circle btn-outline" hx-delete="/admin/visits/{{$v.ID}}"
+              hx-target="#listing_{{$v.ID}}"
+              hx-confirm="Möchtest du den Besuch von {{ $vis.FirstName }} {{ $vis.FamilyName }} wirklich löschen?"
+              hx-swap="outerHTML"><span class="i-mdi-trash text-2xl"></span></a>
+          </div>
+          {{end}}
+        </div>
+      </form>
+    </div>
+  </div>
+
+</div>
+
+<!-- this script is needed for the delete button to send the CSRF-Token -->
+{{if eq $edit true}}
+<script>
+  button = document.getElementById("deleteButton")
+  button.addEventListener('htmx:configRequest', (event) => {
+    event.detail.headers['X-CSRF-Token'] = '{{ .CSRFToken }}';
+  })
+</script>
+{{end}}

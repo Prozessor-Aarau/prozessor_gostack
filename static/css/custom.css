@@ -1,0 +1,20 @@
+.htmx-indicator {
+  display: none;
+}
+
+.htmx-request .htmx-indicator {
+  display: flex;
+}
+
+.htmx-request.htmx-indicator {
+  display: flex;
+}
+
+/* Hide previously loaded content during HTMX request */
+.htmx-request .loaded-content {
+  display: none;
+}
+
+.htmx-request.loaded-content {
+  display: none;
+}

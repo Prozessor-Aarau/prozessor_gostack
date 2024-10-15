@@ -1,0 +1,83 @@
+{{$a := index .Data "abonnement"}}
+
+<form class="grid grid-cols-2 items-center gap-3 ">
+  <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+  <div class="prose col-span-full">
+    <h2>Abonnement erstellen</h2>
+  </div>
+
+  <div class="prose col-span-full">
+    <h3>Besucher:in auswählen <span class="text-error">*</span></h3>
+  </div>
+  <div id="selectInternal"
+    class='col-span-full mt-3 gap-3 grid grid-cols-2 {{if .Form.Errors.Get "member"}}border rounded-md border-error dark:rounded-lg{{end}}'>
+
+    <form id="filterForm" class="mb-3 w-full col-span-2 md:col-span-1" novalidate>
+      <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+      <label class="input input-bordered flex items-center gap-2">
+        <span class="text-3xl i-mdi-magnify"></span>
+        <input type="search" id="search_term" name="search_term" class="grow"
+          placeholder="Suche nach Name, Vorname oder Ort..." hx-post="/admin/visitors/selectbox/{{$a.VisitorID}}"
+          hx-trigger="input changed delay:500ms, search" hx-target="#memberSelect" />
+        <button id="fieldreset" class="ml-3 btn btn-neutral btn-outline btn-xs btn-circle"> <span
+            class="i-mdi-close"></span></button>
+      </label>
+    </form>
+
+    <div id="memberSelect" class="mb-3 col-span-2 md:col-span-1" hx-get="/admin/visitors/selectbox/{{$a.VisitorID}}"
+      hx-trigger="load">
+    </div>
+    {{with .Form.Errors.Get "member"}}
+    <div class="label col-span-2">
+      <span class="label-text text-error">{{.}}</span>
+    </div>
+    {{end}}
+  </div>
+
+  <label class="form-control col-span-2 md:col-span-1">
+    <div class="label">
+      <span class="label-text">Kaufdatum <span class="text-error font-extrabold">*</span></span>
+    </div>
+    <input type="date" id="buydate" name="buydate"
+      class='input input-bordered {{with .Form.Errors.Get "buydate"}} input-error {{end}}' required>
+    {{with .Form.Errors.Get "buydate"}}
+    <div class="label">
+      <span class="label-text text-error">{{.}}</span>
+    </div>
+    {{end}}
+  </label>
+
+  <label class="form-control col-span-2 md:col-span-1 grid grid-cols-2 items-center">
+    <div class="label col-span-full">
+      <span class="label-text">Preis/Zahlungsmodalität </span>
+    </div>
+    <label class="label cursor-pointer justify-start">
+      <input type="checkbox" id="partial_payment" name="partial_payment" class="checkbox mr-4" {{if $a.PartialPayment}}
+        checked {{end}} />
+      <span class="label-text">
+        Teilzahlung (2x halber Betrag)
+      </span>
+    </label>
+    <span id="pricing" class="font-bold text-primary text-xl">
+      {{with $a.Price}}
+      <input type="hidden" name="price" value="{{.}}" />
+      <span>{{.}}.- {{if eq . 320}}Mitglied{{else}}Abonnement{{end}}</span>
+      {{else}}
+      <span>Besucher:in auswählen</span>
+      {{end}}
+    </span>
+  </label>
+
+  <div class=" col-span-full text-sm font-bold text-primary">Bitte Preis überprüfen. Mitglieder müssen zuerst einem
+    Ressort hinzugefügt werden!</div>
+  <div class=" col-span-full text-sm"><span class="text-error font-extrabold">*</span> diese Felder sind zwingend
+    auszufüllen
+  </div>
+
+  <div class="col-span-full w-full gap-3 flex mt-3 items-center justify-center flex-col md:flex-row">
+    <a class="btn btn-success" hx-post="/admin/l3/abonnements/create" hx-target="#content">Speichern
+    </a>
+    <a href="/admin/l3/abonnements" class="btn btn-warning"><span class="i-mdi-cancel-bold"></span>
+      Abbrechen</a>
+  </div>
+</form>

@@ -1,0 +1,272 @@
+{{template "base" .}}
+
+{{define "content"}}
+{{$vis := index .Data "visitor"}}
+{{$route := index .Data "route"}}
+{{$ref := index .Data "ref"}}
+{{$admin := index .Data "admin"}}
+{{$super := index .Data "super"}}
+{{$roles := index .Data "roles"}}
+{{$ressorts := index .Data "ressorts"}}
+<div class="container mx-auto flex flex-col gap-2">
+  <div class="prose">
+    <h1>Profil von {{$vis.FirstName}} {{$vis.FamilyName}}</h1>
+    <h2 class="mt-0">Stammdaten</h2>
+  </div>
+  <!-- start of Form -->
+  <form class="grid grid-cols-4 gap-1 sm:gap-3 overflow-y-auto p-1" method="POST"
+    action='/admin/{{if eq $route "profile"}}profile{{else}}visitors/{{$vis.ID}}{{end}}' enctype="multipart/form-data"
+    novalidate>
+    <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+    <input type="hidden" name="ref" value="{{$ref}}">
+    <input type="hidden" name="route" value="{{$route}}">
+
+    <label class="form-control col-span-4 md:col-span-2">
+      <div class="label">
+        <span class="label-text">Vorname <span class="text-error font-extrabold">*</span></span>
+      </div>
+      <input type="text" id="first_name" name="first_name" class='input input-bordered {{with .Form.Errors.Get "first_name" }}
+        input-error {{end}}' value="{{$vis.FirstName}}" required />
+      {{with .Form.Errors.Get "first_name"}}
+      <div class="label">
+        <span class="label-text text-error">{{.}}</span>
+      </div>
+      {{end}}
+    </label>
+
+    <label class="form-control col-span-4 md:col-span-2">
+      <div class="label">
+        <span class="label-text">Familienname <span class="text-error font-extrabold">*</span></span>
+      </div>
+      <input type="text" id="family_name" name="family_name"
+        class='input input-bordered {{with .Form.Errors.Get "family_name"}} input-error {{end}}'
+        value="{{$vis.FamilyName}}" required>
+      {{with .Form.Errors.Get "family_name"}}
+      <div class="label">
+        <span class="label-text text-error">{{.}}</span>
+      </div>
+      {{end}}
+    </label>
+
+    <label class="form-control col-span-4 sm:col-span-2 md:col-span-1">
+      <div class="label">
+        <span class="label-text">Geburtsdatum <span class="text-error font-extrabold">*</span></span>
+      </div>
+      <input type="date" id="birthdate" name="birthdate"
+        class='input input-bordered {{with .Form.Errors.Get "birthdate"}} input-error {{end}}' {{if realDate
+        $vis.Birthdate}}value="{{humanDate $vis.Birthdate}}" {{end}} required>
+      {{with .Form.Errors.Get "birthdate"}}
+      <div class="label">
+        <span class="label-text text-error">{{.}}</span>
+      </div>
+      {{end}}
+    </label>
+
+    <label class="form-control col-span-4 sm:col-span-2 md:col-span-1">
+      <div class="label">
+        <span class="label-text">Telefonnummer <span class="text-error font-extrabold">**</span></span>
+      </div>
+      <input type="text" id="phone" name="phone"
+        class='input input-bordered {{with .Form.Errors.Get "phone"}} input-error {{end}}' value="{{$vis.Phone}}">
+      {{with .Form.Errors.Get "phone"}}
+      <div class="label">
+        <span class="label-text text-error">{{.}}</span>
+      </div>
+      {{end}}
+    </label>
+    <label class="form-control col-span-4 md:col-span-2">
+      <div class="label">
+        <span class="label-text">E-Mail <span class="text-error font-extrabold">**</span></span>
+      </div>
+      <input type="text" id="email" name="email"
+        class='input input-bordered {{with .Form.Errors.Get "email"}} input-error {{end}}' value="{{$vis.Email}}">
+      {{with .Form.Errors.Get "email"}}
+      <div class="label">
+        <span class="label-text text-error">{{.}}</span>
+      </div>
+      {{end}}
+    </label>
+
+    <label class="form-control col-span-4 md:col-span-2">
+      <div class="label">
+        <span class="label-text">Strasse Nr. <span class="text-error font-extrabold">*</span></span>
+      </div>
+      <input type="text" id="address" name="address"
+        class='input input-bordered {{with .Form.Errors.Get "address"}} input-error {{end}}' value="{{$vis.Address}}"
+        required>
+      {{with .Form.Errors.Get "address"}}
+      <div class="label">
+        <span class="label-text text-error">{{.}}</span>
+      </div>
+      {{end}}
+
+    </label>
+
+    <label class="form-control">
+      <div class="label">
+        <span class="label-text">PLZ <span class="text-error font-extrabold">*</span></span>
+      </div>
+      <input type="text" id="postcode" name="postcode"
+        class='input input-bordered {{with .Form.Errors.Get "postcode"}} input-error {{end}}' value="{{$vis.Postcode}}"
+        required>
+      {{with .Form.Errors.Get "postcode"}}
+      <div class="label">
+        <span class="label-text text-error">{{.}}</span>
+      </div>
+      {{end}}
+    </label>
+    <label class="form-control col-span-3 md:col-span-1">
+      <div class="label">
+        <span class="label-text">Ort <span class="text-error font-extrabold ">*</span></span>
+      </div>
+      <input type=" text" name="city" id="city"
+        class='input input-bordered {{with .Form.Errors.Get "city"}} input-error {{end}}' value="{{$vis.City}}"
+        required>
+      {{with .Form.Errors.Get "city"}}
+      <div class="label">
+        <span class="label-text text-error">{{.}}</span>
+      </div>
+      {{end}}
+    </label>
+
+    <label class="form-control col-span-4">
+      <div class="label">
+        <span class="label-text">Informationen</span>
+      </div>
+      <textarea id="infos" name="infos" class="textarea textarea-bordered h-24"
+        placeholder="Allergien, Besonderes...">{{$vis.Infos}}</textarea>
+    </label>
+    <label class="label cursor-pointer col-span-4 justify-start">
+      <input type="checkbox" id="newsletter" name="newsletter" class="checkbox mr-4" {{if $vis.Newsletter}} checked
+        {{end}} />
+      <span class="label-text text-left">Prozessor Newsletter erhalten.</span>
+    </label>
+    <div class="col-span-4 text-sm"><span class="text-error font-extrabold">*</span> diese Felder sind zwingend
+      auszufüllen
+    </div>
+    <div class="col-span-4 text-sm"><span class="text-error font-extrabold">**</span> mindestens eine Angabe nötig
+      (entweder/oder)</div>
+
+    <div class="pt-6 col-span-full prose {{if ne $admin true}}hidden{{end}}">
+      <h2>Vereinsmitgliedschaft</h2>
+    </div>
+
+    <label class="form-control col-span-2 {{if ne $admin true}}hidden{{end}}">
+      <div class="label">
+        <span class="label-text">Ressort für Mitgliedschaft auswählen</span>
+      </div>
+      <select id="ressort" name="ressort" class="select select-bordered w-full ">
+        <option disabled selected value="0">Ressort auswählen</option>
+        {{range $ressorts}}
+        <option value="{{.ID}}" {{if eq $vis.Ressort.ID .ID}} selected {{end}}>{{.RessortName}}
+        </option>
+        {{end}}
+      </select>
+    </label>
+
+
+    <label class="form-control col-span-2 {{if ne $super true}}hidden{{end}}">
+      <div class="label">
+        <span class="label-text">Zugangs-Level auswählen</span>
+      </div>
+      <select id="ressort" name="ressort" class="select select-bordered w-full ">
+        <option disabled selected value="0">Rolle auswählen</option>
+        {{range $roles}}
+        <option value="{{.ID}}" {{if eq $vis.RoleID .ID}} selected {{end}}>{{.RoleName}}
+        </option>
+        {{end}}
+      </select>
+    </label>
+
+    {{if $admin}}
+    <div class="col-span-full flex items-center justify-start gap-3">
+      <a class="btn btn-secondary" hx-post="/admin/l3/createloginmail" hx-target="#loginresponse">Registrations-Mail
+        versenden</a>
+      <div id="loginresponse" class="label font-extrabold text-success">
+      </div>
+    </div>
+    {{end}}
+
+    {{if eq $route "profile"}}
+    <div class="pt-6 col-span-full prose">
+      <h2>Nutzerprofil</h2>
+    </div>
+
+    <label class="form-control col-span-4 md:col-span-2">
+      <div class="label">
+        <span class="label-text">Passwort ändern</span>
+      </div>
+      <input type="password" name="password" id="password"
+        class='input input-bordered {{with .Form.Errors.Get "password"}} input-error {{end}}'>
+      {{with .Form.Errors.Get "password"}}
+      <div class="label">
+        <span class="label-text text-error">{{.}}</span>
+      </div>
+      {{end}}
+    </label>
+    <label class="form-control col-span-4 md:col-span-2">
+      <div class="label">
+        <span class="label-text">neues Passwort wiederholen</span>
+      </div>
+      <input type="password" name="password_check" id="password_check"
+        class='input input-bordered {{with .Form.Errors.Get "password_check"}} input-error {{end}}'>
+      {{with .Form.Errors.Get "password_check"}}
+      <div class="label">
+        <span class="label-text text-error">{{.}}</span>
+      </div>
+      {{end}}
+    </label>
+    {{if $vis.Avatar}}
+    <div class="avatar col-span-1">
+      <div class="w-24 rounded-full">
+        <img src="/static/uploads/{{$vis.Avatar}}" class="mt-0" />
+      </div>
+    </div>
+    {{end}}
+    <label class="form-control {{if $vis.Avatar}}col-span-3{{else}}col-span-4{{end}}">
+      <div class="label">
+        {{if $vis.Avatar}}
+        <span id="avatartext" class="label-text">Avatar ersetzen</span>
+        {{else}}
+        <span class="label-text">Avatar hochladen</span>
+        {{end}}
+      </div>
+      <input type="file" name="avatar" id="avatarInput" class="file-input file-input-bordered" />
+      {{with .Form.Errors.Get "avatar"}}
+      <div class="label">
+        <span class="label-text text-error">{{.}}</span>
+      </div>
+      {{end}}
+    </label>
+    {{if $vis.Avatar}}
+    <div class="form-control col-span-4">
+      <label class="label cursor-pointer justify-start">
+        <input type="checkbox" name="delete_avatar" id="delete_avatar" onchange="inactive()"
+          class="toggle toggle-error" />
+        <span class="label-text text-left ml-3">Avatar löschen</span>
+      </label>
+    </div>
+    {{end}}
+    {{end}}
+
+    <div class="col-span-full flex items-center gap-3 justify-center">
+      <input type="submit" class="btn btn-success col-span-2 mt-3" value="Speichern">
+      <a onclick="history.back()" class="btn btn-warning col-span-2 mt-3"><span class="i-mdi-cancel-bold"></span>
+        Abbrechen</a>
+    </div>
+
+  </form>
+</div>
+
+<script>
+  fileBox = document.querySelector("#avatarInput")
+  toggle = document.querySelector("#delete_avatar")
+  fileText = document.querySelector("#avatartext")
+
+  toggle.onchange = function () {
+    fileBox.toggleAttribute("disabled")
+    fileText.classList.toggle("opacity-40")
+  }
+
+</script>
+{{end}}

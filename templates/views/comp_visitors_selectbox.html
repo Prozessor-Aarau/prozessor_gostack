@@ -1,0 +1,19 @@
+{{$vis := index .Data "visitors"}}
+{{$visid := index .Data "visid"}}
+
+<select id="member" name="member" class="select select-bordered w-full">
+  <option disabled selected>Mitglied auswählen</option>
+  {{range $vis}}
+  <option value="{{.ID}}" {{if eq $visid .ID}} selected {{end}}>{{.FirstName}} {{.FamilyName}}, {{.City}}
+  </option>
+  {{end}}
+</select>
+
+<script>
+  memberSelectBox = document.querySelector("#member");
+
+  memberSelectBox.addEventListener("change", function () {
+    loc = "/admin/l3/abonnements/create/pricing/" + memberSelectBox.value
+    htmx.ajax('GET', loc, '#pricing')
+  })
+</script>
