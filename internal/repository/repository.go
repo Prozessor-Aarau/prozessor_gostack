@@ -47,6 +47,7 @@ type DatabaseRepo interface {
 	// registering and login
 	CreateRegisterCode(v models.Visitor) (string, error)
 	CreatePassword(v models.Visitor) error
+	CheckCreateLogin(email, uid string) (models.Visitor, error)
 	Authenticate(email, testPassword string) (string, models.Visitor, error)
 }
 

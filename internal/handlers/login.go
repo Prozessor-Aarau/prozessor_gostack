@@ -7,6 +7,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/faebut/prozessor_gostack/internal/forms"
 	"github.com/faebut/prozessor_gostack/internal/models"
 	"github.com/faebut/prozessor_gostack/internal/render"
 	"golang.org/x/crypto/bcrypt"
@@ -39,7 +40,7 @@ func (m *Repository) CreateLoginMail(w http.ResponseWriter, r *http.Request) {
 
 	uid, err := m.DB.CreateRegisterCode(visitor)
 	if err != nil {
-		fmt.Fprint(
+		fmt.Fprintf(
 			w,
 			`<span class="label-text text-error">Probleme beim generieren des Codes: %s</span>`,
 			err,
@@ -82,22 +83,56 @@ func (m *Repository) CreateLoginMail(w http.ResponseWriter, r *http.Request) {
 
 // Login is the login page handlerh http.HandlerFunc
 func (m *Repository) CreateLogin(w http.ResponseWriter, r *http.Request) {
+	email := r.URL.Query().Get("email")
+	uid := r.URL.Query().Get("uid")
+
+	// prepare data to send it to the templates
+	data := make(map[string]interface{})
+
+	visitor, err := m.DB.CheckCreateLogin(email, uid)
+	if err != nil {
+		data["error"] = "Code nicht mehr gültig. Bitte wende dich an den Vorstand!"
+	}
+
+	data["visitor"] = visitor
+
 	// send the data to the template
-	render.Template(w, r, "admin_createlogin.html", &models.TemplateData{})
+	render.Template(w, r, "admin_createlogin.html", &models.TemplateData{
+		Data: data,
+		Form: forms.New(nil),
+	})
 }
 
 // PostLogin is the post login page handler
 func (m *Repository) PostCreateLogin(w http.ResponseWriter, r *http.Request) {
 
-	//TODO create check for password strength
-
-	// prepare data to send it to the templates
-	data := make(map[string]interface{})
+	// validation
+	form := forms.New(r.PostForm)
+	form.Required("password")
+	form.Required("password_check")
+	form.IsPassword("password")
+	form.IsMatch("password_check", "password")
 
 	var visitor models.Visitor
 
 	visitor.Email = r.Form.Get("email")
 	visitor.Password = r.Form.Get("password")
+	visitor.FirstName = r.Form.Get("first_name")
+	visitor.FamilyName = r.Form.Get("family_name")
+
+	// prepare data to send it to the templates
+	data := make(map[string]interface{})
+
+	// what to do if form not valid
+	if !form.Valid() {
+		// send the data to the template
+		w.WriteHeader(http.StatusSeeOther)
+		render.Template(w, r, "admin_createlogin.html", &models.TemplateData{
+			Form: form,
+			Data: data,
+		})
+		return
+	}
 
 	hashedPassword, err := bcrypt.GenerateFromPassword(
 		[]byte(visitor.Password),
@@ -122,6 +157,7 @@ func (m *Repository) PostCreateLogin(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusSeeOther)
 		render.Template(w, r, "admin_createlogin.html", &models.TemplateData{
 			Data: data,
+			Form: form,
 		})
 		return
 	}

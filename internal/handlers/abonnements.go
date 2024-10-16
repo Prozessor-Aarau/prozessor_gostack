@@ -162,3 +162,45 @@ func (m *Repository) AbonnementsList(w http.ResponseWriter, r *http.Request) {
 		Data: data,
 	})
 }
+
+// PostAbonnementsList is the handler to get the abonnements list with filter
+func (m *Repository) PostAbonnementsList(w http.ResponseWriter, r *http.Request) {
+
+	// set initial params
+	page := 1
+	// check if a page param has been submitted and change to this value
+	if r.URL.Query().Has("page") {
+		page, _ = strconv.Atoi(r.URL.Query().Get("page"))
+	}
+	searchTerm := r.Form.Get("search_term")
+
+	form := forms.New(r.PostForm)
+	filter := models.NewAbonnementFilter(searchTerm)
+	// filter.Sort = r.Form.Get("sort")
+	// filter.SortDir = r.Form.Get("sort_dir")
+	// filter.Abo = form.BoxValue("hasabo")
+	filter.AboValidity = r.Form.Get("abovalidity")
+	// filter.Badge = form.BoxValue("badge")
+	filter.Member = form.BoxValue("member")
+	// filter.Partner = form.BoxValue("partner")
+	if r.URL.Query().Has("search") {
+		filter = models.NewAbonnementFilter(r.URL.Query().Get("search"))
+	}
+
+	abonnements, count, err := m.DB.AllAbonnements(page, filter)
+	if err != nil {
+		log.Println("could not get abonnements from DB: ", err)
+		m.App.Session.Put(r.Context(), "error", "Can't get visitors from database")
+	}
+
+	data := make(map[string]interface{})
+	data["abonnements"] = abonnements
+	data["count"] = count
+	data["pages"] = int(math.Ceil(float64(count) / 10))
+	data["onPage"] = page
+	data["filter"] = filter
+
+	render.Template(w, r, "part_abonnements_list.html", &models.TemplateData{
+		Data: data,
+	})
+}

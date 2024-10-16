@@ -407,3 +407,24 @@ func (m *postgresDBRepo) VisitorByID(id string) (models.Visitor, error) {
 
 	return v, nil
 }
+
+// CheckCreateLogin checks an email against a uid to make sure this visitor
+// can create a new login
+func (m *postgresDBRepo) CheckCreateLogin(email, uid string) (models.Visitor, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	var visitor models.Visitor
+
+	query := `SELECT first_name, family_name, email
+  FROM visitors WHERE email = $1 AND register_code = $2`
+
+	row := m.DB.QueryRowContext(ctx, query, email, uid)
+
+	err := row.Scan(&visitor.FirstName, &visitor.FamilyName, &visitor.Email)
+	if err != nil {
+		return visitor, err
+	}
+
+	return visitor, nil
+}

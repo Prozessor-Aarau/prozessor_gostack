@@ -91,6 +91,7 @@ func routes(app *config.AppConfig) http.Handler {
 			// abonnements
 			mux.Get("/abonnements", handlers.Repo.Abonnements)
 			mux.Get("/abonnements/list", handlers.Repo.AbonnementsList)
+			mux.Post("/abonnements/list", handlers.Repo.PostAbonnementsList)
 			mux.Get("/abonnements/create", handlers.Repo.AbonnementCreate)
 			mux.Post("/abonnements/create", handlers.Repo.PostAbonnementCreate)
 			mux.Get("/abonnements/create/pricing/{id}", handlers.Repo.AbonnementCreatePrice)
