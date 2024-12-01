@@ -13,6 +13,65 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+// Login is the login page handler
+func (m *Repository) Login(w http.ResponseWriter, r *http.Request) {
+	// send the data to the template
+	render.Template(w, r, "login.html", &models.TemplateData{
+		Form: forms.New(nil),
+	})
+}
+
+// PostLogin is the home page handler
+func (m *Repository) PostLogin(w http.ResponseWriter, r *http.Request) {
+	_ = m.App.Session.RenewToken(r.Context())
+
+	err := r.ParseForm()
+	if err != nil {
+		log.Println(err)
+	}
+
+	email := r.Form.Get("email")
+	password := r.Form.Get("password")
+
+	// prepare data to send it to the templates
+	data := make(map[string]interface{})
+
+	form := forms.New(r.PostForm)
+	form.Required("email", "password")
+	form.IsEmail("email")
+
+	data["email"] = email
+	if !form.Valid() {
+		render.Template(w, r, "login.html", &models.TemplateData{
+			Form: form,
+			Data: data,
+		})
+		return
+	}
+
+	id, visitor, err := m.DB.Authenticate(email, password)
+	if err != nil {
+		log.Println(err)
+
+		// what to do if form not valid
+		data["error"] = "E-Mail Adresse oder Passwort falsch"
+
+		// send the data to the template
+		w.WriteHeader(http.StatusSeeOther)
+		render.Template(w, r, "login.html", &models.TemplateData{
+			Form: form,
+			Data: data,
+		})
+		return
+	}
+
+	m.App.Session.Put(r.Context(), "user_id", id)
+	m.App.Session.Put(r.Context(), "visitor", visitor)
+	m.App.Session.Put(r.Context(), "access", visitor.RoleID)
+	m.App.Session.Put(r.Context(), "flash", "Logged in successfully")
+	http.Redirect(w, r, "/admin", http.StatusSeeOther)
+}
+
 // CreateLoginMail creates a new UUID saves it to the db and sends a Mail with
 // a link to the new user
 func (m *Repository) CreateLoginMail(w http.ResponseWriter, r *http.Request) {

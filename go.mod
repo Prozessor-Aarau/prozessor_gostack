@@ -15,6 +15,7 @@ require (
 )
 
 require (
+	github.com/a-h/templ v0.2.793 // indirect
 	github.com/ebfe/scard v0.0.0-20230420082256-7db3f9b7c8a7 // indirect
 	github.com/go-test/deep v1.1.1 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect

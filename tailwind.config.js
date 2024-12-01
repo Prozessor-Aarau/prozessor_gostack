@@ -1,5 +1,8 @@
 /** @type {import('tailwindcss').Config} */
-import { iconsPlugin, getIconCollections } from "@egoist/tailwindcss-icons";
+const {
+  iconsPlugin,
+  getIconCollections,
+} = require("@egoist/tailwindcss-icons");
 
 module.exports = {
   content: ["./templates/**/*.{html,js}"],
@@ -44,17 +47,17 @@ module.exports = {
           ...require("daisyui/src/theming/themes")["dracula"],
 
           // using colors from gruvbox
-          primary: "#83a598", // blue
-          secondary: "#d3869b", // purple
-          accent: "#8ec07c", // aqua
-          neutral: "#1d2021", // crust
-          "neutral-content": "ebdbb2", // fg-color
-          "base-100": "#282828", // base
-          "base-content": "#ebdbb2", // base-content
-          info: "#85c1dc", // sapphire
-          success: "#b8bb26", // green
-          warning: "#fabd2f", // yellow
-          error: "#fb4936", // red
+          // primary: "#83a598", // blue
+          // secondary: "#d3869b", // purple
+          // accent: "#8ec07c", // aqua
+          // neutral: "#1d2021", // crust
+          // "neutral-content": "ebdbb2", // fg-color
+          // "base-100": "#282828", // base
+          // "base-content": "#ebdbb2", // base-content
+          // info: "#85c1dc", // sapphire
+          // success: "#b8bb26", // green
+          // warning: "#fabd2f", // yellow
+          // error: "#fb4936", // red
         },
       },
     ],
