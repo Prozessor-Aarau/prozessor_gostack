@@ -5,7 +5,7 @@ tmp_dir = "tmp"
 [build]
   args_bin = []
   bin = "./tmp/main"
-  cmd = "templ generate && npm run build && go build -C ./cmd -o ../tmp/main ."
+  cmd = "npm run build && templ generate && go build -C ./cmd -o ../tmp/main ."
   delay = 1000
   exclude_dir = ["assets", "tmp", "vendor", "testdata", "node_modules"]
   exclude_file = []

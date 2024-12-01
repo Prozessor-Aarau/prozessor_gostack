@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"net/http"
 
+	"github.com/a-h/templ"
 	"github.com/faebut/prozessor_gostack/internal/config"
 	"github.com/faebut/prozessor_gostack/internal/driver"
 	"github.com/faebut/prozessor_gostack/internal/models"
@@ -34,12 +35,31 @@ func NewHandlers(r *Repository) {
 	Repo = r
 }
 
-func MakeHandler(h func(http.ResponseWriter, *http.Request) error) http.HandlerFunc {
+// Make creates a http.HandlerFunction and deals with errors
+func Make(h func(http.ResponseWriter, *http.Request) error) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if err := h(w, r); err != nil {
 			slog.Error("internal server error", "err", err, "path", r.URL.Path)
 		}
 	}
+}
+
+// TODO rename to render, as soon als render package is not needed anymore
+// render helps rendering the templ and adds default data
+func rendering(w http.ResponseWriter, r *http.Request, component templ.Component) error {
+	return component.Render(r.Context(), w)
+}
+
+// hxRedirect makes a client side redirect through HTMX
+// to override targets to full page
+func hxRedirect(w http.ResponseWriter, r *http.Request, to string) error {
+	if len(r.Header.Get("HX-Request")) > 0 {
+		w.Header().Set("HX-Redirect", to)
+		w.WriteHeader(http.StatusSeeOther)
+		return nil
+	}
+	http.Redirect(w, r, to, http.StatusSeeOther)
+	return nil
 }
 
 // Home is the home page handler

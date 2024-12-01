@@ -10,27 +10,18 @@ import (
 	"github.com/faebut/prozessor_gostack/internal/forms"
 	"github.com/faebut/prozessor_gostack/internal/models"
 	"github.com/faebut/prozessor_gostack/internal/render"
-	"github.com/faebut/prozessor_gostack/view/login"
+	"github.com/faebut/prozessor_gostack/view/auth"
 	"golang.org/x/crypto/bcrypt"
 )
 
-// HandleLoginIndex is the login page handler
+// GetLoginIndex is the login index page handler
 func (m *Repository) HandleLoginIndex(w http.ResponseWriter, r *http.Request) error {
-	// send the data to the template
-	login.Index().Render(r.Context(), w)
-	return nil
+	// render the template
+	return rendering(w, r, auth.Login())
 }
 
-// Login is the login page handler
-func (m *Repository) Login(w http.ResponseWriter, r *http.Request) {
-	// send the data to the template
-	render.Template(w, r, "login.html", &models.TemplateData{
-		Form: forms.New(nil),
-	})
-}
-
-// PostLogin is the home page handler
-func (m *Repository) PostLogin(w http.ResponseWriter, r *http.Request) {
+// HandleLoginCreate handles the login form post request
+func (m *Repository) HandleLoginCreate(w http.ResponseWriter, r *http.Request) error {
 	_ = m.App.Session.RenewToken(r.Context())
 
 	err := r.ParseForm()
@@ -50,34 +41,42 @@ func (m *Repository) PostLogin(w http.ResponseWriter, r *http.Request) {
 
 	data["email"] = email
 	if !form.Valid() {
-		render.Template(w, r, "login.html", &models.TemplateData{
-			Form: form,
-			Data: data,
-		})
-		return
+		return rendering(w, r, auth.LoginForm(
+			auth.LoginParams{
+				Email:    email,
+				Password: password,
+			},
+			auth.LoginErrors{
+				Email:    form.Errors.Get("email"),
+				Password: form.Errors.Get("password"),
+			},
+		))
 	}
 
 	id, visitor, err := m.DB.Authenticate(email, password)
 	if err != nil {
 		log.Println(err)
 
-		// what to do if form not valid
-		data["error"] = "E-Mail Adresse oder Passwort falsch"
-
 		// send the data to the template
-		w.WriteHeader(http.StatusSeeOther)
-		render.Template(w, r, "login.html", &models.TemplateData{
-			Form: form,
-			Data: data,
-		})
-		return
+		return rendering(w, r, auth.LoginForm(
+			auth.LoginParams{
+				Email:    email,
+				Password: password,
+			},
+			auth.LoginErrors{
+				Email:              form.Errors.Get("email"),
+				Password:           form.Errors.Get("password"),
+				InvalidCredentials: "E-Mail Adresse oder Passwort ist falsch",
+			},
+		))
 	}
 
 	m.App.Session.Put(r.Context(), "user_id", id)
 	m.App.Session.Put(r.Context(), "visitor", visitor)
 	m.App.Session.Put(r.Context(), "access", visitor.RoleID)
 	m.App.Session.Put(r.Context(), "flash", "Logged in successfully")
-	http.Redirect(w, r, "/admin", http.StatusSeeOther)
+
+	return hxRedirect(w, r, "/admin")
 }
 
 // CreateLoginMail creates a new UUID saves it to the db and sends a Mail with
