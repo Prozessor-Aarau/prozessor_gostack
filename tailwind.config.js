@@ -5,7 +5,7 @@ const {
 } = require("@egoist/tailwindcss-icons");
 
 module.exports = {
-  content: ["./templates/**/*.{html,js}"],
+  content: ["./templates/**/*.{html,js}", "./view/**/*.templ", "./**/*.templ"],
   theme: {
     extend: {
       gridTemplateColumns: {

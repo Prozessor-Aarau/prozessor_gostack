@@ -25,7 +25,7 @@ func routes(app *config.AppConfig) http.Handler {
 	mux.Get("/", handlers.Repo.Home)
 	mux.Get("/register", handlers.Repo.Register)
 	mux.Post("/register", handlers.Repo.PostRegister)
-	mux.Get("/login", handlers.Repo.Login)
+	mux.Get("/login", handlers.MakeHandler(handlers.Repo.HandleLoginIndex))
 	mux.Post("/login", handlers.Repo.PostLogin)
 
 	// for creating logins

@@ -10,8 +10,16 @@ import (
 	"github.com/faebut/prozessor_gostack/internal/forms"
 	"github.com/faebut/prozessor_gostack/internal/models"
 	"github.com/faebut/prozessor_gostack/internal/render"
+	"github.com/faebut/prozessor_gostack/view/login"
 	"golang.org/x/crypto/bcrypt"
 )
+
+// HandleLoginIndex is the login page handler
+func (m *Repository) HandleLoginIndex(w http.ResponseWriter, r *http.Request) error {
+	// send the data to the template
+	login.Index().Render(r.Context(), w)
+	return nil
+}
 
 // Login is the login page handler
 func (m *Repository) Login(w http.ResponseWriter, r *http.Request) {

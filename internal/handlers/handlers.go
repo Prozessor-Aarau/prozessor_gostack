@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"log"
+	"log/slog"
 	"net/http"
 
 	"github.com/faebut/prozessor_gostack/internal/config"
@@ -31,6 +32,14 @@ func NewRepo(a *config.AppConfig, db *driver.DB) *Repository {
 // NewHandlers sets the repository for the handlers
 func NewHandlers(r *Repository) {
 	Repo = r
+}
+
+func MakeHandler(h func(http.ResponseWriter, *http.Request) error) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if err := h(w, r); err != nil {
+			slog.Error("internal server error", "err", err, "path", r.URL.Path)
+		}
+	}
 }
 
 // Home is the home page handler

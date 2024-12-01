@@ -5,7 +5,7 @@ tmp_dir = "tmp"
 [build]
   args_bin = []
   bin = "./tmp/main"
-  cmd = "templ generate && go build -C ./cmd -o ../tmp/main ."
+  cmd = "templ generate && npm run build && go build -C ./cmd -o ../tmp/main ."
   delay = 1000
   exclude_dir = ["assets", "tmp", "vendor", "testdata", "node_modules"]
   exclude_file = []
@@ -21,7 +21,7 @@ tmp_dir = "tmp"
   poll = false
   poll_interval = 0
   post_cmd = []
-  pre_cmd = ["npm run build"]
+  pre_cmd = []
   rerun = false
   rerun_delay = 500
   send_interrupt = false
