@@ -9,19 +9,16 @@ import (
 	"github.com/faebut/prozessor_gostack/internal/forms"
 	"github.com/faebut/prozessor_gostack/internal/models"
 	"github.com/faebut/prozessor_gostack/view/register"
-	"github.com/justinas/nosurf"
 )
 
 // HandleRegisterIndex handles the Register Page
 func (m *Repository) HandleRegisterIndex(w http.ResponseWriter, r *http.Request) error {
-	CSRFToken := nosurf.Token(r)
 	// render the template
-	return rendering(w, r, register.Register(CSRFToken))
+	return rendering(w, r, register.Register())
 }
 
 // PostRegister is the post registration handler
 func (m *Repository) HandleRegisterCreate(w http.ResponseWriter, r *http.Request) error {
-	CSRFToken := nosurf.Token(r)
 	err := r.ParseForm()
 	if err != nil {
 		log.Println(err)
@@ -94,7 +91,6 @@ func (m *Repository) HandleRegisterCreate(w http.ResponseWriter, r *http.Request
 				City:       form.Errors.Get("city"),
 				Consent:    form.Errors.Get("consent"),
 			},
-			CSRFToken,
 		))
 	}
 

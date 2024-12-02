@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"log"
 	"log/slog"
 	"net/http"
@@ -11,6 +12,7 @@ import (
 	"github.com/faebut/prozessor_gostack/internal/models"
 	"github.com/faebut/prozessor_gostack/internal/render"
 	"github.com/faebut/prozessor_gostack/internal/repository"
+	"github.com/justinas/nosurf"
 )
 
 // Repo the repository used by the handlers
@@ -47,7 +49,9 @@ func Make(h func(http.ResponseWriter, *http.Request) error) http.HandlerFunc {
 // TODO rename to render, as soon als render package is not needed anymore
 // render helps rendering the templ and adds default data
 func rendering(w http.ResponseWriter, r *http.Request, component templ.Component) error {
-	return component.Render(r.Context(), w)
+	// set nosurf Token in new context with value
+	ctx := context.WithValue(r.Context(), "csrf.Token", nosurf.Token(r))
+	return component.Render(ctx, w)
 }
 
 // hxRedirect makes a client side redirect through HTMX

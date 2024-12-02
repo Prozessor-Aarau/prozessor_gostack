@@ -1,0 +1,5 @@
+package ui
+
+templ CSRF() {
+<input type="hidden" name="csrf_token" value={ ctx.Value("csrf.Token").(string) } />
+}

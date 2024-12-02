@@ -1,393 +1,353 @@
 package register
 
 import (
-	"github.com/faebut/prozessor_gostack/internal/render"
-	"github.com/faebut/prozessor_gostack/view/layout"
-	"time"
+"github.com/faebut/prozessor_gostack/internal/render"
+"github.com/faebut/prozessor_gostack/view/layout"
+"github.com/faebut/prozessor_gostack/view/ui"
+"time"
 )
 
-templ Register(CSRFToken string) {
-	@layout.App(false) {
-		<div class="prose p-4 container mx-auto flex flex-col gap-2 w-11/12 max-w-4xl">
-			<h2 class="mx-auto pt-6">Ich registriere mich im Prozessor</h2>
-			<!-- start of Form -->
-			@RegisterForm(RegisterParams{Newsletter: true}, RegisterErrors{}, CSRFToken)
-			@RegisterModal()
-		</div>
-	}
+templ Register() {
+@layout.App(false) {
+<div class="prose p-4 container mx-auto flex flex-col gap-2 w-11/12 max-w-4xl">
+  <h2 class="mx-auto pt-6">Ich registriere mich im Prozessor</h2>
+  <!-- start of Form -->
+  @RegisterForm(RegisterParams{Newsletter: true}, RegisterErrors{})
+  @RegisterModal()
+</div>
+}
 }
 
 templ RegisterModal() {
-	<!-- Modal Box -->
-	<input type="checkbox" id="my_modal_6" class="modal-toggle"/>
-	<div class="modal prose" role="dialog">
-		<div class="modal-box">
-			<h2 class="font-bold mt-0 text-lg">Nutzungsreglement</h2>
-			<h4>Verhalten allgemein</h4>
-			<p>
-				Der Verein Prozessor versteht sich als diskriminierungsfreien Ort. Äusserungen, die Besucher*innen in
-				ihrer
-				Menschenwürde herabsetzen, werden nicht toleriert und führen gegebenenfalls zu einem Hausverbot. Dazu
-				gehören unter anderem sexistische und rassistische Äusserungen. Die Konsumation von Drogen/Alkohol im
-				Prozessor ist während den Öffnungszeiten verboten.
-			</p>
-			<h4>Zugang/Preise</h4>
-			<p>
-				Die Werkstätten und Ateliers des Prozessors stehen während den Öffnungszeiten allen Besuchenden offen.
-				Vor
-				der Nutzung ist eine Gebühr gemäss der aktuellen Preisliste zu entrichten. Die Nutzungsgebühr berechtigt
-				zur
-				Nutzung aller Werkstätten und Ateliers, sofern sie nicht durch andere Besucher*innen besetzt sind.
-			</p>
-			<h4>Kenntnisse für die Nutzung</h4>
-			<p>
-				Die Besucher*innen verfügen grundsätzlich über alle zur Benutzung der bereitgestellten Gerätschaften und
-				Werkzeuge erforderlichen Kenntnisse. Spezielle Kenntnisse in einzelnen Bereichen können sich
-				Besucher*innen
-				in Kursen und Workshops aneignen. Die Mitglieder des Vereins Prozessor sowie Helfende stehen für
-				allfällige
-				Fragen zu den Arbeitsplätzen und Gerätschaften während den Öffnungszeiten zur Verfügung.
-			</p>
-			<h4>Besondere Geräte</h4>
-			<p>
-				Bei Maschinen, die besondere Kenntnisse erfordern und/oder gefährlich sind, ist eine separate Schulung am
-				Gerät vor der Nutzung erforderlich. Diese Maschinen sind entsprechend gekennzeichnet.
-			</p>
-			<h4>Material</h4>
-			<p>
-				Alle Materialien für die beabsichtigte Nutzung sind von den Besucher*innen grundsätzlich selber
-				mitzubringen. Der Verein Prozessor verkauft gewisse Werkstoffe sowie Verbrauchsmaterial wie Schrauben oder
-				ähnliches gemäss der Materialpreisliste.
-			</p>
-			<h4>Sicherheit</h4>
-			<p>
-				Die Besucher*innen tragen während der Nutzung im Verein Prozessor angemessene Arbeitskleidung sowie feste
-				Schuhe. Zudem verwenden sie die am jeweiligen Arbeitsplatz vorgeschriebene Schutzausrüstung wie
-				Handschuhe,
-				Helm, Schutzbrille, Atemmaske usw. Die Besucher*innen verhalten sich am Arbeitsplatz so, dass sie andere
-				nicht gefährden.
-			</p>
-			<h4>Verhalten am Arbeitsplatz</h4>
-			<p>
-				Der Arbeitsplatz ist in aufgeräumten und sauberen Zustand zu verlassen. Die Besucher*innen versorgen die
-				gebrauchten Werkzeuge/Gerätschaften an deren Platz. Materialresten werden an den entsprechenden Orten
-				entsorgt.
-			</p>
-			<h4>Versicherung</h4>
-			<p>
-				Die Versicherung ist grundsätzlich Sache der Besucher*innen. Die Haftung durch den Verein Prozessor wird
-				entsprechend dem Abschnitt «Haftungsausschluss» ausgeschlossen.
-			</p>
-			<div class="modal-action">
-				<label for="my_modal_6" class="btn btn-primary">Schliessen!</label>
-			</div>
-		</div>
-	</div>
+<!-- Modal Box -->
+<input type="checkbox" id="my_modal_6" class="modal-toggle" />
+<div class="modal prose" role="dialog">
+  <div class="modal-box">
+    <h2 class="font-bold mt-0 text-lg">Nutzungsreglement</h2>
+    <h4>Verhalten allgemein</h4>
+    <p>
+      Der Verein Prozessor versteht sich als diskriminierungsfreien Ort. Äusserungen, die Besucher*innen in
+      ihrer
+      Menschenwürde herabsetzen, werden nicht toleriert und führen gegebenenfalls zu einem Hausverbot. Dazu
+      gehören unter anderem sexistische und rassistische Äusserungen. Die Konsumation von Drogen/Alkohol im
+      Prozessor ist während den Öffnungszeiten verboten.
+    </p>
+    <h4>Zugang/Preise</h4>
+    <p>
+      Die Werkstätten und Ateliers des Prozessors stehen während den Öffnungszeiten allen Besuchenden offen.
+      Vor
+      der Nutzung ist eine Gebühr gemäss der aktuellen Preisliste zu entrichten. Die Nutzungsgebühr berechtigt
+      zur
+      Nutzung aller Werkstätten und Ateliers, sofern sie nicht durch andere Besucher*innen besetzt sind.
+    </p>
+    <h4>Kenntnisse für die Nutzung</h4>
+    <p>
+      Die Besucher*innen verfügen grundsätzlich über alle zur Benutzung der bereitgestellten Gerätschaften und
+      Werkzeuge erforderlichen Kenntnisse. Spezielle Kenntnisse in einzelnen Bereichen können sich
+      Besucher*innen
+      in Kursen und Workshops aneignen. Die Mitglieder des Vereins Prozessor sowie Helfende stehen für
+      allfällige
+      Fragen zu den Arbeitsplätzen und Gerätschaften während den Öffnungszeiten zur Verfügung.
+    </p>
+    <h4>Besondere Geräte</h4>
+    <p>
+      Bei Maschinen, die besondere Kenntnisse erfordern und/oder gefährlich sind, ist eine separate Schulung am
+      Gerät vor der Nutzung erforderlich. Diese Maschinen sind entsprechend gekennzeichnet.
+    </p>
+    <h4>Material</h4>
+    <p>
+      Alle Materialien für die beabsichtigte Nutzung sind von den Besucher*innen grundsätzlich selber
+      mitzubringen. Der Verein Prozessor verkauft gewisse Werkstoffe sowie Verbrauchsmaterial wie Schrauben oder
+      ähnliches gemäss der Materialpreisliste.
+    </p>
+    <h4>Sicherheit</h4>
+    <p>
+      Die Besucher*innen tragen während der Nutzung im Verein Prozessor angemessene Arbeitskleidung sowie feste
+      Schuhe. Zudem verwenden sie die am jeweiligen Arbeitsplatz vorgeschriebene Schutzausrüstung wie
+      Handschuhe,
+      Helm, Schutzbrille, Atemmaske usw. Die Besucher*innen verhalten sich am Arbeitsplatz so, dass sie andere
+      nicht gefährden.
+    </p>
+    <h4>Verhalten am Arbeitsplatz</h4>
+    <p>
+      Der Arbeitsplatz ist in aufgeräumten und sauberen Zustand zu verlassen. Die Besucher*innen versorgen die
+      gebrauchten Werkzeuge/Gerätschaften an deren Platz. Materialresten werden an den entsprechenden Orten
+      entsorgt.
+    </p>
+    <h4>Versicherung</h4>
+    <p>
+      Die Versicherung ist grundsätzlich Sache der Besucher*innen. Die Haftung durch den Verein Prozessor wird
+      entsprechend dem Abschnitt «Haftungsausschluss» ausgeschlossen.
+    </p>
+    <div class="modal-action">
+      <label for="my_modal_6" class="btn btn-primary">Schliessen!</label>
+    </div>
+  </div>
+</div>
 }
 
 type RegisterParams struct {
-	FirstName  string
-	FamilyName string
-	Birthdate  time.Time
-	Phone      string
-	Email      string
-	Address    string
-	Postcode   string
-	City       string
-	Infos      string
-	Newsletter bool
-	Consent    bool
+FirstName string
+FamilyName string
+Birthdate time.Time
+Phone string
+Email string
+Address string
+Postcode string
+City string
+Infos string
+Newsletter bool
+Consent bool
 }
 
 type RegisterErrors struct {
-	FirstName  string
-	FamilyName string
-	Birthdate  string
-	Phone      string
-	Email      string
-	Address    string
-	Postcode   string
-	City       string
-	Consent    string
+FirstName string
+FamilyName string
+Birthdate string
+Phone string
+Email string
+Address string
+Postcode string
+City string
+Consent string
 }
 
-templ RegisterForm(params RegisterParams, errors RegisterErrors, CSRFToken string) {
-	<form class="grid grid-cols-4 gap-1 sm:gap-3 overflow-y-auto p-1" hx-post="/register" hx-swap="outerHTML" novalidate>
-		<input type="hidden" name="csrf_token" value={ CSRFToken }/>
-		<label class="form-control col-span-4 md:col-span-2">
-			<div class="label">
-				<span class="label-text">Vorname <span class="text-error font-extrabold">*</span></span>
-			</div>
-			<input
-				type="text"
-				id="first_name"
-				name="first_name"
-				class={ "input input-bordered" , templ.KV("input-error",
+templ RegisterForm(params RegisterParams, errors RegisterErrors) {
+<form class="grid grid-cols-4 gap-1 sm:gap-3 overflow-y-auto p-1" hx-post="/register" hx-swap="outerHTML" novalidate>
+  @ui.CSRF()
+  <label class="form-control col-span-4 md:col-span-2">
+    <div class="label">
+      <span class="label-text">Vorname <span class="text-error font-extrabold">*</span></span>
+    </div>
+    <input type="text" id="first_name" name="first_name" class={ "input input-bordered" , templ.KV("input-error",
       len(errors.FirstName)> 0) }
-				value={ params.FirstName }
-				required
-			/>
-			if len(errors.FirstName) > 0 {
-				<div class="label">
-					<span class="label-text text-error">{ errors.FirstName }</span>
-				</div>
-			}
-		</label>
-		<label class="form-control col-span-4 md:col-span-2">
-			<div class="label">
-				<span class="label-text">Familienname <span class="text-error font-extrabold">*</span></span>
-			</div>
-			<input
-				type="text"
-				id="family_name"
-				name="family_name"
-				class={ "input input-bordered" , templ.KV("input-error",
+    value={ params.FirstName }
+    required
+    />
+    if len(errors.FirstName) > 0 {
+    <div class="label">
+      <span class="label-text text-error">{ errors.FirstName }</span>
+    </div>
+    }
+  </label>
+  <label class="form-control col-span-4 md:col-span-2">
+    <div class="label">
+      <span class="label-text">Familienname <span class="text-error font-extrabold">*</span></span>
+    </div>
+    <input type="text" id="family_name" name="family_name" class={ "input input-bordered" , templ.KV("input-error",
       len(errors.FamilyName)> 0) }
-				value={ params.FamilyName }
-				required
-			/>
-			if len(errors.FamilyName) > 0 {
-				<div class="label">
-					<span class="label-text text-error">{ errors.FamilyName }</span>
-				</div>
-			}
-		</label>
-		<label class="form-control col-span-4 sm:col-span-2 md:col-span-1">
-			<div class="label">
-				<span class="label-text">Geburtsdatum <span class="text-error font-extrabold">*</span></span>
-			</div>
-			<input
-				type="date"
-				id="birthdate"
-				name="birthdate"
-				class={ "input input-bordered" , templ.KV("input-error",
+    value={ params.FamilyName }
+    required
+    />
+    if len(errors.FamilyName) > 0 {
+    <div class="label">
+      <span class="label-text text-error">{ errors.FamilyName }</span>
+    </div>
+    }
+  </label>
+  <label class="form-control col-span-4 sm:col-span-2 md:col-span-1">
+    <div class="label">
+      <span class="label-text">Geburtsdatum <span class="text-error font-extrabold">*</span></span>
+    </div>
+    <input type="date" id="birthdate" name="birthdate" class={ "input input-bordered" , templ.KV("input-error",
       len(errors.Birthdate)> 0) }
-				if render.RealDate(params.Birthdate) {
-					value={ render.HumanDate(params.Birthdate) }
-				}
-				required
-			/>
-			if len(errors.Birthdate) > 0 {
-				<div class="label">
-					<span class="label-text text-error">{ errors.Birthdate }</span>
-				</div>
-			}
-		</label>
-		<label class="form-control col-span-4 sm:col-span-2 md:col-span-1">
-			<div class="label">
-				<span class="label-text">Telefonnummer <span class="text-error font-extrabold">**</span></span>
-			</div>
-			<input
-				type="text"
-				id="phone"
-				name="phone"
-				class={ "input input-bordered" , templ.KV("input-error",
+    if render.RealDate(params.Birthdate) {
+    value={ render.HumanDate(params.Birthdate) }
+    }
+    required
+    />
+    if len(errors.Birthdate) > 0 {
+    <div class="label">
+      <span class="label-text text-error">{ errors.Birthdate }</span>
+    </div>
+    }
+  </label>
+  <label class="form-control col-span-4 sm:col-span-2 md:col-span-1">
+    <div class="label">
+      <span class="label-text">Telefonnummer <span class="text-error font-extrabold">**</span></span>
+    </div>
+    <input type="text" id="phone" name="phone" class={ "input input-bordered" , templ.KV("input-error",
       len(errors.Phone)> 0) }
-				value={ params.Phone }
-			/>
-			if len(errors.Phone) > 0 {
-				<div class="label">
-					<span class="label-text text-error">{ errors.Phone }</span>
-				</div>
-			}
-		</label>
-		<label class="form-control col-span-4 md:col-span-2">
-			<div class="label">
-				<span class="label-text">E-Mail <span class="text-error font-extrabold">**</span></span>
-			</div>
-			<input
-				type="text"
-				id="email"
-				name="email"
-				class={ "input input-bordered" , templ.KV("input-error",
+    value={ params.Phone }
+    />
+    if len(errors.Phone) > 0 {
+    <div class="label">
+      <span class="label-text text-error">{ errors.Phone }</span>
+    </div>
+    }
+  </label>
+  <label class="form-control col-span-4 md:col-span-2">
+    <div class="label">
+      <span class="label-text">E-Mail <span class="text-error font-extrabold">**</span></span>
+    </div>
+    <input type="text" id="email" name="email" class={ "input input-bordered" , templ.KV("input-error",
       len(errors.Email)> 0) }
-				value={ params.Email }
-			/>
-			if len(errors.Email) > 0 {
-				<div class="label">
-					<span class="label-text text-error">{ errors.Email }</span>
-				</div>
-			}
-		</label>
-		<label class="form-control col-span-4 md:col-span-2">
-			<div class="label">
-				<span class="label-text">Strasse Nr. <span class="text-error font-extrabold">*</span></span>
-			</div>
-			<input
-				type="text"
-				id="address"
-				name="address"
-				class={ "input input-bordered" , templ.KV("input-error",
+    value={ params.Email }
+    />
+    if len(errors.Email) > 0 {
+    <div class="label">
+      <span class="label-text text-error">{ errors.Email }</span>
+    </div>
+    }
+  </label>
+  <label class="form-control col-span-4 md:col-span-2">
+    <div class="label">
+      <span class="label-text">Strasse Nr. <span class="text-error font-extrabold">*</span></span>
+    </div>
+    <input type="text" id="address" name="address" class={ "input input-bordered" , templ.KV("input-error",
       len(errors.Address)> 0) }
-				value={ params.Address }
-				required
-			/>
-			if len(errors.Address) > 0 {
-				<div class="label">
-					<span class="label-text text-error">{ errors.Address }</span>
-				</div>
-			}
-		</label>
-		<label class="form-control">
-			<div class="label">
-				<span class="label-text">PLZ <span class="text-error font-extrabold">*</span></span>
-			</div>
-			<input
-				type="text"
-				id="postcode"
-				name="postcode"
-				class={ "input input-bordered" , templ.KV("input-error",
+    value={ params.Address }
+    required
+    />
+    if len(errors.Address) > 0 {
+    <div class="label">
+      <span class="label-text text-error">{ errors.Address }</span>
+    </div>
+    }
+  </label>
+  <label class="form-control">
+    <div class="label">
+      <span class="label-text">PLZ <span class="text-error font-extrabold">*</span></span>
+    </div>
+    <input type="text" id="postcode" name="postcode" class={ "input input-bordered" , templ.KV("input-error",
       len(errors.Postcode)> 0) }
-				value={ params.Postcode }
-				required
-			/>
-			if len(errors.Postcode) > 0 {
-				<div class="label">
-					<span class="label-text text-error">{ errors.Postcode }</span>
-				</div>
-			}
-		</label>
-		<label class="form-control col-span-3 md:col-span-1">
-			<div class="label">
-				<span class="label-text">Ort <span class="text-error font-extrabold ">*</span></span>
-			</div>
-			<input
-				type=" text"
-				name="city"
-				id="city"
-				class={ "input input-bordered" , templ.KV("input-error", len(errors.City)>
+    value={ params.Postcode }
+    required
+    />
+    if len(errors.Postcode) > 0 {
+    <div class="label">
+      <span class="label-text text-error">{ errors.Postcode }</span>
+    </div>
+    }
+  </label>
+  <label class="form-control col-span-3 md:col-span-1">
+    <div class="label">
+      <span class="label-text">Ort <span class="text-error font-extrabold ">*</span></span>
+    </div>
+    <input type=" text" name="city" id="city" class={ "input input-bordered" , templ.KV("input-error", len(errors.City)>
     0) }
-				value={ params.City }
-				required
-			/>
-			if len(errors.City) > 0 {
-				<div class="label">
-					<span class="label-text text-error">{ errors.City }</span>
-				</div>
-			}
-		</label>
-		<label class="form-control col-span-4">
-			<div class="label">
-				<span class="label-text">Informationen</span>
-			</div>
-			<textarea
-				id="infos"
-				name="infos"
-				class="textarea textarea-bordered h-24"
-				placeholder="Allergien, Besonderes..."
-				value={ params.Infos }
-			></textarea>
-		</label>
-		<div class="col-span-4 text-sm">
-			<span class="text-error font-extrabold">*</span> diese Felder sind zwingend
-			auszufüllen
-		</div>
-		<div class="col-span-4 text-sm">
-			<span class="text-error font-extrabold">**</span> mindestens eine Angabe nötig
-			(entweder/oder)
-		</div>
-		<!-- start of information -->
-		<div class="join join-vertical w-full my-4 col-span-4">
-			<div class="collapse collapse-arrow join-item border border-base-content border-opacity-20 ">
-				<input type="checkbox" name="my-accordion-4"/>
-				<h4 class="collapse-title  m-0 p-4">Erklärung der Besucher*innen</h4>
-				<div class="collapse-content">
-					<p>Ich erkläre hiermit dass ...</p>
-					<ol class="list-decimal">
-						<li>
-							ich das Angebot des Vereins Prozessor freiwillig, auf eigene Verantwortung und auf eigenes Risiko
-							nutze.
-						</li>
-						<li>
-							ich über alle notwendigen Kenntnisse zur Nutzung der Gerätschaften/Werkzeuge des Vereins Prozessor
-							verfüge, beziehungsweise mich vor der Nutzung entsprechend instruieren lasse.
-						</li>
-						<li>
-							ich während der Nutzung die Sicherheitsvorkehrungen der Gerätschaften/Werkzeuge einhalte und die
-							notwendige Schutzkleidung trage.
-						</li>
-						<li>
-							ich mich in einem meinen Tätigkeiten im Prozessor angemessenen, das heisst guten, seelischen und
-							körperlichen Zustand befinde.
-						</li>
-						<li>
-							ich zum Zeitpunkt meiner Tätigkeit im Prozessor nicht unter dem Einfluss von Medikamenten oder
-							Drogen/Alkohol stehe.
-						</li>
-						<li>
-							ich das Nutzungsreglement gelesen und verstanden habe und befolgen werde.
-						</li>
-					</ol>
-				</div>
-			</div>
-			<div class="collapse collapse-arrow join-item border border-base-content border-opacity-20 ">
-				<input type="checkbox" name="my-accordion-4"/>
-				<h4 class="collapse-title m-0 p-4">Haftungsausschluss</h4>
-				<div class="collapse-content">
-					<ol>
-						<li>
-							Mir ist bekannt, dass ich mit der Ausübung meiner Tätigkeiten im Prozessor die einhergehenden
-							allgemeinen Risiken selbst zu tragen und für die daraus entstehenden Sach- und Personenschäden
-							grundsätzlich selbst aufzukommen habe.
-						</li>
-						<li>
-							Jegliche Haftungsansprüche gegenüber dem Verein Prozessor, die auf unsachgemässe Nutzung der
-							Gerätschaften/Werkzeuge zurückzuführen sind, schliesse ich hiermit aus.
-						</li>
-						<li>
-							Jegliche Haftungsansprüche gegenüber dem Verein Prozessor, die auf Nichtbeachtung der unter
-							«Erklärung
-							der Besucher*innen» aufgeführten Punkte zurückzuführen sind, schliesse ich hiermit aus.
-						</li>
-					</ol>
-				</div>
-			</div>
-		</div>
-		<div class="col-span-4">
-			<!-- The button to open modal -->
-			<label for="my_modal_6" class="btn btn-secondary btn-block my-4">
-				<span class="i-mdi-file-document"></span>Nutzungsreglement anzeigen
-			</label>
-			<label class="label cursor-pointer">
-				<input type="checkbox" id="newsletter" name="newsletter" class="checkbox mr-4" if params.Newsletter {
-	checked
-}/>
-				<span class="label-text">
-					Ja, ich möchte regelmässig den Prozessor Newsletter erhalten. Ich kann diesen
-					jederzeit wieder abbestellen.
-				</span>
-			</label>
-			<label class="label cursor-pointer">
-				<input type="checkbox" id="consent" name="consent" class="checkbox mr-4" if params.Consent {
-	checked
-}/>
-				<span class={ "label-text" , templ.KV("text-error", len(errors.Consent)> 0) }>
-					Hiermit bestätige ich, dass ich mit dem
-					Nutzungsreglement des Vereins
-					Prozessor
-					einverstanden bin und der obigen Erklärungen sowie dem Haftungsausschluss zustimme.
-				</span>
-			</label>
-			if len(errors.Consent) > 0 {
-				<div class="label">
-					<span class="label-text text-error">{ errors.Consent }</span>
-				</div>
-			}
-		</div>
-		<input type="submit" class="btn btn-success col-span-4" value="Registrieren"/>
-	</form>
+    value={ params.City }
+    required
+    />
+    if len(errors.City) > 0 {
+    <div class="label">
+      <span class="label-text text-error">{ errors.City }</span>
+    </div>
+    }
+  </label>
+  <label class="form-control col-span-4">
+    <div class="label">
+      <span class="label-text">Informationen</span>
+    </div>
+    <textarea id="infos" name="infos" class="textarea textarea-bordered h-24" placeholder="Allergien, Besonderes..."
+      value={ params.Infos }></textarea>
+  </label>
+  <div class="col-span-4 text-sm">
+    <span class="text-error font-extrabold">*</span> diese Felder sind zwingend
+    auszufüllen
+  </div>
+  <div class="col-span-4 text-sm">
+    <span class="text-error font-extrabold">**</span> mindestens eine Angabe nötig
+    (entweder/oder)
+  </div>
+  <!-- start of information -->
+  <div class="join join-vertical w-full my-4 col-span-4">
+    <div class="collapse collapse-arrow join-item border border-base-content border-opacity-20 ">
+      <input type="checkbox" name="my-accordion-4" />
+      <h4 class="collapse-title  m-0 p-4">Erklärung der Besucher*innen</h4>
+      <div class="collapse-content">
+        <p>Ich erkläre hiermit dass ...</p>
+        <ol class="list-decimal">
+          <li>
+            ich das Angebot des Vereins Prozessor freiwillig, auf eigene Verantwortung und auf eigenes Risiko
+            nutze.
+          </li>
+          <li>
+            ich über alle notwendigen Kenntnisse zur Nutzung der Gerätschaften/Werkzeuge des Vereins Prozessor
+            verfüge, beziehungsweise mich vor der Nutzung entsprechend instruieren lasse.
+          </li>
+          <li>
+            ich während der Nutzung die Sicherheitsvorkehrungen der Gerätschaften/Werkzeuge einhalte und die
+            notwendige Schutzkleidung trage.
+          </li>
+          <li>
+            ich mich in einem meinen Tätigkeiten im Prozessor angemessenen, das heisst guten, seelischen und
+            körperlichen Zustand befinde.
+          </li>
+          <li>
+            ich zum Zeitpunkt meiner Tätigkeit im Prozessor nicht unter dem Einfluss von Medikamenten oder
+            Drogen/Alkohol stehe.
+          </li>
+          <li>
+            ich das Nutzungsreglement gelesen und verstanden habe und befolgen werde.
+          </li>
+        </ol>
+      </div>
+    </div>
+    <div class="collapse collapse-arrow join-item border border-base-content border-opacity-20 ">
+      <input type="checkbox" name="my-accordion-4" />
+      <h4 class="collapse-title m-0 p-4">Haftungsausschluss</h4>
+      <div class="collapse-content">
+        <ol>
+          <li>
+            Mir ist bekannt, dass ich mit der Ausübung meiner Tätigkeiten im Prozessor die einhergehenden
+            allgemeinen Risiken selbst zu tragen und für die daraus entstehenden Sach- und Personenschäden
+            grundsätzlich selbst aufzukommen habe.
+          </li>
+          <li>
+            Jegliche Haftungsansprüche gegenüber dem Verein Prozessor, die auf unsachgemässe Nutzung der
+            Gerätschaften/Werkzeuge zurückzuführen sind, schliesse ich hiermit aus.
+          </li>
+          <li>
+            Jegliche Haftungsansprüche gegenüber dem Verein Prozessor, die auf Nichtbeachtung der unter
+            «Erklärung
+            der Besucher*innen» aufgeführten Punkte zurückzuführen sind, schliesse ich hiermit aus.
+          </li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <div class="col-span-4">
+    <!-- The button to open modal -->
+    <label for="my_modal_6" class="btn btn-secondary btn-block my-4">
+      <span class="i-mdi-file-document"></span>Nutzungsreglement anzeigen
+    </label>
+    <label class="label cursor-pointer">
+      <input type="checkbox" id="newsletter" name="newsletter" class="checkbox mr-4" if params.Newsletter { checked } />
+      <span class="label-text">
+        Ja, ich möchte regelmässig den Prozessor Newsletter erhalten. Ich kann diesen
+        jederzeit wieder abbestellen.
+      </span>
+    </label>
+    <label class="label cursor-pointer">
+      <input type="checkbox" id="consent" name="consent" class="checkbox mr-4" if params.Consent { checked } />
+      <span class={ "label-text" , templ.KV("text-error", len(errors.Consent)> 0) }>
+        Hiermit bestätige ich, dass ich mit dem
+        Nutzungsreglement des Vereins
+        Prozessor
+        einverstanden bin und der obigen Erklärungen sowie dem Haftungsausschluss zustimme.
+      </span>
+    </label>
+    if len(errors.Consent) > 0 {
+    <div class="label">
+      <span class="label-text text-error">{ errors.Consent }</span>
+    </div>
+    }
+  </div>
+  <input type="submit" class="btn btn-success col-span-4" value="Registrieren" />
+</form>
 }
 
 templ RegisterSuccess(name string) {
-	@layout.App(false) {
-		<div class="prose p-4 container mx-auto flex flex-col gap-2 w-11/12 max-w-4xl">
-			<h2 class="mx-auto pt-6">Willkommen beim Prozessor { name }</h2>
-			<p>
-				Du kannst dich jetzt bei einer Aufsichtsperson anmelden. Deine Registration ist für alle künftigen Besuche im
-				Prozessor gültig.
-			</p>
-			<p>Besuch unsere Webseite für mehr Infos zum Prozessor</p>
-			<a href="https://prozessor-aarau.ch" target="_top" class=" mx-auto btn btn-success">zur Prozessor-Webseite</a>
-		</div>
-	}
+@layout.App(false) {
+<div class="prose p-4 container mx-auto flex flex-col gap-2 w-11/12 max-w-4xl">
+  <h2 class="mx-auto pt-6">Willkommen beim Prozessor { name }</h2>
+  <p>
+    Du kannst dich jetzt bei einer Aufsichtsperson anmelden. Deine Registration ist für alle künftigen Besuche im
+    Prozessor gültig.
+  </p>
+  <p>Besuch unsere Webseite für mehr Infos zum Prozessor</p>
+  <a href="https://prozessor-aarau.ch" target="_top" class=" mx-auto btn btn-success">zur Prozessor-Webseite</a>
+</div>
+}
 }

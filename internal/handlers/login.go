@@ -11,22 +11,18 @@ import (
 	"github.com/faebut/prozessor_gostack/internal/models"
 	"github.com/faebut/prozessor_gostack/internal/render"
 	"github.com/faebut/prozessor_gostack/view/auth"
-	"github.com/justinas/nosurf"
 	"golang.org/x/crypto/bcrypt"
 )
 
 // GetLoginIndex is the login index page handler
 func (m *Repository) HandleLoginIndex(w http.ResponseWriter, r *http.Request) error {
-	CSRFToken := nosurf.Token(r)
-
 	// render the template
-	return rendering(w, r, auth.Login(CSRFToken))
+	return rendering(w, r, auth.Login())
 }
 
 // HandleLoginCreate handles the login form post request
 func (m *Repository) HandleLoginCreate(w http.ResponseWriter, r *http.Request) error {
 	_ = m.App.Session.RenewToken(r.Context())
-	CSRFToken := nosurf.Token(r)
 
 	err := r.ParseForm()
 	if err != nil {
@@ -51,7 +47,6 @@ func (m *Repository) HandleLoginCreate(w http.ResponseWriter, r *http.Request) e
 				Email:    form.Errors.Get("email"),
 				Password: form.Errors.Get("password"),
 			},
-			CSRFToken,
 		))
 	}
 
@@ -70,7 +65,6 @@ func (m *Repository) HandleLoginCreate(w http.ResponseWriter, r *http.Request) e
 				Password:           form.Errors.Get("password"),
 				InvalidCredentials: "E-Mail Adresse oder Passwort ist falsch",
 			},
-			CSRFToken,
 		))
 	}
 
