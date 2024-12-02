@@ -13,8 +13,7 @@ func routes(app *config.AppConfig) http.Handler {
 	mux := chi.NewRouter()
 
 	mux.Use(middleware.Recoverer)
-	// TODO enable again for csrf handling
-	// mux.Use(NoSurf)
+	mux.Use(NoSurf)
 	mux.Use(SessionLoad)
 	mux.Use(middleware.Logger)
 
@@ -24,8 +23,9 @@ func routes(app *config.AppConfig) http.Handler {
 
 	// nonprotected routes
 	mux.Get("/", handlers.Repo.Home)
-	mux.Get("/register", handlers.Repo.Register)
-	mux.Post("/register", handlers.Repo.PostRegister)
+	mux.Get("/register", handlers.Make(handlers.Repo.HandleRegisterIndex))
+	mux.Post("/register", handlers.Make(handlers.Repo.HandleRegisterCreate))
+	mux.Get("/registersuccess", handlers.Make(handlers.Repo.HandleRegisterSuccess))
 	mux.Get("/login", handlers.Make(handlers.Repo.HandleLoginIndex))
 	mux.Post("/login", handlers.Make(handlers.Repo.HandleLoginCreate))
 

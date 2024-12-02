@@ -31,8 +31,14 @@ func SessionLoad(next http.Handler) http.Handler {
 func Auth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if !helpers.IsAuthenticated(r) {
-			session.Put(r.Context(), "error", "Log in first")
-			http.Redirect(w, r, "/login", http.StatusSeeOther)
+			to := "/login"
+			// check if htmx request to ensure full page reload
+			if len(r.Header.Get("HX-Request")) > 0 {
+				w.Header().Set("HX-Redirect", to)
+				w.WriteHeader(http.StatusSeeOther)
+				return
+			}
+			http.Redirect(w, r, to, http.StatusSeeOther)
 			return
 		}
 		next.ServeHTTP(w, r)

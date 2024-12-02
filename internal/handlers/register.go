@@ -8,41 +8,36 @@ import (
 
 	"github.com/faebut/prozessor_gostack/internal/forms"
 	"github.com/faebut/prozessor_gostack/internal/models"
-	"github.com/faebut/prozessor_gostack/internal/render"
+	"github.com/faebut/prozessor_gostack/view/register"
+	"github.com/justinas/nosurf"
 )
 
-// Register is the register page handler
-func (m *Repository) Register(w http.ResponseWriter, r *http.Request) {
-	visitor := models.Visitor{}
-	visitor.Newsletter = true
-
-	data := make(map[string]interface{})
-	data["visitor"] = visitor
-
-	// send the data to the template
-	render.Template(w, r, "selfregister.html", &models.TemplateData{
-		Form: forms.New(nil),
-		Data: data,
-	})
+// HandleRegisterIndex handles the Register Page
+func (m *Repository) HandleRegisterIndex(w http.ResponseWriter, r *http.Request) error {
+	CSRFToken := nosurf.Token(r)
+	// render the template
+	return rendering(w, r, register.Register(CSRFToken))
 }
 
 // PostRegister is the post registration handler
-func (m *Repository) PostRegister(w http.ResponseWriter, r *http.Request) {
+func (m *Repository) HandleRegisterCreate(w http.ResponseWriter, r *http.Request) error {
+	CSRFToken := nosurf.Token(r)
 	err := r.ParseForm()
 	if err != nil {
-		m.App.Session.Put(r.Context(), "error", "kann Formular nicht verarbeiten")
-		http.Redirect(w, r, "/", http.StatusSeeOther)
-		return
+		log.Println(err)
+		// TODO better error handling
+		return nil
 	}
 
-	var visitor models.Visitor
+	var visitor register.RegisterParams
 
 	bdate := r.Form.Get("birthdate")
 	if len(bdate) > 0 {
 		visitor.Birthdate, err = time.Parse("2006-01-02", bdate)
 		if err != nil {
 			log.Println("Error parsing birthdate: ", err)
-			return
+			// TODO better error handling
+			return nil
 		}
 	}
 
@@ -74,8 +69,8 @@ func (m *Repository) PostRegister(w http.ResponseWriter, r *http.Request) {
 	visitor.Newsletter = form.BoxValue("newsletter")
 
 	// check consent box and add error if necessary
-	consent := form.BoxValue("consent")
-	if !consent {
+	visitor.Consent = form.BoxValue("consent")
+	if !visitor.Consent {
 		form.Errors.Add("consent", "Checkbox muss ausgewählt werden")
 	}
 
@@ -85,30 +80,56 @@ func (m *Repository) PostRegister(w http.ResponseWriter, r *http.Request) {
 
 	// what to do if form not valid
 	if !form.Valid() {
-		data["consent"] = consent
-
-		// send the data to the template
-		w.WriteHeader(http.StatusSeeOther)
-		render.Template(w, r, "selfregister.html", &models.TemplateData{
-			Form: form,
-			Data: data,
-		})
-		return
+		// return form with errors and allready filled fields
+		return rendering(w, r, register.RegisterForm(
+			visitor,
+			register.RegisterErrors{
+				FirstName:  form.Errors.Get("first_name"),
+				FamilyName: form.Errors.Get("family_name"),
+				Birthdate:  form.Errors.Get("birthdate"),
+				Phone:      form.Errors.Get("phone"),
+				Email:      form.Errors.Get("email"),
+				Address:    form.Errors.Get("address"),
+				Postcode:   form.Errors.Get("postcode"),
+				City:       form.Errors.Get("city"),
+				Consent:    form.Errors.Get("consent"),
+			},
+			CSRFToken,
+		))
 	}
 
 	// what to do if form valid
-	newVisitorID, err := m.DB.CreateVisitor(visitor)
+	// post new visitor to db
+	newVisitorID, err := m.DB.CreateVisitor(models.Visitor{
+		FirstName:  visitor.FirstName,
+		FamilyName: visitor.FamilyName,
+		Birthdate:  visitor.Birthdate,
+		Phone:      visitor.Phone,
+		Email:      visitor.Email,
+		Address:    visitor.Address,
+		Postcode:   visitor.Postcode,
+		City:       visitor.City,
+		Infos:      visitor.Infos,
+		Newsletter: visitor.Newsletter,
+	})
 	if err != nil {
 		log.Println(err)
+		// TODO better error handling
 		http.Redirect(w, r, "/", http.StatusSeeOther)
-		return
+		return nil
 	}
 
 	log.Println("Visitor inserted, new ID: ", newVisitorID)
 	// send the data to the template
-	w.WriteHeader(http.StatusSeeOther)
-	render.Template(w, r, "selfregistersuccess.html", &models.TemplateData{
-		Data: data,
-	})
 
+	return hxRedirect(w, r, "/registersuccess?name="+visitor.FirstName)
+}
+
+// HandleRegisterSuccess handles the Register Success Page
+func (m *Repository) HandleRegisterSuccess(w http.ResponseWriter, r *http.Request) error {
+	// get param from Query to pass it on
+	name := r.URL.Query().Get("name")
+
+	// render the template
+	return rendering(w, r, register.RegisterSuccess(name))
 }
