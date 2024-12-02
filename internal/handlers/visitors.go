@@ -234,6 +234,7 @@ func (m *Repository) EditVisitor(w http.ResponseWriter, r *http.Request) {
 
 // UpdateProfile updates the visitors profile
 func (m *Repository) PostEditVisitor(w http.ResponseWriter, r *http.Request) {
+	// TODO update visitor in Session to have the new values, e.g. avatar
 	// initial values
 	admin := false
 	user, ok := m.App.Session.Get(r.Context(), "visitor").(models.Visitor)

@@ -37,7 +37,7 @@ func routes(app *config.AppConfig) http.Handler {
 	mux.Route("/admin", func(mux chi.Router) {
 		mux.Use(Auth)
 
-		mux.Get("/", handlers.Repo.Admin)
+		mux.Get("/", handlers.Make(handlers.Repo.HandleAdminIndex))
 
 		mux.Get("/logout", handlers.Repo.Logout)
 		// protected routes level 1

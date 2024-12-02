@@ -1,0 +1,18 @@
+package admin
+
+import (
+	"github.com/faebut/prozessor_gostack/internal/models"
+	"github.com/faebut/prozessor_gostack/view/layout"
+	"strconv"
+)
+
+templ Admin(visitor models.Visitor) {
+	@layout.App(true, visitor) {
+		<p>Welcome to the Admin page { visitor.FirstName }!</p>
+		<p>Dies ist mit Templ</p>
+		<p>Infos are: { visitor.Infos }</p>
+		if visitor.RoleID > 1 {
+			<p>Your Security_Level is: { strconv.Itoa(visitor.RoleID) }</p>
+		}
+	}
+}

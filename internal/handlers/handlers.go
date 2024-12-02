@@ -2,15 +2,12 @@ package handlers
 
 import (
 	"context"
-	"log"
 	"log/slog"
 	"net/http"
 
 	"github.com/a-h/templ"
 	"github.com/faebut/prozessor_gostack/internal/config"
 	"github.com/faebut/prozessor_gostack/internal/driver"
-	"github.com/faebut/prozessor_gostack/internal/models"
-	"github.com/faebut/prozessor_gostack/internal/render"
 	"github.com/faebut/prozessor_gostack/internal/repository"
 	"github.com/justinas/nosurf"
 )
@@ -66,28 +63,8 @@ func hxRedirect(w http.ResponseWriter, r *http.Request, to string) error {
 	return nil
 }
 
-// Home is the home page handler
+// Home is the home page handler simply redirect to /admin, will be /login if not logged in
 func (m *Repository) Home(w http.ResponseWriter, r *http.Request) {
 	// redirect
 	http.Redirect(w, r, "/admin", http.StatusSeeOther)
-}
-
-// Admin is the admin page handler
-func (m *Repository) Admin(w http.ResponseWriter, r *http.Request) {
-	// send the data to the template
-	user, ok := m.App.Session.Get(r.Context(), "visitor").(models.Visitor)
-	if !ok {
-		log.Println("could not get visitor from Session")
-		m.App.Session.Put(r.Context(), "error", "Can't get visitor from session")
-
-		http.Redirect(w, r, "/admin/logout", http.StatusSeeOther)
-		return
-	}
-
-	data := make(map[string]interface{})
-	data["user"] = user
-
-	render.Template(w, r, "admin.html", &models.TemplateData{
-		Data: data,
-	})
 }

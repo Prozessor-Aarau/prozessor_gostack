@@ -1,77 +1,92 @@
 package auth
 
 import (
-"github.com/faebut/prozessor_gostack/view/layout"
-"github.com/faebut/prozessor_gostack/view/ui"
+	"github.com/faebut/prozessor_gostack/internal/models"
+	"github.com/faebut/prozessor_gostack/view/layout"
+	"github.com/faebut/prozessor_gostack/view/ui"
 )
 
 templ Login() {
-@layout.App(false) {
-<!-- Login Form -->
-<div class="flex flex-col items-center">
-  <div class="prose">
-    <h2 class="mt-8">Login Prozessor DB</h2>
-  </div>
-  @LoginForm(LoginParams{}, LoginErrors{})
-</div>
-}
+	@layout.App(false, models.Visitor{}) {
+		<!-- Login Form -->
+		<div class="flex flex-col items-center">
+			<div class="prose">
+				<h2 class="mt-8">Login Prozessor DB</h2>
+			</div>
+			@LoginForm(LoginParams{}, LoginErrors{})
+		</div>
+	}
 }
 
 type LoginErrors struct {
-Email string
-Password string
-InvalidCredentials string
+	Email              string
+	Password           string
+	InvalidCredentials string
 }
 
 type LoginParams struct {
-Email string
-Password string
+	Email    string
+	Password string
 }
 
 templ LoginForm(params LoginParams, errors LoginErrors) {
-<!-- start of Form -->
-<form class="flex flex-col items-center gap-6 p-5 pt-10 w-full max-w-lg" hx-post="/login" hx-swap="outerHTML"
-  novalidate>
-  @ui.CSRF()
-  <label class={ "w-full input input-bordered flex items-center gap-2" , templ.KV("input-error",
+	<!-- start of Form -->
+	<form
+		class="flex flex-col items-center gap-6 p-5 pt-10 w-full max-w-lg"
+		hx-post="/login"
+		hx-swap="outerHTML"
+		novalidate
+	>
+		@ui.CSRF()
+		<label
+			class={ "w-full input input-bordered flex items-center gap-2" , templ.KV("input-error",
     len(errors.InvalidCredentials)> 0 || len(errors.Email)> 0) }
-    >
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="h-4 w-4 opacity-70">
-      <path
-        d="M2.5 3A1.5 1.5 0 0 0 1 4.5v.793c.026.009.051.02.076.032L7.674 8.51c.206.1.446.1.652 0l6.598-3.185A.755.755 0 0 1 15 5.293V4.5A1.5 1.5 0 0 0 13.5 3h-11Z">
-      </path>
-      <path
-        d="M15 6.954 8.978 9.86a2.25 2.25 0 0 1-1.956 0L1 6.954V11.5A1.5 1.5 0 0 0 2.5 13h11a1.5 1.5 0 0 0 1.5-1.5V6.954Z">
-      </path>
-    </svg>
-    <input type="email" id="email" name="email" class="grow" placeholder="Email" value={ params.Email } />
-    if len(errors.Email) > 0 {
-    <div class="label">
-      <span class="label-text text-error">{ errors.Email }</span>
-    </div>
-    }
-  </label>
-  <label class={ "w-full input input-bordered flex items-center gap-2" , templ.KV("input-error",
+		>
+			<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="h-4 w-4 opacity-70">
+				<path
+					d="M2.5 3A1.5 1.5 0 0 0 1 4.5v.793c.026.009.051.02.076.032L7.674 8.51c.206.1.446.1.652 0l6.598-3.185A.755.755 0 0 1 15 5.293V4.5A1.5 1.5 0 0 0 13.5 3h-11Z"
+				></path>
+				<path
+					d="M15 6.954 8.978 9.86a2.25 2.25 0 0 1-1.956 0L1 6.954V11.5A1.5 1.5 0 0 0 2.5 13h11a1.5 1.5 0 0 0 1.5-1.5V6.954Z"
+				></path>
+			</svg>
+			<input type="email" id="email" name="email" class="grow" placeholder="Email" value={ params.Email }/>
+			if len(errors.Email) > 0 {
+				<div class="label">
+					<span class="label-text text-error">{ errors.Email }</span>
+				</div>
+			}
+		</label>
+		<label
+			class={ "w-full input input-bordered flex items-center gap-2" , templ.KV("input-error",
     len(errors.InvalidCredentials)> 0 || len(errors.Password) > 0) }
-    >
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="h-4 w-4 opacity-70">
-      <path fill-rule="evenodd"
-        d="M14 6a4 4 0 0 1-4.899 3.899l-1.955 1.955a.5.5 0 0 1-.353.146H5v1.5a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1-.5-.5v-2.293a.5.5 0 0 1 .146-.353l3.955-3.955A4 4 0 1 1 14 6Zm-4-2a.75.75 0 0 0 0 1.5.5.5 0 0 1 .5.5.75.75 0 0 0 1.5 0 2 2 0 0 0-2-2Z"
-        clip-rule="evenodd"></path>
-    </svg>
-    <input id="password" name="password" type="password" class="grow " placeholder="Passwort" value={ params.Password
-      } />
-    if len(errors.Password) > 0 {
-    <div class="label">
-      <span class="label-text text-error">{ errors.Password }</span>
-    </div>
-    }
-  </label>
-  if len(errors.InvalidCredentials) > 0 {
-  @layout.Error(errors.InvalidCredentials)
-  }
-  <div class="mt-6 grid grid-cols-1 justify-center">
-    <input type="submit" class="btn btn-primary px-10" value="Log In" />
-  </div>
-</form>
+		>
+			<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="h-4 w-4 opacity-70">
+				<path
+					fill-rule="evenodd"
+					d="M14 6a4 4 0 0 1-4.899 3.899l-1.955 1.955a.5.5 0 0 1-.353.146H5v1.5a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1-.5-.5v-2.293a.5.5 0 0 1 .146-.353l3.955-3.955A4 4 0 1 1 14 6Zm-4-2a.75.75 0 0 0 0 1.5.5.5 0 0 1 .5.5.75.75 0 0 0 1.5 0 2 2 0 0 0-2-2Z"
+					clip-rule="evenodd"
+				></path>
+			</svg>
+			<input
+				id="password"
+				name="password"
+				type="password"
+				class="grow "
+				placeholder="Passwort"
+				value={ params.Password }
+			/>
+			if len(errors.Password) > 0 {
+				<div class="label">
+					<span class="label-text text-error">{ errors.Password }</span>
+				</div>
+			}
+		</label>
+		if len(errors.InvalidCredentials) > 0 {
+			@layout.Error(errors.InvalidCredentials)
+		}
+		<div class="mt-6 grid grid-cols-1 justify-center">
+			<input type="submit" class="btn btn-primary px-10" value="Log In"/>
+		</div>
+	</form>
 }
