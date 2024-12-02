@@ -7,13 +7,14 @@ import (
 )
 
 templ Register(CSRFToken string) {
-	@layout.App(false)
-	<div class="prose p-4 container mx-auto flex flex-col gap-2 w-11/12 max-w-4xl">
-		<h2 class="mx-auto pt-6">Ich registriere mich im Prozessor</h2>
-		<!-- start of Form -->
-		@RegisterForm(RegisterParams{Newsletter: true}, RegisterErrors{}, CSRFToken)
-		@RegisterModal()
-	</div>
+	@layout.App(false) {
+		<div class="prose p-4 container mx-auto flex flex-col gap-2 w-11/12 max-w-4xl">
+			<h2 class="mx-auto pt-6">Ich registriere mich im Prozessor</h2>
+			<!-- start of Form -->
+			@RegisterForm(RegisterParams{Newsletter: true}, RegisterErrors{}, CSRFToken)
+			@RegisterModal()
+		</div>
+	}
 }
 
 templ RegisterModal() {
@@ -378,14 +379,15 @@ templ RegisterForm(params RegisterParams, errors RegisterErrors, CSRFToken strin
 }
 
 templ RegisterSuccess(name string) {
-	@layout.App(false)
-	<div class="prose p-4 container mx-auto flex flex-col gap-2 w-11/12 max-w-4xl">
-		<h2 class="mx-auto pt-6">Willkommen beim Prozessor { name }</h2>
-		<p>
-			Du kannst dich jetzt bei einer Aufsichtsperson anmelden. Deine Registration ist für alle künftigen Besuche im
-			Prozessor gültig.
-		</p>
-		<p>Besuch unsere Webseite für mehr Infos zum Prozessor</p>
-		<a href="https://prozessor-aarau.ch" target="_top" class=" mx-auto btn btn-success">zur Prozessor-Webseite</a>
-	</div>
+	@layout.App(false) {
+		<div class="prose p-4 container mx-auto flex flex-col gap-2 w-11/12 max-w-4xl">
+			<h2 class="mx-auto pt-6">Willkommen beim Prozessor { name }</h2>
+			<p>
+				Du kannst dich jetzt bei einer Aufsichtsperson anmelden. Deine Registration ist für alle künftigen Besuche im
+				Prozessor gültig.
+			</p>
+			<p>Besuch unsere Webseite für mehr Infos zum Prozessor</p>
+			<a href="https://prozessor-aarau.ch" target="_top" class=" mx-auto btn btn-success">zur Prozessor-Webseite</a>
+		</div>
+	}
 }
