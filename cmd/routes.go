@@ -33,6 +33,11 @@ func routes(app *config.AppConfig) http.Handler {
 	mux.Get("/createlogin", handlers.Repo.CreateLogin)
 	mux.Post("/createlogin", handlers.Repo.PostCreateLogin)
 
+	// for creating damage reports
+	mux.Get("/report", handlers.Make(handlers.Repo.HandleReportIndex))
+	mux.Post("/report", handlers.Make(handlers.Repo.HandleReportCreate))
+	mux.Get("/reportsuccess", handlers.Make(handlers.Repo.HandleReportSuccess))
+
 	// protected routes
 	mux.Route("/admin", func(mux chi.Router) {
 		mux.Use(Auth)
