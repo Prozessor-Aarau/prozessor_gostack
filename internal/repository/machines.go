@@ -75,7 +75,7 @@ func (m *postgresDBRepo) MachineByID(id string) (models.Machine, error) {
 	defer cancel()
 
 	var machine models.Machine
-	query := `SELECT m.id, m.machine_name, m.created_on, m.updated_on, r.id, r.ressort_name
+	query := `SELECT m.id, m.machine_name, m.created_on, m.updated_on, r.id, r.ressort_name, r.slack_channel
   FROM machines m
   LEFT OUTER JOIN ressorts r ON r.id = m.ressort_id
   WHERE b.id = $1
@@ -89,6 +89,7 @@ func (m *postgresDBRepo) MachineByID(id string) (models.Machine, error) {
 		&machine.UpdatedOn,
 		&machine.RessortID,
 		&machine.RessortName,
+		&machine.SlackChannel,
 	)
 
 	if err != nil {
@@ -131,7 +132,7 @@ func (m *postgresDBRepo) AllMachines(filter models.MachineFilter) ([]models.Mach
 		return machines, 0, err
 	}
 	query := fmt.Sprintf(
-		`SELECT m.id, m.machine_name, m.created_on, m.updated_on, r.id, r.ressort_name
+		`SELECT m.id, m.machine_name, m.created_on, m.updated_on, r.id, r.ressort_name, r.slack_channel
   FROM machines m
   LEFT OUTER JOIN ressorts r ON r.id = m.ressort_id
 	WHERE m.machine_name LIKE $1
@@ -159,6 +160,7 @@ func (m *postgresDBRepo) AllMachines(filter models.MachineFilter) ([]models.Mach
 			&machine.UpdatedOn,
 			&machine.RessortID,
 			&machine.RessortName,
+			&machine.SlackChannel,
 		)
 
 		if err != nil {

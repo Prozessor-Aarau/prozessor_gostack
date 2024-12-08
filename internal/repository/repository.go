@@ -42,6 +42,7 @@ type DatabaseRepo interface {
 	CreateLog(l models.Log)
 	// ressorts
 	AllRessorts() ([]models.Ressort, error)
+	RessortByID(id int) (models.Ressort, error)
 	// roles
 	AllRoles() ([]models.Role, error)
 	// registering and login

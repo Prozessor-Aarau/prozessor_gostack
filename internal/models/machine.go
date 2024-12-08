@@ -3,13 +3,14 @@ package models
 import "time"
 
 type Machine struct {
-	ID          string
-	RessortID   int
-	RessortName string
-	MachineName string
-	FAQs        []FAQ
-	CreatedOn   time.Time
-	UpdatedOn   time.Time
+	ID           string
+	RessortID    int
+	RessortName  string
+	SlackChannel string
+	MachineName  string
+	FAQs         []FAQ
+	CreatedOn    time.Time
+	UpdatedOn    time.Time
 }
 
 type FAQ struct {
