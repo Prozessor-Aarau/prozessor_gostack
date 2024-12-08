@@ -16,6 +16,7 @@ import (
 	"github.com/faebut/prozessor_gostack/internal/helpers"
 	"github.com/faebut/prozessor_gostack/internal/models"
 	"github.com/faebut/prozessor_gostack/internal/render"
+	"github.com/faebut/prozessor_gostack/internal/slack"
 	"github.com/joho/godotenv"
 )
 
@@ -81,6 +82,10 @@ func run() (*driver.DB, error) {
 		fmt.Println("Missing required entries in .env")
 		os.Exit(1)
 	}
+
+	slackToken := os.Getenv("SLACKTOKEN")
+
+	app.Slack = slack.NewSlack(slackToken)
 
 	mailChan := make(chan models.MailData)
 	app.MailChan = mailChan

@@ -78,7 +78,7 @@ func (m *postgresDBRepo) MachineByID(id string) (models.Machine, error) {
 	query := `SELECT m.id, m.machine_name, m.created_on, m.updated_on, r.id, r.ressort_name, r.slack_channel
   FROM machines m
   LEFT OUTER JOIN ressorts r ON r.id = m.ressort_id
-  WHERE b.id = $1
+  WHERE m.id = $1
   `
 	row := m.DB.QueryRowContext(ctx, query, id)
 

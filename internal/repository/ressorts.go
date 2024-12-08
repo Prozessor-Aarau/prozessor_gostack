@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"database/sql"
 	"time"
 
 	"github.com/faebut/prozessor_gostack/internal/models"
@@ -17,16 +18,25 @@ func (m *postgresDBRepo) RessortByID(id int) (models.Ressort, error) {
 	query := `SELECT id, ressort_name, slack_channel, created_on, updated_on FROM ressorts`
 	row := m.DB.QueryRowContext(ctx, query)
 
+	// handle null types
+	var slack sql.NullString
+
 	err := row.Scan(
 		&ressort.ID,
 		&ressort.RessortName,
-		&ressort.SlackChannel,
+		&slack,
 		&ressort.CreatedOn,
 		&ressort.UpdatedOn,
 	)
 
 	if err != nil {
 		return ressort, err
+	}
+
+	// second part of null types
+
+	if slack.Valid {
+		ressort.SlackChannel = slack.String
 	}
 
 	return ressort, nil
@@ -50,10 +60,13 @@ func (m *postgresDBRepo) AllRessorts() ([]models.Ressort, error) {
 	for rows.Next() {
 		var r models.Ressort
 
+		// handle null types
+		var slack sql.NullString
+
 		err := rows.Scan(
 			&r.ID,
 			&r.RessortName,
-			&r.SlackChannel,
+			&slack,
 			&r.CreatedOn,
 			&r.UpdatedOn,
 		)
@@ -61,6 +74,12 @@ func (m *postgresDBRepo) AllRessorts() ([]models.Ressort, error) {
 		if err != nil {
 			return ressorts, err
 		}
+
+		// second part of null types
+		if slack.Valid {
+			r.SlackChannel = slack.String
+		}
+
 		ressorts = append(ressorts, r)
 	}
 

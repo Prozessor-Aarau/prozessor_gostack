@@ -6,13 +6,24 @@ import (
 	"strconv"
 
 	"github.com/faebut/prozessor_gostack/internal/forms"
+	"github.com/faebut/prozessor_gostack/internal/models"
 	"github.com/faebut/prozessor_gostack/view/report"
 )
 
 // HandleRegisterIndex handles the Register Page
 func (m *Repository) HandleReportIndex(w http.ResponseWriter, r *http.Request) error {
+	id := r.URL.Query().Get("machine")
+
+	// get machine to pass it to the template
+	machine, err := m.DB.MachineByID(id)
+	if err != nil {
+		// TODO better error handling
+		log.Println(err)
+		return nil
+	}
+
 	// render the template
-	return rendering(w, r, report.Report())
+	return rendering(w, r, report.Report(machine))
 }
 
 // HandleReportCreate is the post register handler
@@ -24,7 +35,7 @@ func (m *Repository) HandleReportCreate(w http.ResponseWriter, r *http.Request) 
 		return nil
 	}
 
-	var reportForm report.ReportParams
+	var reportForm models.Report
 
 	form := forms.New(r.PostForm)
 	reportForm.Fatal = form.BoxValue("fatal")
@@ -32,22 +43,49 @@ func (m *Repository) HandleReportCreate(w http.ResponseWriter, r *http.Request) 
 	reportForm.ReportInfo = r.Form.Get("report_infos")
 	reportForm.ReportReporter = r.Form.Get("report_reporter")
 
+	reportForm.MachineID = r.Form.Get("machine_id")
+	// get machine to pass it to the template
+	machine, err := m.DB.MachineByID(reportForm.MachineID)
+	if err != nil {
+		// TODO better error handling
+		log.Println(err)
+		return nil
+	}
+
+	// assign machine to reportForm
+	reportForm.MachineName = machine.MachineName
+	reportForm.SlackChannel = machine.SlackChannel
+	reportForm.RessortID = machine.RessortID
+	reportForm.RessortName = machine.RessortName
 	// validation
 	form.Required("report_infos")
 
 	// what to do if form not valid
 	if !form.Valid() {
 		// return form with errors and allready filled fields
-		return rendering(w, r, report.ReportForm(reportForm, report.ReportErrors{
-			ReportInfo: form.Errors.Get("report_infos"),
-		}))
+		return rendering(w, r, report.ReportForm(
+			reportForm,
+			report.ReportErrors{
+				ReportInfo: form.Errors.Get("report_infos"),
+			}))
 	}
 
 	// what to do if form valid
 	// post report to database
+	reportID, err := m.DB.CreateReport(reportForm)
+	if err != nil {
+		log.Println(err)
+		return nil
+	}
+	log.Println("new report with id: ", reportID)
 	log.Println(reportForm)
 
 	// post report to slack
+	err = m.App.Slack.SendSlackMessage(reportForm)
+	if err != nil {
+		log.Println(err)
+		return nil
+	}
 
 	fatalstring := strconv.FormatBool(reportForm.Fatal)
 	return hxRedirect(w, r, "/reportsuccess?fatal="+fatalstring)

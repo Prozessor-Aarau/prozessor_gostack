@@ -6,11 +6,16 @@ import (
 	"github.com/faebut/prozessor_gostack/view/ui"
 )
 
-templ Report() {
+templ Report(m models.Machine) {
 	@layout.App(false, models.Visitor{}) {
 		<div class="prose p-4 container mx-auto flex flex-col gap-2 w-11/12 max-w-4xl">
 			<h2 class="mx-auto pt-6">Problem/Defekt melden</h2>
-			@ReportForm(ReportParams{}, ReportErrors{})
+			@ReportForm(models.Report{
+				MachineID:    m.ID,
+				MachineName:  m.MachineName,
+				SlackChannel: m.SlackChannel,
+				RessortName:  m.RessortName,
+			}, ReportErrors{})
 		</div>
 	}
 }
@@ -20,17 +25,28 @@ type ReportErrors struct {
 }
 
 type ReportParams struct {
+	MachineID      string
+	MachineName    string
+	SlackChannel   string
+	RessortName    string
 	Fatal          bool
 	ReportInfo     string
 	ReportReporter string
 }
 
-templ ReportForm(params ReportParams, errors ReportErrors) {
+templ ReportForm(params models.Report, errors ReportErrors) {
 	<!-- start of Form -->
-	<form class="grid grid-cols-4 gap-1 sm:gap-3 overflow-y-auto p-1" hx-post="/report" hx-swap="outerHTML" novalidate>
+	<form
+		class="grid grid-cols-4 gap-1 sm:gap-3 overflow-y-auto p-1"
+		hx-post="/report"
+		hx-swap="outerHTML"
+		hx-indicator="#spinner"
+		novalidate
+	>
 		@ui.CSRF()
-		<h3 class="col-span-4 mt-0">Maschine: XYZ</h3>
-		<h4 class="col-span-4">Ressort: Holzwerkstatt</h4>
+		<h3 class="col-span-4 mt-0">Maschine: { params.MachineName }</h3>
+		<h4 class="col-span-4">Ressort: { params.RessortName }</h4>
+		<input type="hidden" name="machine_id" value={ params.MachineID }/>
 		<label class="form-control col-span-4">
 			<div class="label">
 				<span class="label-text">Problem/Defekt <span class="text-error font-extrabold">*</span></span>
@@ -86,7 +102,10 @@ templ ReportForm(params ReportParams, errors ReportErrors) {
 			<span class="text-error font-extrabold">*</span> diese Felder sind zwingend
 			auszufüllen
 		</div>
-		<input type="submit" class="btn btn-success col-span-4 mt-4" value="Meldung senden"/>
+		<button class="btn btn-success col-span-4 mt-4">
+			<span>Meldung senden</span>
+			<span id="spinner" class="htmx-indicator">: ongoing...</span>
+		</button>
 	</form>
 }
 
