@@ -49,6 +49,11 @@ type DatabaseRepo interface {
 	CreatePassword(v models.Visitor) error
 	CheckCreateLogin(email, uid string) (models.Visitor, error)
 	Authenticate(email, testPassword string) (string, models.Visitor, error)
+	// machines
+	CreateMachine(machine models.Machine) (string, error)
+	UpdateMachine(machine models.Machine) error
+	MachineByID(id string) (models.Machine, error)
+	AllMachines(filter models.MachineFilter) ([]models.Machine, int, error)
 }
 
 type postgresDBRepo struct {

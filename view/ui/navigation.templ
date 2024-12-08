@@ -51,18 +51,20 @@ templ Navigation(visitor models.Visitor) {
 					<li>
 						<a href="/admin/checkin">Check-In</a>
 					</li>
-					<!-- <li> -->
-					<!--   <a href="/admin/checkout">Kasse</a> -->
-					<!-- </li> -->
-					<!-- {{if ge $usr.RoleID 2}} -->
-					<!-- <li> -->
-					<!--   <a href="/admin/visitors">Benutzende</a> -->
-					<!-- </li> -->
-					<!-- <li> -->
-					<!--   <a>Newsletter</a> -->
-					<!-- </li> -->
-					<!-- {{end}} -->
-					<!-- {{if ge $usr.RoleID 3}} -->
+					if visitor.RoleID >= 2 {
+						<li>
+							<a href="/admin/visitors">Benutzende</a>
+						</li>
+						<li>
+							<a href="/admin/machines">Maschinen</a>
+						</li>
+						<!-- <li> -->
+						<!--   <a>Newsletter</a> -->
+						<!-- </li> -->
+						<!-- <li> -->
+						<!--   <a href="/admin/checkout">Kasse</a> -->
+						<!-- </li> -->
+					}
 					<li>
 						<details>
 							<summary>Abonnements</summary>
@@ -97,20 +99,21 @@ templ Navigation(visitor models.Visitor) {
 					<!-- </li> -->
 					<!-- {{end}} -->
 					<!-- {{if ge $usr.RoleID 4}} -->
-					<li>
-						<details>
-							<summary>Admin</summary>
-							<ul>
-								<li>
-									<a href="/admin/">Stammdaten</a>
-								</li>
-								<li>
-									<a href="/admin/">Log</a>
-								</li>
-							</ul>
-						</details>
-					</li>
-					<!-- {{end}} -->
+					if visitor.RoleID >= 4 {
+						<li>
+							<details>
+								<summary>Admin</summary>
+								<ul>
+									<li>
+										<a href="/admin/">Stammdaten</a>
+									</li>
+									<li>
+										<a href="/admin/">Log</a>
+									</li>
+								</ul>
+							</details>
+						</li>
+					}
 				</ul>
 			</div>
 		</div>

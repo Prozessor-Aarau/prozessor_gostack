@@ -79,6 +79,11 @@ func routes(app *config.AppConfig) http.Handler {
 		mux.Get("/visitors/{id}", handlers.Repo.EditVisitor)
 		mux.Post("/visitors/{id}", handlers.Repo.PostEditVisitor)
 
+		// routes for machines
+		mux.Get("/machines", handlers.Make(handlers.Repo.HandleMachinesIndex))
+		mux.Get("/machines/create", handlers.Make(handlers.Repo.HandleMachinesCreateIndex))
+		mux.Post("/machines/create", handlers.Make(handlers.Repo.HandleMachinesCreate))
+
 		mux.Route("/l2", func(mux chi.Router) {
 			mux.Use(Level2)
 			// put routes, that use at least level 2 in here
