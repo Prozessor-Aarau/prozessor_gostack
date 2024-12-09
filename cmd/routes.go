@@ -51,7 +51,10 @@ func routes(app *config.AppConfig) http.Handler {
 		mux.Post("/profile", handlers.Repo.PostEditVisitor)
 
 		// routes for the checkin page
-		mux.Get("/checkin", handlers.Repo.Checkin)
+		mux.Get("/checkin", handlers.Make(handlers.Repo.HandleCheckinIndex))
+		mux.Get("/checkinvisitorlist", handlers.Make(handlers.Repo.HandleCheckinList))
+		mux.Post("/checkinvisitorlist", handlers.Make(handlers.Repo.HandleCheckinListFilter))
+		mux.Get("/checkedinvisitslist", handlers.Repo.GetVisitsByDate)
 
 		// make new checkin
 		mux.Get("/checkin/{id}", handlers.Repo.CheckinVisitorForm)
@@ -59,10 +62,6 @@ func routes(app *config.AppConfig) http.Handler {
 		// edit checkin
 		mux.Get("/checkin/{id}/{vid}", handlers.Repo.CheckinVisitorForm)
 		mux.Post("/checkin/{id}/{vid}", handlers.Repo.PostCheckin)
-
-		mux.Get("/checkinvisitorlist", handlers.Repo.GetCheckinVisitors)
-		mux.Post("/checkinvisitorlist", handlers.Repo.PostGetCheckinVisitors)
-		mux.Get("/checkedinvisitslist", handlers.Repo.GetVisitsByDate)
 		mux.Delete("/visits/{id}", handlers.Repo.DeleteCheckin)
 
 		// routes for the visitor page

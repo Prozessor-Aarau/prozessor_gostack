@@ -1,0 +1,94 @@
+package checkin
+
+import (
+"github.com/faebut/prozessor_gostack/internal/models"
+"github.com/faebut/prozessor_gostack/internal/render"
+"github.com/faebut/prozessor_gostack/view/layout"
+"github.com/faebut/prozessor_gostack/view/ui"
+"strconv"
+"time"
+)
+
+templ Checkin(visitor models.Visitor, visitors []models.Visitor, count int, pages int, onpage int, filter string) {
+@layout.App(true, visitor) {
+<div class="prose mb-10">
+  <h1>Check-In: { time.Now().Format("02 Jan 2006") }</h1>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+  <div id="addVisit" class="prose">
+    <h2>Einchecken</h2>
+    @searchField()
+    @VisitorList(visitors, count, pages, onpage, filter)
+  </div>
+  <div class="prose border-t pt-6 md:pt-0 md:pl-3 md:border-t-0 md:border-l border-base-content border-opacity-30">
+    <h2>heute Eingecheckt:</h2>
+    <div id="checkedinList" hx-get="/admin/checkedinvisitslist" hx-trigger="load"></div>
+  </div>
+</div>
+}
+}
+
+templ searchField() {
+<form id="filterForm" class="mb-3" novalidate>
+  @ui.CSRF()
+  <label class="input input-bordered flex items-center gap-2">
+    <span class="text-3xl i-mdi-magnify"></span>
+    <input type="search" id="search_term" name="search_term" class="grow"
+      placeholder="Suche nach Name, Vorname oder Ort..." hx-post="/admin/checkinvisitorlist"
+      hx-trigger="input changed delay:500ms, search" hx-target="#visitorList" />
+    <button id="fieldreset" hx-get="/admin/checkinvisitorlist" hx-target="#visitorList"
+      class="ml-3 btn btn-neutral btn-outline btn-xs btn-circle"><span class="i-mdi-close"></span></button>
+  </label>
+</form>
+<script>
+  searchField = document.querySelector("#search_term")
+
+  document.getElementById("fieldreset").addEventListener("click", function (event) {
+    event.preventDefault();
+    searchField.value = "";
+  });
+</script>
+}
+
+templ VisitorList(visitors []models.Visitor, count int, pages int, onpage int, filter string) {
+<div id="visitorList">
+  if count == 0 {
+  @layout.Warning("Keine Suchergebnisse")
+  } else {
+  for _, v := range visitors {
+  <div
+    class="hover:bg-base-200 cursor-pointer grid grid-cols-3 text-sm p-3 py-4 items-center gap-3 border-dashed border-b border-base-content border-opacity-50">
+    <div class="col-span-1">{ v.FirstName } { v.FamilyName }</div>
+    <div class="col-span-1">{ v.City }</div>
+    <div class="col-span-1 flex gap-2 justify-center md:justify-end">
+      <button class="btn btn-sm btn-circle btn-primary" hx-get={ "/admin/checkin/" + v.ID } hx-target="#addVisit">
+        <span class="i-mdi-login"></span>
+      </button>
+    </div>
+  </div>
+  }
+  @pagination(pages, onpage, filter)
+  }
+</div>
+}
+
+templ pagination(pages int, onpage int, filter string) {
+{{ pagesslice := render.Iterate(pages) }}
+<div class="grid justify-items-center">
+  <div class="join pt-6">
+    <button class={ "join-item btn" , templ.KV("btn-disabled", onpage==1) } hx-target="#visitorList"
+      hx-get={ "/admin/checkinvisitorlist?page=" + strconv.Itoa(onpage-1) + filter }>«</button>
+    for _, p := range pagesslice {
+    switch p {
+    case 1, pages, onpage, onpage+1, onpage-1:
+    <button class={ "join-item btn" , templ.KV("btn-primary", onpage==p) } hx-target="#visitorList"
+      hx-get={ "/admin/checkinvisitorlist?page=" + strconv.Itoa(p) + filter }>{ strconv.Itoa(p) }</button>
+    case onpage+2, onpage-2:
+    <button class="join-item btn btn-disabled">.</button>
+    }
+    }
+    <button class={ "join-item btn" , templ.KV("btn-disabled", onpage==pages) } hx-target="#visitorList"
+      hx-get={ "/admin/checkinvisitorlist?page=" + strconv.Itoa(onpage+1) + filter }>»</button>
+  </div>
+</div>
+}
