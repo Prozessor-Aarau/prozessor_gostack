@@ -9,6 +9,7 @@ type Machine struct {
 	SlackChannel string
 	MachineName  string
 	FAQs         []FAQ
+	QR           string
 	CreatedOn    time.Time
 	UpdatedOn    time.Time
 }

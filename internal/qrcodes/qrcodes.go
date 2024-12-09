@@ -30,7 +30,7 @@ func GenerateQRCode(machine models.Machine) error {
 	}
 
 	w, err := standard.New(
-		fmt.Sprintf("./qr_codes/tmp_%s.png", machine.MachineName),
+		fmt.Sprintf("./static/qr_codes/tmp_%s.jpg", machine.ID),
 		standard.WithQRWidth(40),
 		standard.WithBorderWidth(500, 100, 100, 100),
 	)
@@ -44,7 +44,7 @@ func GenerateQRCode(machine models.Machine) error {
 	}
 
 	// load temp file
-	im, err := gg.LoadPNG(fmt.Sprintf("./qr_codes/tmp_%s.png", machine.MachineName))
+	im, err := gg.LoadJPG(fmt.Sprintf("./static/qr_codes/tmp_%s.jpg", machine.ID))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -56,29 +56,29 @@ func GenerateQRCode(machine models.Machine) error {
 	dc.Clear()
 	dc.SetRGB(0, 0, 0)
 
-	if err := dc.LoadFontFace("./assets/MoskNormal.ttf", 144); err != nil {
+	if err := dc.LoadFontFace("./static/assets/MoskNormal.ttf", 144); err != nil {
 		return fmt.Errorf("could not load font: %v", err.Error())
 	}
 	dc.DrawRoundedRectangle(0, 0, float64(dimensions.X), float64(dimensions.Y), 0)
 	dc.DrawImage(im, 0, 0)
 	dc.DrawStringAnchored("Maschine defekt?", float64(dimensions.X)/2, float64(dimensions.Y)/11.5, 0.5, 0.5)
 
-	if err := dc.LoadFontFace("./assets/MoskNormal.ttf", 96); err != nil {
+	if err := dc.LoadFontFace("./static/assets/MoskNormal.ttf", 96); err != nil {
 		return fmt.Errorf("could not load font: %v", err.Error())
 	}
 	dc.DrawStringAnchored(machine.MachineName, float64(dimensions.X)/2, float64(dimensions.Y)/6.5, 0.5, 0.5)
 
-	if err := dc.LoadFontFace("./assets/MoskNormal.ttf", 60); err != nil {
+	if err := dc.LoadFontFace("./static/assets/MoskNormal.ttf", 60); err != nil {
 		panic(err)
 	}
 	dc.DrawStringAnchored("Bitte QR-Code scannen und Formular ausfüllen", float64(dimensions.X)/2, float64(dimensions.Y)/1, 0.5, 0.5)
 	dc.Clip()
 
 	// save final file
-	dc.SavePNG(fmt.Sprintf("./qr_codes/QR_%s.png", machine.MachineName))
+	dc.SavePNG(fmt.Sprintf("./static/qr_codes/QR_%s.png", machine.ID))
 
 	// delete temp file
-	if err := os.Remove(fmt.Sprintf("./qr_codes/tmp_%s.png", machine.MachineName)); err != nil {
+	if err := os.Remove(fmt.Sprintf("./static/qr_codes/tmp_%s.jpg", machine.ID)); err != nil {
 		return fmt.Errorf("Warning: failed to delete temporary qr code: %v", err)
 	}
 
@@ -87,7 +87,7 @@ func GenerateQRCode(machine models.Machine) error {
 
 func RemoveQRCode(machine models.Machine) error {
 	// delete file
-	if err := os.Remove(fmt.Sprintf("./qr_codes/QR_%s.png", machine.MachineName)); err != nil {
+	if err := os.Remove(fmt.Sprintf("./static/qr_codes/QR_%s.png", machine.ID)); err != nil {
 		return fmt.Errorf("Warning: failed to delete qr code: %v", err)
 	}
 

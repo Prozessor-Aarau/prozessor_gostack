@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"time"
 
@@ -75,12 +76,14 @@ func (m *postgresDBRepo) MachineByID(id string) (models.Machine, error) {
 	defer cancel()
 
 	var machine models.Machine
-	query := `SELECT m.id, m.machine_name, m.created_on, m.updated_on, r.id, r.ressort_name, r.slack_channel
+	query := `SELECT m.id, m.machine_name, m.created_on, m.updated_on, r.id, r.ressort_name, r.slack_channel, m.qr_code
   FROM machines m
   LEFT OUTER JOIN ressorts r ON r.id = m.ressort_id
   WHERE m.id = $1
   `
 	row := m.DB.QueryRowContext(ctx, query, id)
+
+	var qr sql.NullString
 
 	err := row.Scan(
 		&machine.ID,
@@ -90,10 +93,15 @@ func (m *postgresDBRepo) MachineByID(id string) (models.Machine, error) {
 		&machine.RessortID,
 		&machine.RessortName,
 		&machine.SlackChannel,
+		&qr,
 	)
 
 	if err != nil {
 		return machine, err
+	}
+
+	if qr.Valid {
+		machine.QR = qr.String
 	}
 
 	return machine, nil
@@ -132,7 +140,7 @@ func (m *postgresDBRepo) AllMachines(filter models.MachineFilter) ([]models.Mach
 		return machines, 0, err
 	}
 	query := fmt.Sprintf(
-		`SELECT m.id, m.machine_name, m.created_on, m.updated_on, r.id, r.ressort_name, r.slack_channel
+		`SELECT m.id, m.machine_name, m.created_on, m.updated_on, r.id, r.ressort_name, r.slack_channel, m.qr_code
   FROM machines m
   LEFT OUTER JOIN ressorts r ON r.id = m.ressort_id
 	WHERE m.machine_name LIKE $1
@@ -153,6 +161,8 @@ func (m *postgresDBRepo) AllMachines(filter models.MachineFilter) ([]models.Mach
 	for rows.Next() {
 		var machine models.Machine
 
+		var qr sql.NullString
+
 		err := rows.Scan(
 			&machine.ID,
 			&machine.MachineName,
@@ -161,10 +171,15 @@ func (m *postgresDBRepo) AllMachines(filter models.MachineFilter) ([]models.Mach
 			&machine.RessortID,
 			&machine.RessortName,
 			&machine.SlackChannel,
+			&qr,
 		)
 
 		if err != nil {
 			return machines, 0, err
+		}
+
+		if qr.Valid {
+			machine.QR = qr.String
 		}
 
 		machines = append(machines, machine)
@@ -175,4 +190,53 @@ func (m *postgresDBRepo) AllMachines(filter models.MachineFilter) ([]models.Mach
 	}
 
 	return machines, count, nil
+}
+
+// SetMachineQR sets a machines qr code in the db
+func (m *postgresDBRepo) SetMachineQR(machine models.Machine) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	query := `UPDATE machines 
+  SET qr_code = $1,
+  updated_on = $2 
+  WHERE id = $3
+  `
+
+	_, err := m.DB.ExecContext(
+		ctx,
+		query,
+		machine.QR,
+		time.Now(),
+		machine.ID,
+	)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// SetMachineQR sets a machines qr code in the db
+func (m *postgresDBRepo) DeleteMachineQR(machine models.Machine) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	query := `UPDATE machines 
+  SET qr_code = NULL,
+  updated_on = $1 
+  WHERE id = $2
+  `
+
+	_, err := m.DB.ExecContext(
+		ctx,
+		query,
+		time.Now(),
+		machine.ID,
+	)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

@@ -55,6 +55,8 @@ type DatabaseRepo interface {
 	UpdateMachine(machine models.Machine) error
 	MachineByID(id string) (models.Machine, error)
 	AllMachines(filter models.MachineFilter) ([]models.Machine, int, error)
+	SetMachineQR(machine models.Machine) error
+	DeleteMachineQR(machine models.Machine) error
 	// reports
 	CreateReport(r models.Report) (int, error)
 }

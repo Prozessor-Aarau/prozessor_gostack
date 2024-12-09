@@ -97,7 +97,7 @@ type MachineErrors struct {
 
 templ MachinesForm(params models.Machine, ressorts []models.Ressort, errors MachineErrors) {
 	<form
-		class="flex flex-wrap gap-3"
+		class="grid grid-cols-1 md:grid-cols-2 gap-3"
 		if len(params.ID)>0 {
 			hx-post={ "/admin/machines/edit/" + params.ID }
 		} else {
@@ -107,72 +107,119 @@ templ MachinesForm(params models.Machine, ressorts []models.Ressort, errors Mach
 		hx-target="#content"
 		novalidate
 	>
-		@ui.CSRF()
-		<div class="prose col-span-full">
-			if len(params.ID) > 0 {
-				<h2>Maschine bearbeiten: { params.MachineName }</h2>
-				<h3 class="mt-0">UID: { params.ID }</h3>
-			} else {
-				<h2>Neue Maschine erstellen</h2>
-			}
-		</div>
-		<label class="form-control w-full">
-			<div class="label">
-				<span class="label-text">Bezeichnung <span class="text-error font-extrabold ">*</span></span>
-			</div>
-			<input
-				type=" text"
-				name="machine_name"
-				id="machine_name"
-				class={ "input input-bordered" , templ.KV("input-error",
-      len(errors.MachineName)>
-    0) }
-				value={ params.MachineName }
-				required
-			/>
-			if len(errors.MachineName) > 0 {
-				<div class="label">
-					<span class="label-text text-error">{ errors.MachineName }</span>
-				</div>
-			}
-		</label>
-		<label class="form-control w-full">
-			<div class="label">
-				<span class="label-text">Ressort <span class="text-error font-extrabold ">*</span></span>
-			</div>
-			<select
-				name="ressort"
-				id="ressort"
-				class={ "select select-bordered" , templ.KV("select-error", len(errors.Ressort)>
-      0) }
-				value={ strconv.Itoa(params.RessortID) }
-				required
-			>
-				<option disabled selected>Ressort auswählen...</option>
-				for _, v := range ressorts {
-					if v.ID == params.RessortID {
-						<option value={ strconv.Itoa(v.ID) } selected>{ v.RessortName }</option>
-					} else {
-						<option value={ strconv.Itoa(v.ID) }>{ v.RessortName }</option>
-					}
+		<div>
+			@ui.CSRF()
+			<div class="prose col-span-full">
+				if len(params.ID) > 0 {
+					<h2>Maschine bearbeiten: { params.MachineName }</h2>
+				} else {
+					<h2>Neue Maschine erstellen</h2>
 				}
-			</select>
-			if len(errors.Ressort) > 0 {
+			</div>
+			<label class="form-control w-full">
 				<div class="label">
-					<span class="label-text text-error">{ errors.Ressort }</span>
+					<span class="label-text">Bezeichnung <span class="text-error font-extrabold ">*</span></span>
 				</div>
-			}
-		</label>
-		<div class="col-span-full w-full gap-3 flex mt-3 items-center justify-center flex-col md:flex-row">
-			if len(params.ID) > 0 {
-				<input type="submit" class="btn btn-success col-span-4" value="Änderungen speichern"/>
-			} else {
-				<input type="submit" class="btn btn-success col-span-4" value="Speichern"/>
-			}
-			<a href="/admin/machines" class="btn btn-warning">
-				<span class="i-mdi-cancel-bold"></span>
-				Abbrechen
-			</a>
+				<input
+					type=" text"
+					name="machine_name"
+					id="machine_name"
+					class={ "input input-bordered" , templ.KV("input-error",
+        len(errors.MachineName)>
+      0) }
+					value={ params.MachineName }
+					required
+				/>
+				if len(errors.MachineName) > 0 {
+					<div class="label">
+						<span class="label-text text-error">{ errors.MachineName }</span>
+					</div>
+				}
+			</label>
+			<label class="form-control w-full">
+				<div class="label">
+					<span class="label-text">Ressort <span class="text-error font-extrabold ">*</span></span>
+				</div>
+				<select
+					name="ressort"
+					id="ressort"
+					class={ "select select-bordered" , templ.KV("select-error",
+        len(errors.Ressort)>
+        0) }
+					value={ strconv.Itoa(params.RessortID) }
+					required
+				>
+					<option disabled selected>Ressort auswählen...</option>
+					for _, v := range ressorts {
+						if v.ID == params.RessortID {
+							<option value={ strconv.Itoa(v.ID) } selected>{ v.RessortName }</option>
+						} else {
+							<option value={ strconv.Itoa(v.ID) }>{ v.RessortName }</option>
+						}
+					}
+				</select>
+				if len(errors.Ressort) > 0 {
+					<div class="label">
+						<span class="label-text text-error">{ errors.Ressort }</span>
+					</div>
+				}
+			</label>
+			<div class="col-span-full w-full gap-3 flex mt-3 items-center justify-center flex-col md:flex-row">
+				if len(params.ID) > 0 {
+					<input type="submit" class="btn btn-success col-span-4" value="Änderungen speichern"/>
+				} else {
+					<input type="submit" class="btn btn-success col-span-4" value="Speichern"/>
+				}
+				<a href="/admin/machines" class="btn btn-warning">
+					<span class="i-mdi-cancel-bold"></span>
+					Abbrechen
+				</a>
+			</div>
 		</div>
+		if len(params.ID)>0 {
+			@QRcode(params)
+		}
 	</form>
+}
+
+templ QRcode(m models.Machine) {
+	<div id="qr-code" class="mt-6">
+		if len(m.QR)>0 {
+			<div class="card bg-base-100 md:w-96 shadow-xl">
+				<figure>
+					<img src={ "/static/qr_codes/" + m.QR } alt="QR-Code"/>
+				</figure>
+				<div class="card-body">
+					<h2 class="card-title">
+						QR-Code
+					</h2>
+					<p><strong>Verlinkt zu Formular:</strong></p>
+					<p><a href={ templ.URL("/report?machine=" + m.ID) }>/report?machine={ m.ID }</a></p>
+					<div class=" card-actions justify-end">
+						<a class="btn btn-info">QR-Code ausdrucken</a>
+						<a
+							class="btn btn-error"
+							hx-target="#qr-code"
+							hx-post={ "/admin/machines/edit/" + m.ID + "/qrcode/delete" }
+						>QR-Code löschen</a>
+					</div>
+				</div>
+			</div>
+		} else {
+			<div class="card bg-base-100 md:w-96 shadow-xl">
+				<div class="card-body">
+					<h2 class="card-title">
+						QR-Code
+					</h2>
+					<p>Es ist noch kein QR-Code vorhanden, du kannst einen erstellen.</p>
+					<div class="card-actions justify-end">
+						<a class="btn btn-info" hx-target="#qr-code" hx-post={ "/admin/machines/edit/" + m.ID + "/qrcode" }>
+							QR-Code
+							generieren
+						</a>
+					</div>
+				</div>
+			</div>
+		}
+	</div>
 }
