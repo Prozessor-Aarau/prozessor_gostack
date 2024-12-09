@@ -77,9 +77,9 @@ templ MachinesList(machines []models.Machine) {
 				class="hover:bg-base-200 cursor-pointer grid grid-cols-6 text-sm p-3 py-4 items-center gap-3 border-dashed border-b border-base-content border-opacity-50"
 			>
 				<div class="col-span-3">{ m.MachineName }</div>
-				<div class="col-span-2 md:col-span-1">{ m.RessortName }</div>
+				<div class="col-span-2 md:col-span-2">{ m.RessortName }</div>
 				<div class="col-span-1 flex justify-end items-center">
-					<a class="btn btn-sm btn-circle btn-primary">
+					<a class="btn btn-sm btn-circle btn-primary" hx-get={ "/admin/machines/edit/" + m.ID } hx-target="#content">
 						<span class="i-mdi-lead-pencil"></span>
 					</a>
 				</div>
@@ -96,7 +96,17 @@ type MachineErrors struct {
 }
 
 templ MachinesForm(params models.Machine, ressorts []models.Ressort, errors MachineErrors) {
-	<form class="flex flex-wrap gap-3" hx-post="/admin/machines/create" hx-swap="innerHTML" hx-target="#content" novalidate>
+	<form
+		class="flex flex-wrap gap-3"
+		if len(params.ID)>0 {
+			hx-post={ "/admin/machines/edit/" + params.ID }
+		} else {
+			hx-post="/admin/machines/create"
+		}
+		hx-swap="innerHTML"
+		hx-target="#content"
+		novalidate
+	>
 		@ui.CSRF()
 		<div class="prose col-span-full">
 			if len(params.ID) > 0 {
@@ -154,7 +164,11 @@ templ MachinesForm(params models.Machine, ressorts []models.Ressort, errors Mach
 			}
 		</label>
 		<div class="col-span-full w-full gap-3 flex mt-3 items-center justify-center flex-col md:flex-row">
-			<input type="submit" class="btn btn-success col-span-4" value="Speichern"/>
+			if len(params.ID) > 0 {
+				<input type="submit" class="btn btn-success col-span-4" value="Änderungen speichern"/>
+			} else {
+				<input type="submit" class="btn btn-success col-span-4" value="Speichern"/>
+			}
 			<a href="/admin/machines" class="btn btn-warning">
 				<span class="i-mdi-cancel-bold"></span>
 				Abbrechen

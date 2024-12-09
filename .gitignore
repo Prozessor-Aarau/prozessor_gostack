@@ -10,6 +10,9 @@ tmp/
 # templ output files
 *_templ.go*
 
+# generated files
+assets/qr_codes/**
+
 # Binaries for programs and plugins
 *.exe
 *.exe~
