@@ -52,17 +52,17 @@ func routes(app *config.AppConfig) http.Handler {
 
 		// routes for the checkin page
 		mux.Get("/checkin", handlers.Make(handlers.Repo.HandleCheckinIndex))
-		mux.Get("/checkinvisitorlist", handlers.Make(handlers.Repo.HandleCheckinList))
-		mux.Post("/checkinvisitorlist", handlers.Make(handlers.Repo.HandleCheckinListFilter))
-		mux.Get("/checkedinvisitslist", handlers.Repo.GetVisitsByDate)
+		mux.Get("/checkin/visitorlist", handlers.Make(handlers.Repo.HandleCheckinList))
+		mux.Post("/checkin/visitorlist", handlers.Make(handlers.Repo.HandleCheckinListFilter))
 
 		// make new checkin
-		mux.Get("/checkin/{id}", handlers.Repo.CheckinVisitorForm)
-		mux.Post("/checkin/{id}", handlers.Repo.PostCheckin)
+		mux.Get("/checkin/{id}", handlers.Make(handlers.Repo.HandleCheckinFormIndex))
+		mux.Post("/checkin/{id}", handlers.Make(handlers.Repo.HandleCheckinForm))
+
 		// edit checkin
-		mux.Get("/checkin/{id}/{vid}", handlers.Repo.CheckinVisitorForm)
-		mux.Post("/checkin/{id}/{vid}", handlers.Repo.PostCheckin)
-		mux.Delete("/visits/{id}", handlers.Repo.DeleteCheckin)
+		mux.Get("/checkin/{id}/{vid}", handlers.Make(handlers.Repo.HandleCheckinFormIndex))
+		mux.Post("/checkin/{id}/{vid}", handlers.Make(handlers.Repo.HandleCheckinForm))
+		mux.Delete("/visits/{id}", handlers.Make(handlers.Repo.HandleCheckinDelete))
 
 		// routes for the visitor page
 		mux.Get("/visitors", handlers.Repo.Visitors)

@@ -1,5 +1,5 @@
 package ui
 
 templ CSRF() {
-<input type="hidden" name="csrf_token" value={ ctx.Value("csrf.Token").(string) } />
+<input type="hidden" id="csrf_token" name="csrf_token" value={ ctx.Value("csrf.Token").(string) } />
 }

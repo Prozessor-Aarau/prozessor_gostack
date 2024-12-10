@@ -1,6 +1,7 @@
 package checkin
 
 import (
+"fmt"
 "github.com/faebut/prozessor_gostack/internal/models"
 "github.com/faebut/prozessor_gostack/internal/render"
 "github.com/faebut/prozessor_gostack/view/layout"
@@ -9,7 +10,15 @@ import (
 "time"
 )
 
-templ Checkin(visitor models.Visitor, visitors []models.Visitor, count int, pages int, onpage int, filter string) {
+templ Checkin(
+visitor models.Visitor,
+visitors []models.Visitor,
+count int,
+pages int,
+onpage int,
+filter string, visitslist []models.Visit,
+vCount int,
+) {
 @layout.App(true, visitor) {
 <div class="prose mb-10">
   <h1>Check-In: { time.Now().Format("02 Jan 2006") }</h1>
@@ -20,10 +29,7 @@ templ Checkin(visitor models.Visitor, visitors []models.Visitor, count int, page
     @searchField()
     @VisitorList(visitors, count, pages, onpage, filter)
   </div>
-  <div class="prose border-t pt-6 md:pt-0 md:pl-3 md:border-t-0 md:border-l border-base-content border-opacity-30">
-    <h2>heute Eingecheckt:</h2>
-    <div id="checkedinList" hx-get="/admin/checkedinvisitslist" hx-trigger="load"></div>
-  </div>
+  @visits(visitslist, vCount)
 </div>
 }
 }
@@ -34,9 +40,9 @@ templ searchField() {
   <label class="input input-bordered flex items-center gap-2">
     <span class="text-3xl i-mdi-magnify"></span>
     <input type="search" id="search_term" name="search_term" class="grow"
-      placeholder="Suche nach Name, Vorname oder Ort..." hx-post="/admin/checkinvisitorlist"
+      placeholder="Suche nach Name, Vorname oder Ort..." hx-post="/admin/checkin/visitorlist"
       hx-trigger="input changed delay:500ms, search" hx-target="#visitorList" />
-    <button id="fieldreset" hx-get="/admin/checkinvisitorlist" hx-target="#visitorList"
+    <button id="fieldreset" hx-get="/admin/checkin/visitorlist" hx-target="#visitorList"
       class="ml-3 btn btn-neutral btn-outline btn-xs btn-circle"><span class="i-mdi-close"></span></button>
   </label>
 </form>
@@ -77,18 +83,302 @@ templ pagination(pages int, onpage int, filter string) {
 <div class="grid justify-items-center">
   <div class="join pt-6">
     <button class={ "join-item btn" , templ.KV("btn-disabled", onpage==1) } hx-target="#visitorList"
-      hx-get={ "/admin/checkinvisitorlist?page=" + strconv.Itoa(onpage-1) + filter }>«</button>
+      hx-get={ "/admin/checkin/visitorlist?page=" + strconv.Itoa(onpage-1) + filter }>«</button>
     for _, p := range pagesslice {
     switch p {
     case 1, pages, onpage, onpage+1, onpage-1:
     <button class={ "join-item btn" , templ.KV("btn-primary", onpage==p) } hx-target="#visitorList"
-      hx-get={ "/admin/checkinvisitorlist?page=" + strconv.Itoa(p) + filter }>{ strconv.Itoa(p) }</button>
+      hx-get={ "/admin/checkin/visitorlist?page=" + strconv.Itoa(p) + filter }>{ strconv.Itoa(p) }</button>
     case onpage+2, onpage-2:
     <button class="join-item btn btn-disabled">.</button>
     }
     }
     <button class={ "join-item btn" , templ.KV("btn-disabled", onpage==pages) } hx-target="#visitorList"
-      hx-get={ "/admin/checkinvisitorlist?page=" + strconv.Itoa(onpage+1) + filter }>»</button>
+      hx-get={ "/admin/checkin/visitorlist?page=" + strconv.Itoa(onpage+1) + filter }>»</button>
   </div>
 </div>
+}
+
+templ visits(visitslist []models.Visit, vCount int) {
+<div class="prose border-t pt-6 md:pt-0 md:pl-3 md:border-t-0 md:border-l border-base-content border-opacity-30">
+  <h2>heute Eingecheckt:</h2>
+  if vCount > 0 {
+  <div class="grid gap-3" style="grid-template-columns: repeat(6,auto);">
+    for _, v := range visitslist {
+    <div id={ "listing_" + strconv.Itoa(v.ID) }
+      class="hover:bg-base-200 cursor-pointer text-sm p-3 py-4 border-dashed border-b border-base-content border-opacity-50 items-center grid grid-cols-subgrid col-span-6">
+      if v.Partner.ID > 0 {
+      <span class="i-mdi-person-multiple text-secondary text-xl"></span>
+      } else if v.Ressort.ID > 0 {
+      <span class="i-mdi-robot-happy text-success text-xl"></span>
+      } else if v.Abonnement {
+      <span class="i-mdi-person text-secondary text-xl"></span>
+      } else {
+      <span class="i-mdi-person text-xl"></span>
+      }
+      <div class="col-span-1 flex items-center flex-wrap">
+        for _, a := range v.Ateliers {
+        <span class={ "i-mdi-" + a.Icon }></span>
+        }
+      </div>
+      <div class="col-span-1">{ v.Visitor.FirstName } { v.Visitor.FamilyName }</div>
+      <div class="col-span-1">{ v.Visitor.City }</div>
+      <div class="col-span-1 flex items-center gap-1">
+        <span class="i-mdi-clock"></span> { render.TimeElapsed(v.DateIn) }
+      </div>
+      <div class="col-span-1 flex items-center flex-wrap justify-end gap-1">
+        <a class="text-warning text-xl flex items-center" hx-get={ "/admin/checkin/" + v.Visitor.ID + "/" +
+          strconv.Itoa(v.ID) } hx-target="#addVisit" hx-swap="show:top">
+          <span class="i-mdi-pen"></span>
+        </a>
+        <!-- <a class="text-secondary text-xl flex items-center" hx-get='/admin/visits/payment/{{.Visitor.ID}}'> -->
+        <!--   <span class="i-mdi-payment"></span> -->
+        <!-- </a> -->
+      </div>
+    </div>
+    }
+  </div>
+  <!-- Start Legende -->
+  <div class="border-base-content border-opacity-20 border rounded-md dark:rounded-lg bg-base-100 my-4 p-4">
+    <h3 class="col-span-3 mt-0">Legende</h3>
+    <div class="flex flex-row gap-3">
+      <div>
+        <span class="label-text">Tarif</span>
+        <div>
+          <span class="i-mdi-person"></span>
+          <span>Nutzung</span>
+        </div>
+        <div>
+          <span class="i-mdi-person text-secondary"></span>
+          <span>Abo</span>
+        </div>
+        <div>
+          <span class="i-mdi-person-multiple text-secondary"></span>
+          <span>Partner*in</span>
+        </div>
+        <div>
+          <span class="i-mdi-robot-happy text-success"></span>
+          <span>Mitglied</span>
+        </div>
+      </div>
+      <div class="flex-grow">
+        <span class="label-text">Werkstätten</span>
+        <div>
+          <span class="i-mdi-nature"></span>
+          <span>Holzwerstatt</span>
+        </div>
+        <div>
+          <span class="i-mdi-camera"></span>
+          <span>Dunkelkammer</span>
+        </div>
+        <div>
+          <span class="i-mdi-hammer-wrench"></span>
+          <span>Metallwerkstatt</span>
+        </div>
+        <div>
+          <span class="i-mdi-battery-charging"></span>
+          <span>Elektroniklabor</span>
+        </div>
+        <div>
+          <span class="i-mdi-album"></span>
+          <span>Soundstudio</span>
+        </div>
+        <div>
+          <span class="i-mdi-printer"></span>
+          <span>Druckatelier</span>
+        </div>
+        <div>
+          <span class="i-mdi-iron"></span>
+          <span>Textilatelier</span>
+        </div>
+        <div>
+          <span class="i-mdi-restaurant"></span>
+          <span>Foodatelier</span>
+        </div>
+        <div>
+          <span class="i-mdi-bike"></span>
+          <span>Velowerkstatt</span>
+        </div>
+        <div>
+          <span class="i-mdi-coffee"></span>
+          <span>Aufenthaltsraum</span>
+        </div>
+        <div>
+          <span class="i-mdi-robot-industrial"></span>
+          <span>Laser/CNC</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  } else {
+  @layout.Warning("heute noch keine Besuche")
+  }
+</div>
+}
+
+templ CheckinForm(
+edit bool,
+visitor models.Visitor,
+ateliers []models.Atelier,
+visit models.Visit,
+checkedAteliers []int,
+err string,
+) {
+<div class="prose">
+  <h2>
+    if edit {
+    { fmt.Sprintf("%s's Check-in", visitor.FirstName) }
+    } else {
+    { fmt.Sprintf("%s %s einchecken", visitor.FirstName, visitor.FamilyName) }
+    }
+  </h2>
+  <!-- here infos for the visitor -->
+  <div class="collapse collapse-plus bg-base-100 border border-base-content border-opacity-20">
+    <input type="checkbox" checked?={ !edit } />
+    <div class="collapse-title text-xl font-medium">Details</div>
+    <div class="collapse-content">
+      <div class="grid grid-cols-2 gap-5">
+        <div class="flex flex-col">
+          <span class="label-text">Adresse:</span>
+          <span>{ visitor.FirstName } { visitor.FamilyName }</span>
+          <span>{ visitor.Address }</span>
+          <span>{ visitor.Postcode } { visitor.City }</span>
+        </div>
+        <div class="flex flex-col">
+          <span class="label-text">Geburtstag:</span>
+          <span>{ visitor.Birthdate.Format("2 Jan 2006") }</span>
+        </div>
+        <div class="flex flex-col">
+          <span class="label-text">Kontakt:</span>
+          if len(visitor.Phone) > 0 {
+          <span>{ visitor.Phone }</span>
+          }
+          if len(visitor.Email) > 0 {
+          <span>{ visitor.Email }</span>
+          }
+        </div>
+        <div class="flex flex-col">
+          <span class="label-text">Abonnement:</span>
+          if len(visitor.AboLast.BuyDate) > 0 {
+          <span class={ "mr-5" , templ.KV("text-error", render.ToToday(visitor.AboLast.BuyDate) < 0 ),
+            templ.KV("text-warning", render.ToToday(visitor.AboLast.BuyDate)>=0 &&
+            render.ToToday(visitor.AboLast.BuyDate) <= 45), templ.KV("text-success",
+              render.ToToday(visitor.AboLast.BuyDate)> 45) }
+              >
+              gültig:
+              { strconv.Itoa(render.ToToday(visitor.AboLast.BuyDate)) }
+              Tage
+          </span>
+          } else {
+          <span>kein Abonnement</span>
+          }
+          if visitor.Badge.Number > 0 {
+          <span class="text-primary flex gap-1 items-center">
+            <span class="i-mdi-key"></span>{
+            strconv.Itoa(visitor.Badge.Number) }
+          </span>
+          }
+        </div>
+        <div class="flex flex-col">
+          <span class="label-text">Vereinsmitglied:</span>
+          if len(visitor.Ressort.RessortName) > 0 {
+          <span>{ visitor.Ressort.RessortName }</span>
+          } else {
+          <span>kein Vereinsmitglied</span>
+          }
+        </div>
+        <div class="flex flex-col">
+          <span class="label-text">Partnerschaft:</span>
+          if len(visitor.Partner) > 0 {
+          for _, p := range visitor.Partner {
+          <span>{ p.PartnerName }</span>
+          }
+          } else {
+          <span>keine Partnerschaft</span>
+          }
+        </div>
+        <div class="col-span-2 grid justify-items-end">
+          <a class="btn btn-secondary btn-circle btn-outline" href={
+            templ.URL(fmt.Sprintf("/admin/visitors/%s?ref=checkin", visitor.ID)) }>
+            <span class="i-mdi-pen text-2xl"></span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- here starts the checkin form -->
+  <div class="mt-6 collapse collapse-plus bg-base-100 border border-base-content border-opacity-20">
+    <input type="checkbox" checked />
+    <div class="collapse-title text-xl font-medium">
+      if edit {
+      Check-in anpassen
+      } else {
+      Einchecken
+      }
+    </div>
+    <div class="collapse-content">
+      <form class="grid grid-cols-2 gap-5" novalidate>
+        @ui.CSRF()
+        <input type="hidden" name="ressort" value={ strconv.Itoa(visit.Ressort.ID) } />
+        <div class="col-span-2 flex flex-col">
+          <span class="label-text">Ateliers auswählen:</span>
+          <div class="grid grid-cols-2 gap-5">
+            for _, a := range ateliers {
+            <div class="form-control">
+              <label class="label cursor-pointer justify-start gap-3">
+                <input name={ strconv.Itoa(a.ID) } type="checkbox" class="checkbox" checked?={ render.Contains(a.ID,
+                  checkedAteliers) } />
+                <span class="label-text">{ a.AtelierName }</span>
+              </label>
+            </div>
+            }
+          </div>
+          if len(visitor.Partner) > 0 {
+          <span class="label-text mt-4 mb-2">als Partner einloggen</span>
+          <select name="partner" class="mb-4 select select-bordered">
+            <option value="0">ohne Partner</option>
+            for _, p := range visitor.Partner {
+            <option value={ strconv.Itoa(p.ID) } selected?={ p.ID==visit.Partner.ID }>{ p.PartnerName }</option>
+            }
+          </select>
+          }
+          if len(err) > 0 {
+          <div class="my-6">
+            @layout.Error(err)
+          </div>
+          }
+        </div>
+        <div class={ "col-span-2 grid gap-3 grid-cols-2 justify-around place-items-center" , templ.KV("sm:grid-cols-3",
+          edit) }>
+          if edit {
+          <button hx-post={ fmt.Sprintf("/admin/checkin/%s/%d", visitor.ID, visit.ID) } hx-target="#addVisit"
+            class="btn btn-primary">Anpassen</button>
+          } else {
+          <button hx-post={ "/admin/checkin/" + visitor.ID } hx-target="#addVisit"
+            class="btn btn-success">Einchecken</button>
+          }
+          <a class="btn btn-warning" href="/admin/checkin">Abbrechen</a>
+          if edit {
+          <div id="deleteButton" class="col-span-2 sm:col-span-1">
+            <button class="btn btn-error btn-circle btn-outline" hx-delete={ "/admin/visits/" + strconv.Itoa(visit.ID) }
+              hx-target={ "#listing_" + strconv.Itoa(visit.ID) } hx-swap="outerHTML"
+              hx-confirm={ "Möchtest du den Besuch von " + visitor.FirstName + " wirklich löschen?" }>
+              <span class="i-mdi-trash text-2xl"></span>
+            </button>
+          </div>
+          }
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+<!-- this script is needed for the delete button to send the CSRF-Token -->
+if edit {
+<script type="text/javascript">
+  button = document.getElementById("deleteButton")
+  button.addEventListener('htmx:configRequest', (event) => {
+    event.detail.headers['X-CSRF-Token'] = document.getElementById('csrf_token').value
+  })
+</script>
+}
 }
