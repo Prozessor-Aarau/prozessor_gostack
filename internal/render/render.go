@@ -9,6 +9,7 @@ import (
 	"math"
 	"net/http"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
@@ -35,6 +36,7 @@ var functions = template.FuncMap{
 var app *config.AppConfig
 var pathToTemplates = "./templates"
 
+// TODO remove helper functions from here and put it into helpers
 // Add two ints together
 func Add(a, b int) int {
 	return a + b
@@ -78,10 +80,20 @@ func RealDate(t time.Time) bool {
 
 // TimeElapsed returns the elapsed hours and minutes in 00:00 format from a timestamp to now
 func TimeElapsed(t time.Time) string {
+	// if less than 9 put a 0 in front of number
+	doubleDigit := func(d int) string {
+		if d < 10 {
+			return fmt.Sprintf("0%d", d)
+		} else {
+			return strconv.Itoa(d)
+		}
+	}
+
 	timeD := time.Since(t)
 	hours := int(math.Floor(timeD.Hours()))
 	minutes := int(timeD.Minutes()) - (hours * 60)
-	diffOut := fmt.Sprintf("%d:%d", hours, minutes)
+
+	diffOut := fmt.Sprintf("%s:%s", doubleDigit(hours), doubleDigit(minutes))
 
 	return diffOut
 }
