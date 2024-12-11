@@ -321,3 +321,31 @@ func (m *Repository) HandleMachinesQRDelete(w http.ResponseWriter, r *http.Reque
 	// if everything okay, go back to machines
 	return rendering(w, r, machines.QRcode(machine))
 }
+
+// HandleMachinesQRPrint handles the Machine QR code deletion
+func (m *Repository) HandleMachinesQRPrint(w http.ResponseWriter, r *http.Request) error {
+	// get id
+	id := chi.URLParam(r, "id")
+
+	machine, err := m.DB.MachineByID(id)
+	if err != nil {
+		log.Println("could not get machine from DB: ", err)
+		m.DB.CreateLog(
+			models.Log{
+				Typ:     "error",
+				Module:  "machines",
+				Message: fmt.Sprintf("Can't get machine from database: %s", err),
+			},
+		)
+		return nil
+	}
+
+	// print the QR-Code
+	err = qrcodes.PrintQRCode(machine)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+
+	return rendering(w, r, machines.SucessButton(machine))
+}

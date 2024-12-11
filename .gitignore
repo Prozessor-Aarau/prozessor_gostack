@@ -11,7 +11,7 @@ tmp/
 *_templ.go*
 
 # generated files
-assets/qr_codes/**
+static/qr_codes/**
 
 # Binaries for programs and plugins
 *.exe

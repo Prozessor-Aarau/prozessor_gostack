@@ -196,7 +196,13 @@ templ QRcode(m models.Machine) {
 					<p><strong>Verlinkt zu Formular:</strong></p>
 					<p><a href={ templ.URL("/report?machine=" + m.ID) }>/report?machine={ m.ID }</a></p>
 					<div class=" card-actions justify-end">
-						<a class="btn btn-info">QR-Code ausdrucken</a>
+						<a
+							class="btn btn-info"
+							hx-post={ "/admin/machines/edit/" + m.ID + "/qrcode/print" }
+							id="printbutton"
+							hx-target="#printbutton"
+							hx-swap="outerHTML"
+						>QR-Code ausdrucken</a>
 						<a
 							class="btn btn-error"
 							hx-target="#qr-code"
@@ -222,4 +228,14 @@ templ QRcode(m models.Machine) {
 			</div>
 		}
 	</div>
+}
+
+templ SucessButton(m models.Machine) {
+	<a
+		hx-post={ "/admin/machines/edit/" + m.ID + "/qrcode/print" }
+		class="btn btn-success"
+		id="printbutton"
+		hx-target="#printbutton"
+		hx-swap="outerHTML"
+	>QR-Code wurde ausgedruckt</a>
 }
