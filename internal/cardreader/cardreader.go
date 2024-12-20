@@ -76,15 +76,6 @@ func (r *CardReader) ReadCard(ct context.Context) (Scan, error) {
 			continue
 		}
 
-		// status, err := tag.Status()
-		// if err != nil {
-		// 	log.Printf("CONNECT: error getting status: %s", err)
-		// 	_ = tag.Disconnect(scard.ResetCard)
-		// 	continue
-		// }
-		//
-		// log.Printf("status: %v", hex.EncodeToString(status.Atr))
-
 		res, err := tag.Transmit([]byte{0xFF, 0xCA, 0x00, 0x00, 0x00})
 		if err != nil {
 			log.Printf("error transmitting: %s", err)
@@ -96,13 +87,6 @@ func (r *CardReader) ReadCard(ct context.Context) (Scan, error) {
 			_ = tag.Disconnect(scard.ResetCard)
 			continue
 		}
-
-		// resCode := res[len(res)-2:]
-		// if resCode[0] != 0x90 && resCode[1] != 0x00 {
-		// 	log.Printf("invalid response code: %x", resCode)
-		// 	_ = tag.Disconnect(scard.ResetCard)
-		// 	continue
-		// }
 
 		uid := res[:len(res)-2]
 

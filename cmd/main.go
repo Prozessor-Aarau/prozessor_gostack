@@ -20,8 +20,6 @@ import (
 	"github.com/joho/godotenv"
 )
 
-const portNumber = ":4000"
-
 var app config.AppConfig
 var session *scs.SessionManager
 var infoLog *log.Logger
@@ -40,6 +38,13 @@ func main() {
 	log.Println("Starting mail listener...")
 	// start listening for mail
 	listenForMail()
+
+	err = godotenv.Load()
+	if err != nil {
+		log.Fatal("error loading .env file")
+	}
+
+	portNumber := os.Getenv("PORT")
 
 	log.Println("Starting application on port", portNumber)
 
