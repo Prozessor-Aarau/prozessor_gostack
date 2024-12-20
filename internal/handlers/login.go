@@ -11,6 +11,7 @@ import (
 	"github.com/faebut/prozessor_gostack/internal/models"
 	"github.com/faebut/prozessor_gostack/internal/render"
 	"github.com/faebut/prozessor_gostack/view/auth"
+	"github.com/joho/godotenv"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -116,8 +117,16 @@ func (m *Repository) CreateLoginMail(w http.ResponseWriter, r *http.Request) {
 		log.Fatal(err)
 	}
 
+	err = godotenv.Load()
+	if err != nil {
+		log.Fatal("error loading .env file")
+	}
+
+	baseUrl := os.Getenv("BASE_URL")
+
 	registerLink := fmt.Sprintf(
-		"http://localhost:4000/createlogin?email=%s&uid=%s",
+		"%s/createlogin?email=%s&uid=%s",
+		baseUrl,
 		visitor.Email,
 		uid,
 	)
