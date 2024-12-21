@@ -345,6 +345,15 @@ func (m *Repository) PostEditVisitor(w http.ResponseWriter, r *http.Request) {
 		visitor.Ressort.ID = ressort
 	}
 
+	roleID, err := strconv.Atoi(r.Form.Get("role"))
+	if err != nil {
+		log.Println("Could not convert roleID to int")
+	}
+
+	if roleID > 0 {
+		visitor.RoleID = roleID
+	}
+
 	// validation
 	form := forms.New(r.PostForm)
 	form.Required("first_name", "family_name", "birthdate", "address", "postcode", "city")

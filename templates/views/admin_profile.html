@@ -169,7 +169,7 @@
       <div class="label">
         <span class="label-text">Zugangs-Level auswählen</span>
       </div>
-      <select id="ressort" name="ressort" class="select select-bordered w-full ">
+      <select id="role" name="role" class="select select-bordered w-full ">
         <option disabled selected value="0">Rolle auswählen</option>
         {{range $roles}}
         <option value="{{.ID}}" {{if eq $vis.RoleID .ID}} selected {{end}}>{{.RoleName}}

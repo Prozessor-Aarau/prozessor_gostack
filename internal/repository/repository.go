@@ -137,8 +137,9 @@ func (m *postgresDBRepo) UpdateVisitor(v models.Visitor) error {
   password = $11, 
   avatar = $12,
   ressort_id = $13,
-  updated_on = $14
-  WHERE id = $15`
+  role_id = $14,
+  updated_on = $15
+  WHERE id = $16`
 
 	_, err := m.DB.ExecContext(ctx, stmt,
 		v.FirstName,
@@ -154,6 +155,7 @@ func (m *postgresDBRepo) UpdateVisitor(v models.Visitor) error {
 		NewNullString(v.Password),
 		NewNullString(v.Avatar),
 		NewNullInt(v.Ressort.ID),
+		NewNullInt(v.RoleID),
 		time.Now(),
 		v.ID,
 	)
