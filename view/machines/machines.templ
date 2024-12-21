@@ -1,66 +1,62 @@
 package machines
 
 import (
-	"github.com/faebut/prozessor_gostack/internal/models"
-	"github.com/faebut/prozessor_gostack/view/layout"
-	"github.com/faebut/prozessor_gostack/view/ui"
-	"strconv"
+"github.com/faebut/prozessor_gostack/internal/models"
+"github.com/faebut/prozessor_gostack/view/layout"
+"github.com/faebut/prozessor_gostack/view/ui"
+"strconv"
 )
 
 templ Machines(visitor models.Visitor, machines []models.Machine, ressorts []models.Ressort) {
-	@layout.App(true, visitor) {
-		<div class="prose mb-10">
-			<h1>Maschinen / Equipment</h1>
-		</div>
-		<div id="content">
-			@MachinesFilter(ressorts)
-			@MachinesList(machines)
-			<div>
-				<a class="mt-3 btn btn-primary" hx-get="/admin/machines/create" hx-target="#content">
-					<span class="i-mdi-key-add"></span> Maschine erstellen
-				</a>
-			</div>
-		</div>
-	}
+@layout.App(true, visitor) {
+<div class="prose mb-10">
+  <h1>Maschinen / Equipment</h1>
+</div>
+<div id="content">
+  @MachinesFilter(ressorts)
+  @MachinesList(machines)
+  <div>
+    <a class="mt-3 btn btn-primary" hx-get="/admin/machines/create" hx-target="#content">
+      <span class="i-mdi-key-add"></span> Maschine erstellen
+    </a>
+  </div>
+</div>
+}
 }
 
 templ MachinesFilter(ressorts []models.Ressort) {
-	<div class="border-base-content border-opacity-20 border rounded-md dark:rounded-lg bg-base-100 my-4 p-4">
-		<h2 class="font-bold text-xl mb-3">Suchfilter</h2>
-		<form id="filterForm" novalidate>
-			<div class="grid grid-cols-5 gap-5 items-center">
-				@ui.CSRF()
-				<label class="input input-bordered flex items-center gap-2 col-span-4 md:col-span-2">
-					<span class="text-3xl i-mdi-magnify"></span>
-					<input type="text" id="filter_string" name="filter_string" class="grow" placeholder="Suche nach Maschine..."/>
-					<button id="fieldreset" class="ml-3 btn btn-neutral btn-outline btn-xs btn-circle">
-						<span class="i-mdi-close"></span>
-					</button>
-				</label>
-				<label class="form-control w-full max-w-xs col-span-8 md:col-span-2">
-					<select name="ressort" id="ressorttype" class="select select-bordered">
-						<option disabled selected>Ressort auswählen...</option>
-						for _, v := range ressorts {
-							<option value={ strconv.Itoa(v.ID) }>{ v.RessortName }</option>
-						}
-					</select>
-				</label>
-				<div class="col-span-5 md:col-span-1 grid grid-cols-2 justify-items-center justify-around gap-3">
-					<button
-						type="submit"
-						hx-post="/admin/machines/list"
-						hx-target="#badgesList"
-						class="btn btn-success btn-outline btn-circle"
-					><span class="i-mdi-magnify text-xl"></span></button>
-					<a href="/admin/machines" class="btn btn-error btn-outline btn-circle">
-						<span class="i-mdi-close text-xl"></span>
-					</a>
-				</div>
-			</div>
-		</form>
-	</div>
-	<!-- reset fields with button -->
-	<script>
+<div class="border-base-content border-opacity-20 border rounded-md dark:rounded-lg bg-base-100 my-4 p-4">
+  <h2 class="font-bold text-xl mb-3">Suchfilter</h2>
+  <form id="filterForm" novalidate>
+    <div class="grid grid-cols-5 gap-5 items-center">
+      @ui.CSRF()
+      <label class="input input-bordered flex items-center gap-2 col-span-4 md:col-span-2">
+        <span class="text-3xl i-mdi-magnify"></span>
+        <input type="text" id="filter_string" name="filter_string" class="grow" placeholder="Suche nach Maschine..." />
+        <button id="fieldreset" class="ml-3 btn btn-neutral btn-outline btn-xs btn-circle">
+          <span class="i-mdi-close"></span>
+        </button>
+      </label>
+      <label class="form-control w-full max-w-xs col-span-8 md:col-span-2">
+        <select name="ressort" id="ressorttype" class="select select-bordered">
+          <option disabled selected>Ressort auswählen...</option>
+          for _, v := range ressorts {
+          <option value={ strconv.Itoa(v.ID) }>{ v.RessortName }</option>
+          }
+        </select>
+      </label>
+      <div class="col-span-5 md:col-span-1 grid grid-cols-2 justify-items-center justify-around gap-3">
+        <button type="submit" hx-post="/admin/machines/list" hx-target="#badgesList"
+          class="btn btn-success btn-outline btn-circle"><span class="i-mdi-magnify text-xl"></span></button>
+        <a href="/admin/machines" class="btn btn-error btn-outline btn-circle">
+          <span class="i-mdi-close text-xl"></span>
+        </a>
+      </div>
+    </div>
+  </form>
+</div>
+<!-- reset fields with button -->
+<script>
   searchField = document.querySelector("#filter_string")
 
   document.getElementById("fieldreset").addEventListener("click", function (event) {
@@ -71,171 +67,159 @@ templ MachinesFilter(ressorts []models.Ressort) {
 }
 
 templ MachinesList(machines []models.Machine) {
-	if len(machines) > 0 {
-		for _, m := range machines {
-			<div
-				class="hover:bg-base-200 cursor-pointer grid grid-cols-6 text-sm p-3 py-4 items-center gap-3 border-dashed border-b border-base-content border-opacity-50"
-			>
-				<div class="col-span-3">{ m.MachineName }</div>
-				<div class="col-span-2 md:col-span-2">{ m.RessortName }</div>
-				<div class="col-span-1 flex justify-end items-center">
-					<a class="btn btn-sm btn-circle btn-primary" hx-get={ "/admin/machines/edit/" + m.ID } hx-target="#content">
-						<span class="i-mdi-lead-pencil"></span>
-					</a>
-				</div>
-			</div>
-		}
-	} else {
-		<span>no Machines yet</span>
-	}
+if len(machines) > 0 {
+for _, m := range machines {
+<div
+  class="hover:bg-base-200 cursor-pointer grid grid-cols-6 text-sm p-3 py-4 items-center gap-3 border-dashed border-b border-base-content border-opacity-50">
+  <div class="col-span-3">{ m.MachineName }</div>
+  <div class="col-span-2 md:col-span-2">{ m.RessortName }</div>
+  <div class="col-span-1 flex justify-end items-center">
+    <a class="btn btn-sm btn-circle btn-primary" hx-get={ "/admin/machines/edit/" + m.ID } hx-target="#content">
+      <span class="i-mdi-lead-pencil"></span>
+    </a>
+  </div>
+</div>
+}
+} else {
+<span>no Machines yet</span>
+}
 }
 
 type MachineErrors struct {
-	MachineName string
-	Ressort     string
+MachineName string
+Ressort string
 }
 
 templ MachinesForm(params models.Machine, ressorts []models.Ressort, errors MachineErrors) {
-	<form
-		class="grid grid-cols-1 md:grid-cols-2 gap-3"
-		if len(params.ID)>0 {
-			hx-post={ "/admin/machines/edit/" + params.ID }
-		} else {
-			hx-post="/admin/machines/create"
-		}
-		hx-swap="innerHTML"
-		hx-target="#content"
-		novalidate
-	>
-		<div>
-			@ui.CSRF()
-			<div class="prose col-span-full">
-				if len(params.ID) > 0 {
-					<h2>Maschine bearbeiten: { params.MachineName }</h2>
-				} else {
-					<h2>Neue Maschine erstellen</h2>
-				}
-			</div>
-			<label class="form-control w-full">
-				<div class="label">
-					<span class="label-text">Bezeichnung <span class="text-error font-extrabold ">*</span></span>
-				</div>
-				<input
-					type=" text"
-					name="machine_name"
-					id="machine_name"
-					class={ "input input-bordered" , templ.KV("input-error",
+<form class="grid grid-cols-1 md:grid-cols-2 gap-3" if len(params.ID)>0 {
+  hx-post={ "/admin/machines/edit/" + params.ID }
+  } else {
+  hx-post="/admin/machines/create"
+  }
+  hx-swap="innerHTML"
+  hx-target="#content"
+  novalidate
+  >
+  <div>
+    @ui.CSRF()
+    <div class="prose col-span-full">
+      if len(params.ID) > 0 {
+      <h2>Maschine bearbeiten: { params.MachineName }</h2>
+      } else {
+      <h2>Neue Maschine erstellen</h2>
+      }
+    </div>
+    <label class="form-control w-full">
+      <div class="label">
+        <span class="label-text">Bezeichnung <span class="text-error font-extrabold ">*</span></span>
+      </div>
+      <input type=" text" name="machine_name" id="machine_name" class={ "input input-bordered" , templ.KV("input-error",
         len(errors.MachineName)>
       0) }
-					value={ params.MachineName }
-					required
-				/>
-				if len(errors.MachineName) > 0 {
-					<div class="label">
-						<span class="label-text text-error">{ errors.MachineName }</span>
-					</div>
-				}
-			</label>
-			<label class="form-control w-full">
-				<div class="label">
-					<span class="label-text">Ressort <span class="text-error font-extrabold ">*</span></span>
-				</div>
-				<select
-					name="ressort"
-					id="ressort"
-					class={ "select select-bordered" , templ.KV("select-error",
+      value={ params.MachineName }
+      required
+      />
+      if len(errors.MachineName) > 0 {
+      <div class="label">
+        <span class="label-text text-error">{ errors.MachineName }</span>
+      </div>
+      }
+    </label>
+    <label class="form-control w-full">
+      <div class="label">
+        <span class="label-text">Ressort <span class="text-error font-extrabold ">*</span></span>
+      </div>
+      <select name="ressort" id="ressort" class={ "select select-bordered" , templ.KV("select-error",
         len(errors.Ressort)>
         0) }
-					value={ strconv.Itoa(params.RessortID) }
-					required
-				>
-					<option disabled selected>Ressort auswählen...</option>
-					for _, v := range ressorts {
-						if v.ID == params.RessortID {
-							<option value={ strconv.Itoa(v.ID) } selected>{ v.RessortName }</option>
-						} else {
-							<option value={ strconv.Itoa(v.ID) }>{ v.RessortName }</option>
-						}
-					}
-				</select>
-				if len(errors.Ressort) > 0 {
-					<div class="label">
-						<span class="label-text text-error">{ errors.Ressort }</span>
-					</div>
-				}
-			</label>
-			<div class="col-span-full w-full gap-3 flex mt-3 items-center justify-center flex-col md:flex-row">
-				if len(params.ID) > 0 {
-					<input type="submit" class="btn btn-success col-span-4" value="Änderungen speichern"/>
-				} else {
-					<input type="submit" class="btn btn-success col-span-4" value="Speichern"/>
-				}
-				<a href="/admin/machines" class="btn btn-warning">
-					<span class="i-mdi-cancel-bold"></span>
-					Abbrechen
-				</a>
-			</div>
-		</div>
-		if len(params.ID)>0 {
-			@QRcode(params)
-		}
-	</form>
+        value={ strconv.Itoa(params.RessortID) }
+        required
+        >
+        <option disabled selected>Ressort auswählen...</option>
+        for _, v := range ressorts {
+        if v.ID == params.RessortID {
+        <option value={ strconv.Itoa(v.ID) } selected>{ v.RessortName }</option>
+        } else {
+        <option value={ strconv.Itoa(v.ID) }>{ v.RessortName }</option>
+        }
+        }
+      </select>
+      if len(errors.Ressort) > 0 {
+      <div class="label">
+        <span class="label-text text-error">{ errors.Ressort }</span>
+      </div>
+      }
+    </label>
+    <div class="col-span-full w-full gap-3 flex mt-3 items-center justify-center flex-col md:flex-row">
+      if len(params.ID) > 0 {
+      <input type="submit" class="btn btn-success col-span-4" value="Änderungen speichern" />
+      } else {
+      <input type="submit" class="btn btn-success col-span-4" value="Speichern" />
+      }
+      <a href="/admin/machines" class="btn btn-warning">
+        <span class="i-mdi-cancel-bold"></span>
+        Abbrechen
+      </a>
+    </div>
+  </div>
+  if len(params.ID)>0 {
+  @QRcode(params)
+  }
+</form>
 }
 
 templ QRcode(m models.Machine) {
-	<div id="qr-code" class="mt-6">
-		if len(m.QR)>0 {
-			<div class="card bg-base-100 md:w-96 shadow-xl">
-				<figure>
-					<img src={ "/static/qr_codes/" + m.QR } alt="QR-Code"/>
-				</figure>
-				<div class="card-body">
-					<h2 class="card-title">
-						QR-Code
-					</h2>
-					<p><strong>Verlinkt zu Formular:</strong></p>
-					<p><a href={ templ.URL("/report?machine=" + m.ID) }>/report?machine={ m.ID }</a></p>
-					<div class=" card-actions justify-end">
-						<a
-							class="btn btn-info"
-							hx-post={ "/admin/machines/edit/" + m.ID + "/qrcode/print" }
-							id="printbutton"
-							hx-target="#printbutton"
-							hx-swap="outerHTML"
-						>QR-Code ausdrucken</a>
-						<a
-							class="btn btn-error"
-							hx-target="#qr-code"
-							hx-post={ "/admin/machines/edit/" + m.ID + "/qrcode/delete" }
-						>QR-Code löschen</a>
-					</div>
-				</div>
-			</div>
-		} else {
-			<div class="card bg-base-100 md:w-96 shadow-xl">
-				<div class="card-body">
-					<h2 class="card-title">
-						QR-Code
-					</h2>
-					<p>Es ist noch kein QR-Code vorhanden, du kannst einen erstellen.</p>
-					<div class="card-actions justify-end">
-						<a class="btn btn-info" hx-target="#qr-code" hx-post={ "/admin/machines/edit/" + m.ID + "/qrcode" }>
-							QR-Code
-							generieren
-						</a>
-					</div>
-				</div>
-			</div>
-		}
-	</div>
+<div id="qr-code" class="mt-6">
+  if len(m.QR)>0 {
+  <div class="card bg-base-100 md:w-96 shadow-xl">
+    <figure>
+      <img src={ "/static/qr_codes/" + m.QR } alt="QR-Code" />
+    </figure>
+    <div class="card-body">
+      <h2 class="card-title">
+        QR-Code
+      </h2>
+      <p><strong>Verlinkt zu Formular:</strong></p>
+      <p><a href={ templ.URL("/report?machine=" + m.ID) }>/report?machine={ m.ID }</a></p>
+					<div class=" card-actions justify-center items-center flex-col gap-4 mt-3">
+          <a class="btn btn-info loaded-content" hx-post={ "/admin/machines/edit/" + m.ID + "/qrcode/print" }
+            id="printbutton" hx-target="#printbutton" hx-indicator="#printbuttonload, #printbutton" hx-swap="outerHTML"
+            hx-confirm="Überprüfe, dass der Label-drucker (neben dem self-checkin terminal) eingeschaltet ist: Grünes Licht leuchtet!">
+            QR-Code
+            ausdrucken
+          </a>
+          <div id="printbuttonload" class="btn btn-disabled htmx-indicator">
+            <span class="loading loading-spinner"></span>Drucke QR-Code
+          </div>
+          <a class="btn btn-warning" hx-target="#qr-code" hx-post={ "/admin/machines/edit/" + m.ID + "/qrcode/delete"
+            }>QR-Code löschen</a>
+    </div>
+  </div>
+</div>
+} else {
+<div class="card bg-base-100 md:w-96 shadow-xl">
+  <div class="card-body">
+    <h2 class="card-title">
+      QR-Code
+    </h2>
+    <p>Es ist noch kein QR-Code vorhanden, du kannst einen erstellen.</p>
+    <div class="card-actions justify-end">
+      <a class="btn btn-info" hx-target="#qr-code" hx-post={ "/admin/machines/edit/" + m.ID + "/qrcode" }>
+        QR-Code
+        generieren
+      </a>
+    </div>
+  </div>
+</div>
+}
+</div>
 }
 
 templ SucessButton(m models.Machine) {
-	<a
-		hx-post={ "/admin/machines/edit/" + m.ID + "/qrcode/print" }
-		class="btn btn-success"
-		id="printbutton"
-		hx-target="#printbutton"
-		hx-swap="outerHTML"
-	>QR-Code wurde ausgedruckt</a>
+<a hx-post={ "/admin/machines/edit/" + m.ID + "/qrcode/print" } class="btn btn-success" id="printbutton"
+  hx-target="#printbutton" hx-swap="outerHTML">QR-Code wurde ausgedruckt</a>
+}
+
+templ ErrorButton(s string) {
+<div class="btn btn-error">{ s }</div>
 }

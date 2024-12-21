@@ -3,11 +3,11 @@
 }
 
 .htmx-request .htmx-indicator {
-  display: flex;
+  display: inline-flex;
 }
 
 .htmx-request.htmx-indicator {
-  display: flex;
+  display: inline-flex;
 }
 
 /* Hide previously loaded content during HTMX request */

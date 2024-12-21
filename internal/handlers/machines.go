@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/faebut/prozessor_gostack/internal/forms"
 	"github.com/faebut/prozessor_gostack/internal/models"
@@ -337,14 +338,14 @@ func (m *Repository) HandleMachinesQRPrint(w http.ResponseWriter, r *http.Reques
 				Message: fmt.Sprintf("Can't get machine from database: %s", err),
 			},
 		)
-		return nil
+		return rendering(w, r, machines.ErrorButton("Datenbankfehler!"))
 	}
 
 	// print the QR-Code
 	err = qrcodes.PrintQRCode(machine)
 	if err != nil {
 		log.Println(err)
-		return err
+		return rendering(w, r, machines.ErrorButton("Druckerfehler!"))
 	}
 
 	return rendering(w, r, machines.SucessButton(machine))
