@@ -121,7 +121,7 @@ func (m *postgresDBRepo) AllMachines(filter models.MachineFilter) ([]models.Mach
 
 	// check if there are filters and set where clauses
 	if filter.RessortID > 0 {
-		ressort = "AND m.ressort_id = $2"
+		ressort = fmt.Sprintf("AND m.ressort_id = %d", filter.RessortID)
 	}
 
 	countQuery := fmt.Sprintf(`SELECT COUNT(*) FROM machines m

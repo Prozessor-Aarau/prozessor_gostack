@@ -7,14 +7,14 @@ import (
 "strconv"
 )
 
-templ Machines(visitor models.Visitor, machines []models.Machine, ressorts []models.Ressort) {
+templ Machines(visitor models.Visitor, ressorts []models.Ressort) {
 @layout.App(true, visitor) {
 <div class="prose mb-10">
   <h1>Maschinen / Equipment</h1>
 </div>
 <div id="content">
   @MachinesFilter(ressorts)
-  @MachinesList(machines)
+  <div id="machinesList" hx-get="/admin/machines/list" hx-trigger="load"></div>
   <div>
     <a class="mt-3 btn btn-primary" hx-get="/admin/machines/create" hx-target="#content">
       <span class="i-mdi-key-add"></span> Maschine erstellen
@@ -38,7 +38,7 @@ templ MachinesFilter(ressorts []models.Ressort) {
         </button>
       </label>
       <label class="form-control w-full max-w-xs col-span-8 md:col-span-2">
-        <select name="ressort" id="ressorttype" class="select select-bordered">
+        <select name="ressort" id="ressort" class="select select-bordered">
           <option disabled selected>Ressort auswählen...</option>
           for _, v := range ressorts {
           <option value={ strconv.Itoa(v.ID) }>{ v.RessortName }</option>
@@ -46,7 +46,7 @@ templ MachinesFilter(ressorts []models.Ressort) {
         </select>
       </label>
       <div class="col-span-5 md:col-span-1 grid grid-cols-2 justify-items-center justify-around gap-3">
-        <button type="submit" hx-post="/admin/machines/list" hx-target="#badgesList"
+        <button type="submit" hx-post="/admin/machines/list" hx-target="#machinesList"
           class="btn btn-success btn-outline btn-circle"><span class="i-mdi-magnify text-xl"></span></button>
         <a href="/admin/machines" class="btn btn-error btn-outline btn-circle">
           <span class="i-mdi-close text-xl"></span>
@@ -81,7 +81,7 @@ for _, m := range machines {
 </div>
 }
 } else {
-<span>no Machines yet</span>
+@layout.Warning("Keine Suchergebnisse")
 }
 }
 

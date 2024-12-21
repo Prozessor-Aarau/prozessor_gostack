@@ -38,6 +38,13 @@ func (m *Repository) HandleMachinesIndex(w http.ResponseWriter, r *http.Request)
 		m.App.Session.Put(r.Context(), "error", "Can't get ressorts from database")
 	}
 
+	// render the template
+	return rendering(w, r, machines.Machines(visitor, ressorts))
+}
+
+// HandleMachinesList handles the machines list
+func (m *Repository) HandleMachinesList(w http.ResponseWriter, r *http.Request) error {
+
 	machineList, _, err := m.DB.AllMachines(models.MachineFilter{
 		MachineName: "",
 		RessortID:   0,
@@ -49,7 +56,39 @@ func (m *Repository) HandleMachinesIndex(w http.ResponseWriter, r *http.Request)
 	}
 
 	// render the template
-	return rendering(w, r, machines.Machines(visitor, machineList, ressorts))
+	return rendering(w, r, machines.MachinesList(machineList))
+}
+
+// HandleMachinesListFilter handles the machines list search filters
+func (m *Repository) HandleMachinesListFilter(w http.ResponseWriter, r *http.Request) error {
+
+	// initial values
+	var mfilter models.MachineFilter
+	mfilter.MachineName = ""
+	mfilter.RessortID = 0
+
+	// get data from Form and set
+	f := r.Form.Get("filter_string")
+	if len(f) > 0 {
+		mfilter.MachineName = f
+	}
+	rID, err := strconv.Atoi(r.Form.Get("ressort"))
+	if err != nil {
+		log.Println("no ressort set")
+	}
+	if rID > 0 {
+		mfilter.RessortID = rID
+	}
+
+	machineList, _, err := m.DB.AllMachines(mfilter)
+
+	if err != nil {
+		log.Println(err)
+		return nil
+	}
+
+	// render the template
+	return rendering(w, r, machines.MachinesList(machineList))
 }
 
 // HandleMachinesCreateIndex handles the Machine creation Page

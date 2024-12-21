@@ -82,6 +82,9 @@ func routes(app *config.AppConfig) http.Handler {
 		mux.Get("/machines", handlers.Make(handlers.Repo.HandleMachinesIndex))
 		mux.Get("/machines/create", handlers.Make(handlers.Repo.HandleMachinesCreateIndex))
 		mux.Post("/machines/create", handlers.Make(handlers.Repo.HandleMachinesCreate))
+		mux.Get("/machines/list", handlers.Make(handlers.Repo.HandleMachinesList))
+		mux.Post("/machines/list", handlers.Make(handlers.Repo.HandleMachinesListFilter))
+		// edit machines
 		mux.Get("/machines/edit/{id}", handlers.Make(handlers.Repo.HandleMachinesEditIndex))
 		mux.Post("/machines/edit/{id}", handlers.Make(handlers.Repo.HandleMachinesEdit))
 		mux.Post("/machines/edit/{id}/qrcode", handlers.Make(handlers.Repo.HandleMachinesQRCreate))
