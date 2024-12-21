@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"io"
 	"log"
 	"math"
@@ -14,31 +15,27 @@ import (
 	"github.com/faebut/prozessor_gostack/internal/forms"
 	"github.com/faebut/prozessor_gostack/internal/models"
 	"github.com/faebut/prozessor_gostack/internal/render"
+	"github.com/faebut/prozessor_gostack/view/visitors"
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
 
-// Visitors is the visitors page handler
-func (m *Repository) Visitors(w http.ResponseWriter, r *http.Request) {
-	user, ok := m.App.Session.Get(r.Context(), "visitor").(models.Visitor)
+// HandleVisitorsIndex is the visitors page handler
+func (m *Repository) HandleVisitorsIndex(w http.ResponseWriter, r *http.Request) error {
+	visitor, ok := m.App.Session.Get(r.Context(), "visitor").(models.Visitor)
 	if !ok {
 		log.Println("could not get visitor from Session")
 		m.App.Session.Put(r.Context(), "error", "Can't get visitor from session")
-		http.Redirect(w, r, "/admin/logout", http.StatusSeeOther)
-		return
+
+		return hxRedirect(w, r, "/admin/logout")
 	}
 
-	data := make(map[string]interface{})
-	data["user"] = user
-
-	render.Template(w, r, "admin_visitors.html", &models.TemplateData{
-		Data: data,
-	})
+	return rendering(w, r, visitors.Visitors(visitor))
 }
 
-// GetVisitors is the handler to get the visitors list
-func (m *Repository) GetVisitors(w http.ResponseWriter, r *http.Request) {
+// HandleVisitorList is the handler to get the visitors list
+func (m *Repository) HandleVisitorList(w http.ResponseWriter, r *http.Request) error {
 
 	// set initial params
 	page := 1
@@ -80,22 +77,39 @@ func (m *Repository) GetVisitors(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Println("could not get visitors from DB: ", err)
 		m.App.Session.Put(r.Context(), "error", "Can't get visitors from database")
+		return err
 	}
 
-	data := make(map[string]interface{})
-	data["visitorlist"] = visitorList
-	data["count"] = count
-	data["pages"] = int(math.Ceil(float64(count) / float64(limit)))
-	data["onPage"] = page
-	data["filter"] = filter
+	urlSearchString := fmt.Sprintf(
+		"&search=%s&sort=%s&sortdir=%s",
+		filter.SearchString,
+		filter.Sort,
+		filter.SortDir,
+	)
+	if filter.Abo {
+		urlSearchString = urlSearchString + fmt.Sprintf("&abo=true&valid=%s", filter.AboValidity)
+	}
+	if filter.Member {
+		urlSearchString = urlSearchString + "&member=true"
+	}
+	if filter.Partner {
+		urlSearchString = urlSearchString + "&partner=true"
+	}
+	if filter.Badge {
+		urlSearchString = urlSearchString + "&badge=true"
+	}
 
-	render.Template(w, r, "part_visitorlist.html", &models.TemplateData{
-		Data: data,
-	})
+	return rendering(w, r, visitors.VisitorList(
+		visitorList,
+		count,
+		int(math.Ceil(float64(count)/10)),
+		page,
+		urlSearchString,
+	))
 }
 
-// PostGetVisitors gets the filter values and returns the filtered visitor list
-func (m *Repository) PostGetVisitors(w http.ResponseWriter, r *http.Request) {
+// HandleVisitorListFilter gets the filter values and returns the filtered visitor list
+func (m *Repository) HandleVisitorListFilter(w http.ResponseWriter, r *http.Request) error {
 
 	// set initial page param
 	page := 1
@@ -120,18 +134,35 @@ func (m *Repository) PostGetVisitors(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Println("could not get visitors from DB: ", err)
 		m.App.Session.Put(r.Context(), "error", "Can't get visitors from database")
+		return err
 	}
 
-	data := make(map[string]interface{})
-	data["visitorlist"] = visitorList
-	data["count"] = count
-	data["pages"] = int(math.Ceil(float64(count) / float64(limit)))
-	data["onPage"] = page
-	data["filter"] = filter
+	urlSearchString := fmt.Sprintf(
+		"&search=%s&sort=%s&sortdir=%s",
+		filter.SearchString,
+		filter.Sort,
+		filter.SortDir,
+	)
+	if filter.Abo {
+		urlSearchString = urlSearchString + fmt.Sprintf("&abo=true&valid=%s", filter.AboValidity)
+	}
+	if filter.Member {
+		urlSearchString = urlSearchString + "&member=true"
+	}
+	if filter.Partner {
+		urlSearchString = urlSearchString + "&partner=true"
+	}
+	if filter.Badge {
+		urlSearchString = urlSearchString + "&badge=true"
+	}
 
-	render.Template(w, r, "part_visitorlist.html", &models.TemplateData{
-		Data: data,
-	})
+	return rendering(w, r, visitors.VisitorList(
+		visitorList,
+		count,
+		int(math.Ceil(float64(count)/10)),
+		page,
+		urlSearchString,
+	))
 }
 
 // VisitorsSelectBox returns a select box with the filtered and selected visitors

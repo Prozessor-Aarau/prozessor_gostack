@@ -1,0 +1,174 @@
+package visitors
+
+import (
+"fmt"
+"github.com/faebut/prozessor_gostack/internal/models"
+"github.com/faebut/prozessor_gostack/internal/render"
+"github.com/faebut/prozessor_gostack/view/layout"
+"github.com/faebut/prozessor_gostack/view/ui"
+"strconv"
+)
+
+templ Visitors(visitor models.Visitor) {
+@layout.App(true, visitor) {
+<div class="prose mb-10">
+  <h1>Besucher:innen</h1>
+</div>
+@searchField()
+<div id="visitorList" hx-get="/admin/visitors/visitorlist" hx-trigger="load"></div>
+}
+}
+
+templ searchField() {
+<div class="border-base-content border-opacity-20 border rounded-md dark:rounded-lg bg-base-100 my-4 p-4">
+  <h2 class="font-bold text-xl mb-3">Suchfilter</h2>
+  <form id="filterForm" novalidate>
+    <div class="grid grid-cols-4 gap-5 items-start">
+      @ui.CSRF()
+      <label class="input input-bordered flex items-center gap-2 col-span-4">
+        <span class="text-3xl i-mdi-magnify"></span>
+        <input type="text" id="search_term" name="search_term" class="grow"
+          placeholder="Suche nach Name, Vorname oder Ort..." />
+        <button id="fieldreset" class="ml-3 btn btn-neutral btn-outline btn-xs btn-circle">
+          <span class="i-mdi-close"></span>
+        </button>
+      </label>
+      <div class="col-span-2 md:col-span-1">
+        <label class="label cursor-pointer justify-start gap-4">
+          <input name="hasabo" type="checkbox" class="checkbox checkbox-sm" onchange="changefunc()" />
+          <span>Abonnement</span>
+        </label>
+        <label class="form-control hidden" id="abooptions">
+          <div class="label">
+            <span class="label-text">Gültigkeit:</span>
+          </div>
+          <select name="abovalidity" id="sort" class="select select-bordered">
+            <option value="all">alle</option>
+            <option value="valid">nur gültig</option>
+            <option value="invalid">nur abgelaufen</option>
+          </select>
+        </label>
+      </div>
+      <label class="label cursor-pointer justify-start gap-4 col-span-2 md:col-span-1">
+        <input name="member" type="checkbox" class="checkbox checkbox-sm" />
+        <span>Mitglied</span>
+      </label>
+      <label class="label cursor-pointer justify-start gap-4 col-span-2 md:col-span-1">
+        <input name="badge" type="checkbox" class="checkbox checkbox-sm" />
+        <span>Badge</span>
+      </label>
+      <label class="label cursor-pointer justify-start gap-4 col-span-2 md:col-span-1">
+        <input name="partner" type="checkbox" class="checkbox checkbox-sm" />
+        <span>Partner</span>
+      </label>
+      <label class="form-control w-full max-w-xs col-span-4 md:col-span-2">
+        <div class="label">
+          <span class="label-text">Sortieren nach:</span>
+        </div>
+        <select name="sort" id="sort" class="select select-bordered">
+          <option value="family_name">Name</option>
+          <option value="buydate">Abonnement</option>
+          <option value="city">Wohnort</option>
+        </select>
+      </label>
+      <label class="form-control w-full max-w-xs col-span-4 md:col-span-2">
+        <div class="label">
+          <span class="label-text">Richtung:</span>
+        </div>
+        <select name="sort_dir" id="sort_dir" class="select select-bordered">
+          <option value="ASC">aufsteigend</option>
+          <option value="DESC">absteigend</option>
+        </select>
+      </label>
+      <div class="col-span-4 grid grid-cols-2 justify-items-center gap-3">
+        <button type="submit" hx-post="/admin/visitors/visitorlist" hx-target="#visitorList"
+          class="btn btn-success btn-outline"><span class="i-mdi-magnify"></span> suchen</button>
+        <a href="/admin/visitors" class="btn btn-error btn-outline">
+          <span class="i-mdi-close"></span> zurücksetzen
+        </a>
+      </div>
+    </div>
+  </form>
+</div>
+<!-- script to reset fields and handle toggles -->
+<script>
+  abooptions = document.querySelector("#abooptions")
+
+  searchField = document.querySelector("#search_term")
+
+  document.getElementById("fieldreset").addEventListener("click", function (event) {
+    event.preventDefault();
+    searchField.value = "";
+  });
+
+  changefunc = function () {
+    abooptions.classList.toggle("hidden")
+  }
+</script>
+}
+
+templ VisitorList(visitors []models.Visitor, count int, pages int, onpage int, filter string) {
+if count == 0 {
+@layout.Warning("Keine Suchergebnisse")
+} else {
+for _, v := range visitors {
+<div
+  class="hover:bg-base-200 cursor-pointer grid grid-cols-12 text-sm p-3 py-4 items-center gap-3 border-dashed border-b border-base-content border-opacity-50">
+  <div class="col-span-6 sm:col-span-3 md:col-span-2">{ v.FirstName } { v.FamilyName }</div>
+  <div class="col-span-6 sm:col-span-3 md:col-span-2">{ v.City }</div>
+  <div class="col-span-full sm:col-span-6 md:col-span-4">{ v.Email }</div>
+  <div class="col-span-6 md:col-span-2 flex justify-end">
+    if len(v.AboLast.BuyDate) > 0 {
+    <span class={ "mr-5" , templ.KV("text-error", render.ToToday(v.AboLast.BuyDate) < 0 ), templ.KV("text-warning",
+      render.ToToday(v.AboLast.BuyDate)>=0 &&
+      render.ToToday(v.AboLast.BuyDate) <= 45), templ.KV("text-success", render.ToToday(v.AboLast.BuyDate)> 45) }
+        >
+        { strconv.Itoa(render.ToToday(v.AboLast.BuyDate)) }
+        Tage
+    </span>
+    }
+  </div>
+  <div class="col-span-6 md:col-span-1 text-left">
+    if v.Badge.Number > 0 {
+    <div class="tooltip tooltip-info" data-tip={ strconv.Itoa(v.Badge.Number) }>
+      <span class="i-mdi-key">sd</span>
+    </div>
+    }
+    if len(v.Ressort.RessortName) > 0 {
+    <div class="tooltip tooltip-info" data-tip={ v.Ressort.RessortName }>
+      <span class="i-mdi-account-group"></span>
+    </div>
+    }
+  </div>
+  <div class="col-span-full md:col-span-1 flex gap-2 justify-center md:justify-end">
+    <a class="btn btn-sm btn-circle btn-primary" href={ templ.URL(fmt.Sprintf("/admin/visitors/%s?ref=visitors", v.ID))
+      }>
+      <span class="i-mdi-lead-pencil"></span>
+    </a>
+  </div>
+</div>
+}
+@pagination(pages, onpage, filter)
+}
+}
+
+templ pagination(pages int, onpage int, filter string) {
+{{ pagesslice := render.Iterate(pages) }}
+<div class="grid justify-items-center">
+  <div class="join pt-6">
+    <button class={ "join-item btn" , templ.KV("btn-disabled", onpage==1) } hx-target="#visitorList"
+      hx-get={ "/admin/visitors/visitorlist?page=" + strconv.Itoa(onpage-1) + filter }>«</button>
+    for _, p := range pagesslice {
+    switch p {
+    case 1, pages, onpage, onpage+1, onpage-1:
+    <button class={ "join-item btn" , templ.KV("btn-primary", onpage==p) } hx-target="#visitorList"
+      hx-get={ "/admin/visitors/visitorlist?page=" + strconv.Itoa(p) + filter }>{ strconv.Itoa(p) }</button>
+    case onpage+2, onpage-2:
+    <button class="join-item btn btn-disabled">.</button>
+    }
+    }
+    <button class={ "join-item btn" , templ.KV("btn-disabled", onpage==pages) } hx-target="#visitorList"
+      hx-get={ "/admin/visitors/visitorlist?page=" + strconv.Itoa(onpage+1) + filter }>»</button>
+  </div>
+</div>
+}

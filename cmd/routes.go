@@ -65,9 +65,9 @@ func routes(app *config.AppConfig) http.Handler {
 		mux.Delete("/visits/{id}", handlers.Make(handlers.Repo.HandleCheckinDelete))
 
 		// routes for the visitor page
-		mux.Get("/visitors", handlers.Repo.Visitors)
-		mux.Get("/visitorlist", handlers.Repo.GetVisitors)
-		mux.Post("/visitorlist", handlers.Repo.PostGetVisitors)
+		mux.Get("/visitors", handlers.Make(handlers.Repo.HandleVisitorsIndex))
+		mux.Get("/visitors/visitorlist", handlers.Make(handlers.Repo.HandleVisitorList))
+		mux.Post("/visitors/visitorlist", handlers.Make(handlers.Repo.HandleVisitorListFilter))
 		// route to get elements
 		mux.Get("/visitors/selectbox/", handlers.Repo.VisitorsSelectBox)
 		mux.Get("/visitors/selectbox/{id}", handlers.Repo.VisitorsSelectBox)
