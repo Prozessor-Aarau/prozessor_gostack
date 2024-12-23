@@ -10,7 +10,6 @@ import (
 
 	"github.com/faebut/prozessor_gostack/internal/forms"
 	"github.com/faebut/prozessor_gostack/internal/models"
-	"github.com/faebut/prozessor_gostack/internal/render"
 	"github.com/faebut/prozessor_gostack/view/auth"
 	"github.com/joho/godotenv"
 	"golang.org/x/crypto/bcrypt"
@@ -170,30 +169,28 @@ func (m *Repository) CreateLoginMail(w http.ResponseWriter, r *http.Request) {
 
 }
 
-// Login is the login page handlerh http.HandlerFunc
-func (m *Repository) CreateLogin(w http.ResponseWriter, r *http.Request) {
+// HandleCreateLoginIndex handles the CreateLogin index page
+func (m *Repository) HandleCreateLoginIndex(w http.ResponseWriter, r *http.Request) error {
 	email := r.URL.Query().Get("email")
 	uid := r.URL.Query().Get("uid")
 
 	// prepare data to send it to the templates
-	data := make(map[string]interface{})
+	var errors auth.CreateLoginErrors
+	var params auth.CreateLoginParams
 
 	visitor, err := m.DB.CheckCreateLogin(email, uid)
 	if err != nil {
-		data["error"] = "Code nicht mehr gültig. Bitte wende dich an den Vorstand!"
+		errors.AppError = "Code nicht mehr gültig. Bitte wende dich an den Vorstand!"
 	}
 
-	data["visitor"] = visitor
+	params.FirstName = visitor.FirstName
+	params.Email = visitor.Email
 
-	// send the data to the template
-	render.Template(w, r, "admin_createlogin.html", &models.TemplateData{
-		Data: data,
-		Form: forms.New(nil),
-	})
+	return rendering(w, r, auth.CreateLogin(params, errors))
 }
 
-// PostLogin is the post login page handler
-func (m *Repository) PostCreateLogin(w http.ResponseWriter, r *http.Request) {
+// HandleCreateLogin handles the CreateLogin post form
+func (m *Repository) HandleCreateLogin(w http.ResponseWriter, r *http.Request) error {
 
 	// validation
 	form := forms.New(r.PostForm)
@@ -202,25 +199,21 @@ func (m *Repository) PostCreateLogin(w http.ResponseWriter, r *http.Request) {
 	form.IsPassword("password")
 	form.IsMatch("password_check", "password")
 
-	var visitor models.Visitor
+	var visitor auth.CreateLoginParams
 
 	visitor.Email = r.Form.Get("email")
 	visitor.Password = r.Form.Get("password")
 	visitor.FirstName = r.Form.Get("first_name")
-	visitor.FamilyName = r.Form.Get("family_name")
 
 	// prepare data to send it to the templates
-	data := make(map[string]interface{})
+	var errors auth.CreateLoginErrors
 
 	// what to do if form not valid
 	if !form.Valid() {
+		errors.Password = form.Errors.Get("password")
+		errors.PasswordCheck = form.Errors.Get("password_check")
 		// send the data to the template
-		w.WriteHeader(http.StatusSeeOther)
-		render.Template(w, r, "admin_createlogin.html", &models.TemplateData{
-			Form: form,
-			Data: data,
-		})
-		return
+		return rendering(w, r, auth.CreateLoginForm(visitor, errors))
 	}
 
 	hashedPassword, err := bcrypt.GenerateFromPassword(
@@ -228,30 +221,24 @@ func (m *Repository) PostCreateLogin(w http.ResponseWriter, r *http.Request) {
 		bcrypt.DefaultCost,
 	)
 	if err != nil {
-		log.Println("Error creating hash :", err)
-		return
+		errors.AppError = "Error creating password hash"
+		// send the data to the template
+		return rendering(w, r, auth.CreateLoginForm(visitor, errors))
 	}
-	visitor.Password = string(hashedPassword)
+	var newVisitor models.Visitor
+	newVisitor.Email = visitor.Email
+	newVisitor.Password = string(hashedPassword)
 
 	// put new password in db and set to login
-	err = m.DB.CreatePassword(visitor)
+	err = m.DB.CreatePassword(newVisitor)
 	if err != nil {
-		data["error"] = fmt.Sprint("Error putting password in db:", err)
-	}
-
-	// what to do if form not valid
-	if data["error"] != nil {
+		errors.AppError = "Error putting password in db"
 		// send the data to the template
-		w.WriteHeader(http.StatusSeeOther)
-		render.Template(w, r, "admin_createlogin.html", &models.TemplateData{
-			Data: data,
-			Form: form,
-		})
-		return
+		return rendering(w, r, auth.CreateLoginForm(visitor, errors))
 	}
 
 	// redirect
-	http.Redirect(w, r, "/admin", http.StatusSeeOther)
+	return hxRedirect(w, r, "/admin")
 }
 
 // Logout logs a user out

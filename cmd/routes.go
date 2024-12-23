@@ -30,8 +30,8 @@ func routes(app *config.AppConfig) http.Handler {
 	mux.Post("/login", handlers.Make(handlers.Repo.HandleLoginCreate))
 
 	// for creating logins
-	mux.Get("/createlogin", handlers.Repo.CreateLogin)
-	mux.Post("/createlogin", handlers.Repo.PostCreateLogin)
+	mux.Get("/createlogin", handlers.Make(handlers.Repo.HandleCreateLoginIndex))
+	mux.Post("/createlogin", handlers.Make(handlers.Repo.HandleCreateLogin))
 
 	// for creating damage reports
 	mux.Get("/report", handlers.Make(handlers.Repo.HandleReportIndex))

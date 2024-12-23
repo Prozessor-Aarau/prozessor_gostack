@@ -90,3 +90,82 @@ templ LoginForm(params LoginParams, errors LoginErrors) {
 		</div>
 	</form>
 }
+
+templ CreateLogin(visitor CreateLoginParams, errors CreateLoginErrors) {
+	@layout.App(false, models.Visitor{}) {
+		<!-- Login Form -->
+		<div class="flex flex-col items-center">
+			<div class="prose">
+				<h2 class="mt-8">Willkommen beim Prozessor { visitor.FirstName }</h2>
+			</div>
+			@CreateLoginForm(visitor, errors)
+		</div>
+	}
+}
+
+type CreateLoginErrors struct {
+	AppError      string
+	Password      string
+	PasswordCheck string
+}
+
+type CreateLoginParams struct {
+	FirstName string
+	Email     string
+	Password  string
+}
+
+templ CreateLoginForm(params CreateLoginParams, errors CreateLoginErrors) {
+	if len(errors.AppError) > 0 {
+		@layout.Error(errors.AppError)
+	} else {
+		<!-- start of Form -->
+		<form
+			class="flex flex-col items-center gap-6 p-5 pt-10 w-full max-w-lg"
+			hx-post="/createlogin"
+			hx-swap="outerHTML"
+			novalidate
+		>
+			@ui.CSRF()
+			<input type="hidden" id="email" name="email" value={ params.Email }/>
+			<input type="hidden" id="first_name" name="first_name" value={ params.FirstName }/>
+			<label class="form-control w-full">
+				<div class="label">
+					<span class="label-text">Passwort ändern</span>
+				</div>
+				<input
+					type="password"
+					name="password"
+					id="password"
+					class={ "input input-bordered" , templ.KV("input-error",
+      len(errors.Password)> 0) }
+				/>
+				if len(errors.Password) > 0 {
+					<div class="label">
+						<span class="label-text text-error">{ errors.Password }</span>
+					</div>
+				}
+			</label>
+			<label class="form-control w-full">
+				<div class="label">
+					<span class="label-text">neues Passwort wiederholen</span>
+				</div>
+				<input
+					type="password"
+					name="password_check"
+					id="password_check"
+					class={ "input input-bordered" ,
+      templ.KV("input-error", len(errors.PasswordCheck)> 0) }
+				/>
+				if len(errors.PasswordCheck) > 0 {
+					<div class="label">
+						<span class="label-text text-error">{ errors.PasswordCheck }</span>
+					</div>
+				}
+			</label>
+			<div class="mt-6 grid grid-cols-1 justify-center">
+				<input type="submit" class="btn btn-primary px-10" value="Login Erstellen"/>
+			</div>
+		</form>
+	}
+}

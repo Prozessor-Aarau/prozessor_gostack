@@ -416,12 +416,12 @@ func (m *postgresDBRepo) CheckCreateLogin(email, uid string) (models.Visitor, er
 
 	var visitor models.Visitor
 
-	query := `SELECT first_name, family_name, email
+	query := `SELECT first_name, email
   FROM visitors WHERE email = $1 AND register_code = $2`
 
 	row := m.DB.QueryRowContext(ctx, query, email, uid)
 
-	err := row.Scan(&visitor.FirstName, &visitor.FamilyName, &visitor.Email)
+	err := row.Scan(&visitor.FirstName, &visitor.Email)
 	if err != nil {
 		return visitor, err
 	}
