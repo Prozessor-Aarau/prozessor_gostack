@@ -117,7 +117,9 @@ type CreateLoginParams struct {
 
 templ CreateLoginForm(params CreateLoginParams, errors CreateLoginErrors) {
 	if len(errors.AppError) > 0 {
-		@layout.Error(errors.AppError)
+		<div class="m-10 pt-10">
+			@layout.Error(errors.AppError)
+		</div>
 	} else {
 		<!-- start of Form -->
 		<form

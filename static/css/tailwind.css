@@ -4565,6 +4565,10 @@ details.collapse summary::-webkit-details-marker {
   margin: 0px;
 }
 
+.m-10 {
+  margin: 2.5rem;
+}
+
 .mx-auto {
   margin-left: auto;
   margin-right: auto;
