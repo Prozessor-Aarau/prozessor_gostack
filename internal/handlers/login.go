@@ -93,16 +93,22 @@ func (m *Repository) CreateLoginMail(w http.ResponseWriter, r *http.Request) {
 	visitor.FirstName = r.Form.Get("first_name")
 	visitor.FamilyName = r.Form.Get("family_name")
 	visitor.Email = strings.TrimSpace(r.Form.Get("email"))
-	roleID, err := strconv.Atoi(r.Form.Get("role"))
-	if err != nil {
-		fmt.Fprintf(
-			w,
-			`<span class="label-text text-error">Probleme beim generieren des Codes: %s</span>`,
-			err,
-		)
-		return
+
+	// handling roles
+	visitor.RoleID = 1
+	rIDString := r.Form.Get("role")
+	if len(rIDString) > 0 {
+		roleID, err := strconv.Atoi(rIDString)
+		if err != nil {
+			fmt.Fprintf(
+				w,
+				`<span class="label-text text-error">Probleme beim generieren des Codes: %s</span>`,
+				err,
+			)
+			return
+		}
+		visitor.RoleID = roleID
 	}
-	visitor.RoleID = roleID
 
 	// validation
 	if len(visitor.Email) < 3 {
