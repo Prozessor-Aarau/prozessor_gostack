@@ -476,7 +476,6 @@ func (m *Repository) PostEditVisitor(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		visitor.Password = string(hashedPassword)
-		visitor.Login = true
 	}
 
 	// what to do if form valid

@@ -23,9 +23,14 @@ func (m *postgresDBRepo) CreateRegisterCode(v models.Visitor) (string, error) {
 	}
 	uidString = uuid.String()
 
-	stmt := `UPDATE visitors SET register_code = $1 WHERE email = $2`
+	roleID := 1
+	if v.RoleID > 1 {
+		roleID = v.RoleID
+	}
 
-	_, err = m.DB.ExecContext(ctx, stmt, uidString, v.Email)
+	stmt := `UPDATE visitors SET register_code = $1, role_id = $2 WHERE email = $3`
+
+	_, err = m.DB.ExecContext(ctx, stmt, uidString, roleID, v.Email)
 	if err != nil {
 		return "", err
 	}
@@ -37,19 +42,12 @@ func (m *postgresDBRepo) CreatePassword(v models.Visitor) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	// update role ID or leave, if there already is one
-	roleID := 1
-	if v.RoleID > 0 {
-		roleID = v.RoleID
-	}
-
 	stmt := `UPDATE visitors 
-  SET password = $1, role_id = $2, updated_on = $3, register_code = NULL
-  WHERE email = $4`
+  SET password = $1, updated_on = $2, register_code = NULL
+  WHERE email = $3`
 
 	_, err := m.DB.ExecContext(ctx, stmt,
 		v.Password,
-		roleID,
 		time.Now(),
 		v.Email,
 	)

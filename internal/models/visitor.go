@@ -15,7 +15,6 @@ type Visitor struct {
 	Email        string
 	Phone        string
 	Infos        string
-	Login        bool
 	Password     string
 	Ressort      Ressort
 	RoleID       int
