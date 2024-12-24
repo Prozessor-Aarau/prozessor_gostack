@@ -388,3 +388,33 @@ func (m *Repository) HandleMachinesQRPrint(w http.ResponseWriter, r *http.Reques
 
 	return rendering(w, r, machines.SucessButton(machine))
 }
+
+// HandleMachinesQRDelete handles the Machine QR code deletion
+func (m *Repository) HandleMachinesDelete(w http.ResponseWriter, r *http.Request) error {
+	// get id
+	id := chi.URLParam(r, "id")
+
+	machine, err := m.DB.MachineByID(id)
+	if err != nil {
+		log.Println("could not get machine from DB: ", err)
+		return nil
+	}
+
+	if len(machine.QR) > 0 {
+		err = qrcodes.RemoveQRCode(machine)
+
+		if err != nil {
+			log.Println("could not Delete QR Code: ", err)
+			return nil
+		}
+	}
+
+	err = m.DB.DeleteMachineById(machine.ID)
+	if err != nil {
+		log.Println("could not delete machine in DB: ", err)
+		return nil
+	}
+
+	// if everything okay, go back to machines
+	return hxRedirect(w, r, "/admin/machines")
+}

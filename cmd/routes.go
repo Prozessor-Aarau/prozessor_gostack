@@ -87,6 +87,7 @@ func routes(app *config.AppConfig) http.Handler {
 		// edit machines
 		mux.Get("/machines/edit/{id}", handlers.Make(handlers.Repo.HandleMachinesEditIndex))
 		mux.Post("/machines/edit/{id}", handlers.Make(handlers.Repo.HandleMachinesEdit))
+		mux.Delete("/machines/{id}", handlers.Make(handlers.Repo.HandleMachinesDelete))
 		mux.Post("/machines/edit/{id}/qrcode", handlers.Make(handlers.Repo.HandleMachinesQRCreate))
 		mux.Post("/machines/edit/{id}/qrcode/delete", handlers.Make(handlers.Repo.HandleMachinesQRDelete))
 		mux.Post("/machines/edit/{id}/qrcode/print", handlers.Make(handlers.Repo.HandleMachinesQRPrint))

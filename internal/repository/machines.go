@@ -241,3 +241,22 @@ func (m *postgresDBRepo) DeleteMachineQR(machine models.Machine) error {
 
 	return nil
 }
+
+// DeleteMachineById deletes a machine from the db
+func (m *postgresDBRepo) DeleteMachineById(id string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	query := "DELETE FROM machines WHERE id = $1"
+
+	_, err := m.DB.ExecContext(
+		ctx,
+		query,
+		id,
+	)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

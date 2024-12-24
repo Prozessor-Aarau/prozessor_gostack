@@ -1,6 +1,7 @@
 package machines
 
 import (
+"fmt"
 "github.com/faebut/prozessor_gostack/internal/models"
 "github.com/faebut/prozessor_gostack/view/layout"
 "github.com/faebut/prozessor_gostack/view/ui"
@@ -160,12 +161,27 @@ templ MachinesForm(params models.Machine, ressorts []models.Ressort, errors Mach
         <span class="i-mdi-cancel-bold"></span>
         Abbrechen
       </a>
+      if len(params.ID) > 0 {
+      <a hx-confirm={ fmt.Sprintf("%s wirklich aus dem System löschen?", params.MachineName) }
+        hx-delete={ "/admin/machines/" + params.ID } class="btn btn-error btn-circle btn-outline" id="deleteButton">
+        <span class="i-mdi-trash text-xl"></span>
+      </a>
+      }
     </div>
   </div>
   if len(params.ID)>0 {
   @QRcode(params)
   }
 </form>
+<!-- this script is needed for the delete button to send the CSRF-Token -->
+if len(params.ID) > 0 {
+<script type="text/javascript">
+  button = document.getElementById("deleteButton")
+  button.addEventListener('htmx:configRequest', (event) => {
+    event.detail.headers['X-CSRF-Token'] = document.getElementById('csrf_token').value
+  })
+</script>
+}
 }
 
 templ QRcode(m models.Machine) {
