@@ -115,3 +115,101 @@ for _, b := range badges {
 </div>
 }
 }
+
+type BadgeCreateErrors struct {
+Number string
+UID string
+}
+
+templ BadgeCreate(badge models.Badge, errors BadgeCreateErrors) {
+<form class="flex flex-wrap gap-3" novalidate>
+  @ui.CSRF()
+  <div class="prose col-span-full">
+    <h2>Neuen Badge erstellen</h2>
+  </div>
+  <label class="form-control w-full">
+    <div class="label">
+      <span class="label-text">Nummer <span class="text-error font-extrabold">*</span></span>
+    </div>
+    <input type="text" placeholder="Badge Nummer" class={ "input input-bordered w-full" , templ.KV("input-error",
+      len(errors.Number)>0) }
+    value={ strconv.Itoa(badge.Number) }
+    name="number"
+    required
+    />
+    if len(errors.Number) > 0 {
+    <div class="label">
+      <span class="label-text text-error">{ errors.Number }</span>
+    </div>
+    }
+  </label>
+  <div class="flex w-full gap-3 items-end">
+    <label id="badge" class="form-control w-full">
+      <div class="label">
+        <span class="label-text">
+          UUID <span class="text-error font-extrabold">*</span>
+        </span>
+      </div>
+      <input type="text" placeholder="Badge UUID" class={ "input input-bordered w-full" , templ.KV("input-error",
+        len(errors.UID)> 0) }
+      value={ badge.UID }
+      name="uid"
+      required
+      />
+      if len(errors.UID) > 0 {
+      <div class="label">
+        <span class="label-text text-error">{ errors.UID }</span>
+      </div>
+      }
+    </label>
+    <div class="btn btn-outline btn-circle btn-secondary" hx-disabled-elt="this" hx-target="#statusMessage"
+      onclick="hideMessage()" hx-get="/admin/l4/badges/scan" hx-indicator="#statusMessage,#indicator">
+      <span class="i-mdi-nfc-variant text-2xl"></span>
+    </div>
+  </div>
+  <div id="indicator" class="flex htmx-indicator gap-3 items-center">
+    <span id="indicator" class="htmx-indicator loading loading-infinity loading-lg"></span>
+    <span class="font-bold">
+      Badge
+      wird gescannt...
+    </span>
+  </div>
+  <div id="statusMessage" class="loaded-content"></div>
+  <div class=" col-span-full text-sm mt-3">
+    <span class="text-error font-extrabold">*</span> diese Felder sind zwingend
+    auszufüllen und die Werte dürfen noch nicht vergeben sein.
+  </div>
+  <div class="col-span-full w-full gap-3 flex mt-3 items-center justify-center flex-col md:flex-row">
+    <a class="btn btn-success" hx-post="/admin/l4/badges/create" hx-target="#content">
+      Speichern
+    </a>
+    <a href="/admin/l3/badges" class="btn btn-warning">
+      <span class="i-mdi-cancel-bold"></span>
+      Abbrechen
+    </a>
+  </div>
+</form>
+<script>
+  hideMessage = function () {
+    document.getElementById("statusMessage").innerHTML = "";
+  }
+</script>
+}
+
+templ BadgeReturnUID(uid string, err string) {
+if len(err) > 0 {
+if err == "noreader" {
+<span class="text-error">Kein Lesegerät verbunden!</span>
+}
+if err == "deadline" {
+<span class="text-error">Dies hat zu lange gedauert, versuchs nochmals!</span>
+}
+} else {
+<label id="badge" class="form-control w-full col-span-full md:col-span-1">
+  <div class="label">
+    <span class="label-text">UUID <span class="text-error font-extrabold">*</span></span>
+  </div>
+  <input type="text" placeholder="Badge UUID" class="input input-bordered w-full " value={ uid } name="uid" />
+</label>
+}
+}

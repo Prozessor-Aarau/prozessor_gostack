@@ -305,24 +305,17 @@ func (m *Repository) BadgeUpdate(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusSeeOther)
 }
 
-// Badge is the handler for a single Badge
-func (m *Repository) BadgeCreate(w http.ResponseWriter, r *http.Request) {
-	// create empty badge
-	badge := models.Badge{}
-
-	data := make(map[string]interface{})
-	data["badge"] = badge
-
-	render.Template(w, r, "part_badge_create.html", &models.TemplateData{
-		Data: data,
-		Form: forms.New(nil),
-	})
+// HandleBadgeCreateIndex is the handler for the Badge creation form
+func (m *Repository) HandleBadgeCreateIndex(w http.ResponseWriter, r *http.Request) error {
+	// return an empty form
+	return rendering(w, r, badges.BadgeCreate(models.Badge{}, badges.BadgeCreateErrors{}))
 }
 
-// Badge is the handler for a single Badge
-func (m *Repository) PostBadgeCreate(w http.ResponseWriter, r *http.Request) {
+// HandleBadgeCreate is the handler for posting the badge creation form
+func (m *Repository) HandleBadgeCreate(w http.ResponseWriter, r *http.Request) error {
 	// create empty badge
 	var badge models.Badge
+	var formErrors badges.BadgeCreateErrors
 
 	form := forms.New(r.Form)
 	form.Required("number", "uid")
@@ -331,18 +324,14 @@ func (m *Repository) PostBadgeCreate(w http.ResponseWriter, r *http.Request) {
 	badge.UID = r.Form.Get("uid")
 	number, err := strconv.Atoi(r.Form.Get("number"))
 	if err != nil {
-		m.DB.CreateLog(
-			models.Log{
-				Typ:     "error",
-				Module:  "badges",
-				Message: fmt.Sprintf("Error converting string to int: %s", err),
-			},
-		)
 		log.Println("Error converting string to int:", err)
 	}
 	badge.Number = number
 
 	numValid, uidValid, err := m.DB.UniqueBadge(badge.Number, badge.UID)
+	if err != nil {
+		log.Println("error getting uniqueness of id and num:", err)
+	}
 
 	if !numValid {
 		form.Errors.Add("number", "Badge mit dieser Nummer exisitert schon")
@@ -352,40 +341,18 @@ func (m *Repository) PostBadgeCreate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if !form.Valid() {
-		data := make(map[string]interface{})
-		data["badge"] = badge
-
-		render.Template(w, r, "part_badge_create.html", &models.TemplateData{
-			Data: data,
-			Form: form,
-		})
-		return
+		formErrors.Number = form.Errors.Get("number")
+		formErrors.UID = form.Errors.Get("uid")
+		return rendering(w, r, badges.BadgeCreate(badge, formErrors))
 	}
 
-	id, err := m.DB.CreateBadge(badge)
+	_, err = m.DB.CreateBadge(badge)
 	if err != nil {
-		m.DB.CreateLog(
-			models.Log{
-				Typ:     "error",
-				Module:  "badges",
-				Message: fmt.Sprintf("Error converting string to int: %s", err),
-			},
-		)
-		log.Println("Error converting string to int:", err)
-		return
-	} else {
-		m.DB.CreateLog(
-			models.Log{
-				Typ:     "info",
-				Module:  "badges",
-				Message: fmt.Sprintf("Created new badge with id: %d", id),
-			},
-		)
+		log.Println("error creating badge", err)
+		return err
 	}
-
 	// redirect on success
-	w.Header().Set("HX-Redirect", "/admin/l3/badges")
-	w.WriteHeader(http.StatusSeeOther)
+	return hxRedirect(w, r, "/admin/l3/badges")
 }
 
 // BadgeDelete is the handler for deleting a badge
@@ -428,36 +395,29 @@ func (m *Repository) BadgeDelete(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusSeeOther)
 }
 
-func (m *Repository) BadgeRead(w http.ResponseWriter, r *http.Request) {
+// HandleBadgeRead handles a read request by badge reader and returns the uid
+func (m *Repository) HandleBadgeRead(w http.ResponseWriter, r *http.Request) error {
 	// set timeout for card reading
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
+	// start reader
 	myReader, err := cardreader.NewCardReader()
 	if err != nil {
 		log.Println(err)
-		fmt.Fprint(w, `<span class="text-error">Kein Lesegerät verbunden!</span>`)
-		return
+		return rendering(w, r, badges.BadgeReturnUID("", "noreader"))
 	}
 
+	// read card
 	res, err := myReader.ReadCard(ctx)
 	if err != nil {
 		if err.Error() == "Deadline Exceeded" {
-			fmt.Fprint(
-				w,
-				`<span class="text-error">Dies hat zu lange gedauert, versuchs nochmals!</span>`,
-			)
+			return rendering(w, r, badges.BadgeReturnUID("", "deadline"))
 		} else {
 			log.Println("error handling for other errors", err)
+			return err
 		}
-	} else {
-		// uid to template data and return in new file
-		data := make(map[string]interface{})
-		data["uid"] = res.UID
-
-		w.Header().Set("HX-Retarget", "#badge")
-		render.Template(w, r, "comp_return_uid.html", &models.TemplateData{
-			Data: data,
-		})
 	}
+
+	return rendering(w, r, badges.BadgeReturnUID(res.UID, ""))
 }
