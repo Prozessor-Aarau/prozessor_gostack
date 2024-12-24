@@ -12,51 +12,28 @@ import (
 	"github.com/faebut/prozessor_gostack/internal/forms"
 	"github.com/faebut/prozessor_gostack/internal/models"
 	"github.com/faebut/prozessor_gostack/internal/render"
+	"github.com/faebut/prozessor_gostack/view/badges"
 	"github.com/go-chi/chi/v5"
 )
 
-// Badges is the badge page handler
-func (m *Repository) Badges(w http.ResponseWriter, r *http.Request) {
-	// set initial values
-	super := false
+// HandleBadgesIndex is the badge page handler
+func (m *Repository) HandleBadgesIndex(w http.ResponseWriter, r *http.Request) error {
 	// send the data to the template
-	user, ok := m.App.Session.Get(r.Context(), "visitor").(models.Visitor)
+	visitor, ok := m.App.Session.Get(r.Context(), "visitor").(models.Visitor)
 	if !ok {
 		log.Println("could not get visitor from Session")
-		m.App.Session.Put(r.Context(), "error", "Can't get visitor from session")
-
-		m.DB.CreateLog(
-			models.Log{
-				Typ:     "error",
-				Module:  "badges",
-				Message: "Can't get visitor from session",
-			},
-		)
-
-		w.Header().Set("HX-Redirect", "/admin/logout")
-		w.WriteHeader(http.StatusSeeOther)
-		return
+		return hxRedirect(w, r, "/admin/logout")
 	}
-
-	if user.RoleID == 4 {
-		super = true
-	}
-
-	data := make(map[string]interface{})
-	data["user"] = user
-	data["super"] = super
-	render.Template(w, r, "admin_badges.html", &models.TemplateData{
-		Data: data,
-	})
+	return rendering(w, r, badges.Badges(visitor))
 }
 
-// BadgesList gets and returns the unfiltered badges list
-func (m *Repository) BadgesList(w http.ResponseWriter, r *http.Request) {
+// HandleBadgesList gets and returns the unfiltered badges list
+func (m *Repository) HandleBadgesList(w http.ResponseWriter, r *http.Request) error {
 	// set initial params
 	// need empty filter to get badges
 	filter := models.NewBadgeFilter("")
 
-	badges, count, err := m.DB.AllBadges(filter)
+	badgesList, _, err := m.DB.AllBadges(filter)
 	if err != nil {
 		log.Println("could not get badges from DB: ", err)
 		m.DB.CreateLog(
@@ -70,17 +47,11 @@ func (m *Repository) BadgesList(w http.ResponseWriter, r *http.Request) {
 		m.App.Session.Put(r.Context(), "error", "Can't get badges from database")
 	}
 
-	data := make(map[string]interface{})
-	data["badges"] = badges
-	data["count"] = count
-
-	render.Template(w, r, "part_badges_list.html", &models.TemplateData{
-		Data: data,
-	})
+	return rendering(w, r, badges.BadgesList(badgesList))
 }
 
 // BadgesList gets and returns the filtered badges list
-func (m *Repository) BadgesFilteredList(w http.ResponseWriter, r *http.Request) {
+func (m *Repository) HandleBadgesListFilter(w http.ResponseWriter, r *http.Request) error {
 	// set initial params
 	// need empty filter to get badges
 	filterString := r.Form.Get("filter_string")
@@ -88,7 +59,7 @@ func (m *Repository) BadgesFilteredList(w http.ResponseWriter, r *http.Request) 
 	filter.InUse = r.Form.Get("inuse")
 	filter.Type = r.Form.Get("type")
 
-	badges, count, err := m.DB.AllBadges(filter)
+	badgesList, _, err := m.DB.AllBadges(filter)
 	if err != nil {
 		log.Println("could not get badges from DB: ", err)
 		m.DB.CreateLog(
@@ -101,13 +72,7 @@ func (m *Repository) BadgesFilteredList(w http.ResponseWriter, r *http.Request) 
 		m.App.Session.Put(r.Context(), "error", "Can't get badges from database")
 	}
 
-	data := make(map[string]interface{})
-	data["badges"] = badges
-	data["count"] = count
-
-	render.Template(w, r, "part_badges_list.html", &models.TemplateData{
-		Data: data,
-	})
+	return rendering(w, r, badges.BadgesList(badgesList))
 }
 
 // Badge is the handler for a single Badge

@@ -1,0 +1,117 @@
+package badges
+
+import (
+"github.com/faebut/prozessor_gostack/internal/models"
+"github.com/faebut/prozessor_gostack/view/layout"
+"github.com/faebut/prozessor_gostack/view/ui"
+"strconv"
+)
+
+templ Badges(visitor models.Visitor) {
+@layout.App(true, visitor) {
+<div class="prose mb-10">
+  <h1>Badges</h1>
+</div>
+<div id="content">
+  @badgesFilter()
+  <div id="badgesList" hx-get="/admin/l3/badges/list" hx-trigger="load"></div>
+  if visitor.RoleID >= 8 {
+  <div>
+    <button type="button" class="mt-3 btn btn-primary" hx-target="#content" hx-get="/admin/l4/badges/create">
+      <span class="i-mdi-key-add"></span> Badge hinzufügen
+    </button>
+  </div>
+  }
+</div>
+}
+}
+
+templ badgesFilter() {
+<div class="border-base-content border-opacity-20 border rounded-md dark:rounded-lg bg-base-100 my-4 p-4">
+  <h2 class="font-bold text-xl mb-3">Suchfilter</h2>
+  <form id="filterForm" novalidate>
+    <div class="grid grid-cols-5 gap-5 items-center">
+      @ui.CSRF()
+      <label class="input input-bordered flex items-center gap-2 col-span-4 md:col-span-2">
+        <span class="text-3xl i-mdi-magnify"></span>
+        <input type="text" id="filter_string" name="filter_string" class="grow"
+          placeholder="Suche nach Badge Nummer..." />
+        <!-- how to implement this button? should reset field -->
+        <button id="fieldreset" class="ml-3 btn btn-neutral btn-outline btn-xs btn-circle">
+          <span class="i-mdi-close"></span>
+        </button>
+      </label>
+      <label class="form-control w-full max-w-xs col-span-5 md:col-span-1">
+        <select name="inuse" id="inuse" class="select select-bordered">
+          <option value="all">Verfügbarkeit (alle)</option>
+          <option value="gone">ausgeliehen</option>
+          <option value="here">verfügbar</option>
+        </select>
+      </label>
+      <label class="form-control w-full max-w-xs col-span-5 md:col-span-1">
+        <select name="type" id="type" class="select select-bordered">
+          <option value="all">Typ (alle)</option>
+          <option value="new">neue Badges</option>
+          <option value="old">alte Badges</option>
+        </select>
+      </label>
+      <div class="col-span-5 md:col-span-1 grid grid-cols-2 justify-items-center justify-around gap-3">
+        <button type="submit" hx-post="/admin/l3/badges/list" hx-target="#badgesList"
+          class="btn btn-success btn-outline btn-circle"><span class="i-mdi-magnify text-xl"></span></button>
+        <a href="/admin/l3/badges" class="btn btn-error btn-outline btn-circle">
+          <span class="i-mdi-close text-xl"></span>
+        </a>
+      </div>
+    </div>
+  </form>
+</div>
+<script>
+  searchField = document.querySelector("#filter_string")
+
+  document.getElementById("fieldreset").addEventListener("click", function (event) {
+    event.preventDefault();
+    searchField.value = "";
+  });
+</script>
+}
+
+templ BadgesList(badges []models.Badge) {
+if len(badges) > 0 {
+for _, b := range badges {
+<div
+  class="hover:bg-base-200 cursor-pointer grid grid-cols-6 text-sm p-3 py-4 items-center gap-3 border-dashed border-b border-base-content border-opacity-50">
+  <div class="col-span-1">{ strconv.Itoa(b.Number) }</div>
+  <div class="col-span-1 text-2xl flex items-center">
+    if len(b.VisitorID) > 0 {
+    if b.VisitorAboValid {
+    <span class="i-mdi-check-circle text-success"></span>
+    } else {
+    <span class="i-mdi-check-circle text-error"></span>
+    }
+    } else if len(b.ExternFirstName) > 0 {
+    <span class="i-mdi-check-circle text-warning"></span>
+    } else {
+    <span class="i-mdi-close-circle-outline"></span>
+    }
+  </div>
+  <div class="col-span-4 md:col-span-1">{ b.UID }</div>
+  <div class="col-span-5 md:col-span-2 text-right md:text-left">
+    { b.VisitorFirstName }
+    { b.VisitorFamilyName }
+    if len(b.ExternFirstName) > 0 {
+    { b.ExternFirstName } { b.ExternFamilyName }, { b.ExternPurpose }
+    }
+  </div>
+  <div class="col-span-1 flex justify-end items-center">
+    <a class="btn btn-sm btn-circle btn-primary" hx-get={ "/admin/l3/badges/" + strconv.Itoa(b.ID) } hx-target="#main">
+      <span class="i-mdi-lead-pencil"></span>
+    </a>
+  </div>
+</div>
+}
+} else {
+<div class="my-10">
+  @layout.Warning("keine Suchergebnisse")
+</div>
+}
+}

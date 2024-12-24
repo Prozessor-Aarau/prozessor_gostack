@@ -100,9 +100,9 @@ func routes(app *config.AppConfig) http.Handler {
 			mux.Use(Level3)
 			// put routes, that use at least level 3 in here
 			// badges
-			mux.Get("/badges", handlers.Repo.Badges)
-			mux.Get("/badges/list", handlers.Repo.BadgesList)
-			mux.Post("/badges/list", handlers.Repo.BadgesFilteredList)
+			mux.Get("/badges", handlers.Make(handlers.Repo.HandleBadgesIndex))
+			mux.Get("/badges/list", handlers.Make(handlers.Repo.HandleBadgesList))
+			mux.Post("/badges/list", handlers.Make(handlers.Repo.HandleBadgesListFilter))
 			mux.Get("/badges/{id}", handlers.Repo.Badge)
 			mux.Post("/badges/{id}", handlers.Repo.BadgeUpdate)
 			mux.Post("/badges/reset/{id}", handlers.Repo.BadgeReset)
