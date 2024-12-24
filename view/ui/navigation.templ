@@ -64,50 +64,50 @@ templ Navigation(visitor models.Visitor) {
         }
         if visitor.RoleID >= 3 {
         <li>
-          <a href="/admin/visitors">Benutzende</a>
-        </li>
-        }
-        if visitor.RoleID >= 4 {
-        <li>
           <details>
-            <summary>Abonnements</summary>
+            <summary>Verwaltung</summary>
             <ul>
+              <li>
+                <a href="/admin/visitors">Besucher:innen</a>
+              </li>
+              if visitor.RoleID >= 5 {
               <li>
                 <a href="/admin/l3/badges">Badges</a>
               </li>
               <li>
-                <a href="/admin/l3/abonnements">Abonnements verwalten</a>
+                <a href="/admin/l3/abonnements">Abonnements</a>
               </li>
               <li>
                 <a href="/admin/l3/abonnements/reminder">Reminder</a>
               </li>
+              }
             </ul>
           </details>
         </li>
-        <li>
-          <!-- <details> -->
-          <!--   <summary>Buchhaltung</summary> -->
-          <!--   <ul> -->
-          <!--     <li> -->
-          <!--       <a href="/admin/">Tagesabrechnungen</a> -->
-          <!--     </li> -->
-          <!--     <li> -->
-          <!--       <a href="/admin/">Rechnungen</a> -->
-          <!--     </li> -->
-          <!--   </ul> -->
-          <!-- </details> -->
-        </li>
+        }
+        if visitor.RoleID >= 8 {
         <!-- <li> -->
-        <!--   <a href="/admin/">Statistik</a> -->
+        <!-- <details> -->
+        <!--   <summary>Buchhaltung</summary> -->
+        <!--   <ul> -->
+        <!--     <li> -->
+        <!--       <a href="/admin/">Tagesabrechnungen</a> -->
+        <!--     </li> -->
+        <!--     <li> -->
+        <!--       <a href="/admin/">Rechnungen</a> -->
+        <!--     </li> -->
+        <!--   </ul> -->
+        <!-- </details> -->
         <!-- </li> -->
-        <!-- {{end}} -->
-        <!-- {{if ge $usr.RoleID 4}} -->
         <li>
           <details>
             <summary>Admin</summary>
             <ul>
               <li>
                 <a href="/admin/">Stammdaten</a>
+              </li>
+              <li>
+                <a href="/admin/">Statistik</a>
               </li>
               <li>
                 <a href="/admin/">Log</a>
