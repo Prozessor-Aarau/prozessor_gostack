@@ -47,8 +47,8 @@ func routes(app *config.AppConfig) http.Handler {
 		mux.Get("/logout", handlers.Repo.Logout)
 		// protected routes level 1
 		// routes for the profile page
-		mux.Get("/profile", handlers.Repo.EditVisitor)
-		mux.Post("/profile", handlers.Repo.PostEditVisitor)
+		mux.Get("/profile", handlers.Make(handlers.Repo.HandleProfileIndex))
+		mux.Post("/profile", handlers.Make(handlers.Repo.HandleProfileEdit))
 
 		// routes for the checkin page
 		mux.Get("/checkin", handlers.Make(handlers.Repo.HandleCheckinIndex))
@@ -75,8 +75,8 @@ func routes(app *config.AppConfig) http.Handler {
 		mux.Post("/visitors/selectbox/{id}", handlers.Repo.VisitorsSelectBox)
 
 		// routes for editing a visitor
-		mux.Get("/visitors/{id}", handlers.Repo.EditVisitor)
-		mux.Post("/visitors/{id}", handlers.Repo.PostEditVisitor)
+		mux.Get("/visitors/{id}", handlers.Make(handlers.Repo.HandleProfileIndex))
+		mux.Post("/visitors/{id}", handlers.Make(handlers.Repo.HandleProfileEdit))
 
 		// routes for machines
 		mux.Get("/machines", handlers.Make(handlers.Repo.HandleMachinesIndex))
