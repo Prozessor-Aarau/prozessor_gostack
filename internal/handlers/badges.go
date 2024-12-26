@@ -11,14 +11,13 @@ import (
 	"github.com/faebut/prozessor_gostack/internal/cardreader"
 	"github.com/faebut/prozessor_gostack/internal/forms"
 	"github.com/faebut/prozessor_gostack/internal/models"
-	"github.com/faebut/prozessor_gostack/internal/render"
 	"github.com/faebut/prozessor_gostack/view/badges"
 	"github.com/go-chi/chi/v5"
 )
 
 // HandleBadgesIndex is the badge page handler
 func (m *Repository) HandleBadgesIndex(w http.ResponseWriter, r *http.Request) error {
-	// send the data to the template
+	// get visitor
 	visitor, ok := m.App.Session.Get(r.Context(), "visitor").(models.Visitor)
 	if !ok {
 		log.Println("could not get visitor from Session")
@@ -75,125 +74,62 @@ func (m *Repository) HandleBadgesListFilter(w http.ResponseWriter, r *http.Reque
 	return rendering(w, r, badges.BadgesList(badgesList))
 }
 
-// Badge is the handler for a single Badge
-func (m *Repository) Badge(w http.ResponseWriter, r *http.Request) {
-	// set initial values
-	super := false
+// HandleBadgeEditIndex is the handler for the Badge edit form
+func (m *Repository) HandleBadgeEditIndex(w http.ResponseWriter, r *http.Request) error {
 
-	user, ok := m.App.Session.Get(r.Context(), "visitor").(models.Visitor)
+	visitor, ok := m.App.Session.Get(r.Context(), "visitor").(models.Visitor)
 	if !ok {
 		log.Println("could not get visitor from Session")
-		m.App.Session.Put(r.Context(), "error", "Can't get visitor from session")
-
-		m.DB.CreateLog(
-			models.Log{
-				Typ:     "error",
-				Module:  "badges",
-				Message: "Can't get visitor from session",
-			},
-		)
-
-		w.Header().Set("HX-Redirect", "/admin/logout")
-		w.WriteHeader(http.StatusSeeOther)
-		return
-	}
-
-	if user.RoleID == 4 {
-		super = true
+		return hxRedirect(w, r, "/admin/logout")
 	}
 
 	bID, err := strconv.Atoi(chi.URLParam(r, "id"))
 	if err != nil {
-		m.DB.CreateLog(
-			models.Log{
-				Typ:     "error",
-				Module:  "badges",
-				Message: fmt.Sprintf("Error converting badge ID to int: %s", err),
-			},
-		)
 		log.Println("Error converting badge id to int", err)
+		return err
 	}
 
 	badge, err := m.DB.BadgeByID(bID)
 	if err != nil {
-		m.DB.CreateLog(
-			models.Log{
-				Typ:     "error",
-				Module:  "badges",
-				Message: fmt.Sprintf("Error getting badge from database: %s", err),
-			},
-		)
 		log.Println("Error getting badge from database:", err)
+		return err
 	}
 
-	data := make(map[string]interface{})
-	data["badge"] = badge
-	data["super"] = super
-
-	render.Template(w, r, "part_badge_edit.html", &models.TemplateData{
-		Data: data,
-		Form: forms.New(nil),
-	})
+	return rendering(w, r, badges.BadgeEdit(badge, badges.BadgeEditErrors{}, visitor, badges.BadgeEditFormParams{}))
 }
 
-// BadgeReset resets the connection of a badge to internal or external visitors
-func (m *Repository) BadgeReset(w http.ResponseWriter, r *http.Request) {
+// HandleBadgeReset resets the connection of a badge to internal or external visitors
+func (m *Repository) HandleBadgeReset(w http.ResponseWriter, r *http.Request) error {
 	id, err := strconv.Atoi(chi.URLParam(r, "id"))
 	if err != nil {
 		log.Println("Error converting string to int:", err)
+		return err
 	}
 
 	err = m.DB.ResetBadge(id)
 	if err != nil {
-		m.DB.CreateLog(
-			models.Log{
-				Typ:     "error",
-				Module:  "badges",
-				Message: fmt.Sprintf("Error resetting badge: %s", err),
-			},
-		)
 		log.Println("Error resetting badge:", err)
+		return err
 	}
 
-	// on success redirect
-	m.DB.CreateLog(
-		models.Log{
-			Typ:     "info",
-			Module:  "badges",
-			Message: fmt.Sprintf("Badge with ID %d has been resetted", id),
-		},
-	)
-	w.Header().Set("HX-Redirect", "/admin/l3/badges")
-	w.WriteHeader(http.StatusSeeOther)
+	return hxRedirect(w, r, "/admin/l3/badges")
 }
 
-// BadgeUpdate updates the information and assignement of a badge
-func (m *Repository) BadgeUpdate(w http.ResponseWriter, r *http.Request) {
-	// set initial values
-	super, err := strconv.ParseBool(r.Form.Get("super"))
-	if err != nil {
-		m.DB.CreateLog(
-			models.Log{
-				Typ:     "error",
-				Module:  "badges",
-				Message: fmt.Sprintf("Error converting string to bool: %s", err),
-			},
-		)
-		log.Println("Error converting string to bool:", err)
+// HandleBadgeUpdate updates the information and assignement of a badge
+func (m *Repository) HandleBadgeUpdate(w http.ResponseWriter, r *http.Request) error {
+	visitor, ok := m.App.Session.Get(r.Context(), "visitor").(models.Visitor)
+	if !ok {
+		log.Println("could not get visitor from Session")
+		return hxRedirect(w, r, "/admin/logout")
 	}
 
 	var badge models.Badge
+	var formErrors badges.BadgeEditErrors
 	// get id for badge
 	bid, err := strconv.Atoi(chi.URLParam(r, "id"))
 	if err != nil {
-		m.DB.CreateLog(
-			models.Log{
-				Typ:     "error",
-				Module:  "badges",
-				Message: fmt.Sprintf("Error converting string to int: %s", err),
-			},
-		)
 		log.Println("Error converting string to int:", err)
+		return err
 	}
 	badge.ID = bid
 
@@ -201,19 +137,16 @@ func (m *Repository) BadgeUpdate(w http.ResponseWriter, r *http.Request) {
 	// get editable fields
 	badge.Number, err = strconv.Atoi(r.Form.Get("number"))
 	if err != nil {
-		m.DB.CreateLog(
-			models.Log{
-				Typ:     "error",
-				Module:  "badges",
-				Message: fmt.Sprintf("Error converting string to int: %s", err),
-			},
-		)
 		log.Println("Error converting string to int:", err)
+		return err
 	}
 	badge.UID = r.Form.Get("uid")
 
+	var params badges.BadgeEditFormParams
 	inUse := form.BoxValue("inuse")
 	extern := form.BoxValue("extern")
+	params.InUse = inUse
+	params.Extern = extern
 
 	if inUse {
 		// set values from form
@@ -231,78 +164,52 @@ func (m *Repository) BadgeUpdate(w http.ResponseWriter, r *http.Request) {
 			badge.ExternEmail = r.Form.Get("ext_email")
 			badge.ExternPurpose = r.Form.Get("ext_purpose")
 		} else {
+			form.Required("member")
 			badge.VisitorID = r.Form.Get("member")
 		}
 
 		// what to do if form not valid
 		if !form.Valid() {
-			// prepare data to send it to the templates
-			data := make(map[string]interface{})
-			data["super"] = super
-			data["badge"] = badge
+			formErrors.ExternFirstName = form.Errors.Get("ext_firstname")
+			formErrors.ExternFamilyName = form.Errors.Get("ext_familyname")
+			formErrors.ExternPurpose = form.Errors.Get("ext_purpose")
+			formErrors.ExternPhone = form.Errors.Get("ext_phone")
+			formErrors.ExternEmail = form.Errors.Get("ext_email")
+			if len(form.Errors.Get("member")) > 0 {
+				formErrors.Member = "Bitte ein Mitglied auswählen"
+			}
 
 			// send the data to the template
-			render.Template(w, r, "part_badge_edit.html", &models.TemplateData{
-				Form: form,
-				Data: data,
-			})
-			return
+			return rendering(w, r, badges.BadgeEdit(badge, formErrors, visitor, params))
 		}
 		// write values to database
 		err := m.DB.UpdateBadge(badge)
 
-		// TODO: do better error handling
 		if err != nil {
-			m.DB.CreateLog(
-				models.Log{
-					Typ:     "error",
-					Module:  "badges",
-					Message: fmt.Sprintf("Error updating badge: %s", err),
-				},
-			)
 			log.Println("Error updating badge:", err)
+			return err
 		}
 	} else {
-		if super {
+		// what to do if not in use. Do Update with new values, because of what a superuser can do or reset if not superuser
+		if visitor.RoleID >= 8 {
 			// write values to database
 			err := m.DB.UpdateBadge(badge)
 
-			// TODO: do better error handling
 			if err != nil {
-				m.DB.CreateLog(
-					models.Log{
-						Typ:     "error",
-						Module:  "badges",
-						Message: fmt.Sprintf("Error updating badge: %s", err),
-					},
-				)
 				log.Println("Error updating badge:", err)
+				return err
 			}
 		} else {
 			err = m.DB.ResetBadge(badge.ID)
 			if err != nil {
-				m.DB.CreateLog(
-					models.Log{
-						Typ:     "error",
-						Module:  "badges",
-						Message: fmt.Sprintf("Error resetting badge: %s", err),
-					},
-				)
 				log.Println("Error resetting badge:", err)
+				return err
 			}
 		}
 	}
 
 	// on success redirect
-	m.DB.CreateLog(
-		models.Log{
-			Typ:     "info",
-			Module:  "badges",
-			Message: fmt.Sprintf("Badge with Number %d has been updated", badge.Number),
-		},
-	)
-	w.Header().Set("HX-Redirect", "/admin/l3/badges")
-	w.WriteHeader(http.StatusSeeOther)
+	return hxRedirect(w, r, "/admin/l3/badges")
 }
 
 // HandleBadgeCreateIndex is the handler for the Badge creation form
@@ -355,44 +262,21 @@ func (m *Repository) HandleBadgeCreate(w http.ResponseWriter, r *http.Request) e
 	return hxRedirect(w, r, "/admin/l3/badges")
 }
 
-// BadgeDelete is the handler for deleting a badge
-func (m *Repository) BadgeDelete(w http.ResponseWriter, r *http.Request) {
+// HandleBadgeDelete is the handler for deleting a badge
+func (m *Repository) HandleBadgeDelete(w http.ResponseWriter, r *http.Request) error {
 	id, err := strconv.Atoi(chi.URLParam(r, "id"))
 	if err != nil {
-		m.DB.CreateLog(
-			models.Log{
-				Typ:     "error",
-				Module:  "badges",
-				Message: fmt.Sprintf("Error converting string to int: %s", err),
-			},
-		)
 		log.Println("Error converting string to int:", err)
-		return
+		return err
 	}
 
 	err = m.DB.DeleteBadge(id)
 	if err != nil {
-		m.DB.CreateLog(
-			models.Log{
-				Typ:     "error",
-				Module:  "badges",
-				Message: fmt.Sprintf("Error deleting badge: %s", err),
-			},
-		)
 		log.Println("Error deleting badge:", err)
-		return
-	} else {
-		m.DB.CreateLog(
-			models.Log{
-				Typ:     "info",
-				Module:  "badges",
-				Message: fmt.Sprintf("Badge with id %d has been deleted", id),
-			},
-		)
+		return err
 	}
 	// redirect on success
-	w.Header().Set("HX-Redirect", "/admin/l3/badges")
-	w.WriteHeader(http.StatusSeeOther)
+	return hxRedirect(w, r, "/admin/l3/badges")
 }
 
 // HandleBadgeRead handles a read request by badge reader and returns the uid

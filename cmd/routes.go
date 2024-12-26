@@ -104,9 +104,9 @@ func routes(app *config.AppConfig) http.Handler {
 			mux.Get("/badges", handlers.Make(handlers.Repo.HandleBadgesIndex))
 			mux.Get("/badges/list", handlers.Make(handlers.Repo.HandleBadgesList))
 			mux.Post("/badges/list", handlers.Make(handlers.Repo.HandleBadgesListFilter))
-			mux.Get("/badges/{id}", handlers.Repo.Badge)
-			mux.Post("/badges/{id}", handlers.Repo.BadgeUpdate)
-			mux.Post("/badges/reset/{id}", handlers.Repo.BadgeReset)
+			mux.Get("/badges/{id}", handlers.Make(handlers.Repo.HandleBadgeEditIndex))
+			mux.Post("/badges/{id}", handlers.Make(handlers.Repo.HandleBadgeUpdate))
+			mux.Post("/badges/reset/{id}", handlers.Make(handlers.Repo.HandleBadgeReset))
 			// abonnements
 			mux.Get("/abonnements", handlers.Repo.Abonnements)
 			mux.Get("/abonnements/list", handlers.Repo.AbonnementsList)
@@ -125,7 +125,7 @@ func routes(app *config.AppConfig) http.Handler {
 			mux.Get("/badges/create", handlers.Make(handlers.Repo.HandleBadgeCreateIndex))
 			mux.Post("/badges/create", handlers.Make(handlers.Repo.HandleBadgeCreate))
 			mux.Get("/badges/scan", handlers.Make(handlers.Repo.HandleBadgeRead))
-			mux.Delete("/badges/{id}", handlers.Repo.BadgeDelete)
+			mux.Delete("/badges/{id}", handlers.Make(handlers.Repo.HandleBadgeDelete))
 		})
 	})
 

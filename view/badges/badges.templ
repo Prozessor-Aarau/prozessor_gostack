@@ -213,3 +213,244 @@ if err == "deadline" {
 </label>
 }
 }
+
+type BadgeEditErrors struct {
+Number string
+UID string
+Member string
+ExternFirstName string
+ExternFamilyName string
+ExternCity string
+ExternPhone string
+ExternEmail string
+ExternPurpose string
+}
+
+type BadgeEditFormParams struct {
+InUse bool
+Extern bool
+}
+
+templ BadgeEdit(badge models.Badge, errors BadgeEditErrors, visitor models.Visitor, params BadgeEditFormParams) {
+<form class="grid grid-cols-2 items-center gap-3 ">
+  @ui.CSRF()
+  <div class="prose col-span-full">
+    <h2>Badge Nr. { strconv.Itoa(badge.Number) } bearbeiten</h2>
+  </div>
+  <label class="form-control w-full  col-span-full md:col-span-1">
+    <div class="label">
+      <span class="label-text">Nummer</span>
+    </div>
+    if visitor.RoleID >= 8 {
+    <input type="text" placeholder="Badge Nummer" class={ "input input-bordered w-full" , templ.KV("input-error",
+      len(errors.Number)>0) }
+    value={ strconv.Itoa(badge.Number) }
+    name="number"
+    required
+    />
+    if len(errors.Number) > 0 {
+    <div class="label">
+      <span class="label-text text-error">{ errors.Number }</span>
+    </div>
+    }
+    } else {
+    <input type="hidden" value={ strconv.Itoa(badge.Number) } name="number" />
+    <span>{ strconv.Itoa(badge.Number) }</span>
+    }
+  </label>
+  <label class="form-control w-full  col-span-full md:col-span-1">
+    <div class="label">
+      <span class="label-text">UUID</span>
+    </div>
+    if visitor.RoleID >= 8 {
+    <input type="text" placeholder="Badge UUID" class="input input-bordered w-full " value={ badge.UID } name="uid" />
+    } else {
+    <input type="hidden" value={ badge.UID } name="uid" />
+    <span>{ badge.UID }</span>
+    }
+  </label>
+  <div class="form-control">
+    <label class="label cursor-pointer justify-start">
+      <input id="toggleUsed" name="inuse" type="checkbox" class="toggle toggle-success" checked?={ len(badge.VisitorID)>
+      0 ||
+      len(badge.ExternFirstName) > 0 || params.InUse }
+      />
+      <span class="label-text pl-3">Badge in Benutzung</span>
+    </label>
+  </div>
+  <!-- start of form for badge user -->
+  <div class={ "col-span-full border-t border-base-content border-dashed border-opacity-50 pt-5 grid-cols-subgrid" ,
+    templ.KV("hidden", len(badge.VisitorID)<1&&len(badge.ExternFirstName)<1&&!params.InUse) } id="selectUser">
+    <div class="form-control col-span-full">
+      <label class="label cursor-pointer justify-start">
+        <input id="toggleExtern" name="extern" type="checkbox" class="toggle toggle-success" checked?={
+          len(badge.ExternFirstName)>0 || params.Extern }
+        />
+        <span class="label-text pl-3">Externe Nutzung</span>
+      </label>
+    </div>
+    <div class={ "col-span-full mt-3 gap-3 grid grid-cols-2" , templ.KV("hidden", len(badge.ExternFirstName)>0 ||
+      params.Extern) }
+      id="selectInternal"
+      >
+      <form id="filterForm" class="mb-3 w-full col-span-2 md:col-span-1" novalidate>
+        @ui.CSRF()
+        <label class="input input-bordered flex items-center gap-2">
+          <span class="text-3xl i-mdi-magnify"></span>
+          <input type="search" id="search_term" name="search_term" class="grow"
+            placeholder="Suche nach Name, Vorname oder Ort..." hx-post={ "/admin/visitors/selectbox/" + badge.VisitorID
+            } hx-trigger="input changed delay:500ms, search" hx-target="#memberSelect" />
+          <button id="fieldreset" class="ml-3 btn btn-neutral btn-outline btn-xs btn-circle">
+            <span class="i-mdi-close"></span>
+          </button>
+        </label>
+      </form>
+      <div id="memberSelect" class="mb-3 col-span-2 md:col-span-1" hx-get={ "/admin/visitors/selectbox/" +
+        badge.VisitorID } hx-trigger="load"></div>
+      <div id="pricing" class="hidden"></div>
+    </div>
+    if len(errors.Member)>0 {
+    <div class="my-4">
+      @layout.Error(errors.Member)
+    </div>
+    }
+    <div class={ "col-span-full mt-3 gap-3 grid grid-cols-2" , templ.KV("hidden",
+      len(badge.ExternFirstName)<1&&!params.Extern) } id="selectExternal">
+      <label class="form-control w-full  col-span-full md:col-span-1">
+        <div class="label">
+          <span class="label-text">Vorname Besitzer*in <span class="text-error font-extrabold">*</span></span>
+        </div>
+        <input class={ "input input-bordered w-full" , templ.KV("input-error", len(errors.ExternFirstName)>0) }
+        value={ badge.ExternFirstName }
+        name="ext_firstname"
+        type="text"
+        placeholder="Vorname Besitzer*in"
+        />
+        if len(errors.ExternFirstName)>0 {
+        <div class="label">
+          <span class="label-text text-error">{ errors.ExternFirstName }</span>
+        </div>
+        }
+      </label>
+      <label class="form-control w-full  col-span-full md:col-span-1">
+        <div class="label">
+          <span class="label-text">Nachname Besitzer*in <span class="text-error font-extrabold">*</span></span>
+        </div>
+        <input class={ "input input-bordered w-full" , templ.KV("input-error", len(errors.ExternFamilyName)>0) }
+        name="ext_familyname"
+        type="text"
+        placeholder="Nachname Besitzer*in"
+        value={ badge.ExternFamilyName }
+        />
+        if len(errors.ExternFamilyName)>0 {
+        <div class="label">
+          <span class="label-text text-error">{ errors.ExternFamilyName }</span>
+        </div>
+        }
+      </label>
+      <label class="form-control w-full  col-span-full md:col-span-1">
+        <div class="label">
+          <span class="label-text">Ort</span>
+        </div>
+        <input name="ext_city" type="text" placeholder="Ort" class="input input-bordered w-full " value={
+          badge.ExternCity } />
+      </label>
+      <label class="form-control w-full  col-span-full md:col-span-1">
+        <div class="label">
+          <span class="label-text">Telefonnummer <span class="text-error font-extrabold">**</span></span>
+        </div>
+        <input name="ext_phone" type="text" placeholder="Telefonnummer" class={ "input input-bordered w-full" ,
+          templ.KV("input-error", len(errors.ExternPhone)>0) }
+        value={ badge.ExternPhone }
+        />
+        if len(errors.ExternPhone)>0 {
+        <div class="label">
+          <span class="label-text text-error">{ errors.ExternPhone }</span>
+        </div>
+        }
+      </label>
+      <label class="form-control w-full  col-span-full md:col-span-1">
+        <div class="label">
+          <span class="label-text">E-Mail <span class="text-error font-extrabold">**</span></span>
+        </div>
+        <input name="ext_email" type="text" placeholder="Email Adresse" class={ "input input-bordered w-full" ,
+          templ.KV("input-error", len(errors.ExternEmail)>0) }
+        value={ badge.ExternEmail }
+        />
+        if len(errors.ExternEmail)>0 {
+        <div class="label">
+          <span class="label-text text-error">{ errors.ExternEmail }</span>
+        </div>
+        }
+      </label>
+      <label class="form-control w-full  col-span-full">
+        <div class="label">
+          <span class="label-text">Nutzungszweck <span class="text-error font-extrabold">*</span></span>
+        </div>
+        <textarea name="ext_purpose" type="text" placeholder="Nutzungszweck"
+          class={ "textarea textarea-bordered h-24 w-full" , templ.KV("textarea-error", len(errors.ExternPurpose)>0) }
+          >{ badge.ExternPurpose }</textarea>
+        if len(errors.ExternPurpose)>0 {
+        <div class="label">
+          <span class="label-text text-error">{ errors.ExternPurpose }</span>
+        </div>
+        }
+      </label>
+      <div class="col-span-full text-sm">
+        <span class="text-error font-extrabold">*</span> diese Felder sind zwingend
+        auszufüllen
+      </div>
+      <div class="col-span-full text-sm">
+        <span class="text-error font-extrabold">**</span> mindestens eine Angabe nötig
+        (entweder/oder)
+      </div>
+    </div>
+  </div>
+  <!-- end for badge user -->
+  <div class="col-span-full gap-3 flex mt-3 items-center justify-center flex-col md:flex-row">
+    <a class="btn btn-success" hx-post={ "/admin/l3/badges/" + strconv.Itoa(badge.ID) } hx-target="#main">
+      Speichern
+    </a>
+    if len(badge.VisitorID)>0||len(badge.ExternFirstName)>0 {
+    <a class="btn btn-error" hx-post={ "/admin/l3/badges/reset/" + strconv.Itoa(badge.ID) }
+      hx-confirm="Zuweisung für diesen Badge wirklich löschen?">
+      Zuweisung löschen
+    </a>
+    }
+    <a href="/admin/l3/badges" class="btn btn-warning">
+      <span class="i-mdi-cancel-bold"></span>
+      Abbrechen
+    </a>
+    if visitor.RoleID >= 8 {
+    <a id="deleteButton" class="btn btn-error btn-circle" hx-delete={ "/admin/l4/badges/" + strconv.Itoa(badge.ID) }
+      hx-confirm="Badge wirklich löschen?">
+      <span class="i-mdi-trash text-2xl"></span>
+    </a>
+    }
+  </div>
+</form>
+<!-- script for toggeling the fields -->
+<script>
+  selectUser = document.querySelector("#selectUser")
+  selectInternal = document.querySelector("#selectInternal")
+  selectExternal = document.querySelector("#selectExternal")
+
+  document.getElementById("toggleUsed").addEventListener("change", function (event) {
+    selectUser.classList.toggle("hidden")
+  });
+
+  document.getElementById("toggleExtern").addEventListener("change", function (event) {
+    selectInternal.classList.toggle("hidden")
+    selectExternal.classList.toggle("hidden")
+  });
+</script>
+<!-- this script is needed for the delete button to send the CSRF-Token -->
+if visitor.RoleID >= 8 {
+<script>
+  button = document.getElementById("deleteButton")
+  button.addEventListener('htmx:configRequest', (event) => {
+    event.detail.headers['X-CSRF-Token'] = '{{ .CSRFToken }}';
+  })
+</script>
+}
+}
