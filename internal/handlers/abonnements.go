@@ -10,25 +10,19 @@ import (
 	"github.com/faebut/prozessor_gostack/internal/forms"
 	"github.com/faebut/prozessor_gostack/internal/models"
 	"github.com/faebut/prozessor_gostack/internal/render"
+	"github.com/faebut/prozessor_gostack/view/abonnements"
 	"github.com/go-chi/chi/v5"
 )
 
 // Abonnements is the abonnements page handler
-func (m *Repository) Abonnements(w http.ResponseWriter, r *http.Request) {
-	user, ok := m.App.Session.Get(r.Context(), "visitor").(models.Visitor)
+func (m *Repository) HandleAbonnementsIndex(w http.ResponseWriter, r *http.Request) error {
+	visitor, ok := m.App.Session.Get(r.Context(), "visitor").(models.Visitor)
 	if !ok {
 		log.Println("could not get visitor from Session")
-		m.App.Session.Put(r.Context(), "error", "Can't get visitor from session")
-		http.Redirect(w, r, "/admin/logout", http.StatusSeeOther)
-		return
+		return hxRedirect(w, r, "/admin/logout")
 	}
 
-	data := make(map[string]interface{})
-	data["user"] = user
-
-	render.Template(w, r, "admin_abonnements.html", &models.TemplateData{
-		Data: data,
-	})
+	return rendering(w, r, abonnements.Abonnements(visitor))
 }
 
 // AbonnementCreate is the abonnements creation page handler

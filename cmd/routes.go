@@ -108,7 +108,7 @@ func routes(app *config.AppConfig) http.Handler {
 			mux.Post("/badges/{id}", handlers.Make(handlers.Repo.HandleBadgeUpdate))
 			mux.Post("/badges/reset/{id}", handlers.Make(handlers.Repo.HandleBadgeReset))
 			// abonnements
-			mux.Get("/abonnements", handlers.Repo.Abonnements)
+			mux.Get("/abonnements", handlers.Make(handlers.Repo.HandleAbonnementsIndex))
 			mux.Get("/abonnements/list", handlers.Repo.AbonnementsList)
 			mux.Post("/abonnements/list", handlers.Repo.PostAbonnementsList)
 			mux.Get("/abonnements/create", handlers.Repo.AbonnementCreate)

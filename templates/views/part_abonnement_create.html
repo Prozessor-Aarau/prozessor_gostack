@@ -17,15 +17,16 @@
       <label class="input input-bordered flex items-center gap-2">
         <span class="text-3xl i-mdi-magnify"></span>
         <input type="search" id="search_term" name="search_term" class="grow"
-          placeholder="Suche nach Name, Vorname oder Ort..." hx-post="/admin/visitors/selectbox/{{$a.VisitorID}}"
-          hx-trigger="input changed delay:500ms, search" hx-target="#memberSelect" />
+          placeholder="Suche nach Name, Vorname oder Ort..."
+          hx-post="/admin/visitors/selectbox/{{$a.VisitorID}}?pricing" hx-trigger="input changed delay:500ms, search"
+          hx-target="#memberSelect" />
         <button id="fieldreset" class="ml-3 btn btn-neutral btn-outline btn-xs btn-circle"> <span
             class="i-mdi-close"></span></button>
       </label>
     </form>
 
-    <div id="memberSelect" class="mb-3 col-span-2 md:col-span-1" hx-get="/admin/visitors/selectbox/{{$a.VisitorID}}"
-      hx-trigger="load">
+    <div id="memberSelect" class="mb-3 col-span-2 md:col-span-1"
+      hx-get="/admin/visitors/selectbox/{{$a.VisitorID}}?pricing" hx-trigger="load">
     </div>
     {{with .Form.Errors.Get "member"}}
     <div class="label col-span-2">

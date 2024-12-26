@@ -1,32 +1,35 @@
-{{template "base" .}}
+package abonnements
 
-{{define "content"}}
+import (
+"github.com/faebut/prozessor_gostack/internal/models"
+"github.com/faebut/prozessor_gostack/view/layout"
+)
+
+templ Abonnements(visitor models.Visitor) {
+@layout.App(true, visitor) {
 <div class="prose mb-10">
   <h1>Abonnements</h1>
 </div>
-
 <div id="content">
-  {{template "aboFilter" .}}
-
+  @abonnementsFilter()
   <div id="aboList" hx-get="/admin/l3/abonnements/list" hx-trigger="load"></div>
-  {{end}}
 </div>
+}
+}
 
-
-{{define "aboFilter"}}
+templ abonnementsFilter() {
 <div class="border-base-content border-opacity-20 border rounded-md dark:rounded-lg bg-base-100 my-4 p-4">
   <h2 class="font-bold text-xl mb-3">Suchfilter</h2>
   <form id="filterForm" novalidate>
     <div class="grid grid-cols-4 gap-5">
-      <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+      <input type="hidden" name="csrf_token" value="{{.CSRFToken}}" />
       <label class="input input-bordered flex items-center gap-2 col-span-4">
         <span class="text-3xl i-mdi-magnify"></span>
         <input type="text" id="search_term" name="search_term" class="grow" placeholder="Suche nach Name, Vorname..." />
-
         <!-- how to implement this button? should reset field -->
-        <button id="fieldreset" class="ml-3 btn btn-neutral btn-outline btn-xs btn-circle"> <span
-            class="i-mdi-close"></span></button>
-
+        <button id="fieldreset" class="ml-3 btn btn-neutral btn-outline btn-xs btn-circle">
+          <span class="i-mdi-close"></span>
+        </button>
       </label>
       <div class="col-span-2 md:col-span-1">
         <label class="form-control" id="abooptions">
@@ -77,18 +80,20 @@
       <div class="col-span-4 grid grid-cols-2 justify-items-center gap-3">
         <button type="submit" hx-post="/admin/l3/abonnements/list" hx-target="#aboList"
           class="btn btn-success btn-outline"><span class="i-mdi-magnify"></span> suchen</button>
-        <a hx-get="/admin/l3/abonnements/list" hx-target="#aboList" class="btn btn-error btn-outline"><span
-            class="i-mdi-close"></span> zurücksetzen</a>
+        <a hx-get="/admin/l3/abonnements/list" hx-target="#aboList" class="btn btn-error btn-outline">
+          <span class="i-mdi-close"></span> zurücksetzen
+        </a>
       </div>
     </div>
   </form>
-
   <div class="border-base-content border-opacity-50 border-dashed border-t mt-4 pt-4">
-    <button type="button" class="btn btn-secondary" hx-get="/admin/l3/abonnements/create" hx-target="#content">Neues Abo
-      hinzufügen</button>
+    <button type="button" class="btn btn-secondary" hx-get="/admin/l3/abonnements/create" hx-target="#content">
+      Neues Abo
+      hinzufügen
+    </button>
   </div>
 </div>
-
+<!-- For the switches -->
 <script>
   searchField = document.querySelector("#search_term")
 
@@ -97,4 +102,4 @@
     searchField.value = "";
   });
 </script>
-{{end}}
+}
