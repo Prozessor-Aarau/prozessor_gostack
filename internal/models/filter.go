@@ -42,11 +42,18 @@ type AbonnementFilter struct {
 	SearchString string
 	AboValidity  string
 	Member       bool
+	Unique       bool
+	Sort         string
+	SortDir      string
 }
 
 func NewAbonnementFilter(search string) AbonnementFilter {
 	return AbonnementFilter{
 		SearchString: search,
 		AboValidity:  "all",
+		Member:       false,
+		Unique:       false,
+		Sort:         "buydate",
+		SortDir:      "DESC",
 	}
 }

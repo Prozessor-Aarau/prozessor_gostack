@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"time"
 
 	"github.com/faebut/prozessor_gostack/internal/models"
@@ -64,13 +65,39 @@ func (m *postgresDBRepo) AllAbonnements(
 	var count int
 
 	search := "%" + filter.SearchString + "%"
+	validity := ""
+	member := ""
 
-	// set count to result
-	row := m.DB.QueryRowContext(ctx, `SELECT COUNT(*) FROM abonnements a
+	// check if validity is set
+	switch filter.AboValidity {
+
+	case "valid":
+		validity = "AND buydate + INTERVAL '1 year' >= CURRENT_DATE"
+
+	case "invalid":
+		validity = "AND buydate + INTERVAL '1 year' < CURRENT_DATE"
+	}
+
+	if filter.Member {
+		member = "AND v.ressort_id IS NOT NULL"
+	}
+
+	// TODO handle uniqueness
+	// unique := ""
+
+	countQuery := fmt.Sprintf(`SELECT COUNT(*) FROM abonnements a
   JOIN visitors v ON v.id = a.visitor_id
   WHERE (LOWER(v.first_name) LIKE LOWER($1)
   OR LOWER(v.family_name) LIKE LOWER($1))
-`, search)
+  %s
+  %s
+`,
+		validity,
+		member,
+	)
+
+	// set count to result
+	row := m.DB.QueryRowContext(ctx, countQuery, search)
 
 	err := row.Scan(&count)
 
@@ -80,16 +107,24 @@ func (m *postgresDBRepo) AllAbonnements(
 
 	offset := 10 * (page - 1)
 
-	query := `SELECT a.id, a.buydate, a.partial_payment, a.reminder, a.member, a.price, a.created_on, a.updated_on, v.id, v.first_name, v.family_name
+	query := fmt.Sprintf(`SELECT a.id, a.buydate, a.partial_payment, a.reminder, a.member, a.price, a.created_on, a.updated_on, v.id, v.first_name, v.family_name
   FROM abonnements a
   JOIN visitors v ON v.id = a.visitor_id
   WHERE (LOWER(v.first_name) LIKE LOWER($1)
   OR LOWER(v.family_name) LIKE LOWER($1))
+  %s
+  %s
   ORDER BY 
-   a.buydate DESC
+   %s %s
   OFFSET $2
   LIMIT 10
-  `
+  `,
+		validity,
+		member,
+		filter.Sort,
+		filter.SortDir,
+	)
+
 	rows, err := m.DB.QueryContext(ctx, query, search, offset)
 	if err != nil {
 		return abonnements, 0, err

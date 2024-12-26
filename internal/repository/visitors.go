@@ -98,7 +98,7 @@ func (m *postgresDBRepo) AllVisitors(
 	}
 
 	if filter.Member {
-		badges = "AND ressort_id IS NOT NULL"
+		members = "AND ressort_id IS NOT NULL"
 	}
 
 	if filter.Partner {

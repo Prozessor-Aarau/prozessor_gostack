@@ -4,6 +4,7 @@ import (
 "github.com/faebut/prozessor_gostack/internal/models"
 "github.com/faebut/prozessor_gostack/internal/render"
 "github.com/faebut/prozessor_gostack/view/layout"
+"github.com/faebut/prozessor_gostack/view/ui"
 "strconv"
 )
 
@@ -24,7 +25,7 @@ templ abonnementsFilter() {
   <h2 class="font-bold text-xl mb-3">Suchfilter</h2>
   <form id="filterForm" novalidate>
     <div class="grid grid-cols-4 gap-5">
-      <input type="hidden" name="csrf_token" value="{{.CSRFToken}}" />
+      @ui.CSRF()
       <label class="input input-bordered flex items-center gap-2 col-span-4">
         <span class="text-3xl i-mdi-magnify"></span>
         <input type="text" id="search_term" name="search_term" class="grow" placeholder="Suche nach Name, Vorname..." />
@@ -33,7 +34,7 @@ templ abonnementsFilter() {
           <span class="i-mdi-close"></span>
         </button>
       </label>
-      <div class="col-span-2 md:col-span-1">
+      <div class="col-span-full md:col-span-1">
         <label class="form-control" id="abooptions">
           <div class="label">
             <span class="label-text">Gültigkeit:</span>
@@ -45,18 +46,12 @@ templ abonnementsFilter() {
           </select>
         </label>
       </div>
-      <div class="col-span-2 md:col-span-1 flex flex-col justify-end">
-        <label class="label cursor-pointer gap-4 col-span-2 md:col-span-1 justify-start">
+      <div class="col-span-full md:col-span-3 flex flex-col justify-end">
+        <label class="label cursor-pointer gap-4 justify-start">
           <input name="member" type="checkbox" class="checkbox checkbox-sm" />
           <span>Mitglied</span>
         </label>
-        <label class="label cursor-pointer gap-4 col-span-2 md:col-span-1 pb-0 justify-start">
-          <input name="badge" type="checkbox" class="checkbox checkbox-sm" />
-          <span>Badge</span>
-        </label>
-      </div>
-      <div class="col-span-full md:col-span-2 flex flex-col justify-end ">
-        <label class="label cursor-pointer gap-4 col-span-2 md:col-span-1 pb-0 justify-start">
+        <label class="label cursor-pointer gap-4 pb-0 justify-start">
           <input name="unique" type="checkbox" class="checkbox checkbox-sm" />
           <span>nur aktuellstes Abo anzeigen</span>
         </label>

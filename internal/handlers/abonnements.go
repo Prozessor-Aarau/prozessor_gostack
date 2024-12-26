@@ -6,6 +6,7 @@ import (
 	"math"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/faebut/prozessor_gostack/internal/forms"
 	"github.com/faebut/prozessor_gostack/internal/models"
@@ -129,13 +130,28 @@ func (m *Repository) HandleAbonnementsList(w http.ResponseWriter, r *http.Reques
 	// set initial params
 	page := 1
 	filter := models.NewAbonnementFilter("")
+
+	// check if page param has been submitted and change to this values
+	if r.URL.Query().Has("page") {
+		page, _ = strconv.Atoi(r.URL.Query().Get("page"))
+	}
 	if r.URL.Query().Has("search") {
 		filter = models.NewAbonnementFilter(r.URL.Query().Get("search"))
 	}
-
-	// check if a page param has been submitted and change to this value
-	if r.URL.Query().Has("page") {
-		page, _ = strconv.Atoi(r.URL.Query().Get("page"))
+	if r.URL.Query().Has("sort") {
+		filter.Sort = r.URL.Query().Get("sort")
+	}
+	if r.URL.Query().Has("sortdir") {
+		filter.SortDir = strings.ToUpper(r.URL.Query().Get("sortdir"))
+	}
+	if r.URL.Query().Has("validity") {
+		filter.AboValidity = r.URL.Query().Get("validity")
+	}
+	if r.URL.Query().Has("member") {
+		filter.Member, _ = strconv.ParseBool(r.URL.Query().Get("member"))
+	}
+	if r.URL.Query().Has("unique") {
+		filter.Unique, _ = strconv.ParseBool(r.URL.Query().Get("partner"))
 	}
 
 	aboList, count, err := m.DB.AllAbonnements(page, filter)
@@ -146,9 +162,18 @@ func (m *Repository) HandleAbonnementsList(w http.ResponseWriter, r *http.Reques
 
 	// make url search string
 	urlSearchString := fmt.Sprintf(
-		"&search=%s",
+		"&search=%s&sort=%s&sortdir=%s&validity=%s",
 		filter.SearchString,
+		filter.Sort,
+		filter.SortDir,
+		filter.AboValidity,
 	)
+	if filter.Member {
+		urlSearchString = urlSearchString + "&member=true"
+	}
+	if filter.Unique {
+		urlSearchString = urlSearchString + "&unique=true"
+	}
 
 	return rendering(w, r, abonnements.AbonnementsList(
 		aboList,
@@ -160,7 +185,7 @@ func (m *Repository) HandleAbonnementsList(w http.ResponseWriter, r *http.Reques
 }
 
 // PostAbonnementsList is the handler to get the abonnements list with filter
-func (m *Repository) PostAbonnementsList(w http.ResponseWriter, r *http.Request) {
+func (m *Repository) HandleAbonnementsListFilter(w http.ResponseWriter, r *http.Request) error {
 
 	// set initial params
 	page := 1
@@ -172,31 +197,41 @@ func (m *Repository) PostAbonnementsList(w http.ResponseWriter, r *http.Request)
 
 	form := forms.New(r.PostForm)
 	filter := models.NewAbonnementFilter(searchTerm)
-	// filter.Sort = r.Form.Get("sort")
-	// filter.SortDir = r.Form.Get("sort_dir")
-	// filter.Abo = form.BoxValue("hasabo")
+	filter.Sort = r.Form.Get("sort")
+	filter.SortDir = r.Form.Get("sort_dir")
 	filter.AboValidity = r.Form.Get("abovalidity")
-	// filter.Badge = form.BoxValue("badge")
 	filter.Member = form.BoxValue("member")
-	// filter.Partner = form.BoxValue("partner")
+	filter.Unique = form.BoxValue("unique")
 	if r.URL.Query().Has("search") {
 		filter = models.NewAbonnementFilter(r.URL.Query().Get("search"))
 	}
 
-	abonnements, count, err := m.DB.AllAbonnements(page, filter)
+	aboList, count, err := m.DB.AllAbonnements(page, filter)
 	if err != nil {
 		log.Println("could not get abonnements from DB: ", err)
-		m.App.Session.Put(r.Context(), "error", "Can't get visitors from database")
+		return err
 	}
 
-	data := make(map[string]interface{})
-	data["abonnements"] = abonnements
-	data["count"] = count
-	data["pages"] = int(math.Ceil(float64(count) / 10))
-	data["onPage"] = page
-	data["filter"] = filter
+	// make url search string
+	urlSearchString := fmt.Sprintf(
+		"&search=%s&sort=%s&sortdir=%s&validity=%s",
+		filter.SearchString,
+		filter.Sort,
+		filter.SortDir,
+		filter.AboValidity,
+	)
+	if filter.Member {
+		urlSearchString = urlSearchString + "&member=true"
+	}
+	if filter.Unique {
+		urlSearchString = urlSearchString + "&unique=true"
+	}
 
-	render.Template(w, r, "part_abonnements_list.html", &models.TemplateData{
-		Data: data,
-	})
+	return rendering(w, r, abonnements.AbonnementsList(
+		aboList,
+		count,
+		int(math.Ceil(float64(count)/10)),
+		page,
+		urlSearchString,
+	))
 }
