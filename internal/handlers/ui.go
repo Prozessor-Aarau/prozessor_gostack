@@ -17,6 +17,11 @@ func (m *Repository) HandleVisitorsSelectBox(w http.ResponseWriter, r *http.Requ
 
 	filter := models.NewVisitorSearch(searchTerm)
 
+	// Get the queryparams to send back to the right page
+	var pricing bool
+	if r.URL.Query().Has("pricing") {
+		pricing = true
+	}
 	// get filtered visitors from DB
 	visitors, _, err := m.DB.AllVisitors(1, 0, filter)
 	if err != nil {
@@ -24,5 +29,5 @@ func (m *Repository) HandleVisitorsSelectBox(w http.ResponseWriter, r *http.Requ
 		return err
 	}
 
-	return rendering(w, r, ui.MemberSelectBox(visID, visitors, false))
+	return rendering(w, r, ui.MemberSelectBox(visID, visitors, pricing))
 }
