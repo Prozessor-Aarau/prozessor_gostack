@@ -10,7 +10,6 @@ import (
 
 	"github.com/faebut/prozessor_gostack/internal/forms"
 	"github.com/faebut/prozessor_gostack/internal/models"
-	"github.com/faebut/prozessor_gostack/internal/render"
 	"github.com/faebut/prozessor_gostack/view/abonnements"
 	"github.com/go-chi/chi/v5"
 )
@@ -26,17 +25,12 @@ func (m *Repository) HandleAbonnementsIndex(w http.ResponseWriter, r *http.Reque
 	return rendering(w, r, abonnements.Abonnements(visitor))
 }
 
-// AbonnementCreate is the abonnements creation page handler
-func (m *Repository) AbonnementCreate(w http.ResponseWriter, r *http.Request) {
-	var abonnement models.Abonnement
+// HandleAbonnementCreateIndex is the abonnements creation page handler
+func (m *Repository) HandleAbonnementCreateIndex(w http.ResponseWriter, r *http.Request) error {
+	var abo models.Abonnement
 
-	data := make(map[string]interface{})
-	data["user"] = abonnement
+	return rendering(w, r, abonnements.AbonnementForm(abo, abonnements.FormErrors{}))
 
-	render.Template(w, r, "part_abonnement_create.html", &models.TemplateData{
-		Data: data,
-		Form: forms.New(nil),
-	})
 }
 
 // AbonnementCreate is the abonnements creation page handler
@@ -46,7 +40,6 @@ func (m *Repository) AbonnementCreatePrice(w http.ResponseWriter, r *http.Reques
 	visitor, err := m.DB.VisitorByID(id)
 	if err != nil {
 		log.Println("could not get visitor from DB: ", err)
-		m.App.Session.Put(r.Context(), "error", "Can't get visitors from database")
 	}
 	member := "Abonnement"
 	price := 400
@@ -66,63 +59,46 @@ func (m *Repository) AbonnementCreatePrice(w http.ResponseWriter, r *http.Reques
 }
 
 // Badge is the handler for a single Badge
-func (m *Repository) PostAbonnementCreate(w http.ResponseWriter, r *http.Request) {
+func (m *Repository) HandleAbonnementCreate(w http.ResponseWriter, r *http.Request) error {
 	// create empty badge
-	var abonnement models.Abonnement
+	var abo models.Abonnement
 
 	form := forms.New(r.Form)
 	form.Required("price", "member", "buydate")
 
-	abonnement.BuyDate = r.Form.Get("buydate")
+	abo.BuyDate = r.Form.Get("buydate")
 	stringPrice, err := strconv.Atoi(r.Form.Get("price"))
 	if err != nil {
 		log.Println("error converting string to int:", err)
 	}
-	abonnement.Price = stringPrice
-	abonnement.VisitorID = r.Form.Get("member")
-	abonnement.PartialPayment = form.BoxValue("partial_payment")
+	abo.Price = stringPrice
+	abo.VisitorID = r.Form.Get("member")
+	abo.PartialPayment = form.BoxValue("partial_payment")
 
 	// set member with price
-	if abonnement.Price == 320 {
-		abonnement.Member = true
+	if abo.Price == 320 {
+		abo.Member = true
 	} else {
-		abonnement.Member = false
+		abo.Member = false
 	}
+
+	var formErrors abonnements.FormErrors
+	formErrors.Member = form.Errors.Get("member")
+	formErrors.Price = form.Errors.Get("price")
+	formErrors.BuyDate = form.Errors.Get("buydate")
 
 	if !form.Valid() {
-		data := make(map[string]interface{})
-		data["abonnement"] = abonnement
-
-		render.Template(w, r, "part_abonnement_create.html", &models.TemplateData{
-			Data: data,
-			Form: form,
-		})
-		return
+		return rendering(w, r, abonnements.AbonnementForm(abo, formErrors))
 	}
 
-	id, err := m.DB.CreateAbonnement(abonnement)
+	_, err = m.DB.CreateAbonnement(abo)
 	if err != nil {
-		m.DB.CreateLog(
-			models.Log{
-				Typ:     "error",
-				Module:  "abonnements",
-				Message: fmt.Sprintf("Error creating abonnement: %s", err),
-			},
-		)
-		log.Println("Error deleting badge:", err)
-		return
-	} else {
-		m.DB.CreateLog(
-			models.Log{
-				Typ:     "info",
-				Module:  "abonnements",
-				Message: fmt.Sprintf("New Abonnement with id %d has been created", id),
-			},
-		)
+		log.Println("Error creating abonnement:", err)
+		return err
 	}
+
 	// redirect on success
-	w.Header().Set("HX-Redirect", "/admin/l3/abonnements")
-	w.WriteHeader(http.StatusSeeOther)
+	return hxRedirect(w, r, "/admin/l3/abonnements")
 }
 
 // AbonnementsList is the handler to get the abonnements list

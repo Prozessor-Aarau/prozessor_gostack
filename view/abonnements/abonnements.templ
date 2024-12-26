@@ -161,3 +161,101 @@ templ pagination(pages int, onpage int, filter string) {
   </div>
 </div>
 }
+
+type FormErrors struct {
+Member string
+BuyDate string
+Price string
+}
+
+templ AbonnementForm(a models.Abonnement, errors FormErrors) {
+<form class="grid grid-cols-2 items-center gap-3 ">
+  @ui.CSRF()
+  <div class="prose col-span-full">
+    <h2>Abonnement erstellen</h2>
+  </div>
+  <div class="prose col-span-full">
+    <h3>Besucher:in auswählen <span class="text-error">*</span></h3>
+  </div>
+  <div class={ "col-span-full mt-3 gap-3 grid grid-cols-2" , templ.KV("border rounded-md border-error dark:rounded-lg",
+    len(errors.Member)>0) }
+    id="selectInternal"
+    >
+    <form id="filterForm" class="mb-3 w-full col-span-2 md:col-span-1" novalidate>
+      @ui.CSRF()
+      <label class="input input-bordered flex items-center gap-2">
+        <span class="text-3xl i-mdi-magnify"></span>
+        <input hx-post={ "/admin/visitors/selectbox/" + a.VisitorID + "?pricing" }
+          hx-trigger="input changed delay:500ms, search" hx-target="#memberSelect" type="search" id="search_term"
+          name="search_term" class="grow" placeholder="Suche nach Name, Vorname oder Ort..." />
+      </label>
+    </form>
+    <div hx-get={ "/admin/visitors/selectbox/" + a.VisitorID + "?pricing" } hx-trigger="load" id="memberSelect"
+      class="mb-3 col-span-2 md:col-span-1"></div>
+    if len(errors.Member)>0 {
+    <div class="label col-span-2">
+      <span class="label-text text-error">{ errors.Member }</span>
+    </div>
+    }
+  </div>
+  <label class="form-control col-span-2 md:col-span-1">
+    <div class="label">
+      <span class="label-text">Kaufdatum <span class="text-error font-extrabold">*</span></span>
+    </div>
+    <input type="date" id="buydate" name="buydate" class={ "input input-bordered" , templ.KV("input-error",
+      len(errors.BuyDate)>0) }
+    value={ a.BuyDate }
+    required
+    />
+    if len(errors.BuyDate)>0 {
+    <div class="label">
+      <span class="label-text text-error">{ errors.BuyDate }</span>
+    </div>
+    }
+  </label>
+  <label class="form-control col-span-2 md:col-span-1 grid grid-cols-2 items-center">
+    <div class="label col-span-full">
+      <span class="label-text">Preis/Zahlungsmodalität </span>
+    </div>
+    <label class="label cursor-pointer justify-start">
+      <input type="checkbox" id="partial_payment" name="partial_payment" class="checkbox mr-4" checked?={
+        a.PartialPayment } />
+      <span class="label-text">
+        Teilzahlung (2x halber Betrag)
+      </span>
+    </label>
+    <span id="pricing" class="font-bold text-primary text-xl">
+      if a.Price > 0 {
+      <input type="hidden" name="price" value={ strconv.Itoa(a.Price) } />
+      <span>
+        { strconv.Itoa(a.Price) }.-
+        if a.Price == 320 {
+        mitglied
+        } else {
+        abonnement
+        }
+      </span>
+      } else {
+      <span>Besucher:in auswählen</span>
+      }
+    </span>
+  </label>
+  <div class=" col-span-full text-sm font-bold text-primary">
+    Bitte Preis überprüfen. Mitglieder müssen zuerst einem
+    Ressort hinzugefügt werden!
+  </div>
+  <div class=" col-span-full text-sm">
+    <span class="text-error font-extrabold">*</span> diese Felder sind zwingend
+    auszufüllen
+  </div>
+  <div class="col-span-full w-full gap-3 flex mt-3 items-center justify-center flex-col md:flex-row">
+    <a class="btn btn-success" hx-post="/admin/l3/abonnements/create" hx-target="#content">
+      Speichern
+    </a>
+    <a href="/admin/l3/abonnements" class="btn btn-warning">
+      <span class="i-mdi-cancel-bold"></span>
+      Abbrechen
+    </a>
+  </div>
+</form>
+}
