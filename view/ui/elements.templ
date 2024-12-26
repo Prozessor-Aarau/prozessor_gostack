@@ -1,14 +1,17 @@
-{{$vis := index .Data "visitors"}}
-{{$visid := index .Data "visid"}}
+package ui
 
+import "github.com/faebut/prozessor_gostack/internal/models"
+
+templ MemberSelectBox(vID string, visitors []models.Visitor, pricing bool) {
 <select id="member" name="member" class="select select-bordered w-full">
   <option disabled selected>Mitglied auswählen</option>
-  {{range $vis}}
-  <option value="{{.ID}}" {{if eq $visid .ID}} selected {{end}}>{{.FirstName}} {{.FamilyName}}, {{.City}}
+  for _, v := range visitors {
+  <option value={ v.ID } selected?={ v.ID==vID }>
+    { v.FirstName } { v.FamilyName }, { v.City }
   </option>
-  {{end}}
+  }
 </select>
-
+if pricing {
 <script>
   memberSelectBox = document.querySelector("#member");
 
@@ -17,3 +20,5 @@
     htmx.ajax('GET', loc, '#pricing')
   })
 </script>
+}
+}

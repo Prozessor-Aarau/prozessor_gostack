@@ -69,10 +69,10 @@ func routes(app *config.AppConfig) http.Handler {
 		mux.Get("/visitors/visitorlist", handlers.Make(handlers.Repo.HandleVisitorList))
 		mux.Post("/visitors/visitorlist", handlers.Make(handlers.Repo.HandleVisitorListFilter))
 		// route to get elements
-		mux.Get("/visitors/selectbox/", handlers.Repo.VisitorsSelectBox)
-		mux.Get("/visitors/selectbox/{id}", handlers.Repo.VisitorsSelectBox)
-		mux.Post("/visitors/selectbox/", handlers.Repo.VisitorsSelectBox)
-		mux.Post("/visitors/selectbox/{id}", handlers.Repo.VisitorsSelectBox)
+		mux.Get("/visitors/selectbox/", handlers.Make(handlers.Repo.HandleVisitorsSelectBox))
+		mux.Get("/visitors/selectbox/{id}", handlers.Make(handlers.Repo.HandleVisitorsSelectBox))
+		mux.Post("/visitors/selectbox/", handlers.Make(handlers.Repo.HandleVisitorsSelectBox))
+		mux.Post("/visitors/selectbox/{id}", handlers.Make(handlers.Repo.HandleVisitorsSelectBox))
 
 		// routes for editing a visitor
 		mux.Get("/visitors/{id}", handlers.Make(handlers.Repo.HandleProfileIndex))

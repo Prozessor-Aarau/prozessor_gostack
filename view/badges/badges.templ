@@ -307,7 +307,6 @@ templ BadgeEdit(badge models.Badge, errors BadgeEditErrors, visitor models.Visit
       </form>
       <div id="memberSelect" class="mb-3 col-span-2 md:col-span-1" hx-get={ "/admin/visitors/selectbox/" +
         badge.VisitorID } hx-trigger="load"></div>
-      <div id="pricing" class="hidden"></div>
     </div>
     if len(errors.Member)>0 {
     <div class="my-4">

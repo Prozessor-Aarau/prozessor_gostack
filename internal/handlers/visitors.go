@@ -10,9 +10,7 @@ import (
 
 	"github.com/faebut/prozessor_gostack/internal/forms"
 	"github.com/faebut/prozessor_gostack/internal/models"
-	"github.com/faebut/prozessor_gostack/internal/render"
 	"github.com/faebut/prozessor_gostack/view/visitors"
-	"github.com/go-chi/chi/v5"
 )
 
 // HandleVisitorsIndex is the visitors page handler
@@ -157,28 +155,4 @@ func (m *Repository) HandleVisitorListFilter(w http.ResponseWriter, r *http.Requ
 		page,
 		urlSearchString,
 	))
-}
-
-// VisitorsSelectBox returns a select box with the filtered and selected visitors
-func (m *Repository) VisitorsSelectBox(w http.ResponseWriter, r *http.Request) {
-	visID := chi.URLParam(r, "id")
-
-	searchTerm := r.Form.Get("search_term")
-
-	filter := models.NewVisitorSearch(searchTerm)
-
-	// get filtered visitors from DB
-	visitors, _, err := m.DB.AllVisitors(1, 0, filter)
-	if err != nil {
-		log.Println("could not get visitors from DB: ", err)
-		m.App.Session.Put(r.Context(), "error", "Can't get visitors from database")
-	}
-
-	data := make(map[string]interface{})
-	data["visitors"] = visitors
-	data["visid"] = visID
-
-	render.Template(w, r, "comp_visitors_selectbox.html", &models.TemplateData{
-		Data: data,
-	})
 }
