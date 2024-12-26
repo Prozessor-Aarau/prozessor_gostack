@@ -448,7 +448,7 @@ if visitor.RoleID >= 8 {
 <script>
   button = document.getElementById("deleteButton")
   button.addEventListener('htmx:configRequest', (event) => {
-    event.detail.headers['X-CSRF-Token'] = '{{ .CSRFToken }}';
+    event.detail.headers['X-CSRF-Token'] = document.getElementById('csrf_token').value
   })
 </script>
 }
