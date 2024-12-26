@@ -125,8 +125,7 @@ func (m *Repository) PostAbonnementCreate(w http.ResponseWriter, r *http.Request
 }
 
 // AbonnementsList is the handler to get the abonnements list
-func (m *Repository) AbonnementsList(w http.ResponseWriter, r *http.Request) {
-
+func (m *Repository) HandleAbonnementsList(w http.ResponseWriter, r *http.Request) error {
 	// set initial params
 	page := 1
 	filter := models.NewAbonnementFilter("")
@@ -139,22 +138,25 @@ func (m *Repository) AbonnementsList(w http.ResponseWriter, r *http.Request) {
 		page, _ = strconv.Atoi(r.URL.Query().Get("page"))
 	}
 
-	abonnements, count, err := m.DB.AllAbonnements(page, filter)
+	aboList, count, err := m.DB.AllAbonnements(page, filter)
 	if err != nil {
 		log.Println("could not get abonnements from DB: ", err)
-		m.App.Session.Put(r.Context(), "error", "Can't get visitors from database")
+		return err
 	}
 
-	data := make(map[string]interface{})
-	data["abonnements"] = abonnements
-	data["count"] = count
-	data["pages"] = int(math.Ceil(float64(count) / 10))
-	data["onPage"] = page
-	data["filter"] = filter
+	// make url search string
+	urlSearchString := fmt.Sprintf(
+		"&search=%s",
+		filter.SearchString,
+	)
 
-	render.Template(w, r, "part_abonnements_list.html", &models.TemplateData{
-		Data: data,
-	})
+	return rendering(w, r, abonnements.AbonnementsList(
+		aboList,
+		count,
+		int(math.Ceil(float64(count)/10)),
+		page,
+		urlSearchString,
+	))
 }
 
 // PostAbonnementsList is the handler to get the abonnements list with filter

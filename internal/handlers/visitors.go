@@ -68,7 +68,6 @@ func (m *Repository) HandleVisitorList(w http.ResponseWriter, r *http.Request) e
 	visitorList, count, err := m.DB.AllVisitors(page, limit, filter)
 	if err != nil {
 		log.Println("could not get visitors from DB: ", err)
-		m.App.Session.Put(r.Context(), "error", "Can't get visitors from database")
 		return err
 	}
 

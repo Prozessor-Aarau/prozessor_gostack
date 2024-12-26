@@ -2,7 +2,9 @@ package abonnements
 
 import (
 "github.com/faebut/prozessor_gostack/internal/models"
+"github.com/faebut/prozessor_gostack/internal/render"
 "github.com/faebut/prozessor_gostack/view/layout"
+"strconv"
 )
 
 templ Abonnements(visitor models.Visitor) {
@@ -12,7 +14,7 @@ templ Abonnements(visitor models.Visitor) {
 </div>
 <div id="content">
   @abonnementsFilter()
-  <div id="aboList" hx-get="/admin/l3/abonnements/list" hx-trigger="load"></div>
+  <div id="aboList" hx-get="/admin/l3/abonnements/abonnementlist" hx-trigger="load"></div>
 </div>
 }
 }
@@ -78,9 +80,9 @@ templ abonnementsFilter() {
         </select>
       </label>
       <div class="col-span-4 grid grid-cols-2 justify-items-center gap-3">
-        <button type="submit" hx-post="/admin/l3/abonnements/list" hx-target="#aboList"
+        <button type="submit" hx-post="/admin/l3/abonnements/abonnementlist" hx-target="#aboList"
           class="btn btn-success btn-outline"><span class="i-mdi-magnify"></span> suchen</button>
-        <a hx-get="/admin/l3/abonnements/list" hx-target="#aboList" class="btn btn-error btn-outline">
+        <a href="/admin/l3/abonnements" class="btn btn-error btn-outline">
           <span class="i-mdi-close"></span> zurücksetzen
         </a>
       </div>
@@ -102,4 +104,65 @@ templ abonnementsFilter() {
     searchField.value = "";
   });
 </script>
+}
+
+templ AbonnementsList(abonnements []models.Abonnement, count int, pages int, onpage int, filter string) {
+if count == 0 {
+@layout.Warning("Keine Suchergebnisse")
+} else {
+for _, a := range abonnements {
+<div
+  class="hover:bg-base-200 cursor-pointer grid grid-cols-6 text-sm p-3 py-4 items-center gap-3 border-dashed border-b border-base-content border-opacity-50">
+  <div class="col-span-1">
+    <span class={ "mr-5" , templ.KV("text-error", render.ToToday(a.BuyDate) < 0 ), templ.KV("text-warning",
+      render.ToToday(a.BuyDate)>=0 &&
+      render.ToToday(a.BuyDate) <= 45), templ.KV("text-success", render.ToToday(a.BuyDate)> 45) }
+        >
+        { strconv.Itoa(render.ToToday(a.BuyDate)) }
+        Tage
+    </span>
+  </div>
+  <div class="col-span-1 text-2xl flex items-center">
+    if a.Member {
+    <span class="i-mdi-account-group"></span>
+    }
+  </div>
+  <div class="col-span-4 md:col-span-1">
+    CHF { strconv.Itoa(a.Price) }.-
+    if a.PartialPayment {
+    <span class="text-xl i-mdi-payment-clock"></span>
+    }
+  </div>
+  <div class="col-span-5 md:col-span-2 text-right md:text-left">{ a.VisitorFirstName } { a.VisitorFamilyName }</div>
+  <div class="col-span-1 flex justify-end items-center">
+    <a class="btn btn-sm btn-circle btn-primary" hx-get={ "/admin/l3/abonnements/" + strconv.Itoa(a.ID) }
+      hx-target="#main">
+      <span class="i-mdi-lead-pencil"></span>
+    </a>
+  </div>
+</div>
+}
+@pagination(pages, onpage, filter)
+}
+}
+
+templ pagination(pages int, onpage int, filter string) {
+{{ pagesslice := render.Iterate(pages) }}
+<div class="grid justify-items-center">
+  <div class="join pt-6">
+    <button class={ "join-item btn" , templ.KV("btn-disabled", onpage==1) } hx-target="#aboList"
+      hx-get={ "/admin/l3/abonnements/abonnementlist?page=" + strconv.Itoa(onpage-1) + filter }>«</button>
+    for _, p := range pagesslice {
+    switch p {
+    case 1, pages, onpage, onpage+1, onpage-1:
+    <button class={ "join-item btn" , templ.KV("btn-primary", onpage==p) } hx-target="#aboList"
+      hx-get={ "/admin/l3/abonnements/abonnementlist?page=" + strconv.Itoa(p) + filter }>{ strconv.Itoa(p) }</button>
+    case onpage+2, onpage-2:
+    <button class="join-item btn btn-disabled">.</button>
+    }
+    }
+    <button class={ "join-item btn" , templ.KV("btn-disabled", onpage==pages) } hx-target="#aboList"
+      hx-get={ "/admin/l3/abonnements/abonnementlist?page=" + strconv.Itoa(onpage+1) + filter }>»</button>
+  </div>
+</div>
 }
