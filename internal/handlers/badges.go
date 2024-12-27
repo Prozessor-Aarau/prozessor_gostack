@@ -112,7 +112,7 @@ func (m *Repository) HandleBadgeReset(w http.ResponseWriter, r *http.Request) er
 		return err
 	}
 
-	return hxRedirect(w, r, "/admin/l3/badges")
+	return hxRedirect(w, r, "/admin/badges")
 }
 
 // HandleBadgeUpdate updates the information and assignement of a badge
@@ -209,7 +209,7 @@ func (m *Repository) HandleBadgeUpdate(w http.ResponseWriter, r *http.Request) e
 	}
 
 	// on success redirect
-	return hxRedirect(w, r, "/admin/l3/badges")
+	return hxRedirect(w, r, "/admin/badges")
 }
 
 // HandleBadgeCreateIndex is the handler for the Badge creation form
@@ -259,7 +259,7 @@ func (m *Repository) HandleBadgeCreate(w http.ResponseWriter, r *http.Request) e
 		return err
 	}
 	// redirect on success
-	return hxRedirect(w, r, "/admin/l3/badges")
+	return hxRedirect(w, r, "/admin/badges")
 }
 
 // HandleBadgeDelete is the handler for deleting a badge
@@ -276,7 +276,7 @@ func (m *Repository) HandleBadgeDelete(w http.ResponseWriter, r *http.Request) e
 		return err
 	}
 	// redirect on success
-	return hxRedirect(w, r, "/admin/l3/badges")
+	return hxRedirect(w, r, "/admin/badges")
 }
 
 // HandleBadgeRead handles a read request by badge reader and returns the uid

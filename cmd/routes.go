@@ -78,35 +78,49 @@ func routes(app *config.AppConfig) http.Handler {
 		mux.Get("/visitors/{id}", handlers.Make(handlers.Repo.HandleProfileIndex))
 		mux.Post("/visitors/{id}", handlers.Make(handlers.Repo.HandleProfileEdit))
 
-		// routes for machines
-		mux.Get("/machines", handlers.Make(handlers.Repo.HandleMachinesIndex))
-		mux.Get("/machines/create", handlers.Make(handlers.Repo.HandleMachinesCreateIndex))
-		mux.Post("/machines/create", handlers.Make(handlers.Repo.HandleMachinesCreate))
-		mux.Get("/machines/list", handlers.Make(handlers.Repo.HandleMachinesList))
-		mux.Post("/machines/list", handlers.Make(handlers.Repo.HandleMachinesListFilter))
-		// edit machines
-		mux.Get("/machines/edit/{id}", handlers.Make(handlers.Repo.HandleMachinesEditIndex))
-		mux.Post("/machines/edit/{id}", handlers.Make(handlers.Repo.HandleMachinesEdit))
-		mux.Delete("/machines/{id}", handlers.Make(handlers.Repo.HandleMachinesDelete))
-		mux.Post("/machines/edit/{id}/qrcode", handlers.Make(handlers.Repo.HandleMachinesQRCreate))
-		mux.Post("/machines/edit/{id}/qrcode/delete", handlers.Make(handlers.Repo.HandleMachinesQRDelete))
-		mux.Post("/machines/edit/{id}/qrcode/print", handlers.Make(handlers.Repo.HandleMachinesQRPrint))
+		// machines
+		mux.Group(func(mux chi.Router) {
+			mux.Use(CheckPermission("ViewMachines"))
+			mux.Get("/machines", handlers.Make(handlers.Repo.HandleMachinesIndex))
+			mux.Get("/machines/create", handlers.Make(handlers.Repo.HandleMachinesCreateIndex))
+			mux.Post("/machines/create", handlers.Make(handlers.Repo.HandleMachinesCreate))
+			mux.Get("/machines/list", handlers.Make(handlers.Repo.HandleMachinesList))
+			mux.Post("/machines/list", handlers.Make(handlers.Repo.HandleMachinesListFilter))
+			// edit machines
+			mux.Get("/machines/edit/{id}", handlers.Make(handlers.Repo.HandleMachinesEditIndex))
+			mux.Post("/machines/edit/{id}", handlers.Make(handlers.Repo.HandleMachinesEdit))
+			mux.Delete("/machines/{id}", handlers.Make(handlers.Repo.HandleMachinesDelete))
+			mux.Post("/machines/edit/{id}/qrcode", handlers.Make(handlers.Repo.HandleMachinesQRCreate))
+			mux.Post("/machines/edit/{id}/qrcode/delete", handlers.Make(handlers.Repo.HandleMachinesQRDelete))
+			mux.Post("/machines/edit/{id}/qrcode/print", handlers.Make(handlers.Repo.HandleMachinesQRPrint))
+		})
 
-		mux.Route("/l2", func(mux chi.Router) {
-			mux.Use(Level2)
-			// put routes, that use at least level 2 in here
+		// badges
+		mux.Group(func(mux chi.Router) {
+			mux.Use(CheckPermission("ViewBadges"))
+			mux.Get("/badges", handlers.Make(handlers.Repo.HandleBadgesIndex))
+			mux.Get("/badges/list", handlers.Make(handlers.Repo.HandleBadgesList))
+			mux.Post("/badges/list", handlers.Make(handlers.Repo.HandleBadgesListFilter))
+			// assign badge and view detail
+			mux.Group(func(mux chi.Router) {
+				mux.Use(CheckPermission("AssignBadge"))
+				mux.Get("/badges/{id}", handlers.Make(handlers.Repo.HandleBadgeEditIndex))
+				mux.Post("/badges/{id}", handlers.Make(handlers.Repo.HandleBadgeUpdate))
+				mux.Post("/badges/reset/{id}", handlers.Make(handlers.Repo.HandleBadgeReset))
+				// create, edit and delete badges
+				mux.Group(func(mux chi.Router) {
+					mux.Use(CheckPermission("EditBadge"))
+					mux.Get("/badges/create", handlers.Make(handlers.Repo.HandleBadgeCreateIndex))
+					mux.Post("/badges/create", handlers.Make(handlers.Repo.HandleBadgeCreate))
+					mux.Get("/badges/scan", handlers.Make(handlers.Repo.HandleBadgeRead))
+					mux.Delete("/badges/{id}", handlers.Make(handlers.Repo.HandleBadgeDelete))
+				})
+			})
 		})
 
 		mux.Route("/l3", func(mux chi.Router) {
 			mux.Use(Level3)
 			// put routes, that use at least level 3 in here
-			// badges
-			mux.Get("/badges", handlers.Make(handlers.Repo.HandleBadgesIndex))
-			mux.Get("/badges/list", handlers.Make(handlers.Repo.HandleBadgesList))
-			mux.Post("/badges/list", handlers.Make(handlers.Repo.HandleBadgesListFilter))
-			mux.Get("/badges/{id}", handlers.Make(handlers.Repo.HandleBadgeEditIndex))
-			mux.Post("/badges/{id}", handlers.Make(handlers.Repo.HandleBadgeUpdate))
-			mux.Post("/badges/reset/{id}", handlers.Make(handlers.Repo.HandleBadgeReset))
 			// abonnements
 			mux.Get("/abonnements", handlers.Make(handlers.Repo.HandleAbonnementsIndex))
 			mux.Get("/abonnements/abonnementlist", handlers.Make(handlers.Repo.HandleAbonnementsList))
@@ -118,17 +132,7 @@ func routes(app *config.AppConfig) http.Handler {
 			mux.Post("/createloginmail", handlers.Repo.CreateLoginMail)
 		})
 
-		mux.Route("/l4", func(mux chi.Router) {
-			mux.Use(Level4)
-			// put routes, that use at least level 4 in here
-			// badges
-			mux.Get("/badges/create", handlers.Make(handlers.Repo.HandleBadgeCreateIndex))
-			mux.Post("/badges/create", handlers.Make(handlers.Repo.HandleBadgeCreate))
-			mux.Get("/badges/scan", handlers.Make(handlers.Repo.HandleBadgeRead))
-			mux.Delete("/badges/{id}", handlers.Make(handlers.Repo.HandleBadgeDelete))
-		})
-
-		// testing with new middleware
+		// statistics
 		mux.Group(func(mux chi.Router) {
 			mux.Use(CheckPermission("ViewStatistics"))
 			mux.Get("/statistics", handlers.Make(handlers.Repo.HandleStatisticsIndex))

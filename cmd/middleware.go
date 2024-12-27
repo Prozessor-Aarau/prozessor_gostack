@@ -52,8 +52,14 @@ func CheckPermission(permission string) func(http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			// function to run if the permission is not valid
 			redirect := func() {
+				to := "/admin"
 				log.Println("No permission for this route")
-				http.Redirect(w, r, "/admin", http.StatusSeeOther)
+				if len(r.Header.Get("HX-Request")) > 0 {
+					w.Header().Set("HX-Redirect", to)
+					w.WriteHeader(http.StatusSeeOther)
+					return
+				}
+				http.Redirect(w, r, to, http.StatusSeeOther)
 			}
 
 			// get permissions
@@ -167,46 +173,10 @@ func CheckPermission(permission string) func(http.Handler) http.Handler {
 	}
 }
 
-// Level functions check if someone has the appropriate level
-func Level2(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		accessLevel := session.Get(r.Context(), "access").(int)
-		required := 2
-		if accessLevel < required {
-			session.Put(r.Context(), "error", "no access to this page")
-			log.Printf(
-				"Your level is not enough. Should be %d, but is %d",
-				required,
-				accessLevel,
-			)
-			http.Redirect(w, r, "/admin", http.StatusSeeOther)
-			return
-		}
-		next.ServeHTTP(w, r)
-	})
-}
 func Level3(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		accessLevel := session.Get(r.Context(), "access").(int)
 		required := 3
-		if accessLevel < required {
-			session.Put(r.Context(), "error", "no access to this page")
-			log.Printf(
-				"Your level is not enough. Should be %d, but is %d",
-				required,
-				accessLevel,
-			)
-			http.Redirect(w, r, "/admin", http.StatusSeeOther)
-			return
-		}
-		next.ServeHTTP(w, r)
-	})
-}
-func Level4(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		accessLevel := session.Get(r.Context(), "access").(int)
-		required := 4
-
 		if accessLevel < required {
 			session.Put(r.Context(), "error", "no access to this page")
 			log.Printf(
