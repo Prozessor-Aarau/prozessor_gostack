@@ -69,10 +69,30 @@ func (m *Repository) HandleLoginCreate(w http.ResponseWriter, r *http.Request) e
 		))
 	}
 
+	// TODO GET Role by ID
+	// get permissions
+	permissions, err := m.DB.RoleByID(visitor.RoleID)
+
+	if err != nil {
+		log.Println(err)
+
+		// send the data to the template
+		return rendering(w, r, auth.LoginForm(
+			auth.LoginParams{},
+			auth.LoginErrors{
+				InvalidCredentials: "Kann Rolle nicht aus DB lesen",
+			},
+		))
+	}
+
 	m.App.Session.Put(r.Context(), "user_id", id)
 	m.App.Session.Put(r.Context(), "visitor", visitor)
+
+	// TODO remove acces as it is not needed anymore
 	m.App.Session.Put(r.Context(), "access", visitor.RoleID)
-	m.App.Session.Put(r.Context(), "flash", "Logged in successfully")
+
+	m.App.Session.Put(r.Context(), "permission", permissions)
+	// m.App.Session.Put(r.Context(), "flash", "Logged in successfully")
 
 	return hxRedirect(w, r, "/admin")
 }

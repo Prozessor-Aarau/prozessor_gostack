@@ -127,6 +127,12 @@ func routes(app *config.AppConfig) http.Handler {
 			mux.Get("/badges/scan", handlers.Make(handlers.Repo.HandleBadgeRead))
 			mux.Delete("/badges/{id}", handlers.Make(handlers.Repo.HandleBadgeDelete))
 		})
+
+		// testing with new middleware
+		mux.Group(func(mux chi.Router) {
+			mux.Use(CheckPermission("ViewStatistics"))
+			mux.Get("/statistics", handlers.Make(handlers.Repo.HandleStatisticsIndex))
+		})
 	})
 
 	return mux

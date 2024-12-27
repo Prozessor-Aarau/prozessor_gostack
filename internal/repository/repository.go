@@ -45,6 +45,7 @@ type DatabaseRepo interface {
 	RessortByID(id int) (models.Ressort, error)
 	// roles
 	AllRoles() ([]models.Role, error)
+	RoleByID(id int) (models.Role, error)
 	// registering and login
 	CreateRegisterCode(v models.Visitor) (string, error)
 	CreatePassword(v models.Visitor) error

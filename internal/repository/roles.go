@@ -44,3 +44,75 @@ func (m *postgresDBRepo) AllRoles() ([]models.Role, error) {
 
 	return roles, nil
 }
+
+// RoleByID returns a role by id
+func (m *postgresDBRepo) RoleByID(id int) (models.Role, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	var role models.Role
+
+	query := `SELECT id, 
+            role_name, 
+            created_on, 
+            updated_on,
+            view_visitors,
+            edit_visitor,
+            edit_visitor_membership,
+            edit_visitor_role,
+            view_machines,
+            view_badges,
+            assign_badge,
+            edit_badge,
+            view_abonnements,
+            add_abonnement,
+            edit_abonnement,
+            view_reminders,
+            add_reminder,
+            view_newsletters,
+            add_newsletter,
+            view_logistics,
+            view_statistics,
+            view_logs,
+            view_finances,
+            add_finances,
+            edit_finances
+            FROM roles
+            WHERE id = $1`
+
+	row := m.DB.QueryRowContext(ctx, query, id)
+
+	err := row.Scan(
+		&role.ID,
+		&role.RoleName,
+		&role.CreatedOn,
+		&role.UpdatedOn,
+		&role.ViewVisitors,
+		&role.EditVisitor,
+		&role.EditVisitorMembership,
+		&role.EditVisitorRole,
+		&role.ViewMachines,
+		&role.ViewBadges,
+		&role.AssignBadge,
+		&role.EditBadge,
+		&role.ViewAbonnements,
+		&role.AddAbonnement,
+		&role.EditAbonnement,
+		&role.ViewReminders,
+		&role.AddReminder,
+		&role.ViewNewsletters,
+		&role.AddNewsletter,
+		&role.ViewLogistics,
+		&role.ViewStatistics,
+		&role.ViewLogs,
+		&role.ViewFinances,
+		&role.AddFinances,
+		&role.EditFinances,
+	)
+
+	if err != nil {
+		return role, err
+	}
+
+	return role, nil
+}

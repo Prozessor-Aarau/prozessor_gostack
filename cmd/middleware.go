@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/faebut/prozessor_gostack/internal/helpers"
+	"github.com/faebut/prozessor_gostack/internal/models"
 	"github.com/justinas/nosurf"
 )
 
@@ -43,6 +44,127 @@ func Auth(next http.Handler) http.Handler {
 		}
 		next.ServeHTTP(w, r)
 	})
+}
+
+// CheckPermission checks if someone has the right permission for a route
+func CheckPermission(permission string) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			// function to run if the permission is not valid
+			redirect := func() {
+				log.Println("No permission for this route")
+				http.Redirect(w, r, "/admin", http.StatusSeeOther)
+			}
+
+			// get permissions
+			permissions := session.Get(r.Context(), "permission").(models.Role)
+
+			switch permission {
+			case "ViewVisitors":
+				if !permissions.ViewVisitors {
+					redirect()
+					return
+				}
+			case "EditVisitor":
+				if !permissions.EditVisitor {
+					redirect()
+					return
+				}
+			case "EditVisitorMembership":
+				if !permissions.EditVisitorMembership {
+					redirect()
+					return
+				}
+			case "EditVisitorRole":
+				if !permissions.EditVisitorRole {
+					redirect()
+					return
+				}
+			case "ViewMachines":
+				if !permissions.ViewMachines {
+					redirect()
+					return
+				}
+			case "ViewBadges":
+				if !permissions.ViewBadges {
+					redirect()
+					return
+				}
+			case "AssignBadge":
+				if !permissions.AssignBadge {
+					redirect()
+					return
+				}
+			case "EditBadge":
+				if !permissions.EditBadge {
+					redirect()
+					return
+				}
+			case "ViewAbonnements":
+				if !permissions.EditBadge {
+					redirect()
+					return
+				}
+			case "EditAbonnement":
+				if !permissions.EditBadge {
+					redirect()
+					return
+				}
+			case "ViewReminders":
+				if !permissions.ViewReminders {
+					redirect()
+					return
+				}
+			case "AddReminder":
+				if !permissions.AddReminder {
+					redirect()
+					return
+				}
+			case "ViewNewsletters":
+				if !permissions.ViewNewsletters {
+					redirect()
+					return
+				}
+			case "AddNewsletter":
+				if !permissions.AddNewsletter {
+					redirect()
+					return
+				}
+			case "ViewLogistics":
+				if !permissions.ViewLogistics {
+					redirect()
+					return
+				}
+			case "ViewStatistics":
+				if !permissions.ViewStatistics {
+					redirect()
+					return
+				}
+			case "ViewLogs":
+				if !permissions.ViewLogs {
+					redirect()
+					return
+				}
+			case "ViewFinances":
+				if !permissions.ViewFinances {
+					redirect()
+					return
+				}
+			case "AddFinances":
+				if !permissions.AddFinances {
+					redirect()
+					return
+				}
+			case "EditFinances":
+				if !permissions.EditFinances {
+					redirect()
+					return
+				}
+			}
+
+			next.ServeHTTP(w, r)
+		})
+	}
 }
 
 // Level functions check if someone has the appropriate level
