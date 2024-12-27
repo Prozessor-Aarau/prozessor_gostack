@@ -47,7 +47,8 @@ func Make(h func(http.ResponseWriter, *http.Request) error) http.HandlerFunc {
 // render helps rendering the templ and adds default data
 func rendering(w http.ResponseWriter, r *http.Request, component templ.Component) error {
 	// set nosurf Token in new context with value
-	ctx := context.WithValue(r.Context(), "csrf.Token", nosurf.Token(r))
+  aCtx := context.WithValue(r.Context(), "permission", Repo.App.Session.Get(r.Context(), "permission"))
+	ctx := context.WithValue(aCtx, "csrf.Token", nosurf.Token(r))
 	return component.Render(ctx, w)
 }
 

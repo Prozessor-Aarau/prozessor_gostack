@@ -6,6 +6,7 @@ import (
 )
 
 templ Navigation(visitor models.Visitor) {
+{{ prm := ctx.Value("permission").(models.Role) }}
 <nav>
   <div class="mb-5">
     <div class="text-xl font-medium px-6 py-3 grid grid-cols-3 bg-base-100 content-between items-center">
@@ -51,32 +52,38 @@ templ Navigation(visitor models.Visitor) {
         <li>
           <a href="/admin/checkin">Check-In</a>
         </li>
-        if visitor.RoleID >= 2 {
+        if prm.ViewMachines {
         <li>
           <a href="/admin/machines">Maschinen</a>
         </li>
+        }
         <!-- <li> -->
         <!--   <a>Newsletter</a> -->
         <!-- </li> -->
         <!-- <li> -->
         <!--   <a href="/admin/checkout">Kasse</a> -->
         <!-- </li> -->
-        }
-        if visitor.RoleID >= 3 {
+        if prm.ViewVisitors || prm.ViewBadges || prm.ViewAbonnements || prm.ViewReminders {
         <li>
           <details>
             <summary>Verwaltung</summary>
             <ul>
+              if prm.ViewVisitors {
               <li>
                 <a href="/admin/visitors">Besucher:innen</a>
               </li>
-              if visitor.RoleID >= 5 {
+              }
+              if prm.ViewBadges {
               <li>
                 <a href="/admin/l3/badges">Badges</a>
               </li>
+              }
+              if prm.ViewAbonnements {
               <li>
                 <a href="/admin/l3/abonnements">Abonnements</a>
               </li>
+              }
+              if prm.ViewReminders {
               <li>
                 <a href="/admin/l3/abonnements/reminder">Reminder</a>
               </li>
@@ -85,7 +92,7 @@ templ Navigation(visitor models.Visitor) {
           </details>
         </li>
         }
-        if visitor.RoleID >= 8 {
+        if prm.ViewFinances {
         <!-- <li> -->
         <!-- <details> -->
         <!--   <summary>Buchhaltung</summary> -->
@@ -99,19 +106,22 @@ templ Navigation(visitor models.Visitor) {
         <!--   </ul> -->
         <!-- </details> -->
         <!-- </li> -->
+        }
+        if prm.ViewStatistics || prm.ViewLogs {
         <li>
           <details>
             <summary>Admin</summary>
             <ul>
+              if prm.ViewStatistics {
               <li>
-                <a href="/admin/">Stammdaten</a>
+                <a href="/admin/statistics">Statistik</a>
               </li>
-              <li>
-                <a href="/admin/">Statistik</a>
-              </li>
+              }
+              if prm.ViewLogs {
               <li>
                 <a href="/admin/">Log</a>
               </li>
+              }
             </ul>
           </details>
         </li>
