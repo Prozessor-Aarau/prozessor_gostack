@@ -1,7 +1,7 @@
 -- +goose Up
 -- +goose StatementBegin
 UPDATE roles 
-SET view_visitors = true,
+SET view_visitors = false,
 edit_visitor = false,
 edit_visitor_membership = false,
 edit_visitor_role = false,
@@ -25,7 +25,7 @@ edit_finances = false
 WHERE role_name = 'Registriert';
 
 UPDATE roles 
-SET view_visitors = true,
+SET view_visitors = false,
 edit_visitor = true,
 edit_visitor_membership = false,
 edit_visitor_role = false,
