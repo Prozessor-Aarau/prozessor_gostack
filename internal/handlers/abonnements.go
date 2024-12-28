@@ -29,7 +29,7 @@ func (m *Repository) HandleAbonnementsIndex(w http.ResponseWriter, r *http.Reque
 func (m *Repository) HandleAbonnementCreateIndex(w http.ResponseWriter, r *http.Request) error {
 	var abo models.Abonnement
 
-	return rendering(w, r, abonnements.AbonnementForm(abo, abonnements.FormErrors{}))
+	return rendering(w, r, abonnements.AbonnementForm(abo, abonnements.FormErrors{}, false))
 
 }
 
@@ -62,6 +62,7 @@ func (m *Repository) AbonnementCreatePrice(w http.ResponseWriter, r *http.Reques
 func (m *Repository) HandleAbonnementCreate(w http.ResponseWriter, r *http.Request) error {
 	// create empty badge
 	var abo models.Abonnement
+	var free bool
 
 	form := forms.New(r.Form)
 	form.Required("price", "member", "buydate")
@@ -74,6 +75,7 @@ func (m *Repository) HandleAbonnementCreate(w http.ResponseWriter, r *http.Reque
 	abo.Price = stringPrice
 	abo.VisitorID = r.Form.Get("member")
 	abo.PartialPayment = form.BoxValue("partial_payment")
+	free = form.BoxValue("free")
 
 	// set member with price
 	if abo.Price == 320 {
@@ -83,12 +85,21 @@ func (m *Repository) HandleAbonnementCreate(w http.ResponseWriter, r *http.Reque
 	}
 
 	var formErrors abonnements.FormErrors
+	if free && !abo.Member {
+		form.Errors.Add("free", "Nur Mitglieder können beitragsbefreit sein")
+		formErrors.Free = form.Errors.Get("free")
+	}
 	formErrors.Member = form.Errors.Get("member")
 	formErrors.Price = form.Errors.Get("price")
 	formErrors.BuyDate = form.Errors.Get("buydate")
 
 	if !form.Valid() {
-		return rendering(w, r, abonnements.AbonnementForm(abo, formErrors))
+		return rendering(w, r, abonnements.AbonnementForm(abo, formErrors, free))
+	}
+
+	// if free membership, delete price
+	if free {
+		abo.Price = 0
 	}
 
 	_, err = m.DB.CreateAbonnement(abo)

@@ -170,9 +170,10 @@ type FormErrors struct {
 Member string
 BuyDate string
 Price string
+Free string
 }
 
-templ AbonnementForm(a models.Abonnement, errors FormErrors) {
+templ AbonnementForm(a models.Abonnement, errors FormErrors, free bool) {
 <form class="grid grid-cols-2 items-center gap-3 ">
   @ui.CSRF()
   <div class="prose col-span-full">
@@ -244,6 +245,15 @@ templ AbonnementForm(a models.Abonnement, errors FormErrors) {
       }
     </span>
   </label>
+  <label class="label cursor-pointer justify-start col-span-full">
+    <input type="checkbox" id="free" name="free" class="checkbox mr-4" checked?={ free } />
+    <span class={ "label-text" , templ.KV("text-error", len(errors.Free)>0) }>Beitragsbefreites Mitglied</span>
+  </label>
+  if len(errors.Free)>0 {
+  <div class="label col-span-full">
+    <span class="label-text text-error">{ errors.Free }</span>
+  </div>
+  }
   <div class=" col-span-full text-sm font-bold text-primary">
     Bitte Preis überprüfen. Mitglieder müssen zuerst einem
     Ressort hinzugefügt werden!
