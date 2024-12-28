@@ -319,7 +319,7 @@ err string,
     <div class="collapse-content">
       <form class="grid grid-cols-2 gap-5" novalidate>
         @ui.CSRF()
-        <input type="hidden" name="ressort" value={ strconv.Itoa(visit.Ressort.ID) } />
+        <input type="hidden" name="ressort" value={ strconv.Itoa(visitor.Ressort.ID) } />
         <div class="col-span-2 flex flex-col">
           <span class="label-text">Ateliers auswählen:</span>
           <div class="grid grid-cols-2 gap-5">
