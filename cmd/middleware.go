@@ -172,21 +172,3 @@ func CheckPermission(permission string) func(http.Handler) http.Handler {
 		})
 	}
 }
-
-func Level3(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		accessLevel := session.Get(r.Context(), "access").(int)
-		required := 3
-		if accessLevel < required {
-			session.Put(r.Context(), "error", "no access to this page")
-			log.Printf(
-				"Your level is not enough. Should be %d, but is %d",
-				required,
-				accessLevel,
-			)
-			http.Redirect(w, r, "/admin", http.StatusSeeOther)
-			return
-		}
-		next.ServeHTTP(w, r)
-	})
-}

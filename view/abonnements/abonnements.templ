@@ -15,12 +15,13 @@ templ Abonnements(visitor models.Visitor) {
 </div>
 <div id="content">
   @abonnementsFilter()
-  <div id="aboList" hx-get="/admin/l3/abonnements/abonnementlist" hx-trigger="load"></div>
+  <div id="aboList" hx-get="/admin/abonnements/abonnementlist" hx-trigger="load"></div>
 </div>
 }
 }
 
 templ abonnementsFilter() {
+{{ prm := ctx.Value("permission").(models.Role) }}
 <div class="border-base-content border-opacity-20 border rounded-md dark:rounded-lg bg-base-100 my-4 p-4">
   <h2 class="font-bold text-xl mb-3">Suchfilter</h2>
   <form id="filterForm" novalidate>
@@ -75,20 +76,22 @@ templ abonnementsFilter() {
         </select>
       </label>
       <div class="col-span-4 grid grid-cols-2 justify-items-center gap-3">
-        <button type="submit" hx-post="/admin/l3/abonnements/abonnementlist" hx-target="#aboList"
+        <button type="submit" hx-post="/admin/abonnements/abonnementlist" hx-target="#aboList"
           class="btn btn-success btn-outline"><span class="i-mdi-magnify"></span> suchen</button>
-        <a href="/admin/l3/abonnements" class="btn btn-error btn-outline">
+        <a href="/admin/abonnements" class="btn btn-error btn-outline">
           <span class="i-mdi-close"></span> zurücksetzen
         </a>
       </div>
     </div>
   </form>
+  if prm.AddAbonnement {
   <div class="border-base-content border-opacity-50 border-dashed border-t mt-4 pt-4">
-    <button type="button" class="btn btn-secondary" hx-get="/admin/l3/abonnements/create" hx-target="#content">
+    <button type="button" class="btn btn-secondary" hx-get="/admin/abonnements/create" hx-target="#content">
       Neues Abo
       hinzufügen
     </button>
   </div>
+  }
 </div>
 <!-- For the switches -->
 <script>
@@ -102,6 +105,7 @@ templ abonnementsFilter() {
 }
 
 templ AbonnementsList(abonnements []models.Abonnement, count int, pages int, onpage int, filter string) {
+{{ prm := ctx.Value("permission").(models.Role) }}
 if count == 0 {
 @layout.Warning("Keine Suchergebnisse")
 } else {
@@ -130,8 +134,8 @@ for _, a := range abonnements {
   </div>
   <div class="col-span-5 md:col-span-2 text-right md:text-left">{ a.VisitorFirstName } { a.VisitorFamilyName }</div>
   <div class="col-span-1 flex justify-end items-center">
-    <a class="btn btn-sm btn-circle btn-primary" hx-get={ "/admin/l3/abonnements/" + strconv.Itoa(a.ID) }
-      hx-target="#main">
+    <a class={ "btn btn-sm btn-circle btn-primary" , templ.KV("btn-disabled", !prm.EditAbonnement) }
+      hx-get={ "/admin/abonnements/" + strconv.Itoa(a.ID) } hx-target="#main">
       <span class="i-mdi-lead-pencil"></span>
     </a>
   </div>
@@ -146,18 +150,18 @@ templ pagination(pages int, onpage int, filter string) {
 <div class="grid justify-items-center">
   <div class="join pt-6">
     <button class={ "join-item btn" , templ.KV("btn-disabled", onpage==1) } hx-target="#aboList"
-      hx-get={ "/admin/l3/abonnements/abonnementlist?page=" + strconv.Itoa(onpage-1) + filter }>«</button>
+      hx-get={ "/admin/abonnements/abonnementlist?page=" + strconv.Itoa(onpage-1) + filter }>«</button>
     for _, p := range pagesslice {
     switch p {
     case 1, pages, onpage, onpage+1, onpage-1:
     <button class={ "join-item btn" , templ.KV("btn-primary", onpage==p) } hx-target="#aboList"
-      hx-get={ "/admin/l3/abonnements/abonnementlist?page=" + strconv.Itoa(p) + filter }>{ strconv.Itoa(p) }</button>
+      hx-get={ "/admin/abonnements/abonnementlist?page=" + strconv.Itoa(p) + filter }>{ strconv.Itoa(p) }</button>
     case onpage+2, onpage-2:
     <button class="join-item btn btn-disabled">.</button>
     }
     }
     <button class={ "join-item btn" , templ.KV("btn-disabled", onpage==pages) } hx-target="#aboList"
-      hx-get={ "/admin/l3/abonnements/abonnementlist?page=" + strconv.Itoa(onpage+1) + filter }>»</button>
+      hx-get={ "/admin/abonnements/abonnementlist?page=" + strconv.Itoa(onpage+1) + filter }>»</button>
   </div>
 </div>
 }
@@ -249,10 +253,10 @@ templ AbonnementForm(a models.Abonnement, errors FormErrors) {
     auszufüllen
   </div>
   <div class="col-span-full w-full gap-3 flex mt-3 items-center justify-center flex-col md:flex-row">
-    <a class="btn btn-success" hx-post="/admin/l3/abonnements/create" hx-target="#content">
+    <a class="btn btn-success" hx-post="/admin/abonnements/create" hx-target="#content">
       Speichern
     </a>
-    <a href="/admin/l3/abonnements" class="btn btn-warning">
+    <a href="/admin/abonnements" class="btn btn-warning">
       <span class="i-mdi-cancel-bold"></span>
       Abbrechen
     </a>

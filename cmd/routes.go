@@ -78,6 +78,13 @@ func routes(app *config.AppConfig) http.Handler {
 		mux.Get("/visitors/{id}", handlers.Make(handlers.Repo.HandleProfileIndex))
 		mux.Post("/visitors/{id}", handlers.Make(handlers.Repo.HandleProfileEdit))
 
+		// membership
+		mux.Group(func(mux chi.Router) {
+			mux.Use(CheckPermission("EditVisitorMembership"))
+			// create a new login
+			mux.Post("/createloginmail", handlers.Repo.CreateLoginMail)
+		})
+
 		// machines
 		mux.Group(func(mux chi.Router) {
 			mux.Use(CheckPermission("ViewMachines"))
@@ -118,19 +125,21 @@ func routes(app *config.AppConfig) http.Handler {
 			})
 		})
 
-		mux.Route("/l3", func(mux chi.Router) {
-			mux.Use(Level3)
-			// put routes, that use at least level 3 in here
-			// abonnements
+		// abonnements
+		mux.Group(func(mux chi.Router) {
+			mux.Use(CheckPermission("ViewAbonnements"))
 			mux.Get("/abonnements", handlers.Make(handlers.Repo.HandleAbonnementsIndex))
 			mux.Get("/abonnements/abonnementlist", handlers.Make(handlers.Repo.HandleAbonnementsList))
 			mux.Post("/abonnements/abonnementlist", handlers.Make(handlers.Repo.HandleAbonnementsListFilter))
-			mux.Get("/abonnements/create", handlers.Make(handlers.Repo.HandleAbonnementCreateIndex))
-			mux.Post("/abonnements/create", handlers.Make(handlers.Repo.HandleAbonnementCreate))
-			mux.Get("/abonnements/create/pricing/{id}", handlers.Repo.AbonnementCreatePrice)
-			// create a new login
-			mux.Post("/createloginmail", handlers.Repo.CreateLoginMail)
+			// add abonnements
+			mux.Group(func(mux chi.Router) {
+				mux.Use(CheckPermission("AddAbonnements"))
+				mux.Get("/abonnements/create", handlers.Make(handlers.Repo.HandleAbonnementCreateIndex))
+				mux.Post("/abonnements/create", handlers.Make(handlers.Repo.HandleAbonnementCreate))
+			})
 		})
+		// this is only the price, so no permission needed
+		mux.Get("/abonnements/create/pricing/{id}", handlers.Repo.AbonnementCreatePrice)
 
 		// statistics
 		mux.Group(func(mux chi.Router) {

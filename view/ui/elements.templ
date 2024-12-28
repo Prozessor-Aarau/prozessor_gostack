@@ -16,7 +16,7 @@ if pricing {
   memberSelectBox = document.querySelector("#member");
 
   memberSelectBox.addEventListener("change", function () {
-    loc = "/admin/l3/abonnements/create/pricing/" + memberSelectBox.value
+    loc = "/admin/abonnements/create/pricing/" + memberSelectBox.value
     htmx.ajax('GET', loc, '#pricing')
   })
 </script>

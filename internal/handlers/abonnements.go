@@ -98,7 +98,7 @@ func (m *Repository) HandleAbonnementCreate(w http.ResponseWriter, r *http.Reque
 	}
 
 	// redirect on success
-	return hxRedirect(w, r, "/admin/l3/abonnements")
+	return hxRedirect(w, r, "/admin/abonnements")
 }
 
 // AbonnementsList is the handler to get the abonnements list
