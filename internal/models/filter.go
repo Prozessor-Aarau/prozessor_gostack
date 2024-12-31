@@ -57,3 +57,19 @@ func NewAbonnementFilter(search string) AbonnementFilter {
 		SortDir:      "DESC",
 	}
 }
+
+type LogisticFilter struct {
+	Filter   string
+	InUse    string
+	Validity string
+	Type     int
+}
+
+func NewLogisticFilter(search string) LogisticFilter {
+	return LogisticFilter{
+		Filter:   search,
+		InUse:    "all",
+		Validity: "all",
+		Type:     0,
+	}
+}

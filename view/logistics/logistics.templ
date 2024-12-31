@@ -1,0 +1,551 @@
+package logistics
+
+import (
+	"github.com/faebut/prozessor_gostack/internal/models"
+	"github.com/faebut/prozessor_gostack/view/layout"
+	"github.com/faebut/prozessor_gostack/view/ui"
+	"strconv"
+	"time"
+)
+
+templ Logistics(visitor models.Visitor, categories []models.LogisticCategory) {
+	@layout.App(true, visitor) {
+		<div class="prose mb-10">
+			<h1>Lagerverwaltung</h1>
+		</div>
+		<div id="content">
+			@logisticsFilter(categories)
+			<div id="logisticsList" hx-get="/admin/logistics/list" hx-trigger="load"></div>
+		</div>
+	}
+}
+
+templ logisticsFilter(categories []models.LogisticCategory) {
+	{{ prm := ctx.Value("permission").(models.Role) }}
+	<div class="border-base-content border-opacity-20 border rounded-md dark:rounded-lg bg-base-100 my-4 p-4">
+		<h2 class="font-bold text-xl mb-3">Suchfilter</h2>
+		<form id="filterForm" novalidate>
+			<div class="grid grid-cols-4 gap-5 items-center">
+				@ui.CSRF()
+				<label class="input input-bordered flex items-center gap-2 col-span-full">
+					<span class="text-3xl i-mdi-magnify"></span>
+					<input
+						type="text"
+						id="filter_string"
+						name="filter_string"
+						class="grow"
+						placeholder="Suche nach Lagerplatz, Vorname, Familienname ..."
+					/>
+					<!-- how to implement this button? should reset field -->
+					<button id="fieldreset" class="ml-3 btn btn-neutral btn-outline btn-xs btn-circle">
+						<span class="i-mdi-close"></span>
+					</button>
+				</label>
+				<label class="form-control w-full max-w-xs col-span-full md:col-span-1">
+					<select name="inuse" id="inuse" class="select select-bordered">
+						<option value="all">Verfügbarkeit (alle)</option>
+						<option value="used">vergeben</option>
+						<option value="available">verfügbar</option>
+					</select>
+				</label>
+				<label class="form-control w-full max-w-xs col-span-full md:col-span-1">
+					<select name="validity" id="validity" class="select select-bordered">
+						<option value="all">Gültigkeit (alle)</option>
+						<option value="valid">Noch gültig</option>
+						<option value="invalid">bereits abgelaufen</option>
+					</select>
+				</label>
+				<label class="form-control w-full max-w-xs col-span-5 md:col-span-1">
+					<select name="type" id="type" class="select select-bordered">
+						<option value="0" selected>Typ (alle)</option>
+						for _, v := range categories {
+							<option value={ strconv.Itoa(v.ID) }>{ v.CatName }</option>
+						}
+					</select>
+				</label>
+				<div class="col-span-5 md:col-span-1 grid grid-cols-2 justify-items-center justify-around gap-3">
+					<button
+						type="submit"
+						hx-post="/admin/logistics/list"
+						hx-target="#logisticsList"
+						class="btn btn-success btn-outline btn-circle"
+					><span class="i-mdi-magnify text-xl"></span></button>
+					<a href="/admin/logistics" class="btn btn-error btn-outline btn-circle">
+						<span class="i-mdi-close text-xl"></span>
+					</a>
+				</div>
+			</div>
+		</form>
+		if prm.EditLogistics {
+			<div class="border-base-content border-opacity-50 border-dashed border-t mt-4 pt-4">
+				<button type="button" class="btn btn-secondary" hx-get="/admin/logistics/create" hx-target="#content">
+					Lagerplatz
+					hinzufügen
+				</button>
+			</div>
+		}
+	</div>
+	<!-- For the switches -->
+	<script>
+  searchField = document.querySelector("#search_term")
+
+  document.getElementById("fieldreset").addEventListener("click", function (event) {
+    event.preventDefault();
+    searchField.value = "";
+  });
+</script>
+}
+
+templ LogisticsList(logistics []models.Logistic) {
+	{{ prm := ctx.Value("permission").(models.Role) }}
+	if len(logistics) > 0 {
+		for _, l := range logistics {
+			<div
+				class="hover:bg-base-200 cursor-pointer grid grid-cols-6 text-sm p-3 py-4 items-center gap-3 border-dashed border-b border-base-content border-opacity-50"
+			>
+				<div class="col-span-1">{ strconv.Itoa(l.Number) }</div>
+				<div class="col-span-1 text-2xl flex items-center">
+					if len(l.Visitor.ID) > 0 {
+						if l.EndDate.Sub(time.Now()).Hours() / 24 > 0 {
+							<span class="i-mdi-check-circle text-success"></span>
+						} else {
+							<span class="i-mdi-check-circle text-error"></span>
+						}
+					} else {
+						<span class="i-mdi-close-circle-outline"></span>
+					}
+				</div>
+				<div class="col-span-4 md:col-span-1">{ l.Category.CatName }</div>
+				<div class="col-span-5 md:col-span-2 text-right md:text-left">
+					{ l.Visitor.FirstName }
+					{ l.Visitor.FamilyName }
+				</div>
+				<div class="col-span-1 flex justify-end items-center">
+					<a
+						class={ "btn btn-sm btn-circle btn-primary" , templ.KV("btn-disabled", !prm.EditLogistics) }
+						hx-get={ "/admin/logistics/" + strconv.Itoa(l.ID) }
+						hx-target="#content"
+					>
+						<span class="i-mdi-lead-pencil"></span>
+					</a>
+				</div>
+			</div>
+		}
+	} else {
+		<div class="my-10">
+			@layout.Warning("keine Suchergebnisse")
+		</div>
+	}
+}
+
+type FormErrors struct {
+	Number    string
+	UnitPrice string
+	StartDate string
+	EndDate   string
+	Category  string
+	Visitor   string
+	AppError  string
+}
+
+templ LogisticsForm(
+	l models.Logistic,
+	categories []models.LogisticCategory,
+	errors FormErrors,
+	assigned bool,
+) {
+	{{
+var fixCat []models.LogisticCategory
+var freeCat []models.LogisticCategory
+
+for _, cat := range categories {
+	if cat.ID < 4 {
+		fixCat = append(fixCat, cat)
+	} else {
+		freeCat = append(freeCat, cat)
+	}
+}
+	}}
+	<form
+		class="grid grid-cols-2 items-center gap-3 "
+	>
+		<input type="hidden" name="id" value={ strconv.Itoa(l.ID) }/>
+		@ui.CSRF()
+		<div class="prose col-span-full">
+			if l.CreatedOn.IsZero() {
+				<h2>Lagerplatz erstellen</h2>
+			} else {
+				<h2>Lagerplatz bearbeiten</h2>
+			}
+		</div>
+		<!-- toggle fix place or free place, only in creation mode  -->
+		<div class="form-control col-span-full">
+			<label class="label cursor-pointer justify-start">
+				<input id="toggleFree" name="free" type="checkbox" class="toggle toggle-success" checked?={ l.Category.ID>= 4 }/>
+				<span class="label-text pl-3">Sperrgut/Kleingut ohne fixen Palettenplatz</span>
+			</label>
+		</div>
+		<!-- form for fixed places -->
+		<div id="fixForm" class={ "col-span-full grid grid-cols-4 gap-3" , templ.KV("hidden",l.Category.ID>= 4 ) }>
+			<div class="prose col-span-full">
+				<h3>Fixer Palettenplatz</h3>
+			</div>
+			<label class="form-control w-full col-span-2 md:col-span-1">
+				<div class="label">
+					<span class="label-text">Nummer</span>
+				</div>
+				<input
+					class={ "input input-bordered w-full" , templ.KV("input-error", len(errors.Number)>0) }
+					name="number"
+					type="text"
+					placeholder="Nummer"
+					value={ strconv.Itoa(l.Number) }
+				/>
+				if len(errors.Number)>0 {
+					<div class="label">
+						<span class="label-text text-error">{ errors.Number }</span>
+					</div>
+				}
+			</label>
+			<label class="form-control w-full col-span-2 md:col-span-1">
+				<div class="label">
+					<span class="label-text">Preis/Monat</span>
+				</div>
+				<div class="content-center h-full">
+					<span id="fix_price" class="pl-1 text-lg text-primary font-bold "></span>
+				</div>
+			</label>
+			<label class="form-control col-span-full md:col-span-2">
+				<div class="label">
+					<span class="label-text">Palettengrösse</span>
+				</div>
+				<select id="fixCatSelect" name="fix_cat" class="select select-bordered w-full">
+					for _,c := range fixCat {
+						<option value={ strconv.Itoa(c.ID) } selected?={ c.ID==l.Category.ID }>{ c.CatName }</option>
+					}
+				</select>
+			</label>
+		</div>
+		<!-- form for free places -->
+		<div id="freeForm" class={ "col-span-full grid grid-cols-4 gap-3" , templ.KV("hidden", l.Number < 200) }>
+			<div class="prose col-span-full">
+				<h3>Freier Palettenplatz</h3>
+			</div>
+			<label class="form-control w-full col-span-2 md:col-span-1">
+				<div class="label">
+					<span class="label-text">Nummer</span>
+				</div>
+				<div class="content-center h-full">
+					<span id="freeNumber" class="pl-1 text-primary text-lg font-bold"></span>
+				</div>
+			</label>
+			<label class="form-control w-full col-span-2 md:col-span-1">
+				<div class="label">
+					<span class="label-text">Preis/Monat</span>
+				</div>
+				<input
+					class={ "input input-bordered w-full" , templ.KV("input-error", len(errors.UnitPrice)>0) }
+					placeholder="0.00"
+					name="free_price"
+					id="free_price"
+					type="text"
+					value={ strconv.FormatFloat(l.UnitPrice, 'f', 2, 64) }
+				/>
+				if len(errors.UnitPrice)>0 {
+					<div class="label">
+						<span class="label-text text-error">{ errors.UnitPrice }</span>
+					</div>
+				}
+			</label>
+			<label class="form-control col-span-full md:col-span-2">
+				<div class="label">
+					<span class="label-text">Grösse</span>
+				</div>
+				<select id="freeCatSelect" name="free_cat" class="select select-bordered w-full">
+					for _,c := range freeCat {
+						<option value={ strconv.Itoa(c.ID) } selected?={ c.ID==l.Category.ID }>{ c.CatName }</option>
+					}
+				</select>
+			</label>
+		</div>
+		<!-- toggle for assigning or not -->
+		<div id="assignDiv" class={ "form-control col-span-full" , templ.KV("hidden", l.Number>= 200) }>
+			<label class="label cursor-pointer justify-start">
+				<input
+					checked?={ len(l.Visitor.ID)> 0 || assigned }
+					id="toggleAssign"
+					name="assign"
+					type="checkbox"
+					class="toggle toggle-success"
+				/>
+				<span class="label-text pl-3">Platz zuweisen</span>
+			</label>
+		</div>
+		<!-- form for all places -->
+		<div id="assignForm" class={ "col-span-full grid grid-cols-2 gap-3" , templ.KV("hidden", !assigned) }>
+			<div class="prose col-span-full">
+				<h3>Zuweisung</h3>
+			</div>
+			<label class="form-control col-span-full md:col-span-1">
+				<div class="label">
+					<span class="label-text">Startdatum</span>
+				</div>
+				<input
+					type="date"
+					id="startdate"
+					name="startdate"
+					class={ "input input-bordered" , templ.KV("input-error",
+        len(errors.StartDate)> 0) }
+					if !l.StartDate.IsZero() {
+						value={ l.StartDate.Format("2006-01-02") }
+					}
+					required
+				/>
+				if len(errors.StartDate) > 0 {
+					<div class="label">
+						<span class="label-text text-error">{ errors.StartDate }</span>
+					</div>
+				}
+			</label>
+			<label class="form-control col-span-full md:col-span-1">
+				<div class="label">
+					<span class="label-text">Enddatum</span>
+				</div>
+				<input
+					type="date"
+					id="enddate"
+					name="enddate"
+					class={ "input input-bordered" , templ.KV("input-error",
+        len(errors.EndDate)> 0) }
+					if !l.EndDate.IsZero() {
+						value={ l.EndDate.Format("2006-01-02") }
+					}
+					required
+				/>
+				if len(errors.EndDate) > 0 {
+					<div class="label">
+						<span class="label-text text-error">{ errors.EndDate }</span>
+					</div>
+				}
+			</label>
+			<div class="label mb-0 pb-0 col-span-full">
+				<span class="label-text mb-0 pb-0">Mitglied zuweisen</span>
+			</div>
+			<form id="filterForm" class="mb-3 w-full col-span-2 md:col-span-1" novalidate>
+				@ui.CSRF()
+				<label class="input input-bordered flex items-center gap-2">
+					<span class="text-3xl i-mdi-magnify"></span>
+					<input
+						hx-post={ "/admin/visitors/selectbox/" + l.Visitor.ID + "?member" }
+						hx-trigger="input changed delay:500ms, search"
+						hx-target="#memberSelect"
+						placeholder="Suche nach Name, Vorname oder Ort..."
+						type="search"
+						id="search_term"
+						name="search_term"
+						class="grow"
+					/>
+				</label>
+			</form>
+			<div
+				hx-get={ "/admin/visitors/selectbox/" + l.Visitor.ID + "?member" }
+				hx-trigger="load"
+				id="memberSelect"
+				class="mb-3 col-span-2 md:col-span-1"
+			></div>
+			if len(errors.Visitor) > 0 {
+				<div class="my-4 col-span-full">
+					@layout.Error(errors.Visitor)
+				</div>
+			}
+			<div class="col-span-full prose">
+				<h3>Preis Total</h3>
+				<div class="content-center h-full">
+					<span id="result_price" class=" text-secondary text-xl font-bold"></span>
+				</div>
+				<input type="hidden" id="membership" name="membership"/>
+			</div>
+		</div>
+		<!-- error handling for app and post buttons -->
+		if len(errors.AppError)>0 {
+			<div class="my-4">
+				@layout.Error(errors.AppError)
+			</div>
+		}
+		<div class="col-span-full w-full gap-3 flex mt-3 items-center justify-center flex-col md:flex-row">
+			<a
+				class="btn btn-success"
+				hx-target="#content"
+				if l.CreatedOn.IsZero() {
+					hx-post="/admin/logistics/create"
+				} else {
+					hx-post={ "/admin/logistics/" + strconv.Itoa(l.ID) }
+				}
+			>
+				Speichern
+			</a>
+			<a href="/admin/logistics" class="btn btn-warning">
+				<span class="i-mdi-cancel-bold"></span>
+				Abbrechen
+			</a>
+			if !l.CreatedOn.IsZero() {
+				<a
+					if l.Number>=200 {
+						hx-confirm="Lagerplatz wirklich löschen?"
+					} else {
+						hx-confirm="Lagerplatz wirklich löschen? Zuweisungen kannst du durch editieren löschen"
+					}
+					id="deleteButton"
+					class="btn btn-error btn-circle"
+					hx-delete={ "/admin/logistics/" + strconv.Itoa(l.ID) }
+				>
+					<span class="i-mdi-trash text-2xl"></span>
+				</a>
+			}
+		</div>
+		@templ.JSONScript("categories", fixCat)
+	</form>
+	<!-- script for ui changes -->
+	<script>
+    toggle = document.getElementById("toggleFree")
+    assign = document.getElementById("toggleAssign")
+    assignDiv = document.getElementById("assignDiv")
+    assignForm = document.getElementById("assignForm")
+    freeForm = document.getElementById("freeForm")
+    fixForm = document.getElementById("fixForm")
+    fixCatSelect = document.getElementById("fixCatSelect")
+    fixPrice = document.getElementById("fix_price")
+    freeCatSelect = document.getElementById("freeCatSelect")
+    freePrice = document.getElementById("free_price")
+    freeNumber = document.getElementById("freeNumber")
+    startDate = document.getElementById("startdate")
+    endDate = document.getElementById("enddate")
+    resultPrice = document.getElementById("result_price")
+    membership = document.getElementById("membership")
+    var categories = JSON.parse(document.getElementById('categories').textContent);
+    // set first price
+    selectChange()
+    setNumber()
+    calcPrice()
+
+    assign.onchange = () => {
+      if (assign.checked) {
+        assignForm.classList.remove("hidden")
+      } else {
+        assignForm.classList.add("hidden")
+      }
+    }
+
+
+    // toggle behaviour on changing category
+    function selectChange() {
+      var id = fixCatSelect.value
+
+      var price = 0
+
+      // need to check for member here
+      if (membership.innerText == "true") {
+        price = categories.find(x => x.ID == id).PriceMember;
+      } else {
+        price = categories.find(x => x.ID == id).Price;
+      }
+
+      fixPrice.innerText = price
+    }
+
+    function calcPrice() {
+      let price = 0
+      let start = new Date(startDate.value)
+      let end = new Date(endDate.value)
+      var timeDiff = Math.abs(end.getTime() - start.getTime());
+      var Daydiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
+
+      // get factor of time from days
+      var timeFactor = 0
+      var timeDiff = Math.abs(end.getTime() - start.getTime());
+      var Daydiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
+      var Mondiff = Daydiff / 30
+
+      if (Mondiff <= 0.5) {
+        timeFactor = 0.5
+      } else {
+        timeFactor = Math.ceil(Mondiff)
+      }
+
+      var basePrice = 0
+
+      if (toggle.checked) {
+        basePrice = freePrice.value
+      } else {
+        basePrice = fixPrice.innerText
+      }
+
+      price = basePrice * timeFactor
+      if (isNaN(price)) {
+        resultPrice.innerHTML = "Bitte Start- und Enddatum setzen"
+      } else {
+        resultPrice.innerHTML = price
+      }
+    }
+
+    function setNumber() {
+      if (freeCatSelect.value == 4) {
+        freeNumber.innerText = "200"
+      } else {
+        freeNumber.innerText = "300"
+      }
+    }
+
+    // handle change events
+    fixCatSelect.addEventListener("change", () => {
+      selectChange();
+      calcPrice();
+    })
+
+    startDate.addEventListener("change", () => {
+      calcPrice();
+    })
+
+    endDate.addEventListener("change", () => {
+      calcPrice();
+    })
+
+    freePrice.addEventListener("change", () => {
+      calcPrice();
+    })
+
+    if (toggle !== null) {
+      toggle.onchange = function () {
+        freeForm.classList.toggle("hidden")
+        fixForm.classList.toggle("hidden")
+        calcPrice()
+
+        if (toggle.checked) {
+          assignDiv.classList.add("hidden")
+          assignForm.classList.remove("hidden")
+        } else {
+          assignDiv.classList.remove("hidden")
+          if (assign.checked) {
+            assignForm.classList.remove("hidden")
+          } else {
+            assignForm.classList.add("hidden")
+          }
+        }
+      }
+    }
+
+    freeCatSelect.addEventListener("change", () => {
+      setNumber();
+    })
+
+  </script>
+	<!-- this script is needed for the delete button to send the CSRF-Token -->
+	if !l.CreatedOn.IsZero() {
+		<script>
+    button = document.getElementById("deleteButton")
+    button.addEventListener('htmx:configRequest', (event) => {
+      event.detail.headers['X-CSRF-Token'] = document.getElementById('csrf_token').value
+    })
+  </script>
+	}
+}

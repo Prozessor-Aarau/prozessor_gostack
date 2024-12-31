@@ -102,6 +102,22 @@ func routes(app *config.AppConfig) http.Handler {
 			mux.Post("/machines/edit/{id}/qrcode/print", handlers.Make(handlers.Repo.HandleMachinesQRPrint))
 		})
 
+		// logistics
+		mux.Group(func(mux chi.Router) {
+			mux.Use(CheckPermission("ViewLogistics"))
+			mux.Get("/logistics", handlers.Make(handlers.Repo.HandleLogisticsIndex))
+			mux.Get("/logistics/list", handlers.Make(handlers.Repo.HandleLogisticsList))
+			mux.Post("/logistics/list", handlers.Make(handlers.Repo.HandleLogisticsListFilter))
+			mux.Group(func(mux chi.Router) {
+				mux.Use(CheckPermission("EditLogistics"))
+				mux.Get("/logistics/create", handlers.Make(handlers.Repo.HandleLogisticsCreateIndex))
+				mux.Post("/logistics/create", handlers.Make(handlers.Repo.HandleLogisticsCreateAndEdit))
+				mux.Delete("/logistics/{id}", handlers.Make(handlers.Repo.HandleLogisticsDelete))
+				mux.Get("/logistics/{id}", handlers.Make(handlers.Repo.HandleLogisticsEditIndex))
+				mux.Post("/logistics/{id}", handlers.Make(handlers.Repo.HandleLogisticsCreateAndEdit))
+			})
+		})
+
 		// badges
 		mux.Group(func(mux chi.Router) {
 			mux.Use(CheckPermission("ViewBadges"))
@@ -139,7 +155,8 @@ func routes(app *config.AppConfig) http.Handler {
 			})
 		})
 		// this is only the price, so no permission needed
-		mux.Get("/abonnements/create/pricing/{id}", handlers.Repo.AbonnementCreatePrice)
+		mux.Get("/elements/pricing/{id}", handlers.Repo.AbonnementCreatePrice)
+		mux.Get("/elements/member/{id}", handlers.Repo.HandleSelectMembership)
 
 		// statistics
 		mux.Group(func(mux chi.Router) {

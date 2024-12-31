@@ -59,6 +59,13 @@ type DatabaseRepo interface {
 	SetMachineQR(machine models.Machine) error
 	DeleteMachineQR(machine models.Machine) error
 	DeleteMachineById(id string) error
+	// logistics
+	AllLogisticCategories() ([]models.LogisticCategory, error)
+	LogisticsByID(id int) (models.Logistic, error)
+	AllLogistics(page int, filter models.LogisticFilter) ([]models.Logistic, int, error)
+	CreateLogistic(l models.Logistic) error
+	UpdateLogistic(l models.Logistic) error
+	DeleteLogistic(id int) error
 	// reports
 	CreateReport(r models.Report) (int, error)
 }
@@ -95,6 +102,28 @@ func NewNullInt(d int) sql.NullInt32 {
 		}
 	}
 	return sql.NullInt32{}
+}
+
+// returns Nullstring if string is empty instead of empty string
+func NewNullFloat64(f float64) sql.NullFloat64 {
+	if f > 0 {
+		return sql.NullFloat64{
+			Float64: float64(f),
+			Valid:   true,
+		}
+	}
+	return sql.NullFloat64{}
+}
+
+// returns Nullstring if string is empty instead of empty string
+func NewNullTime(t time.Time) sql.NullTime {
+	if !t.IsZero() {
+		return sql.NullTime{
+			Time:  t,
+			Valid: true,
+		}
+	}
+	return sql.NullTime{}
 }
 
 // CreateLog creates a log in the database

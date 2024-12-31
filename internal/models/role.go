@@ -24,6 +24,7 @@ type Role struct {
 	ViewNewsletters       bool
 	AddNewsletter         bool
 	ViewLogistics         bool
+	EditLogistics         bool
 	ViewStatistics        bool
 	ViewLogs              bool
 	ViewFinances          bool
