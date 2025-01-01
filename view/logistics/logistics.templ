@@ -2,6 +2,7 @@ package logistics
 
 import (
 	"github.com/faebut/prozessor_gostack/internal/models"
+	"github.com/faebut/prozessor_gostack/internal/render"
 	"github.com/faebut/prozessor_gostack/view/layout"
 	"github.com/faebut/prozessor_gostack/view/ui"
 	"strconv"
@@ -87,7 +88,7 @@ templ logisticsFilter(categories []models.LogisticCategory) {
 	</div>
 	<!-- For the switches -->
 	<script>
-  searchField = document.querySelector("#search_term")
+  searchField = document.querySelector("#filter_string")
 
   document.getElementById("fieldreset").addEventListener("click", function (event) {
     event.preventDefault();
@@ -96,7 +97,7 @@ templ logisticsFilter(categories []models.LogisticCategory) {
 </script>
 }
 
-templ LogisticsList(logistics []models.Logistic) {
+templ LogisticsList(logistics []models.Logistic, pages int, onpage int, filter string) {
 	{{ prm := ctx.Value("permission").(models.Role) }}
 	if len(logistics) > 0 {
 		for _, l := range logistics {
@@ -131,11 +132,42 @@ templ LogisticsList(logistics []models.Logistic) {
 				</div>
 			</div>
 		}
+		@pagination(pages, onpage, filter)
 	} else {
 		<div class="my-10">
 			@layout.Warning("keine Suchergebnisse")
 		</div>
 	}
+}
+
+templ pagination(pages int, onpage int, filter string) {
+	{{ pagesslice := render.Iterate(pages) }}
+	<div class="grid justify-items-center">
+		<div class="join pt-6">
+			<button
+				class={ "join-item btn" , templ.KV("btn-disabled", onpage==1) }
+				hx-target="#logisticsList"
+				hx-get={ "/admin/logistics/list?page=" + strconv.Itoa(onpage-1) + filter }
+			>«</button>
+			for _, p := range pagesslice {
+				switch p {
+					case 1, pages, onpage, onpage+1, onpage-1:
+						<button
+							class={ "join-item btn" , templ.KV("btn-primary", onpage==p) }
+							hx-target="#logisticsList"
+							hx-get={ "/admin/logistics/list?page=" + strconv.Itoa(p) + filter }
+						>{ strconv.Itoa(p) }</button>
+					case onpage+2, onpage-2:
+						<button class="join-item btn btn-disabled">.</button>
+				}
+			}
+			<button
+				class={ "join-item btn" , templ.KV("btn-disabled", onpage==pages) }
+				hx-target="#logisticsList"
+				hx-get={ "/admin/logistics/list?page=" + strconv.Itoa(onpage+1) + filter }
+			>»</button>
+		</div>
+	</div>
 }
 
 type FormErrors struct {

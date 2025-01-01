@@ -137,6 +137,7 @@ func (m *Repository) HandleAbonnementsList(w http.ResponseWriter, r *http.Reques
 	if r.URL.Query().Has("member") {
 		filter.Member, _ = strconv.ParseBool(r.URL.Query().Get("member"))
 	}
+	// TODO here is something off with this filter
 	if r.URL.Query().Has("unique") {
 		filter.Unique, _ = strconv.ParseBool(r.URL.Query().Get("partner"))
 	}

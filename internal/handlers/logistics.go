@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"log"
 	"math"
 	"net/http"
@@ -34,17 +35,48 @@ func (m *Repository) HandleLogisticsIndex(w http.ResponseWriter, r *http.Request
 
 // HandleLogisticsList gets and returns the unfiltered logistics list
 func (m *Repository) HandleLogisticsList(w http.ResponseWriter, r *http.Request) error {
+	// set initial params
+	page := 1
 	filter := models.NewLogisticFilter("")
 
-	page := 1
+	// check if page param has been submitted and change to this values
+	if r.URL.Query().Has("page") {
+		page, _ = strconv.Atoi(r.URL.Query().Get("page"))
+	}
+	if r.URL.Query().Has("search") {
+		filter = models.NewLogisticFilter(r.URL.Query().Get("search"))
+	}
+	if r.URL.Query().Has("validity") {
+		filter.Validity = r.URL.Query().Get("validity")
+	}
+	if r.URL.Query().Has("inuse") {
+		filter.InUse = r.URL.Query().Get("inuse")
+	}
+	if r.URL.Query().Has("type") {
+		filter.Type, _ = strconv.Atoi(r.URL.Query().Get("type"))
+	}
 
-	logisticsList, _, err := m.DB.AllLogistics(page, filter)
+	logisticsList, count, err := m.DB.AllLogistics(page, filter)
 	if err != nil {
 		log.Println("could not get logistics from DB: ", err)
 		return err
 	}
 
-	return rendering(w, r, logistics.LogisticsList(logisticsList))
+	// make url search string
+	urlSearchString := fmt.Sprintf(
+		"&search=%s&validity=%s&inuse=%s&type=%d",
+		filter.Filter,
+		filter.Validity,
+		filter.InUse,
+		filter.Type,
+	)
+
+	return rendering(w, r, logistics.LogisticsList(
+		logisticsList,
+		int(math.Ceil(float64(count)/10)),
+		page,
+		urlSearchString,
+	))
 }
 
 // HandleLogisticsListFilter gets and returns the filtered logistics list
@@ -62,13 +94,27 @@ func (m *Repository) HandleLogisticsListFilter(w http.ResponseWriter, r *http.Re
 		page, _ = strconv.Atoi(r.URL.Query().Get("page"))
 	}
 
-	logisticsList, _, err := m.DB.AllLogistics(page, filter)
+	logisticsList, count, err := m.DB.AllLogistics(page, filter)
 	if err != nil {
 		log.Println("could not get logistics from DB: ", err)
 		return err
 	}
 
-	return rendering(w, r, logistics.LogisticsList(logisticsList))
+	// make url search string
+	urlSearchString := fmt.Sprintf(
+		"&search=%s&validity=%s&inuse=%s&type=%d",
+		filter.Filter,
+		filter.Validity,
+		filter.InUse,
+		filter.Type,
+	)
+
+	return rendering(w, r, logistics.LogisticsList(
+		logisticsList,
+		int(math.Ceil(float64(count)/10)),
+		page,
+		urlSearchString,
+	))
 }
 
 // HandleBadgeEditIndex is the handler for the Badge edit form
