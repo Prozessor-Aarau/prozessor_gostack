@@ -22,6 +22,7 @@ type Logistic struct {
 	Member    bool
 	UnitPrice float64
 	Price     float64
+	Label     string
 	UpdatedOn time.Time
 	CreatedOn time.Time
 }

@@ -12,6 +12,7 @@ tmp/
 
 # generated files
 static/qr_codes/**
+static/labels/**
 static/uploads/**
 
 # Binaries for programs and plugins

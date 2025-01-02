@@ -210,6 +210,9 @@ for _, cat := range categories {
 				<h2>Lagerplatz bearbeiten</h2>
 			}
 		</div>
+		if len(l.Visitor.ID) > 0 {
+			@Label(l)
+		}
 		<!-- toggle fix place or free place, only in creation mode  -->
 		<div class="form-control col-span-full">
 			<label class="label cursor-pointer justify-start">
@@ -580,4 +583,104 @@ for _, cat := range categories {
     })
   </script>
 	}
+}
+
+templ Label(l models.Logistic) {
+	{{
+	var contact string
+	if len(l.Visitor.Phone) > 0 {
+		contact = l.Visitor.Phone
+	} else if len(l.Visitor.Email) > 0 {
+		contact = l.Visitor.Email
+	}
+	}}
+	<div id="label" class="col-span-full">
+		<div class="prose">
+			<h3>Label</h3>
+		</div>
+		<input type="hidden" name="label" value={ l.Label }/>
+		<div class="card md:card-side bg-base-300 shadow-xl">
+			if len(l.Label)>0 {
+				<figure class="md:w-56">
+					<img src={ "/static/labels/" + l.Label } alt="Label"/>
+				</figure>
+				<div class="card-body">
+					<h2 class="card-title">Label existiert!</h2>
+					<p>
+						Du kannst das Label beliebig oft ausdrucken.
+					</p>
+					<p>
+						Bei Änderungen wird das Label gelöscht!
+					</p>
+					<div class="card-actions justify-center md:justify-end">
+						<a
+							class="btn btn-info loaded-content"
+							hx-post={ "/admin/logistics/" + strconv.Itoa(l.ID) + "/label/print" }
+							id="printbutton"
+							hx-target="#printbutton"
+							hx-indicator="#printbuttonload, #printbutton"
+							hx-swap="outerHTML"
+							hx-confirm="Überprüfe, dass der Label-drucker (neben dem self-checkin terminal) eingeschaltet ist: Grünes Licht leuchtet!"
+						>
+							Label ausdrucken
+						</a>
+						<div id="printbuttonload" class="btn btn-disabled htmx-indicator">
+							<span class="loading loading-spinner"></span>Drucke Label
+						</div>
+						<a
+							hx-post={ "/admin/logistics/" + strconv.Itoa(l.ID) + "/label/delete" }
+							class="btn btn-warning"
+							hx-target="#label"
+						>Label löschen</a>
+					</div>
+				</div>
+			} else {
+				<div class="card-body">
+					<h2 class="card-title">Label existiert nicht</h2>
+					<p>
+						Du kannst ein neues Label mit folgenden Informationen generieren:
+					</p>
+					<p>
+						<strong>Lagerplatz: </strong> { strconv.Itoa(l.Number) }
+					</p>
+					<p>
+						<strong>Grösse: </strong> { l.Category.CatName }
+					</p>
+					<p>
+						<strong>Gehört: </strong> { l.Visitor.FirstName } { l.Visitor.FamilyName }
+					</p>
+					<p>
+						<strong>Reserviert bis: </strong> { l.EndDate.Format("02.01.2006") }
+					</p>
+					<p>
+						<strong>Kontakt: </strong> { contact }
+					</p>
+					<div class="card-actions justify-center md:justify-end">
+						<a
+							class="btn btn-info"
+							hx-target="#label"
+							hx-post={ "/admin/logistics/" + strconv.Itoa(l.ID) + "/label" }
+							hx-swap="outerHTML"
+						>
+							Label generieren
+						</a>
+					</div>
+				</div>
+			}
+		</div>
+	</div>
+}
+
+templ SucessButton(l models.Logistic) {
+	<a
+		hx-post={ "/admin/logistics/" + strconv.Itoa(l.ID) + "/label/print" }
+		class="btn btn-success"
+		id="printbutton"
+		hx-target="#printbutton"
+		hx-swap="outerHTML"
+	>Label wurde ausgedruckt</a>
+}
+
+templ ErrorButton(s string) {
+	<div class="btn btn-error">{ s }</div>
 }

@@ -66,6 +66,8 @@ type DatabaseRepo interface {
 	CreateLogistic(l models.Logistic) error
 	UpdateLogistic(l models.Logistic) error
 	DeleteLogistic(id int) error
+	SetLogisticLabel(l models.Logistic) error
+	DeleteLogisticLabel(l models.Logistic) error
 	// reports
 	CreateReport(r models.Report) (int, error)
 }

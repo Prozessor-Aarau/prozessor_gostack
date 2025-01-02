@@ -83,7 +83,7 @@ func GenerateQRCode(machine models.Machine) error {
 
 	// delete temp file
 	if err := os.Remove(fmt.Sprintf("./static/qr_codes/tmp_%s.jpg", machine.ID)); err != nil {
-		return fmt.Errorf("Warning: failed to delete temporary qr code: %v", err)
+		return fmt.Errorf("warning: failed to delete temporary qr code: %v", err)
 	}
 
 	return nil
@@ -92,7 +92,7 @@ func GenerateQRCode(machine models.Machine) error {
 func RemoveQRCode(machine models.Machine) error {
 	// delete file
 	if err := os.Remove(fmt.Sprintf("./static/qr_codes/QR_%s.png", machine.ID)); err != nil {
-		return fmt.Errorf("Warning: failed to delete qr code: %v", err)
+		return fmt.Errorf("warning: failed to delete qr code: %v", err)
 	}
 
 	return nil

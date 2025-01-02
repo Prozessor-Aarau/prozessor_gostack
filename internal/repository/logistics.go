@@ -54,7 +54,7 @@ func (m *postgresDBRepo) LogisticsByID(id int) (models.Logistic, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	query := `SELECT l.id, l.number, l.start_date, l.end_date, l.reminder, l.member, l.unit_price, l.price, c.id, c.cat_name, v.id, v.first_name, v.family_name, v.phone, v.email, l.created_on, l.updated_on
+	query := `SELECT l.id, l.number, l.start_date, l.end_date, l.reminder, l.member, l.unit_price, l.price, l.label, c.id, c.cat_name, v.id, v.first_name, v.family_name, v.phone, v.email, l.created_on, l.updated_on
     FROM logistics l
     LEFT OUTER JOIN visitors v ON v.id = l.visitor_id
     LEFT OUTER JOIN logistics_categories c ON c.id = l.category
@@ -71,6 +71,7 @@ func (m *postgresDBRepo) LogisticsByID(id int) (models.Logistic, error) {
 	var member sql.NullBool
 	var unitPrice sql.NullFloat64
 	var price sql.NullFloat64
+	var label sql.NullString
 	var visID sql.NullString
 	var firstName sql.NullString
 	var familyName sql.NullString
@@ -86,6 +87,7 @@ func (m *postgresDBRepo) LogisticsByID(id int) (models.Logistic, error) {
 		&member,
 		&unitPrice,
 		&price,
+		&label,
 		&l.Category.ID,
 		&l.Category.CatName,
 		&visID,
@@ -115,6 +117,9 @@ func (m *postgresDBRepo) LogisticsByID(id int) (models.Logistic, error) {
 	}
 	if price.Valid {
 		l.Price = price.Float64
+	}
+	if label.Valid {
+		l.Label = label.String
 	}
 	if visID.Valid {
 		l.Visitor.ID = visID.String
@@ -380,6 +385,55 @@ func (m *postgresDBRepo) DeleteLogistic(id int) error {
 		id,
 	)
 
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// SetLogisticLabel sets a label for a logistic place in the db
+func (m *postgresDBRepo) SetLogisticLabel(l models.Logistic) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	query := `UPDATE logistics 
+  SET label = $1,
+  updated_on = $2 
+  WHERE id = $3
+  `
+
+	_, err := m.DB.ExecContext(
+		ctx,
+		query,
+		l.Label,
+		time.Now(),
+		l.ID,
+	)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// DeleteLogisticLabel deletes a logistic label from DB
+func (m *postgresDBRepo) DeleteLogisticLabel(l models.Logistic) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	query := `UPDATE logistics 
+  SET label = NULL,
+  updated_on = $1 
+  WHERE id = $2
+  `
+
+	_, err := m.DB.ExecContext(
+		ctx,
+		query,
+		time.Now(),
+		l.ID,
+	)
 	if err != nil {
 		return err
 	}

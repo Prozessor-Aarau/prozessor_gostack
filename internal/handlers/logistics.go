@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/faebut/prozessor_gostack/internal/forms"
+	"github.com/faebut/prozessor_gostack/internal/labels"
 	"github.com/faebut/prozessor_gostack/internal/models"
 	"github.com/faebut/prozessor_gostack/view/logistics"
 	"github.com/go-chi/chi/v5"
@@ -300,6 +301,22 @@ func (m *Repository) HandleLogisticsCreateAndEdit(w http.ResponseWriter, r *http
 	id := r.Form.Get("id")
 	newLogistic.ID, _ = strconv.Atoi(id)
 	if newLogistic.ID > 0 {
+
+		// check if there is a label and if it is true, delete the old label
+		label := r.Form.Get("label")
+		if len(label) > 0 {
+			newLogistic.Label = label
+			err := labels.DeleteLabel(newLogistic)
+			if err != nil {
+				return err
+			}
+			err = m.DB.DeleteLogisticLabel(newLogistic)
+			if err != nil {
+				return err
+			}
+			newLogistic.Label = ""
+		}
+
 		// update existing Logistic
 		err = m.DB.UpdateLogistic(newLogistic)
 		if err != nil {
@@ -340,6 +357,21 @@ func (m *Repository) HandleLogisticsDelete(w http.ResponseWriter, r *http.Reques
 		return err
 	}
 
+	l, err := m.DB.LogisticsByID(id)
+	if err != nil {
+		log.Println("could not get logistic from DB: ", err)
+		return err
+	}
+
+  // check if there is a label that has to be deleted
+  if len(l.Label)>0 {
+    err := labels.DeleteLabel(l)
+    if err != nil {
+      return err
+    }
+  }
+
+  // delete the logistic place
 	err = m.DB.DeleteLogistic(id)
 	if err != nil {
 		log.Println("Error deleting logistics:", err)
@@ -347,4 +379,84 @@ func (m *Repository) HandleLogisticsDelete(w http.ResponseWriter, r *http.Reques
 	}
 	// redirect on success
 	return hxRedirect(w, r, "/admin/logistics")
+}
+
+// HandleLogisticsLabelCreate handles the Logistic label generation
+func (m *Repository) HandleLogisticsLabelCreate(w http.ResponseWriter, r *http.Request) error {
+	// get id
+	id, _ := strconv.Atoi(chi.URLParam(r, "id"))
+
+	l, err := m.DB.LogisticsByID(id)
+	if err != nil {
+		log.Println("could not get logistic from DB: ", err)
+		return err
+	}
+
+	// generate file
+	filename, err := labels.GenerateLabel(l)
+	if err != nil {
+		log.Println("error creating label", err)
+		return err
+	}
+
+	// write changes to database
+	l.Label = filename
+	err = m.DB.SetLogisticLabel(l)
+	if err != nil {
+		log.Println("could not write Label to DB: ", err)
+		return nil
+	}
+
+	// if everything okay, go back to machines
+	return rendering(w, r, logistics.Label(l))
+}
+
+// HandleLogisticsLabelDelete handles the Logistic label deletion
+func (m *Repository) HandleLogisticsLabelDelete(w http.ResponseWriter, r *http.Request) error {
+	// get id and logistic
+	id, _ := strconv.Atoi(chi.URLParam(r, "id"))
+	l, err := m.DB.LogisticsByID(id)
+	if err != nil {
+		log.Println("could not get logistic from DB: ", err)
+		return err
+	}
+
+	err = labels.DeleteLabel(l)
+
+	if err != nil {
+		log.Println("could not Delete label: ", err)
+		return err
+	}
+
+	// write changes to database
+	err = m.DB.DeleteLogisticLabel(l)
+	if err != nil {
+		log.Println("could not delete Label from DB: ", err)
+		return err
+	}
+
+	l.Label = ""
+
+	// if everything okay, go back to machines
+	return rendering(w, r, logistics.Label(l))
+}
+
+// HandleLogisticsLabelPrint handles the logistic label printing
+func (m *Repository) HandleLogisticsLabelPrint(w http.ResponseWriter, r *http.Request) error {
+	// get id and logistic
+	id, _ := strconv.Atoi(chi.URLParam(r, "id"))
+	l, err := m.DB.LogisticsByID(id)
+	if err != nil {
+		log.Println("could not get logistic from DB: ", err)
+		return err
+	}
+
+	// print the QR-Code
+	err = labels.PrintLabel(l)
+	if err != nil {
+		log.Println(err)
+		return rendering(w, r, logistics.ErrorButton("Druckerfehler!"))
+	}
+
+	return rendering(w, r, logistics.SucessButton(l))
 }

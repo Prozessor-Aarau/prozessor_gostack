@@ -115,6 +115,10 @@ func routes(app *config.AppConfig) http.Handler {
 				mux.Delete("/logistics/{id}", handlers.Make(handlers.Repo.HandleLogisticsDelete))
 				mux.Get("/logistics/{id}", handlers.Make(handlers.Repo.HandleLogisticsEditIndex))
 				mux.Post("/logistics/{id}", handlers.Make(handlers.Repo.HandleLogisticsCreateAndEdit))
+				// labels
+				mux.Post("/logistics/{id}/label", handlers.Make(handlers.Repo.HandleLogisticsLabelCreate))
+				mux.Post("/logistics/{id}/label/delete", handlers.Make(handlers.Repo.HandleLogisticsLabelDelete))
+				mux.Post("/logistics/{id}/label/print", handlers.Make(handlers.Repo.HandleLogisticsLabelPrint))
 			})
 		})
 

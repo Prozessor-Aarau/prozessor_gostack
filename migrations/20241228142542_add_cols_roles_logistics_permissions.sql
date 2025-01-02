@@ -1,7 +1,7 @@
 -- +goose Up
 -- +goose StatementBegin
 ALTER TABLE roles
-ADD COLUMN edit_logistics BOOL DEFAULT false;-- +goose StatementEnd
+ADD COLUMN edit_logistics BOOL DEFAULT false;
 
 UPDATE roles
 SET edit_logistics = true
