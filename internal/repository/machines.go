@@ -146,8 +146,8 @@ func (m *postgresDBRepo) AllMachines(filter models.MachineFilter) ([]models.Mach
 	WHERE m.machine_name LIKE $1
   %s
   ORDER BY 
-  m.machine_name ASC,
-  r.ressort_name ASC
+  r.ressort_name ASC,
+  m.machine_name ASC
   `,
 		ressort,
 	)
