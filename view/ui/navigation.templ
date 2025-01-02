@@ -1,140 +1,140 @@
 package ui
 
 import (
-"github.com/faebut/prozessor_gostack/internal/models"
-"github.com/faebut/prozessor_gostack/internal/render"
+	"github.com/faebut/prozessor_gostack/internal/models"
+	"github.com/faebut/prozessor_gostack/internal/render"
 )
 
 templ Navigation(visitor models.Visitor) {
-{{ prm := ctx.Value("permission").(models.Role) }}
-<nav>
-  <div class="mb-5">
-    <div class="text-xl font-medium px-6 py-3 grid grid-cols-3 bg-base-100 content-between items-center">
-      <div role="button" id="menubutton" class="btn btn-accent btn-circle collapse-close" onclick="menuToggle()">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"></path>
-        </svg>
-      </div>
-      <div tabindex="0" class="justify-self-center">
-        <a class="btn btn-ghost text-xl">prozessor_db</a>
-      </div>
-      <div class="flex items-center gap-2 justify-self-end">
-        <div class="dropdown dropdown-end z-30">
-          <div tabindex="0" role="button" class="btn btn-circle avatar placeholder">
-            if len(visitor.Avatar) > 0 {
-            <div class="w-10 rounded-full">
-              <img src={ "/static/uploads/" + visitor.Avatar } alt="User Avatar" />
-            </div>
-            } else {
-            <div class="avatar placeholder">
-              <div class="bg-neutral text-neutral-content w-12 rounded-full">
-                <span>{ render.Initials(visitor.FirstName, visitor.FamilyName) }</span>
-              </div>
-            </div>
-            }
-          </div>
-          <ul tabindex="1" class="menu menu-sm dropdown-content mt-3 p-2 shadow bg-base-100 rounded-box w-52">
-            <li>
-              <a class="justify-between" href="/admin/profile">
-                Profil
-              </a>
-            </li>
-            <li><a href="/admin/logout">Logout</a></li>
-          </ul>
-        </div>
-      </div>
-    </div>
-    <div class="transition p-0 m-0 border border-base-100 bg-base-100 border-b-base-content border-opacity-20 hidden">
-      <ul class="menu menu-lg">
-        <li>
-          <a href="/admin">Homepage</a>
-        </li>
-        <li>
-          <a href="/admin/checkin">Check-In</a>
-        </li>
-        if prm.ViewMachines {
-        <li>
-          <a href="/admin/machines">Maschinen</a>
-        </li>
-        }
-        if prm.ViewLogistics {
-        <li>
-          <a href="/admin/logistics">Lagerverwaltung</a>
-        </li>
-        }
-        <!-- <li> -->
-        <!--   <a>Newsletter</a> -->
-        <!-- </li> -->
-        <!-- <li> -->
-        <!--   <a href="/admin/checkout">Kasse</a> -->
-        <!-- </li> -->
-        if prm.ViewVisitors || prm.ViewBadges || prm.ViewAbonnements || prm.ViewReminders {
-        <li>
-          <details>
-            <summary>Verwaltung</summary>
-            <ul>
-              if prm.ViewVisitors {
-              <li>
-                <a href="/admin/visitors">Besucher:innen</a>
-              </li>
-              }
-              if prm.ViewBadges {
-              <li>
-                <a href="/admin/badges">Badges</a>
-              </li>
-              }
-              if prm.ViewAbonnements {
-              <li>
-                <a href="/admin/abonnements">Abonnements</a>
-              </li>
-              }
-              if prm.ViewReminders {
-              <li>
-                <a href="/admin/abonnements/reminder">Reminder</a>
-              </li>
-              }
-            </ul>
-          </details>
-        </li>
-        }
-        if prm.ViewFinances {
-        <!-- <li> -->
-        <!-- <details> -->
-        <!--   <summary>Buchhaltung</summary> -->
-        <!--   <ul> -->
-        <!--     <li> -->
-        <!--       <a href="/admin/">Tagesabrechnungen</a> -->
-        <!--     </li> -->
-        <!--     <li> -->
-        <!--       <a href="/admin/">Rechnungen</a> -->
-        <!--     </li> -->
-        <!--   </ul> -->
-        <!-- </details> -->
-        <!-- </li> -->
-        }
-        if prm.ViewStatistics || prm.ViewLogs {
-        <li>
-          <details>
-            <summary>Admin</summary>
-            <ul>
-              if prm.ViewStatistics {
-              <li>
-                <a href="/admin/statistics">Statistik</a>
-              </li>
-              }
-              if prm.ViewLogs {
-              <li>
-                <a href="/admin/">Log</a>
-              </li>
-              }
-            </ul>
-          </details>
-        </li>
-        }
-      </ul>
-    </div>
-  </div>
-  <script>
+	{{ prm := ctx.Value("permission").(models.Role) }}
+	<nav>
+		<div class="mb-5">
+			<div class="text-xl font-medium px-3 md:px-6 py-3 grid grid-cols-3 bg-base-100 content-between items-center">
+				<div role="button" id="menubutton" class="btn btn-accent btn-circle collapse-close" onclick="menuToggle()">
+					<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"></path>
+					</svg>
+				</div>
+				<div tabindex="0" class="justify-self-center">
+					<a class="btn btn-ghost text-xl">prozessor_db</a>
+				</div>
+				<div class="flex items-center gap-2 justify-self-end">
+					<div class="dropdown dropdown-end z-30">
+						<div tabindex="0" role="button" class="btn btn-circle avatar placeholder">
+							if len(visitor.Avatar) > 0 {
+								<div class="w-10 rounded-full">
+									<img src={ "/static/uploads/" + visitor.Avatar } alt="User Avatar"/>
+								</div>
+							} else {
+								<div class="avatar placeholder">
+									<div class="bg-neutral text-neutral-content w-12 rounded-full">
+										<span>{ render.Initials(visitor.FirstName, visitor.FamilyName) }</span>
+									</div>
+								</div>
+							}
+						</div>
+						<ul tabindex="1" class="menu menu-sm dropdown-content mt-3 p-2 shadow bg-base-100 rounded-box w-52">
+							<li>
+								<a class="justify-between" href="/admin/profile">
+									Profil
+								</a>
+							</li>
+							<li><a href="/admin/logout">Logout</a></li>
+						</ul>
+					</div>
+				</div>
+			</div>
+			<div class="transition p-0 m-0 border border-base-100 bg-base-100 border-b-base-content border-opacity-20 hidden">
+				<ul class="menu menu-lg">
+					<li>
+						<a href="/admin">Homepage</a>
+					</li>
+					<li>
+						<a href="/admin/checkin">Check-In</a>
+					</li>
+					if prm.ViewMachines {
+						<li>
+							<a href="/admin/machines">Maschinen</a>
+						</li>
+					}
+					if prm.ViewLogistics {
+						<li>
+							<a href="/admin/logistics">Lagerverwaltung</a>
+						</li>
+					}
+					<!-- <li> -->
+					<!--   <a>Newsletter</a> -->
+					<!-- </li> -->
+					<!-- <li> -->
+					<!--   <a href="/admin/checkout">Kasse</a> -->
+					<!-- </li> -->
+					if prm.ViewVisitors || prm.ViewBadges || prm.ViewAbonnements || prm.ViewReminders {
+						<li>
+							<details>
+								<summary>Verwaltung</summary>
+								<ul>
+									if prm.ViewVisitors {
+										<li>
+											<a href="/admin/visitors">Besucher:innen</a>
+										</li>
+									}
+									if prm.ViewBadges {
+										<li>
+											<a href="/admin/badges">Badges</a>
+										</li>
+									}
+									if prm.ViewAbonnements {
+										<li>
+											<a href="/admin/abonnements">Abonnements</a>
+										</li>
+									}
+									if prm.ViewReminders {
+										<li>
+											<a href="/admin/abonnements/reminder">Reminder</a>
+										</li>
+									}
+								</ul>
+							</details>
+						</li>
+					}
+					if prm.ViewFinances {
+						<!-- <li> -->
+						<!-- <details> -->
+						<!--   <summary>Buchhaltung</summary> -->
+						<!--   <ul> -->
+						<!--     <li> -->
+						<!--       <a href="/admin/">Tagesabrechnungen</a> -->
+						<!--     </li> -->
+						<!--     <li> -->
+						<!--       <a href="/admin/">Rechnungen</a> -->
+						<!--     </li> -->
+						<!--   </ul> -->
+						<!-- </details> -->
+						<!-- </li> -->
+					}
+					if prm.ViewStatistics || prm.ViewLogs {
+						<li>
+							<details>
+								<summary>Admin</summary>
+								<ul>
+									if prm.ViewStatistics {
+										<li>
+											<a href="/admin/statistics">Statistik</a>
+										</li>
+									}
+									if prm.ViewLogs {
+										<li>
+											<a href="/admin/">Log</a>
+										</li>
+									}
+								</ul>
+							</details>
+						</li>
+					}
+				</ul>
+			</div>
+		</div>
+		<script>
     // using classList.toggle() method
     const para = document.querySelector('.hidden');
     const menubutton = document.querySelector('#menubutton');
@@ -145,5 +145,5 @@ templ Navigation(visitor models.Visitor) {
       menubutton.classList.toggle('rotate-45');
     }
   </script>
-</nav>
+	</nav>
 }

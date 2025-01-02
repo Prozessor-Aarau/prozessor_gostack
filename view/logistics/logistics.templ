@@ -56,7 +56,7 @@ templ logisticsFilter(categories []models.LogisticCategory) {
 						<option value="invalid">bereits abgelaufen</option>
 					</select>
 				</label>
-				<label class="form-control w-full max-w-xs col-span-5 md:col-span-1">
+				<label class="form-control w-full max-w-xs col-span-full md:col-span-1">
 					<select name="type" id="type" class="select select-bordered">
 						<option value="0" selected>Typ (alle)</option>
 						for _, v := range categories {
@@ -64,7 +64,7 @@ templ logisticsFilter(categories []models.LogisticCategory) {
 						}
 					</select>
 				</label>
-				<div class="col-span-5 md:col-span-1 grid grid-cols-2 justify-items-center justify-around gap-3">
+				<div class="col-span-full md:col-span-1 grid grid-cols-2 justify-items-center justify-around gap-3">
 					<button
 						type="submit"
 						hx-post="/admin/logistics/list"
@@ -101,8 +101,16 @@ templ LogisticsList(logistics []models.Logistic, pages int, onpage int, filter s
 	{{ prm := ctx.Value("permission").(models.Role) }}
 	if len(logistics) > 0 {
 		for _, l := range logistics {
+			{{
+var contact string
+if len(l.Visitor.Phone) > 0 {
+	contact = l.Visitor.Phone
+} else if len(l.Visitor.Email) > 0 {
+	contact = l.Visitor.Email
+}
+			}}
 			<div
-				class="hover:bg-base-200 cursor-pointer grid grid-cols-6 text-sm p-3 py-4 items-center gap-3 border-dashed border-b border-base-content border-opacity-50"
+				class="hover:bg-base-200 cursor-pointer grid grid-cols-8 text-sm p-3 py-4 items-center gap-3 border-dashed border-b border-base-content border-opacity-50"
 			>
 				<div class="col-span-1">{ strconv.Itoa(l.Number) }</div>
 				<div class="col-span-1 text-2xl flex items-center">
@@ -116,12 +124,15 @@ templ LogisticsList(logistics []models.Logistic, pages int, onpage int, filter s
 						<span class="i-mdi-close-circle-outline"></span>
 					}
 				</div>
-				<div class="col-span-4 md:col-span-1">{ l.Category.CatName }</div>
-				<div class="col-span-5 md:col-span-2 text-right md:text-left">
+				<div class="col-span-6 md:col-span-1">{ l.Category.CatName }</div>
+				<div class="col-span-4 md:col-span-2 text-right md:text-left">
 					{ l.Visitor.FirstName }
 					{ l.Visitor.FamilyName }
 				</div>
-				<div class="col-span-1 flex justify-end items-center">
+				<div class="col-span-4 md:col-span-2 text-right md:text-left">
+					{ contact }
+				</div>
+				<div class="col-span-full md:col-span-1 flex justify-center md:justify-end items-center">
 					<a
 						class={ "btn btn-sm btn-circle btn-primary" , templ.KV("btn-disabled", !prm.EditLogistics) }
 						hx-get={ "/admin/logistics/" + strconv.Itoa(l.ID) }

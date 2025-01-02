@@ -1,24 +1,23 @@
 package layout
 
 import (
-"github.com/faebut/prozessor_gostack/internal/models"
-"github.com/faebut/prozessor_gostack/view/ui"
+	"github.com/faebut/prozessor_gostack/internal/models"
+	"github.com/faebut/prozessor_gostack/view/ui"
 )
 
 templ App(nav bool, visitor models.Visitor) {
-<!DOCTYPE html>
-<html lang="de">
-// Header
-
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Prozessor Database</title>
-  <link rel="icon" href="/static/assets/favicon.svg" />
-  <link rel="stylesheet" href="/static/css/tailwind.css" />
-  <link rel="stylesheet" href="/static/css/custom.css" />
-  <script src="https://unpkg.com/htmx.org@2.0.2"></script>
-  <style>
+	<!DOCTYPE html>
+	<html lang="de">
+		// Header
+		<head>
+			<meta charset="UTF-8"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1"/>
+			<title>Prozessor Database</title>
+			<link rel="icon" href="/static/assets/favicon.svg"/>
+			<link rel="stylesheet" href="/static/css/tailwind.css"/>
+			<link rel="stylesheet" href="/static/css/custom.css"/>
+			<script src="https://unpkg.com/htmx.org@2.0.2"></script>
+			<style>
     .bg-dia-stripes {
       background-image:
         repeating-linear-gradient(45deg,
@@ -33,24 +32,22 @@ templ App(nav bool, visitor models.Visitor) {
       font-size: 1.5em;
     }
   </style>
-</head>
-
-<body>
-  <div class="container mx-auto max-w-4xl bg-dia-stripes">
-    <!-- Navigation -->
-    if nav {
-    @ui.Navigation(visitor)
-    }
-    <!-- Content -->
-    <main id="main" class="px-6">
-      { children... }
-    </main>
-    <!-- Footer  -->
-    if nav {
-    @ui.Footer()
-    }
-  </div>
-</body>
-
-</html>
+		</head>
+		<body>
+			<div class="container mx-auto max-w-4xl bg-dia-stripes">
+				<!-- Navigation -->
+				if nav {
+					@ui.Navigation(visitor)
+				}
+				<!-- Content -->
+				<main id="main" class="px-3 md:px-6">
+					{ children... }
+				</main>
+				<!-- Footer  -->
+				if nav {
+					@ui.Footer()
+				}
+			</div>
+		</body>
+	</html>
 }

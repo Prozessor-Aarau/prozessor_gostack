@@ -4529,10 +4529,6 @@ details.collapse summary::-webkit-details-marker {
   grid-column: span 6 / span 6;
 }
 
-.col-span-8 {
-  grid-column: span 8 / span 8;
-}
-
 .col-span-full {
   grid-column: 1 / -1;
 }
@@ -4754,6 +4750,10 @@ details.collapse summary::-webkit-details-marker {
   grid-template-columns: repeat(6, minmax(0, 1fr));
 }
 
+.grid-cols-8 {
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+}
+
 .grid-cols-subgrid {
   grid-template-columns: subgrid;
 }
@@ -4966,9 +4966,9 @@ details.collapse summary::-webkit-details-marker {
   padding-right: 2.5rem;
 }
 
-.px-6 {
-  padding-left: 1.5rem;
-  padding-right: 1.5rem;
+.px-3 {
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
 }
 
 .py-3 {
@@ -5228,6 +5228,11 @@ details.collapse summary::-webkit-details-marker {
 
   .md\:border-t-0 {
     border-top-width: 0px;
+  }
+
+  .md\:px-6 {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
   }
 
   .md\:pl-3 {
