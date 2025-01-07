@@ -4,10 +4,12 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/faebut/prozessor_gostack/internal/models"
+	"github.com/joho/godotenv"
 	mail "github.com/xhit/go-simple-mail/v2"
 )
 
@@ -22,12 +24,34 @@ func listenForMail() {
 }
 
 func sendMsg(m models.MailData) {
+	// get .env file
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("error loading .env file")
+	}
+
 	server := mail.NewSMTPClient()
-	server.Host = "asmtp.mail.hostpoint.ch"
-	server.Port = 587
-	server.Username = "info@prozessor-aarau.ch"
-	server.Password = "***REMOVED***"
-	server.Encryption = mail.EncryptionTLS
+	server.Host = os.Getenv("SMTP_HOST")
+	server.Port, err = strconv.Atoi(os.Getenv("SMTP_PORT"))
+	if err != nil {
+		errorLog.Println(err)
+		return
+	}
+
+	server.Username = os.Getenv("SMTP_USERNAME")
+	server.Password = os.Getenv("SMTP_PASSWORD")
+
+	encryption, err := strconv.ParseBool(os.Getenv("SMTP_ENCRYPTION"))
+	if err != nil {
+		errorLog.Println(err)
+		return
+	}
+
+	if encryption {
+		server.Encryption = mail.EncryptionTLS
+	} else {
+		server.Encryption = mail.EncryptionNone
+	}
 
 	server.KeepAlive = false
 	server.ConnectTimeout = 10 * time.Second
