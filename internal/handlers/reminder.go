@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"context"
+	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -55,53 +57,89 @@ func (m *Repository) HandleReminderListPost(w http.ResponseWriter, r *http.Reque
 }
 
 // HandleReminderProgressIndex handles the start of sending the reminders and renders the progress page
-func (m *Repository) HandleReminderProgress(w http.ResponseWriter, r *http.Request) {
+func (m *Repository) HandleReminderProgressPage(w http.ResponseWriter, r *http.Request) error {
+	return rendering(w, r, reminder.ReminderProgressPage())
+}
+
+func (m *Repository) HandleReminderProgressBar(w http.ResponseWriter, r *http.Request) {
+	// get visitors to remind TODO this needs to change to only take the selected ones
 	visitors, _, err := m.DB.AllToRemindVisitors()
 	if err != nil {
 		log.Println("could not get reminder visitors from DB: ", err)
 	}
-
-	// check for all ids if the checkbox is checked and add visitor to new slice
-	// var selectedVisitors []models.ReminderVisitor
-	// for _, v := range visitors {
-	// 	value := r.Form.Get(v.Visitor.ID)
-	// 	if len(value) > 0 {
-	// 		selectedVisitors = append(selectedVisitors, v)
-	// 	}
-	// }
 	//
-	// m.App.Reminders = &selectedVisitors
-
+	// // check for all ids if the checkbox is checked and add visitor to new slice
+	// // var selectedVisitors []models.ReminderVisitor
+	// // for _, v := range visitors {
+	// // 	value := r.Form.Get(v.Visitor.ID)
+	// // 	if len(value) > 0 {
+	// // 		selectedVisitors = append(selectedVisitors, v)
+	// // 	}
+	// // }
+	// //
+	// // m.App.Reminders = &selectedVisitors
+	//
 	// get length
 	count := len(visitors)
 
 	// Create a channel to send data to the template.
-	data := make(chan models.Reminder)
-	// Run a background process that will take 10 seconds to complete.
+	dataCh := make(chan models.Reminder)
+
+	// go func() {
+	// 	// Always remember to close the channel.
+	// 	defer close(data)
+	// 	for i, v := range visitors {
+	// 		select {
+	// 		case <-r.Context().Done():
+	// 			// Quit early if the client is no longer connected.
+	// 			return
+	// 		case <-time.After(time.Second):
+	// 			// Send a new piece of data to the channel.
+	// 			data <- models.Reminder{
+	// 				Count:      count,
+	// 				Progress:   i + 1,
+	// 				FirstName:  v.Visitor.FirstName,
+	// 				FamilyName: v.Visitor.FamilyName,
+	// 				Email:      v.Visitor.Email,
+	// 			}
+	// 		}
+	// 	}
+	// }()
+	//
+	// Set headers for SSE
+	w.Header().Set("Content-Type", "text/event-stream")
+	w.Header().Set("Cache-Control", "no-cache")
+	w.Header().Set("Connection", "keep-alive")
+
+	// Create a context for handling client disconnection
+	ctx, cancel := context.WithCancel(r.Context())
+	defer cancel()
+
+	// TODO quit loop when channel is closed
+	// TODO do something and get channel from somewhere else
+	// Send data to the client
 	go func() {
-		// Always remember to close the channel.
-		defer close(data)
-		for i, v := range visitors {
-			select {
-			case <-r.Context().Done():
-				// Quit early if the client is no longer connected.
-				return
-			case <-time.After(time.Second):
-				// Send a new piece of data to the channel.
-				data <- models.Reminder{
-					Count:      count,
-					Progress:   i + 1,
-					FirstName:  v.Visitor.FirstName,
-					FamilyName: v.Visitor.FamilyName,
-					Email:      v.Visitor.Email,
-				}
+		for data := range dataCh {
+			template, err := templ.ToGoHTML(ctx, reminder.ReminderProgressBar(data))
+			if err != nil {
+				log.Println(err)
 			}
+
+			fmt.Fprintf(w, "data: %s\n\n", template)
+			w.(http.Flusher).Flush()
 		}
 	}()
 
-	// Pass the channel to the template.
-	component := reminder.ReminderProgressPage(data)
+	// Simulate sending data periodically
+	for i, v := range visitors {
+		dataCh <- models.Reminder{
+			Count:      count,
+			Progress:   i + 1,
+			FirstName:  v.Visitor.FirstName,
+			FamilyName: v.Visitor.FamilyName,
+			Email:      v.Visitor.Email,
+		}
+		time.Sleep(300 * time.Millisecond)
+	}
 
-	// Serve using the streaming mode of the handler.
-	templ.Handler(component, templ.WithStreaming()).ServeHTTP(w, r)
 }

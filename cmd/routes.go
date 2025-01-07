@@ -97,9 +97,18 @@ func routes(app *config.AppConfig) http.Handler {
 			mux.Get("/machines/edit/{id}", handlers.Make(handlers.Repo.HandleMachinesEditIndex))
 			mux.Post("/machines/edit/{id}", handlers.Make(handlers.Repo.HandleMachinesEdit))
 			mux.Delete("/machines/{id}", handlers.Make(handlers.Repo.HandleMachinesDelete))
-			mux.Post("/machines/edit/{id}/qrcode", handlers.Make(handlers.Repo.HandleMachinesQRCreate))
-			mux.Post("/machines/edit/{id}/qrcode/delete", handlers.Make(handlers.Repo.HandleMachinesQRDelete))
-			mux.Post("/machines/edit/{id}/qrcode/print", handlers.Make(handlers.Repo.HandleMachinesQRPrint))
+			mux.Post(
+				"/machines/edit/{id}/qrcode",
+				handlers.Make(handlers.Repo.HandleMachinesQRCreate),
+			)
+			mux.Post(
+				"/machines/edit/{id}/qrcode/delete",
+				handlers.Make(handlers.Repo.HandleMachinesQRDelete),
+			)
+			mux.Post(
+				"/machines/edit/{id}/qrcode/print",
+				handlers.Make(handlers.Repo.HandleMachinesQRPrint),
+			)
 		})
 
 		// logistics
@@ -110,15 +119,33 @@ func routes(app *config.AppConfig) http.Handler {
 			mux.Post("/logistics/list", handlers.Make(handlers.Repo.HandleLogisticsListFilter))
 			mux.Group(func(mux chi.Router) {
 				mux.Use(CheckPermission("EditLogistics"))
-				mux.Get("/logistics/create", handlers.Make(handlers.Repo.HandleLogisticsCreateIndex))
-				mux.Post("/logistics/create", handlers.Make(handlers.Repo.HandleLogisticsCreateAndEdit))
+				mux.Get(
+					"/logistics/create",
+					handlers.Make(handlers.Repo.HandleLogisticsCreateIndex),
+				)
+				mux.Post(
+					"/logistics/create",
+					handlers.Make(handlers.Repo.HandleLogisticsCreateAndEdit),
+				)
 				mux.Delete("/logistics/{id}", handlers.Make(handlers.Repo.HandleLogisticsDelete))
 				mux.Get("/logistics/{id}", handlers.Make(handlers.Repo.HandleLogisticsEditIndex))
-				mux.Post("/logistics/{id}", handlers.Make(handlers.Repo.HandleLogisticsCreateAndEdit))
+				mux.Post(
+					"/logistics/{id}",
+					handlers.Make(handlers.Repo.HandleLogisticsCreateAndEdit),
+				)
 				// labels
-				mux.Post("/logistics/{id}/label", handlers.Make(handlers.Repo.HandleLogisticsLabelCreate))
-				mux.Post("/logistics/{id}/label/delete", handlers.Make(handlers.Repo.HandleLogisticsLabelDelete))
-				mux.Post("/logistics/{id}/label/print", handlers.Make(handlers.Repo.HandleLogisticsLabelPrint))
+				mux.Post(
+					"/logistics/{id}/label",
+					handlers.Make(handlers.Repo.HandleLogisticsLabelCreate),
+				)
+				mux.Post(
+					"/logistics/{id}/label/delete",
+					handlers.Make(handlers.Repo.HandleLogisticsLabelDelete),
+				)
+				mux.Post(
+					"/logistics/{id}/label/print",
+					handlers.Make(handlers.Repo.HandleLogisticsLabelPrint),
+				)
 			})
 		})
 
@@ -149,12 +176,21 @@ func routes(app *config.AppConfig) http.Handler {
 		mux.Group(func(mux chi.Router) {
 			mux.Use(CheckPermission("ViewAbonnements"))
 			mux.Get("/abonnements", handlers.Make(handlers.Repo.HandleAbonnementsIndex))
-			mux.Get("/abonnements/abonnementlist", handlers.Make(handlers.Repo.HandleAbonnementsList))
-			mux.Post("/abonnements/abonnementlist", handlers.Make(handlers.Repo.HandleAbonnementsListFilter))
+			mux.Get(
+				"/abonnements/abonnementlist",
+				handlers.Make(handlers.Repo.HandleAbonnementsList),
+			)
+			mux.Post(
+				"/abonnements/abonnementlist",
+				handlers.Make(handlers.Repo.HandleAbonnementsListFilter),
+			)
 			// add abonnements
 			mux.Group(func(mux chi.Router) {
 				mux.Use(CheckPermission("AddAbonnements"))
-				mux.Get("/abonnements/create", handlers.Make(handlers.Repo.HandleAbonnementCreateIndex))
+				mux.Get(
+					"/abonnements/create",
+					handlers.Make(handlers.Repo.HandleAbonnementCreateIndex),
+				)
 				mux.Post("/abonnements/create", handlers.Make(handlers.Repo.HandleAbonnementCreate))
 			})
 		})
@@ -168,7 +204,8 @@ func routes(app *config.AppConfig) http.Handler {
 			mux.Get("/reminder", handlers.Make(handlers.Repo.HandleReminderIndex))
 			mux.Get("/reminder/list", handlers.Make(handlers.Repo.HandleReminderList))
 			mux.Post("/reminder/list", handlers.Make(handlers.Repo.HandleReminderListPost))
-			mux.Get("/reminder/confirm", handlers.Repo.HandleReminderProgress)
+			mux.Get("/reminder/confirm", handlers.Make(handlers.Repo.HandleReminderProgressPage))
+			mux.Get("/reminder/progress", handlers.Repo.HandleReminderProgressBar)
 		})
 
 		// statistics
