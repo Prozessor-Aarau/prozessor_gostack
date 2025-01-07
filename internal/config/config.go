@@ -19,4 +19,5 @@ type AppConfig struct {
 	Session       *scs.SessionManager
 	MailChan      chan models.MailData
 	Slack         *slack.Slack
+	Reminders     *[]models.ReminderVisitor
 }

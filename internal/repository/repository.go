@@ -70,6 +70,8 @@ type DatabaseRepo interface {
 	DeleteLogisticLabel(l models.Logistic) error
 	// reports
 	CreateReport(r models.Report) (int, error)
+	// reminder
+	AllToRemindVisitors() ([]models.ReminderVisitor, int, error)
 }
 
 type postgresDBRepo struct {

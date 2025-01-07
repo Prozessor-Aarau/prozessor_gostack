@@ -162,6 +162,15 @@ func routes(app *config.AppConfig) http.Handler {
 		mux.Get("/elements/pricing/{id}", handlers.Repo.AbonnementCreatePrice)
 		mux.Get("/elements/member/{id}", handlers.Repo.HandleSelectMembership)
 
+		// reminder
+		mux.Group(func(mux chi.Router) {
+			mux.Use(CheckPermission("ViewReminders"))
+			mux.Get("/reminder", handlers.Make(handlers.Repo.HandleReminderIndex))
+			mux.Get("/reminder/list", handlers.Make(handlers.Repo.HandleReminderList))
+			mux.Post("/reminder/list", handlers.Make(handlers.Repo.HandleReminderListPost))
+			mux.Get("/reminder/confirm", handlers.Repo.HandleReminderProgress)
+		})
+
 		// statistics
 		mux.Group(func(mux chi.Router) {
 			mux.Use(CheckPermission("ViewStatistics"))
