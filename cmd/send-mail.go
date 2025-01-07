@@ -1,11 +1,9 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"os"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/faebut/prozessor_gostack/internal/models"
@@ -65,19 +63,20 @@ func sendMsg(m models.MailData) {
 
 	email := mail.NewMSG()
 	email.SetFrom(m.From).AddTo(m.To).SetSubject(m.Subject)
-	if m.Template == "" {
-		email.SetBody(mail.TextHTML, m.Content)
-	} else {
-		data, err := os.ReadFile(fmt.Sprintf("./email-templates/%s", m.Template))
-		if err != nil {
-			errorLog.Println(err)
-			return
-		}
-		mailTemplate := string(data)
-
-		msgToSend := strings.Replace(mailTemplate, "[%body%]", m.Content, 1)
-		email.SetBody(mail.TextHTML, msgToSend)
-	}
+	email.SetBody(mail.TextHTML, m.Content)
+	// if m.Template == "" {
+	// 	email.SetBody(mail.TextHTML, m.Content)
+	// } else {
+	// 	data, err := os.ReadFile(fmt.Sprintf("./email-templates/%s", m.Template))
+	// 	if err != nil {
+	// 		errorLog.Println(err)
+	// 		return
+	// 	}
+	// 	mailTemplate := string(data)
+	//
+	// 	msgToSend := strings.Replace(mailTemplate, "[%body%]", m.Content, 1)
+	// 	email.SetBody(mail.TextHTML, msgToSend)
+	// }
 
 	err = email.Send(client)
 	if err != nil {
