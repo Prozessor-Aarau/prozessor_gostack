@@ -36,7 +36,8 @@ func sendMsg(m models.MailData) {
 		return
 	}
 
-	server.Username = os.Getenv("SMTP_USERNAME")
+	from := os.Getenv("SMTP_USERNAME")
+	server.Username = from
 	server.Password = os.Getenv("SMTP_PASSWORD")
 
 	encryption, err := strconv.ParseBool(os.Getenv("SMTP_ENCRYPTION"))
@@ -62,21 +63,8 @@ func sendMsg(m models.MailData) {
 	}
 
 	email := mail.NewMSG()
-	email.SetFrom(m.From).AddTo(m.To).SetSubject(m.Subject)
+	email.SetFrom(from).AddTo(m.To).SetSubject(m.Subject)
 	email.SetBody(mail.TextHTML, m.Content)
-	// if m.Template == "" {
-	// 	email.SetBody(mail.TextHTML, m.Content)
-	// } else {
-	// 	data, err := os.ReadFile(fmt.Sprintf("./email-templates/%s", m.Template))
-	// 	if err != nil {
-	// 		errorLog.Println(err)
-	// 		return
-	// 	}
-	// 	mailTemplate := string(data)
-	//
-	// 	msgToSend := strings.Replace(mailTemplate, "[%body%]", m.Content, 1)
-	// 	email.SetBody(mail.TextHTML, msgToSend)
-	// }
 
 	err = email.Send(client)
 	if err != nil {

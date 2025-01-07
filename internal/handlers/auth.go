@@ -172,7 +172,6 @@ func (m *Repository) CreateLoginMail(w http.ResponseWriter, r *http.Request) {
 	msgToSend = strings.Replace(msgToSend, "[%link%]", registerLink, 1)
 
 	msg := models.MailData{
-		From:    "info@prozessor-aarau.ch",
 		To:      visitor.Email,
 		Subject: "Prozessor Registrierungs-Link",
 		Content: msgToSend,

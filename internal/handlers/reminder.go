@@ -83,7 +83,7 @@ func (m *Repository) HandleReminderProgressBar(w http.ResponseWriter, r *http.Re
 	count := len(visitors)
 
 	// Create a channel to send data to the template.
-	dataCh := make(chan models.Reminder)
+	dataCh := make(chan models.MailData)
 
 	// go func() {
 	// 	// Always remember to close the channel.
@@ -132,12 +132,12 @@ func (m *Repository) HandleReminderProgressBar(w http.ResponseWriter, r *http.Re
 
 	// Simulate sending data periodically
 	for i, v := range visitors {
-		dataCh <- models.Reminder{
+		dataCh <- models.MailData{
 			Count:      count,
 			Progress:   i + 1,
 			FirstName:  v.Visitor.FirstName,
 			FamilyName: v.Visitor.FamilyName,
-			Email:      v.Visitor.Email,
+			To:         v.Visitor.Email,
 		}
 		time.Sleep(300 * time.Millisecond)
 	}

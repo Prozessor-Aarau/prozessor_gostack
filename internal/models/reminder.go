@@ -12,11 +12,3 @@ type ReminderVisitor struct {
 	Difference  int
 	Reminder    time.Time
 }
-
-type Reminder struct {
-	Count      int
-	Progress   int
-	Email      string
-	FirstName  string
-	FamilyName string
-}

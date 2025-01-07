@@ -2,9 +2,13 @@ package models
 
 // MailData holds an email message
 type MailData struct {
-	To      string
-	From    string
-	Subject string
-	Content string
+	Reason     string
+	Count      int
+	Progress   int
+	To         string
+	FirstName  string
+	FamilyName string
+	Subject    string
+	Content    string
 	// Template string
 }
