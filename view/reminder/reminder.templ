@@ -192,6 +192,7 @@ templ ReminderProgressPage() {
 
 templ ReminderProgressBar(r models.MailData) {
 <div class="flex flex-col items-center gap-5 w-full">
+  if r.Count > r.Progress {
   <div class="prose">
     <h3 class="text-primary">{ strconv.Itoa(r.Progress) } / { strconv.Itoa(r.Count) }</h3>
   </div>
@@ -200,7 +201,7 @@ templ ReminderProgressBar(r models.MailData) {
   <div class="prose">
     <h4 class="text-primary">Sende an: { r.FirstName } { r.FamilyName }</h4>
   </div>
-  if r.Count == r.Progress {
+  } else {
   <div>
     <h2 class="text-success">Alle { strconv.Itoa(r.Count) } Reminder wurden versendet!</h2>
   </div>

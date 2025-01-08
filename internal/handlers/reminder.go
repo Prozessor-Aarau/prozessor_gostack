@@ -142,4 +142,8 @@ func (m *Repository) HandleReminderProgressBar(w http.ResponseWriter, r *http.Re
 		time.Sleep(300 * time.Millisecond)
 	}
 
+	close(dataCh)
+	log.Println("channel closed")
+	// TODO how to tell client to not open connection again, because it will reset
+	// TODO as channel will be filled elsewhere and the is empty, maybe this is not a Problem.
 }
