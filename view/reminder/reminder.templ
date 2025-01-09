@@ -179,7 +179,7 @@ templ ReminderCreateForm(visitors []models.ReminderVisitor) {
     </table>
   </div>
   if len(visitors)>0 {
-  <button class="btn btn-success" hx-get="/admin/reminder/confirm" hx-target="#content">Reminder versenden</button>
+  <button class="btn btn-success" hx-post="/admin/reminder/confirm" hx-target="#content">Reminder versenden</button>
   }
   <a href="/admin/reminder" class="btn btn-warning">Abbrechen</a>
 </form>
@@ -187,7 +187,8 @@ templ ReminderCreateForm(visitors []models.ReminderVisitor) {
 
 templ ReminderProgressPage() {
 <div class="w-full text-center text-2xl font-extrabold text-primary mb-6">Reminder werden versendet</div>
-<div id="progressbar" class="w-full" hx-ext="sse" sse-connect="/admin/reminder/progress" sse-swap="message"></div>
+<div id="progressbar" class="w-full" hx-ext="sse" sse-connect="/admin/reminder/progress" sse-swap="message"
+  sse-close="stop"></div>
 }
 
 templ ReminderProgressBar(r models.MailData) {

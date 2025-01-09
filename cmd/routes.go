@@ -204,7 +204,7 @@ func routes(app *config.AppConfig) http.Handler {
 			mux.Get("/reminder", handlers.Make(handlers.Repo.HandleReminderIndex))
 			mux.Get("/reminder/list", handlers.Make(handlers.Repo.HandleReminderList))
 			mux.Post("/reminder/list", handlers.Make(handlers.Repo.HandleReminderListPost))
-			mux.Get("/reminder/confirm", handlers.Make(handlers.Repo.HandleReminderProgressPage))
+			mux.Post("/reminder/confirm", handlers.Make(handlers.Repo.HandleReminderSend))
 			mux.Get("/reminder/progress", handlers.Repo.HandleReminderProgressBar)
 		})
 
