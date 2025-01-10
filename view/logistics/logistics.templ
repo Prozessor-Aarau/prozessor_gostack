@@ -187,6 +187,13 @@ errors FormErrors,
 assigned bool,
 ) {
 {{
+var postUrl string
+if l.CreatedOn.IsZero() {
+postUrl = "/admin/logistics/create"
+} else {
+postUrl = "/admin/logistics/" + strconv.Itoa(l.ID)
+}
+
 var fixCat []models.LogisticCategory
 var freeCat []models.LogisticCategory
 
@@ -369,7 +376,7 @@ if cat.ID < 4 { fixCat=append(fixCat, cat) } else { freeCat=append(freeCat, cat)
       <div class="content-center">
         <span id="result_price" class=" text-secondary text-xl font-bold"></span>
       </div>
-      <input type="hidden" id="membership" name="membership" />
+      <input type="hidden" id="membership" name="membership" value={ strconv.FormatBool(l.Member) } />
     </div>
     <div class="col-span-full md:col-span-1 prose">
       <h3>Bezahlung</h3>
@@ -388,8 +395,7 @@ if cat.ID < 4 { fixCat=append(fixCat, cat) } else { freeCat=append(freeCat, cat)
   </div>
   }
   <div class="col-span-full w-full gap-3 flex mt-3 items-center justify-center flex-col md:flex-row">
-    <a class="btn btn-success" hx-target="#content" if l.CreatedOn.IsZero() { hx-post="/admin/logistics/create" } else {
-      hx-post={ "/admin/logistics/" + strconv.Itoa(l.ID) } }>
+    <a hx-post={ postUrl } class="btn btn-success" hx-target="#content">
       Speichern
     </a>
     <a href="/admin/logistics" class="btn btn-warning">
@@ -414,21 +420,20 @@ if cat.ID < 4 { fixCat=append(fixCat, cat) } else { freeCat=append(freeCat, cat)
   </form>
   <!-- script for ui changes -->
   <script>
-    toggle = document.getElementById("toggleFree")
-    assign = document.getElementById("toggleAssign")
-    assignDiv = document.getElementById("assignDiv")
-    assignForm = document.getElementById("assignForm")
-    freeForm = document.getElementById("freeForm")
-    fixForm = document.getElementById("fixForm")
-    fixCatSelect = document.getElementById("fixCatSelect")
-    fixPrice = document.getElementById("fix_price")
-    freeCatSelect = document.getElementById("freeCatSelect")
-    freePrice = document.getElementById("free_price")
-    freeNumber = document.getElementById("freeNumber")
-    startDate = document.getElementById("startdate")
-    endDate = document.getElementById("enddate")
-    resultPrice = document.getElementById("result_price")
-    membership = document.getElementById("membership")
+    var toggle = document.getElementById("toggleFree")
+    var assign = document.getElementById("toggleAssign")
+    var assignDiv = document.getElementById("assignDiv")
+    var assignForm = document.getElementById("assignForm")
+    var freeForm = document.getElementById("freeForm")
+    var fixForm = document.getElementById("fixForm")
+    var fixCatSelect = document.getElementById("fixCatSelect")
+    var fixPrice = document.getElementById("fix_price")
+    var freeCatSelect = document.getElementById("freeCatSelect")
+    var freePrice = document.getElementById("free_price")
+    var freeNumber = document.getElementById("freeNumber")
+    var startDate = document.getElementById("startdate")
+    var endDate = document.getElementById("enddate")
+    var resultPrice = document.getElementById("result_price")
     var categories = JSON.parse(document.getElementById('categories').textContent);
     // set first price
     selectChange()
@@ -446,12 +451,14 @@ if cat.ID < 4 { fixCat=append(fixCat, cat) } else { freeCat=append(freeCat, cat)
 
     // toggle behaviour on changing category
     function selectChange() {
+      var membership = document.getElementById("membership")
+      console.log(membership.value)
       var id = fixCatSelect.value
 
       var price = 0
 
       // need to check for member here
-      if (membership.innerText == "true") {
+      if (membership.value == "true") {
         price = categories.find(x => x.ID == id).PriceMember;
       } else {
         price = categories.find(x => x.ID == id).Price;
@@ -476,7 +483,7 @@ if cat.ID < 4 { fixCat=append(fixCat, cat) } else { freeCat=append(freeCat, cat)
       if (Mondiff <= 0.5) {
         timeFactor = 0.5
       } else {
-        timeFactor = Math.ceil(Mondiff)
+        timeFactor = Math.round(Mondiff)
       }
 
       var basePrice = 0

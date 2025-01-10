@@ -47,5 +47,7 @@ func (m *Repository) HandleSelectMembership(w http.ResponseWriter, r *http.Reque
 		log.Println("could not get visitor from DB: ", err)
 	}
 
-	fmt.Fprint(w, strconv.FormatBool(visitor.Ressort.ID > 0))
+	returnString := fmt.Sprintf("<input type=\"hidden\" id=\"membership\" name=\"membership\" value=\"%s\" />", strconv.FormatBool(visitor.Ressort.ID > 0))
+
+	fmt.Fprint(w, returnString)
 }

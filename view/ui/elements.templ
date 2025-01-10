@@ -3,16 +3,16 @@ package ui
 import "github.com/faebut/prozessor_gostack/internal/models"
 
 templ MemberSelectBox(vID string, visitors []models.Visitor, pricing bool, member bool) {
-	<select id="member" name="member" class="select select-bordered w-full">
-		<option disabled selected>Mitglied auswählen</option>
-		for _, v := range visitors {
-			<option value={ v.ID } selected?={ v.ID==vID }>
-				{ v.FirstName } { v.FamilyName }, { v.City }
-			</option>
-		}
-	</select>
-	if pricing {
-		<script>
+<select id="member" name="member" class="select select-bordered w-full">
+  <option disabled selected>Mitglied auswählen</option>
+  for _, v := range visitors {
+  <option value={ v.ID } selected?={ v.ID==vID }>
+    { v.FirstName } { v.FamilyName }, { v.City }
+  </option>
+  }
+</select>
+if pricing {
+<script>
   memberSelectBox = document.querySelector("#member");
 
   memberSelectBox.addEventListener("change", function () {
@@ -20,18 +20,18 @@ templ MemberSelectBox(vID string, visitors []models.Visitor, pricing bool, membe
     htmx.ajax('GET', loc, '#pricing')
   })
 </script>
-	}
-	if member {
-		<script>
+}
+if member {
+<script>
   memberSelectBox = document.querySelector("#member");
 
   memberSelectBox.addEventListener("change", async function () {
     loc = "/admin/elements/member/" + memberSelectBox.value
-    await htmx.ajax('GET', loc, '#membership')
+    await htmx.ajax('GET', loc, {target: '#membership', swap: 'outerHTML'})
 
     selectChange();
     calcPrice();
   })
 </script>
-	}
+}
 }

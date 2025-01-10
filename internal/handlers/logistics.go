@@ -274,7 +274,7 @@ func (m *Repository) HandleLogisticsCreateAndEdit(w http.ResponseWriter, r *http
 			// get membership
 			member, err := strconv.ParseBool(r.Form.Get("membership"))
 			if err != nil {
-				log.Println("cannot parse bool", err)
+				log.Println("cannot parse membership", err)
 			}
 			newLogistic.Member = member
 
@@ -345,7 +345,7 @@ func calcPrice(start time.Time, end time.Time, unit float64) float64 {
 	if diffMonths <= 0.5 {
 		timeFactor = 0.5
 	} else {
-		timeFactor = math.Ceil(diffMonths)
+		timeFactor = math.Round(diffMonths)
 	}
 
 	return unit * timeFactor
