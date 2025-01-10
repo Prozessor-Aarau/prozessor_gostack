@@ -9,6 +9,7 @@ import (
 
 	"github.com/a-h/templ"
 	"github.com/faebut/prozessor_gostack/internal/forms"
+	"github.com/faebut/prozessor_gostack/internal/mailtemplates"
 	"github.com/faebut/prozessor_gostack/internal/models"
 	"github.com/faebut/prozessor_gostack/view/reminder"
 )
@@ -32,7 +33,7 @@ func (m *Repository) HandleReminderList(w http.ResponseWriter, r *http.Request) 
 		return err
 	}
 
-	return rendering(w, r, reminder.ReminderList(visitors, count))
+	return rendering(w, r, reminder.ReminderList(visitors, count, m.App.Reminder.Active))
 }
 
 // HandleReminderListPost handles the reminder list request before sending reminders and shows list for validation
@@ -86,13 +87,40 @@ func (m *Repository) sendReminder(visitors []models.ReminderVisitor) {
 
 	// Open new Channel to send data to the template.
 	log.Println("open new channel")
-	m.App.WaitMailChan = make(chan models.MailData, count)
+	m.App.Reminder.WaitList = make(chan models.MailData, count)
+	m.App.Reminder.Active = true
 
 	for i, v := range visitors {
-		log.Println(i, ":", v.Visitor.FirstName, v.Visitor.FamilyName)
+
+		// create template
+		template, err := mailtemplates.Reminder(v)
+		if err != nil {
+			log.Println("error creating template:", err)
+			return
+		}
+
+		// create model for mail
+		msg := models.MailData{
+			To:      v.Visitor.Email,
+			Subject: "Erneuerung Abonnement",
+			Content: template,
+		}
+
+		// Set date of reminder in DB, for those who already had an abonnement
+		if v.AboID > 0 {
+			err := m.DB.SetReminderDate(v)
+			if err != nil {
+				log.Println("error setting reminder date:", err)
+				return
+			}
+		}
+
+		// send to channel
+		m.App.MailChan <- msg
 
 		// put info in the channel to be read in frontend
-		m.App.WaitMailChan <- models.MailData{
+		m.App.Reminder.WaitList <- models.MailData{
+			Reason:     "Reminder",
 			Count:      count,
 			Progress:   i + 1,
 			FirstName:  v.Visitor.FirstName,
@@ -103,9 +131,11 @@ func (m *Repository) sendReminder(visitors []models.ReminderVisitor) {
 	}
 
 	log.Println("closing channel")
-	close(m.App.WaitMailChan)
+	m.App.Reminder.Active = false
+	close(m.App.Reminder.WaitList)
 }
 
+// HandleReminderProgressBar handles the SSE channel to send an updated progress bar for the sending of reminders
 func (m *Repository) HandleReminderProgressBar(w http.ResponseWriter, r *http.Request) {
 	// Set headers for SSE
 	w.Header().Set("Content-Type", "text/event-stream")
@@ -117,13 +147,12 @@ func (m *Repository) HandleReminderProgressBar(w http.ResponseWriter, r *http.Re
 	defer cancel()
 
 	// Send data to the client
-	for data := range m.App.WaitMailChan {
+	for data := range m.App.Reminder.WaitList {
 		select {
 		case <-r.Context().Done():
 			// Quit early if the client is no longer connected.
 			return
 		default:
-			log.Println("Now with:", data.FirstName)
 			template, err := templ.ToGoHTML(ctx, reminder.ReminderProgressBar(data))
 			if err != nil {
 				log.Println(err)

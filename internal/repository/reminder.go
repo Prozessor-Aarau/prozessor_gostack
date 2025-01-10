@@ -13,7 +13,7 @@ func (m *postgresDBRepo) AllToRemindVisitors() ([]models.ReminderVisitor, int, e
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	query := `SELECT v.id, first_name, family_name, v.email, v.ressort_id, b.number, a.buydate, a.buydate + INTERVAL '1 year' AS aboenddate, a.buydate + INTERVAL '1 year' >= CURRENT_DATE AS abovalid, DATE_PART('day', a.buydate + INTERVAL '1 year' - CURRENT_DATE) AS DateDifference, a.reminder
+	query := `SELECT v.id, first_name, family_name, v.email, v.ressort_id, b.number, a.id, a.buydate, a.buydate + INTERVAL '1 year' AS aboenddate, a.buydate + INTERVAL '1 year' >= CURRENT_DATE AS abovalid, DATE_PART('day', a.buydate + INTERVAL '1 year' - CURRENT_DATE) AS DateDifference, a.reminder
   FROM visitors v
   LEFT JOIN LATERAL 
     (SELECT * FROM abonnements 
@@ -26,7 +26,7 @@ func (m *postgresDBRepo) AllToRemindVisitors() ([]models.ReminderVisitor, int, e
   AND (buydate + INTERVAL '1 year' <= CURRENT_DATE + INTERVAL '30 days' OR buydate IS NULL)
   AND vp.partner_id IS NULL
   AND (a.reminder + INTERVAL '45 days' <= CURRENT_DATE OR a.reminder IS NULL)
-  GROUP BY v.id, a.buydate, b.number, a.reminder
+  GROUP BY v.id, a.id, a.buydate, b.number, a.reminder
   ORDER BY buydate ASC`
 
 	var visitors []models.ReminderVisitor
@@ -43,6 +43,7 @@ func (m *postgresDBRepo) AllToRemindVisitors() ([]models.ReminderVisitor, int, e
 
 		// start handling null types
 		var ressortID sql.NullInt16
+		var aboID sql.NullInt16
 		var buydate sql.NullTime
 		var enddate sql.NullTime
 		var abovalid sql.NullBool
@@ -56,6 +57,7 @@ func (m *postgresDBRepo) AllToRemindVisitors() ([]models.ReminderVisitor, int, e
 			&v.Visitor.Email,
 			&ressortID,
 			&v.BadgeNumber,
+			&aboID,
 			&buydate,
 			&enddate,
 			&abovalid,
@@ -66,6 +68,9 @@ func (m *postgresDBRepo) AllToRemindVisitors() ([]models.ReminderVisitor, int, e
 		// handling null types
 		if ressortID.Valid {
 			v.RessortID = int(ressortID.Int16)
+		}
+		if aboID.Valid {
+			v.AboID = int(aboID.Int16)
 		}
 		if buydate.Valid {
 			v.BuyDate = buydate.Time
@@ -95,4 +100,19 @@ func (m *postgresDBRepo) AllToRemindVisitors() ([]models.ReminderVisitor, int, e
 	}
 
 	return visitors, len(visitors), nil
+}
+
+// SetReminderDate sets the date in the db for the reminder
+func (m *postgresDBRepo) SetReminderDate(visitor models.ReminderVisitor) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	stmt := `UPDATE abonnements SET reminder = $1 WHERE id = $2`
+
+	_, err := m.DB.ExecContext(ctx, stmt, time.Now(), visitor.AboID)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

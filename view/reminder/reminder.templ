@@ -20,8 +20,11 @@ templ Reminder(visitor models.Visitor) {
 }
 }
 
-templ ReminderList(visitors []models.ReminderVisitor, count int) {
+templ ReminderList(visitors []models.ReminderVisitor, count int, sending bool) {
 {{ prm := ctx.Value("permission").(models.Role) }}
+if sending {
+@ReminderProgressPage()
+} else {
 if count > 0 {
 <form>
   @ui.CSRF()
@@ -89,7 +92,11 @@ if count > 0 {
             if !v.Reminder.IsZero() {
             { render.HumanDate(v.Reminder) }
             } else {
+            if v.BuyDate.IsZero() {
+            <span class="text-error">Reminder unklar</span>
+            } else {
             kein Reminder
+            }
             }
           </td>
         </tr>
@@ -119,6 +126,7 @@ if count > 0 {
 </script>
 } else {
 @layout.Warning("Keine offenen Reminder oder Reminder die älter als 45 Tage sind")
+}
 }
 }
 
@@ -186,7 +194,6 @@ templ ReminderCreateForm(visitors []models.ReminderVisitor) {
 }
 
 templ ReminderProgressPage() {
-<div class="w-full text-center text-2xl font-extrabold text-primary mb-6">Reminder werden versendet</div>
 <div id="progressbar" class="w-full" hx-ext="sse" sse-connect="/admin/reminder/progress" sse-swap="message"
   sse-close="stop"></div>
 }
@@ -194,7 +201,8 @@ templ ReminderProgressPage() {
 templ ReminderProgressBar(r models.MailData) {
 <div class="flex flex-col items-center gap-5 w-full">
   if r.Count > r.Progress {
-  <div class="prose">
+  <div class="flex flex-col items-center prose">
+    <h2 class="text-primary">Reminder werden versendet</h2>
     <h3 class="text-primary">{ strconv.Itoa(r.Progress) } / { strconv.Itoa(r.Count) }</h3>
   </div>
   <progress class="progress progress-primary w-56" value={ strconv.Itoa(r.Progress) } max={ strconv.Itoa(r.Count)
@@ -203,11 +211,8 @@ templ ReminderProgressBar(r models.MailData) {
     <h4 class="text-primary">Sende an: { r.FirstName } { r.FamilyName }</h4>
   </div>
   } else {
-  <div>
+  <div class="prose">
     <h2 class="text-success">Alle { strconv.Itoa(r.Count) } Reminder wurden versendet!</h2>
-  </div>
-  <div>
-    <span class="i-mdi-alert-circle-check text-2xl text-success"></span>
   </div>
   <a class="btn btn-primary" href="/admin/reminder">Zurück zur Liste</a>
   }

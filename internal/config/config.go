@@ -18,6 +18,9 @@ type AppConfig struct {
 	InProduction  bool
 	Session       *scs.SessionManager
 	MailChan      chan models.MailData
-	WaitMailChan  chan models.MailData
-	Slack         *slack.Slack
+	Reminder      struct {
+		WaitList chan models.MailData
+		Active   bool
+	}
+	Slack *slack.Slack
 }

@@ -72,6 +72,7 @@ type DatabaseRepo interface {
 	CreateReport(r models.Report) (int, error)
 	// reminder
 	AllToRemindVisitors() ([]models.ReminderVisitor, int, error)
+	SetReminderDate(visitor models.ReminderVisitor) error
 }
 
 type postgresDBRepo struct {

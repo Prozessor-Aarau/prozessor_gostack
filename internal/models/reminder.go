@@ -6,6 +6,7 @@ type ReminderVisitor struct {
 	Visitor     Visitor
 	RessortID   int
 	BadgeNumber int
+	AboID       int
 	BuyDate     time.Time
 	EndDate     time.Time
 	Valid       bool
