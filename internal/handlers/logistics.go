@@ -196,6 +196,7 @@ func (m *Repository) HandleLogisticsCreateAndEdit(w http.ResponseWriter, r *http
 			form.Errors.Add("free_price", "Nur Zahlen im Format 0.00 sind erlaubt")
 		}
 		newLogistic.UnitPrice = unitPrice
+		newLogistic.Paid = form.BoxValue("paid")
 		// parse dates
 		start, err := time.Parse("2006-01-02", r.Form.Get("startdate"))
 		if err != nil {
@@ -257,6 +258,7 @@ func (m *Repository) HandleLogisticsCreateAndEdit(w http.ResponseWriter, r *http
 			newLogistic.StartDate = start
 			end, _ := time.Parse("2006-01-02", r.Form.Get("enddate"))
 			newLogistic.EndDate = end
+			newLogistic.Paid = form.BoxValue("paid")
 
 			if !form.Valid() {
 				// get errors and then render form again
@@ -363,15 +365,15 @@ func (m *Repository) HandleLogisticsDelete(w http.ResponseWriter, r *http.Reques
 		return err
 	}
 
-  // check if there is a label that has to be deleted
-  if len(l.Label)>0 {
-    err := labels.DeleteLabel(l)
-    if err != nil {
-      return err
-    }
-  }
+	// check if there is a label that has to be deleted
+	if len(l.Label) > 0 {
+		err := labels.DeleteLabel(l)
+		if err != nil {
+			return err
+		}
+	}
 
-  // delete the logistic place
+	// delete the logistic place
 	err = m.DB.DeleteLogistic(id)
 	if err != nil {
 		log.Println("Error deleting logistics:", err)

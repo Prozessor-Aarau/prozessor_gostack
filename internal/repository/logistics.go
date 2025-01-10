@@ -54,7 +54,7 @@ func (m *postgresDBRepo) LogisticsByID(id int) (models.Logistic, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	query := `SELECT l.id, l.number, l.start_date, l.end_date, l.reminder, l.member, l.unit_price, l.price, l.label, c.id, c.cat_name, v.id, v.first_name, v.family_name, v.phone, v.email, l.created_on, l.updated_on
+	query := `SELECT l.id, l.number, l.start_date, l.end_date, l.reminder, l.member, l.unit_price, l.paid, l.price, l.label, c.id, c.cat_name, v.id, v.first_name, v.family_name, v.phone, v.email, l.created_on, l.updated_on
     FROM logistics l
     LEFT OUTER JOIN visitors v ON v.id = l.visitor_id
     LEFT OUTER JOIN logistics_categories c ON c.id = l.category
@@ -70,6 +70,7 @@ func (m *postgresDBRepo) LogisticsByID(id int) (models.Logistic, error) {
 	var reminder sql.NullTime
 	var member sql.NullBool
 	var unitPrice sql.NullFloat64
+	var paid sql.NullBool
 	var price sql.NullFloat64
 	var label sql.NullString
 	var visID sql.NullString
@@ -86,6 +87,7 @@ func (m *postgresDBRepo) LogisticsByID(id int) (models.Logistic, error) {
 		&reminder,
 		&member,
 		&unitPrice,
+		&paid,
 		&price,
 		&label,
 		&l.Category.ID,
@@ -114,6 +116,9 @@ func (m *postgresDBRepo) LogisticsByID(id int) (models.Logistic, error) {
 	}
 	if unitPrice.Valid {
 		l.UnitPrice = unitPrice.Float64
+	}
+	if paid.Valid {
+		l.Paid = paid.Bool
 	}
 	if price.Valid {
 		l.Price = price.Float64
@@ -203,7 +208,7 @@ func (m *postgresDBRepo) AllLogistics(page int, filter models.LogisticFilter) ([
 	offset := 10 * (page - 1)
 
 	query := fmt.Sprintf(
-		`SELECT l.id, l.number, l.start_date, l.end_date, l.reminder, l.member, l.price, c.id, c.cat_name, v.id, v.first_name, v.family_name, v.phone, v.email
+		`SELECT l.id, l.number, l.start_date, l.end_date, l.reminder, l.member, l.paid, l.price, c.id, c.cat_name, v.id, v.first_name, v.family_name, v.phone, v.email
     FROM logistics l
     LEFT OUTER JOIN visitors v ON v.id = l.visitor_id
     LEFT OUTER JOIN logistics_categories c ON c.id = l.category
@@ -238,6 +243,7 @@ func (m *postgresDBRepo) AllLogistics(page int, filter models.LogisticFilter) ([
 		var endDate sql.NullTime
 		var reminder sql.NullTime
 		var member sql.NullBool
+		var paid sql.NullBool
 		var price sql.NullFloat64
 		var visID sql.NullString
 		var firstName sql.NullString
@@ -252,6 +258,7 @@ func (m *postgresDBRepo) AllLogistics(page int, filter models.LogisticFilter) ([
 			&endDate,
 			&reminder,
 			&member,
+			&paid,
 			&price,
 			&l.Category.ID,
 			&l.Category.CatName,
@@ -274,6 +281,9 @@ func (m *postgresDBRepo) AllLogistics(page int, filter models.LogisticFilter) ([
 		}
 		if member.Valid {
 			l.Member = member.Bool
+		}
+		if paid.Valid {
+			l.Paid = paid.Bool
 		}
 		if price.Valid {
 			l.Price = price.Float64
@@ -308,8 +318,8 @@ func (m *postgresDBRepo) CreateLogistic(l models.Logistic) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	stmt := `INSERT INTO logistics (number, start_date, end_date, category, visitor_id, member, unit_price, price, created_on, updated_on)
-  VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`
+	stmt := `INSERT INTO logistics (number, start_date, end_date, category, visitor_id, member, unit_price, paid, price, created_on, updated_on)
+  VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`
 
 	_, err := m.DB.ExecContext(
 		ctx,
@@ -321,6 +331,7 @@ func (m *postgresDBRepo) CreateLogistic(l models.Logistic) error {
 		NewNullString(l.Visitor.ID),
 		l.Member,
 		l.UnitPrice,
+		l.Paid,
 		NewNullFloat64(l.Price),
 		time.Now(),
 		time.Now(),
@@ -346,9 +357,10 @@ func (m *postgresDBRepo) UpdateLogistic(l models.Logistic) error {
   visitor_id = $5, 
   member = $6, 
   unit_price = $7, 
-  price = $8, 
-  updated_on = $9
-  WHERE id = $10`
+  paid = $8, 
+  price = $9, 
+  updated_on = $10
+  WHERE id = $11`
 
 	_, err := m.DB.ExecContext(
 		ctx,
@@ -360,6 +372,7 @@ func (m *postgresDBRepo) UpdateLogistic(l models.Logistic) error {
 		NewNullString(l.Visitor.ID),
 		l.Member,
 		l.UnitPrice,
+		l.Paid,
 		NewNullFloat64(l.Price),
 		time.Now(),
 		l.ID,

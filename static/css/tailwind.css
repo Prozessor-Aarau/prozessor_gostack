@@ -4925,8 +4925,8 @@ details.collapse summary::-webkit-details-marker {
   grid-template-columns: repeat(6, minmax(0, 1fr));
 }
 
-.grid-cols-8 {
-  grid-template-columns: repeat(8, minmax(0, 1fr));
+.grid-cols-9 {
+  grid-template-columns: repeat(9, minmax(0, 1fr));
 }
 
 .grid-cols-subgrid {
