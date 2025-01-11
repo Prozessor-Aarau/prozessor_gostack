@@ -14,6 +14,7 @@ tmp/
 static/qr_codes/**
 static/labels/**
 static/uploads/**
+static/bills/**
 
 # Binaries for programs and plugins
 *.exe

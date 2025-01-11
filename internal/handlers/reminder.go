@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/a-h/templ"
+	"github.com/faebut/prozessor_gostack/internal/billing"
 	"github.com/faebut/prozessor_gostack/internal/forms"
 	"github.com/faebut/prozessor_gostack/internal/mailtemplates"
 	"github.com/faebut/prozessor_gostack/internal/models"
@@ -99,11 +100,54 @@ func (m *Repository) sendReminder(visitors []models.ReminderVisitor) {
 			return
 		}
 
+		// set amount
+		var amount float64
+		if v.RessortID > 0 {
+			amount = 320
+		} else {
+			amount = 400
+		}
+
+		// create new start date
+		var newStartDate time.Time
+		if !v.EndDate.IsZero() {
+			newStartDate = v.EndDate.AddDate(0, 0, 1)
+		} else {
+			// if there was no abo before, set it to the June 2024 date
+			newStartDate, _ = time.Parse("2006-01-02", "2024-06-01")
+		}
+
+		// create bill
+		file, err := billing.CreateBill(
+			models.BillData{
+				Visitor: v.Visitor,
+				Amount:  amount,
+				Infos: fmt.Sprintf(
+					"Jahresabonnement für %s %s, gültig ab: %s",
+					v.Visitor.FirstName,
+					v.Visitor.FamilyName,
+					newStartDate.Format("02.01.2006"),
+				),
+				Message: fmt.Sprintf(
+					"Abo %s %s",
+					v.Visitor.FirstName,
+					v.Visitor.FamilyName,
+				),
+			},
+			m.DB,
+		)
+
+		if err != nil {
+			log.Println("error creating bill:", err)
+			return
+		}
+
 		// create model for mail
 		msg := models.MailData{
 			To:      v.Visitor.Email,
 			Subject: "Erneuerung Abonnement",
 			Content: template,
+			File:    file,
 		}
 
 		// Set date of reminder in DB, for those who already had an abonnement

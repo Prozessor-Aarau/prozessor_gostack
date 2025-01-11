@@ -73,6 +73,9 @@ type DatabaseRepo interface {
 	// reminder
 	AllToRemindVisitors() ([]models.ReminderVisitor, int, error)
 	SetReminderDate(visitor models.ReminderVisitor) error
+	// billing
+	CreateBill(b models.BillData) (int, error)
+	SetBillPath(path string, id int) error
 }
 
 type postgresDBRepo struct {

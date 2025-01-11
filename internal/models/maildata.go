@@ -10,5 +10,6 @@ type MailData struct {
 	FamilyName string
 	Subject    string
 	Content    string
+	File       string
 	// Template string
 }

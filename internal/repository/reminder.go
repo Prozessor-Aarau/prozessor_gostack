@@ -13,7 +13,7 @@ func (m *postgresDBRepo) AllToRemindVisitors() ([]models.ReminderVisitor, int, e
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	query := `SELECT v.id, first_name, family_name, v.email, v.ressort_id, b.number, a.id, a.buydate, a.buydate + INTERVAL '1 year' AS aboenddate, a.buydate + INTERVAL '1 year' >= CURRENT_DATE AS abovalid, DATE_PART('day', a.buydate + INTERVAL '1 year' - CURRENT_DATE) AS DateDifference, a.reminder
+	query := `SELECT v.id, first_name, family_name, v.email, v.address, v.postcode, v.city, v.ressort_id, b.number, a.id, a.buydate, a.buydate + INTERVAL '1 year' AS aboenddate, a.buydate + INTERVAL '1 year' >= CURRENT_DATE AS abovalid, DATE_PART('day', a.buydate + INTERVAL '1 year' - CURRENT_DATE) AS DateDifference, a.reminder
   FROM visitors v
   LEFT JOIN LATERAL 
     (SELECT * FROM abonnements 
@@ -55,6 +55,9 @@ func (m *postgresDBRepo) AllToRemindVisitors() ([]models.ReminderVisitor, int, e
 			&v.Visitor.FirstName,
 			&v.Visitor.FamilyName,
 			&v.Visitor.Email,
+			&v.Visitor.Address,
+			&v.Visitor.Postcode,
+			&v.Visitor.City,
 			&ressortID,
 			&v.BadgeNumber,
 			&aboID,
