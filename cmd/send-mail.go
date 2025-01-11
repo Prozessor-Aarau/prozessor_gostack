@@ -66,6 +66,10 @@ func sendMsg(m models.MailData) {
 	email.SetFrom(from).AddTo(m.To).SetSubject(m.Subject)
 	email.SetBody(mail.TextHTML, m.Content)
 
+	if len(m.File) > 0 {
+		email.Attach(&mail.File{FilePath: m.File})
+	}
+
 	err = email.Send(client)
 	if err != nil {
 		log.Println(err)

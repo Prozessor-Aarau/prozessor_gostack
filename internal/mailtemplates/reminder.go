@@ -33,11 +33,18 @@ func Reminder(visitor models.ReminderVisitor) (string, error) {
 	if endDate.IsZero() {
 		msgAbo = `Du warst bis anhin oder zu einem früheren Zeitpunkt aktiv im Prozessor oder hast aus einem anderen Grund freien Zugang zu den Werkstätten erhalten. An der Vereins-GV vom 5. Mai 2024 wurde beschlossen, dass per 1. Juni 2024 alle Vereinsmitglieder Beitragspflichtig sind, sofern sie die Werkstatt ausserhalb der Öffnungszeiten für eigene Zwecke nutzen möchten.
     `
-		callToAction = `Wir möchten uns an dieser Stelle ganz herzilch für deinen Einsatz im Prozessor bedanken! Es würde uns riesig freuen, dich weiterhin als aktives Mitglied in einem der Ressorts beim Prozessor zu haben. 
-    <br><br>
-    Wenn du weiterhin aktiv im Verein aktiv sein möchtest, hast du die Möglichkeit vergünstigtes Abonnement zum Betrag von 320.- pro Jahr zu erstehen. Einen entsprechenden Einzahlungsschein ist der Email angehängt. 
-    <br><br>
-    Möchtest du den Prozessor mit deinem Einsatz unterstützen, nutzt die Werkstätten aber nicht privat, so bist du nicht beitragspflichtig. In diesem Fall darfst du dich gerne bei uns melden, wir passen das gerne in unserem System so an.`
+
+		if visitor.RessortID > 0 {
+			callToAction = `Wir möchten uns an dieser Stelle ganz herzilch für deinen Einsatz im Prozessor bedanken! Es würde uns riesig freuen, dich weiterhin als aktives Mitglied in einem der Ressorts beim Prozessor zu haben. 
+      <br><br>
+      Wenn du weiterhin aktiv im Verein aktiv sein möchtest, hast du die Möglichkeit vergünstigtes Abonnement zum Betrag von 320.- pro Jahr zu erstehen. Einen entsprechenden Einzahlungsschein ist der Email angehängt. 
+      <br><br>
+      Möchtest du den Prozessor mit deinem Einsatz unterstützen, nutzt die Werkstätten aber nicht privat, so bist du nicht beitragspflichtig. In diesem Fall darfst du dich gerne bei uns melden, wir passen das gerne in unserem System so an.`
+		} else {
+			callToAction = `Es würde uns freuen, dich weiterhin beim Prozessor zu haben. Du kannst für CHF 400.- ein Abonnement erstehen und behältst deinen Zugangsbadge. In diesem Fall bitten wir dich, den angehängten Einzahlungsschein innert 30 Tagen zu bezahlen.
+      <br><br>
+      Noch viel toller wärs, wenn du Teil vom Prozessor wirst und dich als aktives Vereinsmitglied in einem der Ressorts engagierst. In diesem Fall profitierst du von einem vergünstigten Abonnement für CHF 320.-. Nimm mit uns Kontakt auf, falls du den Prozessor aktiv mitgestalten möchtest. Wir senden dir dann gerne den Einzahlungsschein für das vergünstigte Abonnement zu.`
+		}
 
 		bringBack = fmt.Sprintf(
 			"bis spätestens am <strong>%s</strong>",

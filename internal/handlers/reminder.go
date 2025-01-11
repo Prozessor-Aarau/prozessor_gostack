@@ -120,6 +120,7 @@ func (m *Repository) sendReminder(visitors []models.ReminderVisitor) {
 		// create bill
 		file, err := billing.CreateBill(
 			models.BillData{
+				Purpose: "abonnement",
 				Visitor: v.Visitor,
 				Amount:  amount,
 				Infos: fmt.Sprintf(

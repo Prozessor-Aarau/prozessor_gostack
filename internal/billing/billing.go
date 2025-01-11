@@ -85,6 +85,9 @@ func CreateBill(data models.BillData, m repository.DatabaseRepo) (string, error)
 		return "", err
 	}
 
+	// set message to RG Number
+	bill.AdditionalInfo = fmt.Sprintf("RG%d: ", data.ID) + data.Message
+
 	// check if dirs exist, if not create them
 	filepath := "./static/bills/" + data.Purpose + "/"
 	if _, err := os.Stat("static/bills"); err != nil {
