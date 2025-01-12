@@ -77,6 +77,9 @@ type DatabaseRepo interface {
 	CreateBill(b models.BillData) (int, error)
 	SetBillPath(path string, id int) error
 	GetAllBills() ([]models.BillData, int, error)
+	GetBillByID(id int) (models.BillData, error)
+	GetBillCategories() ([]string, error)
+	SetBillPayment(b models.BillData) error
 }
 
 type postgresDBRepo struct {

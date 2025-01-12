@@ -23,7 +23,12 @@ func (m *Repository) HandleBillingIndex(w http.ResponseWriter, r *http.Request) 
 		return hxRedirect(w, r, "/admin/logout")
 	}
 
-	return rendering(w, r, bills.Bills(visitor))
+	categories, err := m.DB.GetBillCategories()
+	if err != nil {
+		return err
+	}
+
+	return rendering(w, r, bills.Bills(visitor, categories))
 }
 
 // HandleLogisticsList gets and returns the unfiltered logistics list
@@ -140,4 +145,31 @@ func (m *Repository) HandleBillingDelete(w http.ResponseWriter, r *http.Request)
 	}
 	// redirect on success
 	return hxRedirect(w, r, "/admin/logistics")
+}
+
+// HandleBillingPayment is the handler for changing the payment status
+func (m *Repository) HandleBillingPayment(w http.ResponseWriter, r *http.Request) error {
+	billStringID := r.Form.Get("id")
+
+	billID, err := strconv.Atoi(billStringID)
+	if err != nil {
+		log.Println("could not convert id to int:", err)
+		return err
+	}
+
+	bill, err := m.DB.GetBillByID(billID)
+	if err != nil {
+		log.Println("could not get bill from db:", err)
+		return err
+	}
+
+	bill.Paid = !bill.Paid
+
+	err = m.DB.SetBillPayment(bill)
+	if err != nil {
+		log.Println("could not set payment:", err)
+		return err
+	}
+
+	return rendering(w, r, bills.PayButton(bill))
 }

@@ -221,6 +221,7 @@ func routes(app *config.AppConfig) http.Handler {
 			mux.Get("/billing", handlers.Make(handlers.Repo.HandleBillingIndex))
 			mux.Get("/billing/list", handlers.Make(handlers.Repo.HandleBillingList))
 			mux.Post("/billing/list", handlers.Make(handlers.Repo.HandleBillingListFilter))
+			mux.Post("/billing/payment", handlers.Make(handlers.Repo.HandleBillingPayment))
 		})
 	})
 

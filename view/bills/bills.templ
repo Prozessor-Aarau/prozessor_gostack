@@ -5,22 +5,24 @@ import (
 "github.com/faebut/prozessor_gostack/internal/render"
 "github.com/faebut/prozessor_gostack/view/layout"
 "github.com/faebut/prozessor_gostack/view/ui"
+"golang.org/x/text/cases"
+"golang.org/x/text/language"
 "strconv"
 )
 
-templ Bills(visitor models.Visitor) {
+templ Bills(visitor models.Visitor, categories []string) {
 @layout.App(true, visitor) {
 <div class="prose mb-10">
   <h1>Rechnungen</h1>
 </div>
 <div id="content">
-  @billFilter()
+  @billFilter(categories)
   <div id="billsList" hx-get="/admin/billing/list" hx-trigger="load"></div>
 </div>
 }
 }
 
-templ billFilter() {
+templ billFilter(categories []string) {
 {{ prm := ctx.Value("permission").(models.Role) }}
 <div class="border-base-content border-opacity-20 border rounded-md dark:rounded-lg bg-base-100 my-4 p-4">
   <h2 class="font-bold text-xl mb-3">Suchfilter</h2>
@@ -43,20 +45,13 @@ templ billFilter() {
           <option value="paid">bezahlt</option>
         </select>
       </label>
-      <label class="form-control w-full max-w-xs col-span-full md:col-span-1">
-        <select name="validity" id="validity" class="select select-bordered">
-          <option value="all">Rechnungstyp (alle)</option>
-          <option value="valid">Noch gültig</option>
-          <option value="invalid">bereits abgelaufen</option>
+      <label class="form-control w-full max-w-xs col-span-full md:col-span-2">
+        <select name="type" id="type" class="select select-bordered">
+          <option value="0" selected>Rechnungstyp (alle)</option>
+          for _, c := range categories {
+          <option value={ c }>{ cases.Title(language.English, cases.NoLower).String(c) }</option>
+          }
         </select>
-      </label>
-      <label class="form-control w-full max-w-xs col-span-full md:col-span-1">
-        <!-- <select name="type" id="type" class="select select-bordered"> -->
-        <!-- 	<option value="0" selected>Typ (alle)</option> -->
-        <!-- 	for _, v := range categories { -->
-        <!-- 		<option value={ strconv.Itoa(v.ID) }>{ v.CatName }</option> -->
-        <!-- 	} -->
-        <!-- </select> -->
       </label>
       <div class="col-span-full md:col-span-1 grid grid-cols-2 justify-items-center justify-around gap-3">
         <button type="submit" hx-post="/admin/billing/list" hx-target="#logisticsList"
@@ -70,8 +65,8 @@ templ billFilter() {
   if prm.EditLogistics {
   <div class="border-base-content border-opacity-50 border-dashed border-t mt-4 pt-4">
     <button type="button" class="btn btn-secondary" hx-get="/admin/logistics/create" hx-target="#content">
-      Lagerplatz
-      hinzufügen
+      Rechnung
+      erstellen
     </button>
   </div>
   }
@@ -99,39 +94,39 @@ for _, b := range bills {
   <div class="col-span-4 md:col-span-2">{ b.FirstName } { b.FamilyName }</div>
   <div class="col-span-4 md:col-span-1 text-right">
     if b.Paid {
-    <span class="text-success">{ strconv.FormatFloat(b.Amount, 'f', 2, 64) } </span>
+    <span id={ "price_" + strconv.Itoa(b.ID) } class="text-success">
+      { strconv.FormatFloat(b.Amount, 'f', 2, 64) }
+    </span>
     } else {
-    <span class="text-error">{ strconv.FormatFloat(b.Amount, 'f', 2, 64) } </span>
+    <span id={ "price_" + strconv.Itoa(b.ID) } class="text-error">{ strconv.FormatFloat(b.Amount, 'f', 2, 64) } </span>
     }
   </div>
   <div class="col-span-full md:col-span-7">
     { b.Infos }
   </div>
-  <div class="col-span-full md:col-span-1 flex gap-3 justify-center md:justify-end items-center">
+  <form class="col-span-full md:col-span-1 flex gap-3 justify-center md:justify-end items-center">
+    @ui.CSRF()
+    <input name="id" type="hidden" value={ strconv.Itoa(b.ID) } />
+    <!-- download button -->
     <a class="btn btn-sm btn-circle btn-info" href={ templ.URL("/static/bills/" + b.Purpose + "/" + b.FileName) }
       target="_blank">
       <span class="i-mdi-download"></span>
     </a>
+    <!-- edit button -->
     <a class={ "btn btn-sm btn-circle btn-disabled" , templ.KV("btn-disabled", !prm.EditFinances) }
       hx-get={ "/admin/billing/" + strconv.Itoa(b.ID) } hx-target="#content">
       <span class="i-mdi-lead-pencil"></span>
     </a>
-    if b.Paid {
-    <a class={ "btn btn-sm btn-circle btn-error" , templ.KV("btn-disabled", !prm.EditFinances) }
-      hx-post={ "/admin/billing/" + strconv.Itoa(b.ID) } hx-target="#content">
-      <span class="i-mdi-cash-remove"></span>
-    </a>
-    } else {
-    <a class={ "btn btn-sm btn-circle btn-success" , templ.KV("btn-disabled", !prm.EditFinances) }
-      hx-post={ "/admin/billing/" + strconv.Itoa(b.ID) } hx-target="#content">
-      <span class="i-mdi-cash-check"></span>
-    </a>
-    }
-    <a class={ "btn btn-sm btn-circle btn-error" , templ.KV("btn-disabled", !prm.EditFinances) }
+    <!-- change payment status -->
+    <div id={ "paybutton_" + strconv.Itoa(b.ID) }>
+      @PayButton(b)
+    </div>
+    <!-- delete button -->
+    <a class={ "btn btn-sm btn-circle btn-error btn-outline" , templ.KV("btn-disabled", !prm.EditFinances) }
       hx-post={ "/admin/billing/" + strconv.Itoa(b.ID) } hx-target="#content">
       <span class="i-mdi-delete"></span>
     </a>
-  </div>
+  </form>
 </div>
 }
 @pagination(pages, onpage, filter)
@@ -139,6 +134,31 @@ for _, b := range bills {
 <div class="my-10">
   @layout.Warning("keine Suchergebnisse")
 </div>
+}
+}
+
+templ PayButton(b models.BillData) {
+{{ prm := ctx.Value("permission").(models.Role) }}
+if b.Paid {
+<!-- price -->
+<span id={ "price_" + strconv.Itoa(b.ID) } class="text-success" hx-swap-oob={ "outerHTML:#price_" + strconv.Itoa(b.ID)
+  }>{ strconv.FormatFloat(b.Amount, 'f', 2, 64) } </span>
+<!-- button -->
+<a class={ "btn btn-sm btn-circle btn-error" , templ.KV("btn-disabled", !prm.EditFinances) }
+  hx-post="/admin/billing/payment" hx-target={ "#paybutton_" + strconv.Itoa(b.ID) }>
+  <span class="i-mdi-cash-remove"></span>
+</a>
+} else {
+<!-- price -->
+<span id={ "price_" + strconv.Itoa(b.ID) } class="text-error" hx-swap-oob={ "outerHTML:#price_" + strconv.Itoa(b.ID) }>
+  {
+  strconv.FormatFloat(b.Amount, 'f', 2, 64) }
+</span>
+<!-- button -->
+<a class={ "btn btn-sm btn-circle btn-success" , templ.KV("btn-disabled", !prm.EditFinances) }
+  hx-post="/admin/billing/payment" hx-target={ "#paybutton_" + strconv.Itoa(b.ID) }>
+  <span class="i-mdi-cash-check"></span>
+</a>
 }
 }
 
