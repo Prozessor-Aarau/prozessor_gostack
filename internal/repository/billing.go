@@ -436,3 +436,19 @@ func (m *postgresDBRepo) SetBillPayment(b models.BillData) error {
 
 	return nil
 }
+
+// DeleteBill deletes a bill by id
+func (m *postgresDBRepo) DeleteBill(id int) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	stmt := "DELETE FROM billing WHERE id = $1"
+
+	_, err := m.DB.ExecContext(ctx, stmt, id)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

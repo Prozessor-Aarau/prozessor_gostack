@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/faebut/prozessor_gostack/internal/labels"
+	"github.com/faebut/prozessor_gostack/internal/billing"
 	"github.com/faebut/prozessor_gostack/internal/models"
 	"github.com/faebut/prozessor_gostack/view/bills"
 	"github.com/go-chi/chi/v5"
@@ -116,28 +116,30 @@ func (m *Repository) HandleBillingDelete(w http.ResponseWriter, r *http.Request)
 		return err
 	}
 
-	l, err := m.DB.LogisticsByID(id)
+	bill, err := m.DB.GetBillByID(id)
 	if err != nil {
-		log.Println("could not get logistic from DB: ", err)
+		log.Println("could not get bill from DB: ", err)
 		return err
 	}
 
-	// check if there is a label that has to be deleted
-	if len(l.Label) > 0 {
-		err := labels.DeleteLabel(l)
+	// check if there is an invoice that has to be deleted
+	if len(bill.FileName) > 0 {
+		err := billing.DeleteBill(bill)
 		if err != nil {
 			return err
 		}
 	}
 
 	// delete the logistic place
-	err = m.DB.DeleteLogistic(id)
+	err = m.DB.DeleteBill(id)
 	if err != nil {
-		log.Println("Error deleting logistics:", err)
+		log.Println("Error deleting bill:", err)
 		return err
 	}
-	// redirect on success
-	return hxRedirect(w, r, "/admin/logistics")
+
+	// return empty string
+	fmt.Fprint(w, "")
+	return nil
 }
 
 // HandleBillingPayment is the handler for changing the payment status

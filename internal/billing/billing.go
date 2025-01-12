@@ -118,3 +118,13 @@ func CreateBill(data models.BillData, m repository.DatabaseRepo) (string, error)
 
 	return combinedPath, nil
 }
+
+// DeleteBill deletes a bill from the disk
+func DeleteBill(data models.BillData) error {
+	// delete file
+	if err := os.Remove(fmt.Sprintf("./static/bills/%s/%s", data.Purpose, data.FileName)); err != nil {
+		return fmt.Errorf("warning: failed to delete bill: %v", err)
+	}
+
+	return nil
+}

@@ -80,6 +80,7 @@ type DatabaseRepo interface {
 	GetBillByID(id int) (models.BillData, error)
 	GetBillCategories() ([]string, error)
 	SetBillPayment(b models.BillData) error
+	DeleteBill(id int) error
 }
 
 type postgresDBRepo struct {
