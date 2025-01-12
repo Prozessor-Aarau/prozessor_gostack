@@ -39,7 +39,7 @@ templ billFilter(categories []string) {
         </button>
       </label>
       <label class="form-control w-full max-w-xs col-span-full md:col-span-1">
-        <select name="inuse" id="inuse" class="select select-bordered">
+        <select name="payment" id="inuse" class="select select-bordered">
           <option value="all">Bezahlstatus (alle)</option>
           <option value="unpaid">offen</option>
           <option value="paid">bezahlt</option>
@@ -47,14 +47,14 @@ templ billFilter(categories []string) {
       </label>
       <label class="form-control w-full max-w-xs col-span-full md:col-span-2">
         <select name="type" id="type" class="select select-bordered">
-          <option value="0" selected>Rechnungstyp (alle)</option>
+          <option value="all" selected>Rechnungstyp (alle)</option>
           for _, c := range categories {
           <option value={ c }>{ cases.Title(language.English, cases.NoLower).String(c) }</option>
           }
         </select>
       </label>
       <div class="col-span-full md:col-span-1 grid grid-cols-2 justify-items-center justify-around gap-3">
-        <button type="submit" hx-post="/admin/billing/list" hx-target="#logisticsList"
+        <button type="submit" hx-post="/admin/billing/list" hx-target="#billsList"
           class="btn btn-success btn-outline btn-circle"><span class="i-mdi-magnify text-xl"></span></button>
         <a href="/admin/billing" class="btn btn-error btn-outline btn-circle">
           <span class="i-mdi-close text-xl"></span>
@@ -62,9 +62,9 @@ templ billFilter(categories []string) {
       </div>
     </div>
   </form>
-  if prm.EditLogistics {
+  if prm.AddFinances {
   <div class="border-base-content border-opacity-50 border-dashed border-t mt-4 pt-4">
-    <button type="button" class="btn btn-secondary" hx-get="/admin/logistics/create" hx-target="#content">
+    <button type="button" class="btn btn-secondary btn-disabled" hx-get="/admin/billing/create" hx-target="#content">
       Rechnung
       erstellen
     </button>
@@ -166,19 +166,19 @@ templ pagination(pages int, onpage int, filter string) {
 {{ pagesslice := render.Iterate(pages) }}
 <div class="grid justify-items-center">
   <div class="join pt-6">
-    <button class={ "join-item btn" , templ.KV("btn-disabled", onpage==1) } hx-target="#logisticsList"
-      hx-get={ "/admin/logistics/list?page=" + strconv.Itoa(onpage-1) + filter }>«</button>
+    <button class={ "join-item btn" , templ.KV("btn-disabled", onpage==1) } hx-target="#billsList"
+      hx-get={ "/admin/billing/list?page=" + strconv.Itoa(onpage-1) + filter }>«</button>
     for _, p := range pagesslice {
     switch p {
     case 1, pages, onpage, onpage+1, onpage-1:
-    <button class={ "join-item btn" , templ.KV("btn-primary", onpage==p) } hx-target="#logisticsList"
-      hx-get={ "/admin/logistics/list?page=" + strconv.Itoa(p) + filter }>{ strconv.Itoa(p) }</button>
+    <button class={ "join-item btn" , templ.KV("btn-primary", onpage==p) } hx-target="#billsList"
+      hx-get={ "/admin/billing/list?page=" + strconv.Itoa(p) + filter }>{ strconv.Itoa(p) }</button>
     case onpage+2, onpage-2:
     <button class="join-item btn btn-disabled">.</button>
     }
     }
-    <button class={ "join-item btn" , templ.KV("btn-disabled", onpage==pages) } hx-target="#logisticsList"
-      hx-get={ "/admin/logistics/list?page=" + strconv.Itoa(onpage+1) + filter }>»</button>
+    <button class={ "join-item btn" , templ.KV("btn-disabled", onpage==pages) } hx-target="#billsList"
+      hx-get={ "/admin/billing/list?page=" + strconv.Itoa(onpage+1) + filter }>»</button>
   </div>
 </div>
 }

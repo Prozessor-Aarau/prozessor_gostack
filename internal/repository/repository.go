@@ -76,7 +76,7 @@ type DatabaseRepo interface {
 	// billing
 	CreateBill(b models.BillData) (int, error)
 	SetBillPath(path string, id int) error
-	GetAllBills() ([]models.BillData, int, error)
+	GetAllBills(page int, filter models.BillFilter) ([]models.BillData, int, error)
 	GetBillByID(id int) (models.BillData, error)
 	GetBillCategories() ([]string, error)
 	SetBillPayment(b models.BillData) error

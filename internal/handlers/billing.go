@@ -10,7 +10,6 @@ import (
 	"github.com/faebut/prozessor_gostack/internal/labels"
 	"github.com/faebut/prozessor_gostack/internal/models"
 	"github.com/faebut/prozessor_gostack/view/bills"
-	"github.com/faebut/prozessor_gostack/view/logistics"
 	"github.com/go-chi/chi/v5"
 )
 
@@ -35,45 +34,41 @@ func (m *Repository) HandleBillingIndex(w http.ResponseWriter, r *http.Request) 
 func (m *Repository) HandleBillingList(w http.ResponseWriter, r *http.Request) error {
 	// set initial params
 	page := 1
-	// filter := models.NewLogisticFilter("")
+	filter := models.NewBillFilter("")
 
 	// check if page param has been submitted and change to this values
-	// if r.URL.Query().Has("page") {
-	// 	page, _ = strconv.Atoi(r.URL.Query().Get("page"))
-	// }
-	// if r.URL.Query().Has("search") {
-	// 	filter = models.NewLogisticFilter(r.URL.Query().Get("search"))
-	// }
-	// if r.URL.Query().Has("validity") {
-	// 	filter.Validity = r.URL.Query().Get("validity")
-	// }
-	// if r.URL.Query().Has("inuse") {
-	// 	filter.InUse = r.URL.Query().Get("inuse")
-	// }
-	// if r.URL.Query().Has("type") {
-	// 	filter.Type, _ = strconv.Atoi(r.URL.Query().Get("type"))
-	// }
+	if r.URL.Query().Has("page") {
+		page, _ = strconv.Atoi(r.URL.Query().Get("page"))
+	}
+	if r.URL.Query().Has("search") {
+		filter = models.NewBillFilter(r.URL.Query().Get("search"))
+	}
+	if r.URL.Query().Has("payment") {
+		filter.Payment = r.URL.Query().Get("payment")
+	}
+	if r.URL.Query().Has("type") {
+		filter.Type = r.URL.Query().Get("type")
+	}
 
-	billsList, count, err := m.DB.GetAllBills()
+	billsList, count, err := m.DB.GetAllBills(page, filter)
 	if err != nil {
 		log.Println("could not get bills from DB: ", err)
 		return err
 	}
 
 	// make url search string
-	// urlSearchString := fmt.Sprintf(
-	// 	"&search=%s&validity=%s&inuse=%s&type=%d",
-	// 	filter.Filter,
-	// 	filter.Validity,
-	// 	filter.InUse,
-	// 	filter.Type,
-	// )
+	urlSearchString := fmt.Sprintf(
+		"&search=%s&payment=%s&type=%s",
+		filter.Filter,
+		filter.Payment,
+		filter.Type,
+	)
 
 	return rendering(w, r, bills.BillsList(
 		billsList,
 		int(math.Ceil(float64(count)/10)),
 		page,
-		"",
+		urlSearchString,
 	))
 }
 
@@ -82,33 +77,31 @@ func (m *Repository) HandleBillingListFilter(w http.ResponseWriter, r *http.Requ
 	// set initial params
 	// need empty filter to get logistics
 	filterString := r.Form.Get("filter_string")
-	filter := models.NewLogisticFilter(filterString)
-	filter.InUse = r.Form.Get("inuse")
-	filter.Validity = r.Form.Get("validity")
-	filter.Type, _ = strconv.Atoi(r.Form.Get("type"))
+	filter := models.NewBillFilter(filterString)
+	filter.Payment = r.Form.Get("payment")
+	filter.Type = r.Form.Get("type")
 
 	page := 1
 	if r.URL.Query().Has("page") {
 		page, _ = strconv.Atoi(r.URL.Query().Get("page"))
 	}
 
-	logisticsList, count, err := m.DB.AllLogistics(page, filter)
+	billsList, count, err := m.DB.GetAllBills(page, filter)
 	if err != nil {
-		log.Println("could not get logistics from DB: ", err)
+		log.Println("could not get bills from DB: ", err)
 		return err
 	}
 
 	// make url search string
 	urlSearchString := fmt.Sprintf(
-		"&search=%s&validity=%s&inuse=%s&type=%d",
+		"&search=%s&payment=%s&type=%s",
 		filter.Filter,
-		filter.Validity,
-		filter.InUse,
+		filter.Payment,
 		filter.Type,
 	)
 
-	return rendering(w, r, logistics.LogisticsList(
-		logisticsList,
+	return rendering(w, r, bills.BillsList(
+		billsList,
 		int(math.Ceil(float64(count)/10)),
 		page,
 		urlSearchString,

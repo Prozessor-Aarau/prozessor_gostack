@@ -73,3 +73,17 @@ func NewLogisticFilter(search string) LogisticFilter {
 		Type:     0,
 	}
 }
+
+type BillFilter struct {
+	Filter  string
+	Payment string
+	Type    string
+}
+
+func NewBillFilter(search string) BillFilter {
+	return BillFilter{
+		Filter:  search,
+		Payment: "all",
+		Type:    "all",
+	}
+}

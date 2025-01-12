@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"time"
 
 	"github.com/faebut/prozessor_gostack/internal/models"
@@ -80,17 +81,71 @@ func (m *postgresDBRepo) SetBillPath(path string, id int) error {
 }
 
 // GetAllBills gets all bills
-func (m *postgresDBRepo) GetAllBills() ([]models.BillData, int, error) {
+func (m *postgresDBRepo) GetAllBills(page int, filter models.BillFilter) ([]models.BillData, int, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
 	var bills []models.BillData
+	var count int
 
-	query := `SELECT b.id, b.purpose, b.with_address, b.first_name, b.family_name, b.street, b.number, b.postcode, b.city, b.infos, b.with_message, b.message, b.with_reference, b.reference, b.file_name, b.paid, b.amount, b.created_on, b.updated_on, v.id, v.first_name, v.family_name, v.address, v.postcode, v.city, v.ressort_id
+	// prepare filters
+	search := "%" + filter.Filter + "%"
+	payment := ""
+	bType := ""
+
+	// check if there are filters and set where clauses
+	switch filter.Payment {
+	case "paid":
+		payment = "AND b.paid = true"
+	case "unpaid":
+		payment = "AND b.paid = false"
+	}
+
+	if filter.Type != "all" {
+		bType = fmt.Sprintf("AND b.purpose = '%s'", filter.Type)
+	}
+
+	countQuery := fmt.Sprintf(`SELECT count(*) 
   FROM billing b
-  LEFT OUTER JOIN visitors v ON v.id = b.visitor_id`
+    WHERE (b.id::varchar(20) LIKE LOWER($1)
+    OR LOWER(b.family_name) LIKE LOWER($1) 
+    OR LOWER(b.first_name) LIKE LOWER($1))
+    %s
+    %s
+  `,
+		payment,
+		bType,
+	)
 
-	rows, err := m.DB.QueryContext(ctx, query)
+	// set count to 0
+	row := m.DB.QueryRowContext(ctx, countQuery, search)
+
+	err := row.Scan(&count)
+
+	if err != nil {
+		return bills, count, err
+	}
+
+	offset := 10 * (page - 1)
+
+	query := fmt.Sprintf(`SELECT b.id, b.purpose, b.with_address, b.first_name, b.family_name, b.street, b.number, b.postcode, b.city, b.infos, b.with_message, b.message, b.with_reference, b.reference, b.file_name, b.paid, b.amount, b.created_on, b.updated_on, v.id, v.first_name, v.family_name, v.address, v.postcode, v.city, v.ressort_id
+  FROM billing b
+  LEFT OUTER JOIN visitors v ON v.id = b.visitor_id
+    WHERE (b.id::varchar(20) LIKE LOWER($1)
+    OR LOWER(b.family_name) LIKE LOWER($1) 
+    OR LOWER(b.first_name) LIKE LOWER($1))
+    %s
+    %s
+    ORDER BY 
+    b.updated_on DESC
+    OFFSET $2
+    LIMIT 10  
+  `,
+		payment,
+		bType,
+	)
+
+	rows, err := m.DB.QueryContext(ctx, query, search, offset)
 	if err != nil {
 		return bills, 0, err
 	}
@@ -208,7 +263,7 @@ func (m *postgresDBRepo) GetAllBills() ([]models.BillData, int, error) {
 		return bills, 0, err
 	}
 
-	return bills, len(bills), nil
+	return bills, count, nil
 }
 
 // GetBillByID gets a bill by id
