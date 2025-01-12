@@ -206,6 +206,7 @@ func routes(app *config.AppConfig) http.Handler {
 			mux.Post("/reminder/list", handlers.Make(handlers.Repo.HandleReminderListPost))
 			mux.Post("/reminder/confirm", handlers.Make(handlers.Repo.HandleReminderSend))
 			mux.Get("/reminder/progress", handlers.Repo.HandleReminderProgressBar)
+			mux.Get("/reminder/preview/{id}", handlers.Make(handlers.Repo.HandleReminderPreview))
 		})
 
 		// statistics

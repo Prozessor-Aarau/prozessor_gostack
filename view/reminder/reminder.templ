@@ -177,7 +177,8 @@ templ ReminderCreateForm(visitors []models.ReminderVisitor) {
             }
           </td>
           <td>
-            <button type="button" class="btn btn-ghost btn-sm">anzeigen</button>
+            <button type="button" class="btn btn-ghost btn-sm" hx-get={ "/admin/reminder/preview/" + v.Visitor.ID }
+              hx-target="#preview" hx-swap="innerHTML">anzeigen</button>
           </td>
         </tr>
         }
@@ -191,6 +192,7 @@ templ ReminderCreateForm(visitors []models.ReminderVisitor) {
   }
   <a href="/admin/reminder" class="btn btn-warning">Abbrechen</a>
 </form>
+<div id="preview" class="my-8"></div>
 }
 
 templ ReminderProgressPage() {
@@ -216,5 +218,16 @@ templ ReminderProgressBar(r models.MailData) {
   </div>
   <a class="btn btn-primary" href="/admin/reminder">Zurück zur Liste</a>
   }
+</div>
+}
+
+templ ReminderPreview(template string) {
+<div class="prose mb-6">
+  <h2>Preview</h2>
+</div>
+<div class="mockup-window bg-base-300 border w-full">
+  <div class="flex justify-center p-4" data-theme="light">
+    @templ.Raw(template)
+  </div>
 </div>
 }

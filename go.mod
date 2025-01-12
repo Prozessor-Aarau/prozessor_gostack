@@ -23,6 +23,7 @@ require (
 	github.com/yeqown/go-qrcode/v2 v2.2.4
 	github.com/yeqown/go-qrcode/writer/standard v1.2.4
 	golang.org/x/crypto v0.27.0
+	golang.org/x/net v0.28.0
 	gopkg.in/yaml.v2 v2.4.0
 )
 

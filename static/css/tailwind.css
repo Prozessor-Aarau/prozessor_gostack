@@ -2116,6 +2116,22 @@ html {
   justify-self: end;
 }
 
+.mockup-window {
+  position: relative;
+  overflow: hidden;
+  overflow-x: auto;
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--rounded-box, 1rem);
+  padding-top: 1.25rem;
+}
+
+.mockup-window pre[data-prefix]:before {
+  content: attr(data-prefix);
+  display: inline-block;
+  text-align: right;
+}
+
 .modal {
   pointer-events: none;
   position: fixed;
@@ -3254,6 +3270,25 @@ details.collapse summary::-webkit-details-marker {
 .menu :where(li > .menu-dropdown-toggle.menu-dropdown-show):after {
   transform: rotate(225deg);
   margin-top: 0;
+}
+
+.mockup-window:before {
+  content: "";
+  margin-bottom: 1rem;
+  display: block;
+  aspect-ratio: 1 / 1;
+  height: 0.75rem;
+  flex-shrink: 0;
+  align-self: flex-start;
+  border-radius: 9999px;
+  opacity: 0.3;
+  box-shadow: 1.4em 0,
+        2.8em 0,
+        4.2em 0;
+}
+
+.mockup-window:where([dir="rtl"], [dir="rtl"] *):before {
+  align-self: flex-end;
 }
 
 .mockup-browser .mockup-browser-toolbar .input {
@@ -4826,6 +4861,11 @@ details.collapse summary::-webkit-details-marker {
   margin-bottom: 1.5rem;
 }
 
+.my-8 {
+  margin-top: 2rem;
+  margin-bottom: 2rem;
+}
+
 .mb-0 {
   margin-bottom: 0px;
 }
@@ -4848,6 +4888,10 @@ details.collapse summary::-webkit-details-marker {
 
 .mb-5 {
   margin-bottom: 1.25rem;
+}
+
+.mb-6 {
+  margin-bottom: 1.5rem;
 }
 
 .ml-3 {

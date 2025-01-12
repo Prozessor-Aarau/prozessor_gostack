@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"log"
@@ -13,6 +14,8 @@ import (
 	"github.com/faebut/prozessor_gostack/internal/mailtemplates"
 	"github.com/faebut/prozessor_gostack/internal/models"
 	"github.com/faebut/prozessor_gostack/view/reminder"
+	"github.com/go-chi/chi/v5"
+	"golang.org/x/net/html"
 )
 
 // HandleReminderIndex is the reminder page handler
@@ -211,4 +214,51 @@ func (m *Repository) HandleReminderProgressBar(w http.ResponseWriter, r *http.Re
 	// send event to stop listening
 	fmt.Fprint(w, "event: stop\ndata: stop\n\n")
 	w.(http.Flusher).Flush()
+}
+
+// HandleReminderPreview handles the preview of a reminder
+func (m *Repository) HandleReminderPreview(w http.ResponseWriter, r *http.Request) error {
+	id := chi.URLParam(r, "id")
+
+	visitor, err := m.DB.VisitorByID(id)
+	if err != nil {
+		log.Println("could not get visitor from DB: ", err)
+		return err
+	}
+
+	buydate, err := time.Parse("2006-01-02", visitor.AboLast.BuyDate)
+	if err != nil {
+		log.Println("cannot parse buydate", err)
+		return err
+	}
+
+	enddate := buydate.AddDate(1, 0, 0)
+
+	v := models.ReminderVisitor{
+		Visitor:   visitor,
+		RessortID: visitor.Ressort.ID,
+		EndDate:   enddate,
+	}
+
+	var b bytes.Buffer
+	var node *html.Node
+
+	node, err = html.Parse(bytes.NewBufferString("<body>"))
+	if err != nil {
+		log.Println("making bytes of template:", err)
+		return err
+	}
+
+	// create template
+	template, err := mailtemplates.Reminder(v)
+
+	b = *bytes.NewBuffer([]byte(template))
+	if err != nil {
+		log.Println("error creating buffer from template:", err)
+		return err
+	}
+
+	html.Render(&b, node)
+
+	return rendering(w, r, reminder.ReminderPreview(b.String()))
 }
