@@ -98,19 +98,19 @@ templ Navigation(visitor models.Visitor) {
 						</li>
 					}
 					if prm.ViewFinances {
-						<!-- <li> -->
-						<!-- <details> -->
-						<!--   <summary>Buchhaltung</summary> -->
-						<!--   <ul> -->
-						<!--     <li> -->
-						<!--       <a href="/admin/">Tagesabrechnungen</a> -->
-						<!--     </li> -->
-						<!--     <li> -->
-						<!--       <a href="/admin/">Rechnungen</a> -->
-						<!--     </li> -->
-						<!--   </ul> -->
-						<!-- </details> -->
-						<!-- </li> -->
+						<li>
+							<details>
+								<summary>Buchhaltung</summary>
+								<ul>
+									<!-- <li> -->
+									<!--   <a href="/admin/">Tagesabrechnungen</a> -->
+									<!-- </li> -->
+									<li>
+										<a href="/admin/billing">Rechnungen</a>
+									</li>
+								</ul>
+							</details>
+						</li>
 					}
 					if prm.ViewStatistics || prm.ViewLogs {
 						<li>

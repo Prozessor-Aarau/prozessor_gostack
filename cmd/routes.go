@@ -213,6 +213,14 @@ func routes(app *config.AppConfig) http.Handler {
 			mux.Use(CheckPermission("ViewStatistics"))
 			mux.Get("/statistics", handlers.Make(handlers.Repo.HandleStatisticsIndex))
 		})
+
+		// finances
+		mux.Group(func(mux chi.Router) {
+			mux.Use(CheckPermission("ViewFinances"))
+			mux.Get("/billing", handlers.Make(handlers.Repo.HandleBillingIndex))
+			mux.Get("/billing/list", handlers.Make(handlers.Repo.HandleBillingList))
+			mux.Post("/billing/list", handlers.Make(handlers.Repo.HandleBillingListFilter))
+		})
 	})
 
 	return mux

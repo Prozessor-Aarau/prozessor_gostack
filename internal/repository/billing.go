@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"database/sql"
 	"time"
 
 	"github.com/faebut/prozessor_gostack/internal/models"
@@ -76,4 +77,135 @@ func (m *postgresDBRepo) SetBillPath(path string, id int) error {
 	}
 
 	return nil
+}
+
+func (m *postgresDBRepo) GetAllBills() ([]models.BillData, int, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	var bills []models.BillData
+
+	query := `SELECT b.id, b.purpose, b.with_address, b.first_name, b.family_name, b.street, b.number, b.postcode, b.city, b.infos, b.with_message, b.message, b.with_reference, b.reference, b.file_name, b.paid, b.amount, b.created_on, b.updated_on, v.id, v.first_name, v.family_name, v.address, v.postcode, v.city, v.ressort_id
+  FROM billing b
+  LEFT OUTER JOIN visitors v ON v.id = b.visitor_id`
+
+	rows, err := m.DB.QueryContext(ctx, query)
+	if err != nil {
+		return bills, 0, err
+	}
+
+	defer rows.Close()
+
+	for rows.Next() {
+		var b models.BillData
+
+		// start handling null types
+		var aFirstName sql.NullString
+		var aFamilyName sql.NullString
+		var aStreet sql.NullString
+		var aNumber sql.NullString
+		var aPostcode sql.NullString
+		var aCity sql.NullString
+		var message sql.NullString
+		var reference sql.NullString
+		var filename sql.NullString
+		var visitorID sql.NullString
+		var vFirstName sql.NullString
+		var vFamilyName sql.NullString
+		var vAddress sql.NullString
+		var vPostcode sql.NullString
+		var vCity sql.NullString
+		var vRessortID sql.NullInt32
+
+		err := rows.Scan(
+			&b.ID,
+			&b.Purpose,
+			&b.WithAddress,
+			&aFirstName,
+			&aFamilyName,
+			&aStreet,
+			&aNumber,
+			&aPostcode,
+			&aCity,
+			&b.Infos,
+			&b.WithMessage,
+			&message,
+			&b.WithReference,
+			&reference,
+			&filename,
+			&b.Paid,
+			&b.Amount,
+			&b.CreatedOn,
+			&b.UpdatedOn,
+			&visitorID,
+			&vFirstName,
+			&vFamilyName,
+			&vAddress,
+			&vPostcode,
+			&vCity,
+			&vRessortID,
+		)
+
+		if err != nil {
+			return bills, 0, err
+		}
+
+		// handling null types
+		if aFirstName.Valid {
+			b.FirstName = aFirstName.String
+		}
+		if aFamilyName.Valid {
+			b.FamilyName = aFamilyName.String
+		}
+		if aStreet.Valid {
+			b.Street = aStreet.String
+		}
+		if aNumber.Valid {
+			b.Number = aNumber.String
+		}
+		if aPostcode.Valid {
+			b.Postcode = aPostcode.String
+		}
+		if aCity.Valid {
+			b.City = aPostcode.String
+		}
+		if message.Valid {
+			b.Message = message.String
+		}
+		if reference.Valid {
+			b.Reference = reference.String
+		}
+		if filename.Valid {
+			b.FileName = filename.String
+		}
+		if visitorID.Valid {
+			b.Visitor.ID = visitorID.String
+		}
+		if vFirstName.Valid {
+			b.Visitor.FirstName = vFirstName.String
+		}
+		if vFamilyName.Valid {
+			b.Visitor.FamilyName = vFamilyName.String
+		}
+		if vAddress.Valid {
+			b.Visitor.Address = vAddress.String
+		}
+		if vPostcode.Valid {
+			b.Visitor.Postcode = vPostcode.String
+		}
+		if vCity.Valid {
+			b.Visitor.City = vCity.String
+		}
+		if vRessortID.Valid {
+			b.Visitor.Ressort.ID = int(vRessortID.Int32)
+		}
+
+		bills = append(bills, b)
+	}
+
+	if err = rows.Err(); err != nil {
+		return bills, 0, err
+	}
+
+	return bills, len(bills), nil
 }
