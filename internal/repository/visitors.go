@@ -408,6 +408,153 @@ func (m *postgresDBRepo) VisitorByID(id string) (models.Visitor, error) {
 	return v, nil
 }
 
+// UpdateVisitor updates a visitor
+func (m *postgresDBRepo) UpdateVisitor(v models.Visitor) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	stmt := `UPDATE visitors 
+  SET first_name = $1, 
+  family_name = $2, 
+  birthdate = $3, 
+  phone = $4,
+  email = $5, 
+  address = $6, 
+  postcode = $7, 
+  city = $8, 
+  infos = $9, 
+  newsletter = $10, 
+  password = $11, 
+  avatar = $12,
+  ressort_id = $13,
+  role_id = $14,
+  updated_on = $15
+  WHERE id = $16`
+
+	_, err := m.DB.ExecContext(ctx, stmt,
+		v.FirstName,
+		v.FamilyName,
+		v.Birthdate,
+		NewNullString(v.Phone),
+		NewNullString(strings.ToLower(v.Email)),
+		v.Address,
+		v.Postcode,
+		v.City,
+		NewNullString(v.Infos),
+		v.Newsletter,
+		NewNullString(v.Password),
+		NewNullString(v.Avatar),
+		NewNullInt(v.Ressort.ID),
+		NewNullInt(v.RoleID),
+		time.Now(),
+		v.ID,
+	)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// checks if email is unique
+func (m *postgresDBRepo) CheckEmailUnique(email string) (bool, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	query := `SELECT * FROM visitors WHERE email = $1`
+
+	rows, err := m.DB.QueryContext(ctx, query, email)
+	if err != nil {
+		return false, err
+	}
+
+	defer rows.Close()
+
+	// return true, if there is no record set with the same email
+	if !rows.Next() {
+		return true, nil
+	}
+
+	return false, nil
+}
+
+// GetAllVisitors gets all visitors and returns also count
+func (m *postgresDBRepo) CheckinAllVisitors(
+	page int,
+	filter models.VisitorFilter,
+) ([]models.Visitor, int, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	var visitors []models.Visitor
+	var count int
+
+	search := "%" + filter.SearchString + "%"
+
+	// set count to result
+	row := m.DB.QueryRowContext(ctx, `SELECT COUNT(*) FROM visitors
+  WHERE (LOWER(first_name) LIKE LOWER($1)
+  OR LOWER(family_name) LIKE LOWER($1) 
+  OR LOWER(city) LIKE LOWER($1))
+  AND visitors.id NOT IN (
+    SELECT visitor_id
+    FROM visits
+    WHERE DATE(date_in) = CURRENT_DATE)
+`, search)
+
+	err := row.Scan(&count)
+
+	if err != nil {
+		return visitors, count, err
+	}
+
+	offset := 10 * (page - 1)
+
+	query := `SELECT visitors.id, first_name, family_name, city
+  FROM visitors
+  WHERE (LOWER(first_name) LIKE LOWER($1)
+  OR LOWER(family_name) LIKE LOWER($1) 
+  OR LOWER(city) LIKE LOWER($1))
+  AND visitors.id NOT IN (
+    SELECT visitor_id
+    FROM visits
+    WHERE DATE(date_in) = CURRENT_DATE)
+  ORDER BY 
+   family_name ASC
+  OFFSET $2
+  LIMIT 10
+  `
+	rows, err := m.DB.QueryContext(ctx, query, search, offset)
+	if err != nil {
+		return visitors, 0, err
+	}
+
+	defer rows.Close()
+
+	for rows.Next() {
+		var v models.Visitor
+
+		err := rows.Scan(
+			&v.ID,
+			&v.FirstName,
+			&v.FamilyName,
+			&v.City,
+		)
+
+		if err != nil {
+			return visitors, 0, err
+		}
+		visitors = append(visitors, v)
+	}
+
+	if err = rows.Err(); err != nil {
+		return visitors, count, err
+	}
+
+	return visitors, count, nil
+}
+
 // CheckCreateLogin checks an email against a uid to make sure this visitor
 // can create a new login
 func (m *postgresDBRepo) CheckCreateLogin(email, uid string) (models.Visitor, error) {
