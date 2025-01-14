@@ -147,24 +147,17 @@ func (m *Repository) HandleProfileEdit(w http.ResponseWriter, r *http.Request) e
 	profileToEdit.Phone = strings.TrimSpace(r.Form.Get("phone"))
 	profileToEdit.Infos = strings.TrimSpace(r.Form.Get("infos"))
 
-	ressortString := r.Form.Get("ressort")
-
-	if len(ressortString) > 0 {
-		ressort, err := strconv.Atoi(ressortString)
-		if err != nil {
-			log.Println("error converting string to int", err)
-		}
-		profileToEdit.Ressort.ID = ressort
+	ressort, err := strconv.Atoi(r.Form.Get("ressort"))
+	if err != nil {
+		log.Println("error converting string to int", err)
 	}
+	profileToEdit.Ressort.ID = ressort
 
 	roleID, err := strconv.Atoi(r.Form.Get("role"))
 	if err != nil {
 		log.Println("Could not convert roleID to int")
 	}
-
-	if roleID > 0 {
-		profileToEdit.RoleID = roleID
-	}
+	profileToEdit.RoleID = roleID
 
 	// validation
 	form := forms.New(r.PostForm)

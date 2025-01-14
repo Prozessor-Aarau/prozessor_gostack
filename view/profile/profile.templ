@@ -211,7 +211,7 @@ referer string) {
       <span class="label-text">Ressort für Mitgliedschaft auswählen</span>
     </div>
     <select id="ressort" name="ressort" class="select select-bordered w-full">
-      <option disabled selected value="0">Ressort auswählen</option>
+      <option selected value="0">kein Ressort</option>
       for _,r := range ressorts {
       <option value={ strconv.Itoa(r.ID) } selected?={ r.ID==profile.Ressort.ID }>{ r.RessortName }</option>
       }
@@ -224,7 +224,7 @@ referer string) {
       <span class="label-text">Zugangs-Level auswählen</span>
     </div>
     <select id="role" name="role" class="select select-bordered w-full ">
-      <option disabled selected value="0">Rolle auswählen</option>
+      <option selected value="0">keine Rolle</option>
       for _, r := range roles {
       <option value={ strconv.Itoa(r.ID) } selected?={ profile.RoleID==r.ID }>{ r.RoleName }</option>
       }
