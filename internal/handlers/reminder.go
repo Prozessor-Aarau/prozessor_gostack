@@ -226,13 +226,17 @@ func (m *Repository) HandleReminderPreview(w http.ResponseWriter, r *http.Reques
 		return err
 	}
 
-	buydate, err := time.Parse("2006-01-02", visitor.AboLast.BuyDate)
-	if err != nil {
-		log.Println("cannot parse buydate", err)
-		return err
-	}
+	var buydate time.Time
+	var enddate time.Time
 
-	enddate := buydate.AddDate(1, 0, 0)
+	if len(visitor.AboLast.BuyDate) > 0 {
+		buydate, err = time.Parse("2006-01-02", visitor.AboLast.BuyDate)
+		if err != nil {
+			log.Println("cannot parse buydate", err)
+			return err
+		}
+		enddate = buydate.AddDate(1, 0, 0)
+	}
 
 	v := models.ReminderVisitor{
 		Visitor:   visitor,
