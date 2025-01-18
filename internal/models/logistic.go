@@ -5,8 +5,8 @@ import "time"
 type LogisticCategory struct {
 	ID          int
 	CatName     string
-	Price       int
-	PriceMember int
+	Price       float64
+	PriceMember float64
 	UpdatedOn   time.Time
 	CreatedOn   time.Time
 }
