@@ -31,7 +31,7 @@ func Reminder(visitor models.ReminderVisitor) (string, error) {
 
 	// check if there ever was an abonnement
 	if endDate.IsZero() {
-		msgAbo = `Du warst bis anhin oder zu einem früheren Zeitpunkt aktiv im Prozessor oder hast aus einem anderen Grund freien Zugang zu den Werkstätten erhalten. An der Vereins-GV vom 5. Mai 2024 wurde beschlossen, dass per 1. Juni 2024 alle Vereinsmitglieder Beitragspflichtig sind, sofern sie die Werkstatt ausserhalb der Öffnungszeiten für eigene Zwecke nutzen möchten.
+		msgAbo = `Du warst bis anhin oder zu einem früheren Zeitpunkt aktiv im Prozessor oder hast aus einem anderen Grund freien Zugang zu den Werkstätten erhalten. An der Vereins-GV vom 5. Mai 2024 wurde beschlossen, dass per 1. Juni 2024 alle Vereinsmitglieder beitragspflichtig sind, sofern sie die Werkstatt ausserhalb der Öffnungszeiten für eigene Zwecke nutzen möchten.
     `
 
 		if visitor.RessortID > 0 {
