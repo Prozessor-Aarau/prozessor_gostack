@@ -89,7 +89,8 @@ func (m *postgresDBRepo) MachineByID(id string) (models.Machine, error) {
     array_agg(rp.fatal) AS report_fatal, 
     array_agg(rp.solved) AS report_solved, 
     array_agg(rp.report_info) AS report_info, 
-    array_agg(rp.report_reporter) AS report_reporter
+    array_agg(rp.report_reporter) AS report_reporter,
+    array_agg(DATE(rp.updated_on)) AS updated_on
   FROM machines m
   LEFT OUTER JOIN ressorts r ON r.id = m.ressort_id
   LEFT OUTER JOIN reports rp ON rp.machine_id = m.id
@@ -107,7 +108,7 @@ func (m *postgresDBRepo) MachineByID(id string) (models.Machine, error) {
 	var info []sql.NullString
 	var reporter []sql.NullString
 	// TODO this does not seem to be possible
-	// var updated []sql.NullTime
+	var updated []sql.NullString
 
 	err := row.Scan(
 		&machine.ID,
@@ -123,7 +124,7 @@ func (m *postgresDBRepo) MachineByID(id string) (models.Machine, error) {
 		pq.Array(&solved),
 		pq.Array(&info),
 		pq.Array(&reporter),
-		// pq.Array(&updated),
+		pq.Array(&updated),
 	)
 
 	if err != nil {
@@ -138,6 +139,11 @@ func (m *postgresDBRepo) MachineByID(id string) (models.Machine, error) {
 		for i := range reportID {
 			var reportString string
 
+			updatedOn, err := time.Parse("2006-01-02", updated[i].String)
+			if err != nil {
+				return models.Machine{}, err
+			}
+
 			if reporter[i].Valid {
 				reportString = reporter[i].String
 			}
@@ -148,6 +154,7 @@ func (m *postgresDBRepo) MachineByID(id string) (models.Machine, error) {
 				Solved:         solved[i].Bool,
 				ReportInfo:     info[i].String,
 				ReportReporter: reportString,
+				UpdatedOn:      updatedOn,
 			})
 		}
 

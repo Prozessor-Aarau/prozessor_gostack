@@ -17,9 +17,7 @@ func (m *Repository) HandleReportIndex(w http.ResponseWriter, r *http.Request) e
 	// get machine to pass it to the template
 	machine, err := m.DB.MachineByID(id)
 	if err != nil {
-		// TODO better error handling
-		log.Println(err)
-		return nil
+		return err
 	}
 
 	// render the template
@@ -30,9 +28,7 @@ func (m *Repository) HandleReportIndex(w http.ResponseWriter, r *http.Request) e
 func (m *Repository) HandleReportCreate(w http.ResponseWriter, r *http.Request) error {
 	err := r.ParseForm()
 	if err != nil {
-		log.Println(err)
-		// TODO better error handling
-		return nil
+		return err
 	}
 
 	var reportForm models.Report
@@ -47,9 +43,7 @@ func (m *Repository) HandleReportCreate(w http.ResponseWriter, r *http.Request) 
 	// get machine to pass it to the template
 	machine, err := m.DB.MachineByID(reportForm.MachineID)
 	if err != nil {
-		// TODO better error handling
-		log.Println(err)
-		return nil
+		return err
 	}
 
 	// assign machine to reportForm

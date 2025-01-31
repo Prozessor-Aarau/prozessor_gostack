@@ -1,128 +1,144 @@
 package report
 
 import (
-	"github.com/faebut/prozessor_gostack/internal/models"
-	"github.com/faebut/prozessor_gostack/view/layout"
-	"github.com/faebut/prozessor_gostack/view/ui"
+"github.com/faebut/prozessor_gostack/internal/models"
+"github.com/faebut/prozessor_gostack/view/layout"
+"github.com/faebut/prozessor_gostack/view/ui"
 )
 
 templ Report(m models.Machine) {
-	@layout.App(false, models.Visitor{}) {
-		<div class="prose p-4 container mx-auto flex flex-col gap-2 w-11/12 max-w-4xl">
-			<h2 class="mx-auto pt-6">Problem/Defekt melden</h2>
-			@ReportForm(models.Report{
-				MachineID:    m.ID,
-				MachineName:  m.MachineName,
-				SlackChannel: m.SlackChannel,
-				RessortName:  m.RessortName,
-			}, ReportErrors{})
-		</div>
-	}
+@layout.App(false, models.Visitor{}) {
+<div class="container mx-auto flex flex-col gap-2 max-w-4xl">
+  <div class="prose">
+    <h2 class="mx-auto pt-6">Problem/Defekt melden</h2>
+    <h3 class="col-span-4 mt-0">Maschine: { m.MachineName }</h3>
+    <h4 class="col-span-4">Ressort: { m.RessortName }</h4>
+  </div>
+  @existingReports(m.Reports)
+  @ReportForm(models.Report{
+  MachineID: m.ID,
+  SlackChannel: m.SlackChannel,
+  }, ReportErrors{})
+</div>
+}
+}
+
+templ existingReports(reports []models.Report) {
+{{
+unsolved := false
+for _, r := range reports {
+if !r.Solved {
+unsolved = true
+}
+}
+}}
+if len(reports) > 0 && unsolved {
+<div class="bg-base-200 collapse">
+  <input type="checkbox" class="peer" />
+  <div class="collapse-title bg-error text-error-content peer-checked:bg-base-200 peer-checked:text-base-content">
+    Dieses Gerät hat offene Meldungen!
+    <br />
+    (klicken zum ansehen)
+  </div>
+  <div class="collapse-content grid grid-cols-1 gap-3">
+    for _, r := range reports {
+    if !r.Solved {
+    <div class="w-full border border-dashed border-opacity-30 grid grid-cols-[60px_auto]">
+      <div class="col-span-1 p-3 flex items-center">
+        if r.Fatal {
+        <span class="i-mdi-alert text-5xl text-error"></span>
+        }
+      </div>
+      <div class="col-span-1 p-3">
+        <span class="font-bold">{ r.UpdatedOn.Format("02.01.2006") }:</span>
+        <br />
+        { r.ReportInfo }
+      </div>
+    </div>
+    }
+    }
+  </div>
+</div>
+}
 }
 
 type ReportErrors struct {
-	ReportInfo string
+ReportInfo string
 }
 
 type ReportParams struct {
-	MachineID      string
-	MachineName    string
-	SlackChannel   string
-	RessortName    string
-	Fatal          bool
-	ReportInfo     string
-	ReportReporter string
+MachineID string
+MachineName string
+SlackChannel string
+RessortName string
+Fatal bool
+ReportInfo string
+ReportReporter string
 }
 
 templ ReportForm(params models.Report, errors ReportErrors) {
-	<!-- start of Form -->
-	<form
-		class="grid grid-cols-4 gap-1 sm:gap-3 overflow-y-auto p-1"
-		hx-post="/report"
-		hx-swap="outerHTML"
-		hx-indicator="#spinner"
-		novalidate
-	>
-		@ui.CSRF()
-		<h3 class="col-span-4 mt-0">Maschine: { params.MachineName }</h3>
-		<h4 class="col-span-4">Ressort: { params.RessortName }</h4>
-		<input type="hidden" name="machine_id" value={ params.MachineID }/>
-		<label class="form-control col-span-4">
-			<div class="label">
-				<span class="label-text">Problem/Defekt <span class="text-error font-extrabold">*</span></span>
-			</div>
-			<textarea
-				id="report_infos"
-				name="report_infos"
-				class={ "textarea textarea-bordered h-24" ,
+<!-- start of Form -->
+<form class="grid grid-cols-4 gap-1 sm:gap-3 overflow-y-auto p-1 my-6" hx-post="/report" hx-swap="outerHTML"
+  hx-indicator="#spinner" novalidate>
+  @ui.CSRF()
+  <input type="hidden" name="machine_id" value={ params.MachineID } />
+  <label class="form-control col-span-4">
+    <div class="label">
+      <span class="label-text">Problem/Defekt <span class="text-error font-extrabold">*</span></span>
+    </div>
+    <textarea id="report_infos" name="report_infos" class={ "textarea textarea-bordered h-24" ,
       templ.KV("textarea-error", len(errors.ReportInfo)> 0) }
-				placeholder="Beschreibe deine Beobachtung: Was funktioniert nicht, was ist dir aufgefallen..."
-				value={ params.ReportInfo }
-				required
-			></textarea>
-			if len(errors.ReportInfo) > 0 {
-				<div class="label">
-					<span class="label-text text-error">{ errors.ReportInfo }</span>
-				</div>
-			}
-		</label>
-		<div class="form-control col-span-4">
-			<label class="label cursor-pointer">
-				<input
-					type="checkbox"
-					id="fatal"
-					name="fatal"
-					class="toggle toggle-primary mr-4"
-					if params.Fatal {
-						checked="checked"
-					}
-				/>
-				<span class="label-text">
-					Bitte auswählen, wenn du findest, dass die Maschine in diesem Zustand nicht mehr genutzt
-					werden sollte. Um die anderen Nutzenden zu schützen, darfst du hier lieber einmal zu viel als zu wenig
-					vorsichtig
-					sein.
-				</span>
-			</label>
-		</div>
-		<label class="form-control col-span-4">
-			<div class="label">
-				<span class="label-text">Kontaktmöglichkeit (freiwillig)</span>
-			</div>
-			<input
-				type="text"
-				id="report_reporter"
-				name="report_reporter"
-				class="input input-bordered"
-				value={ params.ReportReporter }
-				placeholder="Name, E-Mail oder Tel-Nr. usw."
-			/>
-		</label>
-		<div class="col-span-4 text-sm">
-			<span class="text-error font-extrabold">*</span> diese Felder sind zwingend
-			auszufüllen
-		</div>
-		<button class="btn btn-success col-span-4 mt-4">
-			<span>Meldung senden</span>
-			<span id="spinner" class="htmx-indicator">: ongoing...</span>
-		</button>
-	</form>
+      placeholder="Beschreibe deine Beobachtung: Was funktioniert nicht, was ist dir aufgefallen..."
+      value={ params.ReportInfo }
+      required
+      ></textarea>
+    if len(errors.ReportInfo) > 0 {
+    <div class="label">
+      <span class="label-text text-error">{ errors.ReportInfo }</span>
+    </div>
+    }
+  </label>
+  <div class="form-control col-span-4">
+    <label class="label cursor-pointer">
+      <input type="checkbox" id="fatal" name="fatal" class="toggle toggle-primary mr-4" if params.Fatal {
+        checked="checked" } />
+      <span class="label-text">
+        Maschine sollte in diesem Zustand nicht mehr genutzt werden.
+      </span>
+    </label>
+  </div>
+  <label class="form-control col-span-4">
+    <div class="label">
+      <span class="label-text">Kontaktmöglichkeit (freiwillig)</span>
+    </div>
+    <input type="text" id="report_reporter" name="report_reporter" class="input input-bordered" value={
+      params.ReportReporter } placeholder="Name, E-Mail oder Tel-Nr. usw." />
+  </label>
+  <div class="col-span-4 text-sm">
+    <span class="text-error font-extrabold">*</span> diese Felder sind zwingend
+    auszufüllen
+  </div>
+  <button class="btn btn-success col-span-4 mt-4">
+    <span>Meldung senden</span>
+    <span id="spinner" class="htmx-indicator">: ongoing...</span>
+  </button>
+</form>
 }
 
 templ ReportSuccess(fatal bool) {
-	@layout.App(false, models.Visitor{}) {
-		<div class="prose p-4 container mx-auto flex flex-col gap-2 w-11/12 max-w-4xl">
-			<h2 class="mx-auto pt-6">Vielen Dank für die Meldung!</h2>
-			if fatal {
-				<p>
-					Bitte kennzeichne die Maschine/das Gerät gut sichtbar als "Defekt", damit sie nicht weiter benutzt wird.
-				</p>
-			}
-			<p>
-				Das zuständige Ressort wird sich so bald wie möglich darum kümmern.
-			</p>
-			<p>Besuch unsere Webseite für mehr Infos zum Prozessor</p>
-			<a href="https://prozessor-aarau.ch" target="_top" class=" mx-auto btn btn-success">zur Prozessor-Webseite</a>
-		</div>
-	}
+@layout.App(false, models.Visitor{}) {
+<div class="prose p-4 container mx-auto flex flex-col gap-2 w-11/12 max-w-4xl">
+  <h2 class="mx-auto pt-6">Vielen Dank für die Meldung!</h2>
+  if fatal {
+  <p>
+    Bitte kennzeichne die Maschine/das Gerät gut sichtbar als "Defekt", damit sie nicht weiter benutzt wird.
+  </p>
+  }
+  <p>
+    Das zuständige Ressort wird sich so bald wie möglich darum kümmern.
+  </p>
+  <p>Besuch unsere Webseite für mehr Infos zum Prozessor</p>
+  <a href="https://prozessor-aarau.ch" target="_top" class=" mx-auto btn btn-success">zur Prozessor-Webseite</a>
+</div>
+}
 }
