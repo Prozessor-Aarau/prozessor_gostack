@@ -78,6 +78,8 @@ type DatabaseRepo interface {
 	GetBillCategories() ([]string, error)
 	SetBillPayment(b models.BillData) error
 	DeleteBill(id int) error
+	LogisticsByVisitorID(vID string) ([]models.Logistic, error)
+	UpdateLogisticsBillID(billID int, logistics []int) error
 }
 
 type postgresDBRepo struct {

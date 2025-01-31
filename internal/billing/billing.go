@@ -15,19 +15,19 @@ import (
 )
 
 // CreateBill creates a bill and returns the billdata including the path to the file
-func CreateBill(data models.BillData, m repository.DatabaseRepo) (string, error) {
+func CreateBill(data models.BillData, m repository.DatabaseRepo) (string, int, error) {
 
 	// create initial bill
 	bill, err := qrbill.New(false)
 	if err != nil {
 		log.Println(err)
-		return "", err
+		return "", 0, err
 	}
 
 	// read .env file
 	err = godotenv.Load()
 	if err != nil {
-		return "", err
+		return "", 0, err
 	}
 	// Set receiver options
 	bill.IsQrIBAN = false
@@ -82,7 +82,7 @@ func CreateBill(data models.BillData, m repository.DatabaseRepo) (string, error)
 	// create bill and return id
 	data.ID, err = m.CreateBill(data)
 	if err != nil {
-		return "", err
+		return "", 0, err
 	}
 
 	// set message to RG Number
@@ -107,16 +107,16 @@ func CreateBill(data models.BillData, m repository.DatabaseRepo) (string, error)
 	// Directly save invoice as PDF.
 	err = bill.SaveAsPDF(combinedPath)
 	if err != nil {
-		return "", err
+		return "", 0, err
 	}
 
 	// update filename in database
 	err = m.SetBillPath(data.FileName, data.ID)
 	if err != nil {
-		return "", err
+		return "", 0, err
 	}
 
-	return combinedPath, nil
+	return combinedPath, data.ID, nil
 }
 
 // DeleteBill deletes a bill from the disk

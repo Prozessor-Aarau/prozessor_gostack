@@ -22,11 +22,15 @@ func (m *Repository) HandleVisitorsSelectBox(w http.ResponseWriter, r *http.Requ
 	// Get the queryparams to send back to the right page
 	var pricing bool
 	var member bool
+	var logistics bool
 	if r.URL.Query().Has("pricing") {
 		pricing = true
 	}
 	if r.URL.Query().Has("member") {
 		member = true
+	}
+	if r.URL.Query().Has("logistics") {
+		logistics = true
 	}
 	// get filtered visitors from DB
 	visitors, _, err := m.DB.AllVisitors(1, 0, filter)
@@ -35,7 +39,7 @@ func (m *Repository) HandleVisitorsSelectBox(w http.ResponseWriter, r *http.Requ
 		return err
 	}
 
-	return rendering(w, r, ui.MemberSelectBox(visID, visitors, pricing, member))
+	return rendering(w, r, ui.MemberSelectBox(visID, visitors, pricing, member, logistics))
 }
 
 // HandleSelectMembership returns the membership from the select box

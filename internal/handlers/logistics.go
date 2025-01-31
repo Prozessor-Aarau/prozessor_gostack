@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"math"
@@ -8,8 +9,10 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/faebut/prozessor_gostack/internal/billing"
 	"github.com/faebut/prozessor_gostack/internal/forms"
 	"github.com/faebut/prozessor_gostack/internal/labels"
+	"github.com/faebut/prozessor_gostack/internal/mailtemplates"
 	"github.com/faebut/prozessor_gostack/internal/models"
 	"github.com/faebut/prozessor_gostack/view/logistics"
 	"github.com/go-chi/chi/v5"
@@ -196,7 +199,6 @@ func (m *Repository) HandleLogisticsCreateAndEdit(w http.ResponseWriter, r *http
 			form.Errors.Add("free_price", "Nur Zahlen im Format 0.00 sind erlaubt")
 		}
 		newLogistic.UnitPrice = unitPrice
-		newLogistic.Paid = form.BoxValue("paid")
 		// parse dates
 		start, err := time.Parse("2006-01-02", r.Form.Get("startdate"))
 		if err != nil {
@@ -258,7 +260,6 @@ func (m *Repository) HandleLogisticsCreateAndEdit(w http.ResponseWriter, r *http
 			newLogistic.StartDate = start
 			end, _ := time.Parse("2006-01-02", r.Form.Get("enddate"))
 			newLogistic.EndDate = end
-			newLogistic.Paid = form.BoxValue("paid")
 
 			if !form.Valid() {
 				// get errors and then render form again
@@ -461,4 +462,120 @@ func (m *Repository) HandleLogisticsLabelPrint(w http.ResponseWriter, r *http.Re
 	}
 
 	return rendering(w, r, logistics.SucessButton(l))
+}
+
+// HandleLogisticsCreateBillIndex is the handler for the logistic bill creation form
+func (m *Repository) HandleLogisticsCreateBillIndex(w http.ResponseWriter, r *http.Request) error {
+	return rendering(w, r, logistics.LogisticsBill())
+}
+
+// HandleLogisticsCreateBillIndex is the handler for the logistic bill creation form
+func (m *Repository) HandleLogisticsBillList(w http.ResponseWriter, r *http.Request) error {
+	// get visitor ID
+	vID := chi.URLParam(r, "id")
+
+	// get logistics by visitor id
+	logList, err := m.DB.LogisticsByVisitorID(vID)
+	if err != nil {
+		return err
+	}
+
+	// return an empty form
+	return rendering(w, r, logistics.BillList(logList, vID))
+}
+
+// HandleLogisticsCreateBillIndex is the handler for the logistic bill creation form
+func (m *Repository) HandleLogisticsCreateBillPost(w http.ResponseWriter, r *http.Request) error {
+	sending := r.URL.Query().Has("send")
+
+	vID := r.Form.Get("vid")
+
+	if len(vID) < 1 {
+		return errors.New("no visitor ID given")
+	}
+
+	// get visitor
+	visitor, err := m.DB.VisitorByID(vID)
+	if err != nil {
+		return err
+	}
+
+	// get logistics by visitor id
+	logList, err := m.DB.LogisticsByVisitorID(vID)
+	if err != nil {
+		return err
+	}
+
+	// check for all ids if the checkbox is checked and add visitor to new slice
+	form := forms.New(r.Form)
+	var selectedLogistics []models.Logistic
+	var total float64
+	var numString string
+	for _, l := range logList {
+		if form.BoxValue(strconv.Itoa(l.ID)) {
+			selectedLogistics = append(selectedLogistics, l)
+			// calculate total
+			total += l.Price
+			numString += "[" + strconv.Itoa(l.Number) + "]"
+		}
+	}
+
+	// create bill
+	file, billID, err := billing.CreateBill(
+		models.BillData{
+			Purpose: "lagerplatz",
+			Visitor: visitor,
+			Amount:  total,
+			Infos: fmt.Sprintf(
+				"Lagerplätze für %s %s, Plätze: %s",
+				visitor.FirstName,
+				visitor.FamilyName,
+				numString,
+			),
+			Message: fmt.Sprintf(
+				"Lagerplätze %s",
+				numString,
+			),
+		},
+		m.DB,
+	)
+
+	if err != nil {
+		return err
+	}
+
+	// create slice of int of ids from selected logs
+	var logSlice []int
+	for _, l := range selectedLogistics {
+		logSlice = append(logSlice, l.ID)
+	}
+
+	// write bill id to the logistics
+	err = m.DB.UpdateLogisticsBillID(billID, logSlice)
+
+	if err != nil {
+		return err
+	}
+
+	// if mail has to be send create mail and send it
+	if sending {
+		// get email template
+		template, err := mailtemplates.LogisticsBill(visitor, selectedLogistics)
+		if err != nil {
+			return err
+		}
+
+		// create mail
+		msg := models.MailData{
+			To:      visitor.Email,
+			Subject: "Rechnung Lagerplätze",
+			Content: template,
+			File:    file,
+		}
+
+		// send mail
+		m.App.MailChan <- msg
+	}
+
+	return nil
 }

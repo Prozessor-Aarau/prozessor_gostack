@@ -146,6 +146,10 @@ func routes(app *config.AppConfig) http.Handler {
 					"/logistics/{id}/label/print",
 					handlers.Make(handlers.Repo.HandleLogisticsLabelPrint),
 				)
+				mux.Get("/logistics/billing", handlers.Make(handlers.Repo.HandleLogisticsCreateBillIndex))
+				mux.Post("/logistics/billing", handlers.Make(handlers.Repo.HandleLogisticsCreateBillPost))
+				mux.Get("/logistics/billing/list", handlers.Make(handlers.Repo.HandleLogisticsBillList))
+				mux.Get("/logistics/billing/list/{id}", handlers.Make(handlers.Repo.HandleLogisticsBillList))
 			})
 		})
 
@@ -194,7 +198,7 @@ func routes(app *config.AppConfig) http.Handler {
 				mux.Post("/abonnements/create", handlers.Make(handlers.Repo.HandleAbonnementCreate))
 			})
 		})
-		// this is only the price, so no permission needed
+		// this is only basic info for selectboxes, so no permission needed
 		mux.Get("/elements/pricing/{id}", handlers.Repo.AbonnementCreatePrice)
 		mux.Get("/elements/member/{id}", handlers.Repo.HandleSelectMembership)
 

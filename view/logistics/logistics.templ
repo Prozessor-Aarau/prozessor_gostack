@@ -69,10 +69,14 @@ templ logisticsFilter(categories []models.LogisticCategory) {
     </div>
   </form>
   if prm.EditLogistics {
-  <div class="border-base-content border-opacity-50 border-dashed border-t mt-4 pt-4">
+  <div class="border-base-content border-opacity-50 border-dashed border-t mt-4 pt-4 flex gap-3">
     <button type="button" class="btn btn-secondary" hx-get="/admin/logistics/create" hx-target="#content">
       Lagerplatz
       hinzufügen
+    </button>
+    <button type="button" class="btn btn-primary" hx-get="/admin/logistics/billing" hx-target="#content">
+      Lagerplätze
+      verrechnen
     </button>
   </div>
   }
@@ -122,15 +126,24 @@ contact = l.Visitor.Email
   <div class="col-span-4 md:col-span-2 text-right md:text-left">
     { contact }
   </div>
-  <div class="col-span-full md:col-span-1 text-right md:text-left">
-    if l.Paid && l.Price > 0 {
+  <div class="col-span-full md:col-span-1 flex justify-end gap-3 items-center md:text-left">
+    if l.BillID > 0 {
+    if l.BillPaid {
     <span class="text-success">
       { strconv.FormatFloat(l.Price, 'f', 2, 64) }
     </span>
+    <span class="i-mdi-cash-check text-success text-lg"></span>
+    } else {
+    <span class="text-warning">
+      { strconv.FormatFloat(l.Price, 'f', 2, 64) }
+    </span>
+    <span class="i-mdi-cash-clock text-warning text-lg"></span>
+    }
     } else if l.Price > 0 {
     <span class="text-error">
       { strconv.FormatFloat(l.Price, 'f', 2, 64) }
     </span>
+    <span class="i-mdi-cash-remove text-error text-lg"></span>
     }
   </div>
   <div class="col-span-full md:col-span-1 flex justify-center md:justify-end items-center">
@@ -377,15 +390,6 @@ if cat.ID < 4 { fixCat=append(fixCat, cat) } else { freeCat=append(freeCat, cat)
         <span id="result_price" class=" text-secondary text-xl font-bold"></span>
       </div>
       <input type="hidden" id="membership" name="membership" value={ strconv.FormatBool(l.Member) } />
-    </div>
-    <div class="col-span-full md:col-span-1 prose">
-      <h3>Bezahlung</h3>
-      <label class="label cursor-pointer justify-start">
-        <input type="checkbox" id="paid" name="paid" class="checkbox mr-4" checked?={ l.Paid } />
-        <span class="label-text text-left">
-          Betrag bezahlt
-        </span>
-      </label>
     </div>
   </div>
   <!-- error handling for app and post buttons -->
@@ -644,4 +648,176 @@ if cat.ID < 4 { fixCat=append(fixCat, cat) } else { freeCat=append(freeCat, cat)
 
   templ ErrorButton(s string) {
   <div class="btn btn-error">{ s }</div>
+  }
+
+  templ LogisticsBill() {
+  <form class="grid grid-cols-2 items-center gap-3 ">
+    @ui.CSRF()
+    <div class="prose col-span-full">
+      <h2>Rechnung erstellen</h2>
+    </div>
+    <!-- form for all places -->
+    <div id="assignForm" class={ "col-span-full grid grid-cols-2 gap-3" }>
+      <form id="filterForm" class="mb-3 w-full col-span-2 md:col-span-1" novalidate>
+        @ui.CSRF()
+        <label class="input input-bordered flex items-center gap-2">
+          <span class="text-3xl i-mdi-magnify"></span>
+          <input hx-post={ "/admin/visitors/selectbox/?logistics" } hx-trigger="input changed delay:500ms, search"
+            hx-target="#memberSelect" placeholder="Suche nach Name, Vorname oder Ort..." type="search" id="search_term"
+            name="search_term" class="grow" />
+        </label>
+      </form>
+      <div hx-get={ "/admin/visitors/selectbox/" } hx-trigger="load" id="memberSelect"
+        class="mb-3 col-span-2 md:col-span-1"></div>
+    </div>
+    <!-- error handling for app and post buttons -->
+  </form>
+  <!-- list of logistic places that match -->
+  <div id="visitorID"></div>
+  <div id="logisticsBillList" hx-get="/admin/logistics/billing/list" hx-trigger="load"></div>
+  <div class="mt-4 flex justify-center w-full">
+    <a class="btn btn-warning" href="/admin/logistics">
+      Abbrechen
+    </a>
+  </div>
+  }
+
+  templ BillList(logistics []models.Logistic, vID string) {
+  <div class="prose col-span-full my-4">
+    <h3>Verrechenbare Plätze</h3>
+  </div>
+  if len(logistics)>0 {
+  <form>
+    @ui.CSRF()
+    <input name="vid" type="hidden" value={ vID } />
+    <div class="overflow-x-auto w-full">
+      <table class="table table-pin-cols table-pin-rows">
+        <!-- head -->
+        <thead>
+          <tr>
+            <th>
+              <label>
+                <input id="masterCheckBox" type="checkbox" class="checkbox" />
+              </label>
+            </th>
+            <th>Nr.</th>
+            <th>Kategorie</th>
+            <th>Startdatum</th>
+            <th>Enddatum</th>
+            <th class="text-right">Preis</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- start row -->
+          for _, l := range logistics {
+          <tr>
+            <th>
+              <label>
+                <input name={ strconv.Itoa(l.ID) } type="checkbox" class="checkbox slavecheckbox" />
+              </label>
+            </th>
+            <td>
+              { strconv.Itoa(l.Number) }
+            </td>
+            <td>
+              { l.Category.CatName }
+            </td>
+            <td>
+              { l.StartDate.Format("02.01.2006") }
+            </td>
+            <td>
+              { l.EndDate.Format("02.01.2006") }
+            </td>
+            <td class="text-right" id={ "price-" + strconv.Itoa(l.ID) }>
+              { strconv.FormatFloat(l.Price, 'f', 2, 64) }
+            </td>
+          </tr>
+          }
+          <tr class="bg-base-200">
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td class="font-bold text-right">
+              TOTAL
+            </td>
+            <td id="total" class="font-bold text-right">
+              0.00
+            </td>
+          </tr>
+          <!-- end row -->
+        </tbody>
+        <!-- foot -->
+      </table>
+    </div>
+    <div class="mt-6 flex gap-3 justify-center flex-col md:flex-row">
+      <button type="button" class="btn btn-primary sendbutton" hx-post="/admin/logistics/billing?send" disabled>
+        <span class="text-lg i-mdi-invoice-text-send"></span> Rechnung
+        versenden
+      </button>
+      <button type="button" class="btn btn-secondary sendbutton" hx-post="/admin/logistics/billing" disabled>
+        <span class="text-lg i-mdi-invoice-text-arrow-left"></span> Rechnung
+        nur speichern
+      </button>
+    </div>
+  </form>
+  <!-- script for list -->
+  <script>
+    var masterCheckBox = document.getElementById("masterCheckBox")
+    var allCheckBoxes = document.getElementsByClassName("slavecheckbox")
+    var sendButtons = document.getElementsByClassName("sendbutton")
+    var totalCell = document.getElementById("total")
+
+    masterCheckBox.addEventListener("change", () => {
+      if (masterCheckBox.checked) {
+        for (let i = 0; i < allCheckBoxes.length; i++) {
+          allCheckBoxes[i].checked = true
+        }
+      } else {
+        for (let i = 0; i < allCheckBoxes.length; i++) {
+          allCheckBoxes[i].checked = false
+        }
+      }
+      handleButtons()
+    });
+
+    for (let i = 0; i < allCheckBoxes.length; i++) {
+      allCheckBoxes[i].addEventListener("change", () => {
+        handleButtons()
+      })
+    }
+
+    // disable buttons or not, if something is selected
+    function handleButtons() {
+      var anyChecked = false
+      var total = 0.00
+
+      for (let i = 0; i < allCheckBoxes.length; i++) {
+        if (allCheckBoxes[i].checked) {
+          // set anyChecked to true if any checkbox is checked
+          anyChecked = true
+
+          // get price of checked bill and add it to total
+          var price = document.getElementById("price-" + allCheckBoxes[i].name)
+
+          total += parseFloat(price.innerText)
+        }
+      }
+
+      // set total field to calculated total
+      totalCell.innerHTML = total.toFixed(2)
+
+      // enable/disable buttons if a checkbox is checked
+      for (let i = 0; i < sendButtons.length; i++) {
+        if (anyChecked) {
+          sendButtons[i].disabled = false
+        } else {
+          sendButtons[i].disabled = true
+        }
+      }
+    }
+  </script>
+  } else {
+  @layout.Warning("Keine verrechenbare Plätze für Auswahl")
+  }
   }
