@@ -14,6 +14,7 @@ import (
 	"github.com/faebut/prozessor_gostack/internal/labels"
 	"github.com/faebut/prozessor_gostack/internal/mailtemplates"
 	"github.com/faebut/prozessor_gostack/internal/models"
+	"github.com/faebut/prozessor_gostack/view/layout"
 	"github.com/faebut/prozessor_gostack/view/logistics"
 	"github.com/go-chi/chi/v5"
 )
@@ -577,5 +578,13 @@ func (m *Repository) HandleLogisticsCreateBillPost(w http.ResponseWriter, r *htt
 		m.App.MailChan <- msg
 	}
 
-	return nil
+	// message string for success
+	var messageString string
+	if sending {
+		messageString = "Rechnung erfolgreich versendet."
+	} else {
+		messageString = "Rechnung erfolgreich gespeichert."
+	}
+
+	return rendering(w, r, layout.Success(messageString))
 }

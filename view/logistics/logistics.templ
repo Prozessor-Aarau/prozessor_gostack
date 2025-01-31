@@ -677,7 +677,7 @@ if cat.ID < 4 { fixCat=append(fixCat, cat) } else { freeCat=append(freeCat, cat)
   <div id="logisticsBillList" hx-get="/admin/logistics/billing/list" hx-trigger="load"></div>
   <div class="mt-4 flex justify-center w-full">
     <a class="btn btn-warning" href="/admin/logistics">
-      Abbrechen
+      Zurück zur Übersicht
     </a>
   </div>
   }
@@ -751,11 +751,13 @@ if cat.ID < 4 { fixCat=append(fixCat, cat) } else { freeCat=append(freeCat, cat)
       </table>
     </div>
     <div class="mt-6 flex gap-3 justify-center flex-col md:flex-row">
-      <button type="button" class="btn btn-primary sendbutton" hx-post="/admin/logistics/billing?send" disabled>
+      <button type="button" class="btn btn-primary sendbutton" hx-post="/admin/logistics/billing?send"
+        hx-target="#logisticsBillList" disabled>
         <span class="text-lg i-mdi-invoice-text-send"></span> Rechnung
         versenden
       </button>
-      <button type="button" class="btn btn-secondary sendbutton" hx-post="/admin/logistics/billing" disabled>
+      <button type="button" class="btn btn-secondary sendbutton" hx-post="/admin/logistics/billing"
+        hx-target="#logisticsBillList" disabled>
         <span class="text-lg i-mdi-invoice-text-arrow-left"></span> Rechnung
         nur speichern
       </button>

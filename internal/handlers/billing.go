@@ -130,7 +130,7 @@ func (m *Repository) HandleBillingDelete(w http.ResponseWriter, r *http.Request)
 		}
 	}
 
-	// delete the logistic place
+	// delete the delete
 	err = m.DB.DeleteBill(id)
 	if err != nil {
 		log.Println("Error deleting bill:", err)
