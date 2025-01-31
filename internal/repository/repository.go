@@ -67,6 +67,9 @@ type DatabaseRepo interface {
 	DeleteLogisticLabel(l models.Logistic) error
 	// reports
 	CreateReport(r models.Report) (int, error)
+	DeleteReport(id int) error
+	UpdateReportStatus(status bool, id int) error
+	ReportsByMachineID(id string) ([]models.Report, error)
 	// reminder
 	AllToRemindVisitors() ([]models.ReminderVisitor, int, error)
 	SetReminderDate(visitor models.ReminderVisitor) error

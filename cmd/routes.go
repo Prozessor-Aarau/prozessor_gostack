@@ -109,6 +109,9 @@ func routes(app *config.AppConfig) http.Handler {
 				"/machines/edit/{id}/qrcode/print",
 				handlers.Make(handlers.Repo.HandleMachinesQRPrint),
 			)
+			// edit reports
+			mux.Post("/machines/{id}/reports/{reportid}/{solved}", handlers.Make(handlers.Repo.HandleMachineUpdateReportStatus))
+			mux.Delete("/machines/{id}/reports/{reportid}", handlers.Make(handlers.Repo.HandleMachineDeleteReport))
 		})
 
 		// logistics

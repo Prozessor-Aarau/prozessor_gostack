@@ -418,3 +418,60 @@ func (m *Repository) HandleMachinesDelete(w http.ResponseWriter, r *http.Request
 	// if everything okay, go back to machines
 	return hxRedirect(w, r, "/admin/machines")
 }
+
+// HandleMachinesQRDelete handles the Machine QR code deletion
+func (m *Repository) HandleMachineUpdateReportStatus(w http.ResponseWriter, r *http.Request) error {
+	// get url params
+	machineID := chi.URLParam(r, "id")
+
+	reportID, err := strconv.Atoi(chi.URLParam(r, "reportid"))
+	if err != nil {
+		return err
+	}
+
+	solved, err := strconv.ParseBool(chi.URLParam(r, "solved"))
+	if err != nil {
+		return err
+	}
+
+	// set new solved-status in DB
+	err = m.DB.UpdateReportStatus(solved, reportID)
+	if err != nil {
+		return err
+	}
+
+	// get updated list of reports
+	reports, err := m.DB.ReportsByMachineID(machineID)
+	if err != nil {
+		return err
+	}
+
+	// render new list to frontend
+	return rendering(w, r, machines.ReportList(reports))
+}
+
+// HandleMachinesQRDelete handles the Machine QR code deletion
+func (m *Repository) HandleMachineDeleteReport(w http.ResponseWriter, r *http.Request) error {
+	// get url params
+	machineID := chi.URLParam(r, "id")
+
+	reportID, err := strconv.Atoi(chi.URLParam(r, "reportid"))
+	if err != nil {
+		return err
+	}
+
+	// set new solved-status in DB
+	err = m.DB.DeleteReport(reportID)
+	if err != nil {
+		return err
+	}
+
+	// get updated list of reports
+	reports, err := m.DB.ReportsByMachineID(machineID)
+	if err != nil {
+		return err
+	}
+
+	// render new list to frontend
+	return rendering(w, r, machines.ReportList(reports))
+}

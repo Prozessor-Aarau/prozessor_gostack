@@ -8,6 +8,7 @@ import (
 
 	"github.com/faebut/prozessor_gostack/internal/models"
 	"github.com/google/uuid"
+	"github.com/lib/pq"
 )
 
 // CreateBadge puts a new badge into the database
@@ -76,14 +77,37 @@ func (m *postgresDBRepo) MachineByID(id string) (models.Machine, error) {
 	defer cancel()
 
 	var machine models.Machine
-	query := `SELECT m.id, m.machine_name, m.created_on, m.updated_on, r.id, r.ressort_name, r.slack_channel, m.qr_code
+	query := `SELECT m.id, 
+    m.machine_name, 
+    m.created_on, 
+    m.updated_on, 
+    r.id, 
+    r.ressort_name, 
+    r.slack_channel, 
+    m.qr_code, 
+    array_agg(rp.id) AS report_id, 
+    array_agg(rp.fatal) AS report_fatal, 
+    array_agg(rp.solved) AS report_solved, 
+    array_agg(rp.report_info) AS report_info, 
+    array_agg(rp.report_reporter) AS report_reporter
   FROM machines m
   LEFT OUTER JOIN ressorts r ON r.id = m.ressort_id
+  LEFT OUTER JOIN reports rp ON rp.machine_id = m.id
   WHERE m.id = $1
+  GROUP BY m.id, r.id
   `
 	row := m.DB.QueryRowContext(ctx, query, id)
 
 	var qr sql.NullString
+
+	// null slice vars for potential reports
+	var reportID []sql.NullInt32
+	var fatal []sql.NullBool
+	var solved []sql.NullBool
+	var info []sql.NullString
+	var reporter []sql.NullString
+	// TODO this does not seem to be possible
+	// var updated []sql.NullTime
 
 	err := row.Scan(
 		&machine.ID,
@@ -94,6 +118,12 @@ func (m *postgresDBRepo) MachineByID(id string) (models.Machine, error) {
 		&machine.RessortName,
 		&machine.SlackChannel,
 		&qr,
+		pq.Array(&reportID),
+		pq.Array(&fatal),
+		pq.Array(&solved),
+		pq.Array(&info),
+		pq.Array(&reporter),
+		// pq.Array(&updated),
 	)
 
 	if err != nil {
@@ -102,6 +132,25 @@ func (m *postgresDBRepo) MachineByID(id string) (models.Machine, error) {
 
 	if qr.Valid {
 		machine.QR = qr.String
+	}
+
+	if reportID[0].Valid {
+		for i := range reportID {
+			var reportString string
+
+			if reporter[i].Valid {
+				reportString = reporter[i].String
+			}
+			machine.Reports = append(machine.Reports, models.Report{
+				ID:             int(reportID[i].Int32),
+				MachineID:      machine.ID,
+				Fatal:          fatal[i].Bool,
+				Solved:         solved[i].Bool,
+				ReportInfo:     info[i].String,
+				ReportReporter: reportString,
+			})
+		}
+
 	}
 
 	return machine, nil

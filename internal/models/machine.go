@@ -10,6 +10,7 @@ type Machine struct {
 	MachineName  string
 	FAQs         []FAQ
 	QR           string
+	Reports      []Report
 	CreatedOn    time.Time
 	UpdatedOn    time.Time
 }
