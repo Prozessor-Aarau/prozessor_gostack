@@ -118,6 +118,11 @@ Ressort string
 }
 
 templ MachinesForm(params models.Machine, ressorts []models.Ressort, errors MachineErrors) {
+if len(params.ID) > 0 {
+<div class="prose col-span-full mb-4">
+  <h2>{ params.MachineName }</h2>
+</div>
+}
 if len(params.Reports) > 0 {
 @ReportList(params.Reports)
 }
@@ -133,9 +138,9 @@ if len(params.Reports) > 0 {
   @ui.CSRF()
   <div class="prose col-span-full">
     if len(params.ID) > 0 {
-    <h2>Maschine bearbeiten: { params.MachineName }</h2>
+    <h3>Maschine bearbeiten</h3>
     } else {
-    <h2>Neue Maschine erstellen</h2>
+    <h3>Neue Maschine erstellen</h3>
     }
   </div>
   if len(params.ID)>0 {
@@ -222,7 +227,7 @@ anySolved = true
 <form id="reportList" class="mb-12">
   @ui.CSRF()
   <div class="prose">
-    <h2 class="mb-3">Offene Statusmeldungen</h2>
+    <h3 class="mb-3">Offene Statusmeldungen</h3>
   </div>
   for _, r := range reports {
   if !r.Solved {
@@ -236,14 +241,14 @@ anySolved = true
       <span>noch nutzbar</span>
       }
     </div>
-    <div class="col-span-1">
+    <div class="col-span-2 md:col-span-1">
       if len(r.ReportReporter) > 0 {
       Gemeldet von: { r.ReportReporter }
       } else {
       anonyme Meldung
       }
     </div>
-    <div class="col-span-1">
+    <div class="col-span-full md:col-span-1">
       Meldedatum: { r.UpdatedOn.Format("02.01.2006") }
     </div>
     <div class="col-span-full">{ r.ReportInfo }</div>
@@ -279,14 +284,14 @@ anySolved = true
           <span>noch nutzbar</span>
           }
         </div>
-        <div class="col-span-1">
+        <div class="col-span-2 md:col-span-1">
           if len(r.ReportReporter) > 0 {
           Gemeldet von: { r.ReportReporter }
           } else {
           anonyme Meldung
           }
         </div>
-        <div class="col-span-1">
+        <div class="col-span-full md:col-span-1">
           Meldedatum: { r.UpdatedOn.Format("02.01.2006") }
         </div>
         <div class="col-span-full">{ r.ReportInfo }</div>
