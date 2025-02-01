@@ -108,15 +108,15 @@ for _, b := range bills {
   <form class="col-span-full md:col-span-1 flex gap-3 justify-center md:justify-end items-center">
     @ui.CSRF()
     <input name="id" type="hidden" value={ strconv.Itoa(b.ID) } />
-    <!-- download button -->
-    <a class="btn btn-sm btn-circle btn-info" href={ templ.URL("/static/bills/" + b.Purpose + "/" + b.FileName) }
-      target="_blank">
-      <span class="i-mdi-download"></span>
-    </a>
     <!-- edit button -->
     <a class={ "btn btn-sm btn-circle btn-disabled" , templ.KV("btn-disabled", !prm.EditFinances) }
       hx-get={ "/admin/billing/" + strconv.Itoa(b.ID) } hx-target="#content">
       <span class="i-mdi-lead-pencil"></span>
+    </a>
+    <!-- download button -->
+    <a class="btn btn-sm btn-circle btn-info" href={ templ.URL("/static/bills/" + b.Purpose + "/" + b.FileName) }
+      target="_blank">
+      <span class="i-mdi-download"></span>
     </a>
     <!-- change payment status -->
     <div id={ "paybutton_" + strconv.Itoa(b.ID) }>
