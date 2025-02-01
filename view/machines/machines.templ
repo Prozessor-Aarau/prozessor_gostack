@@ -90,7 +90,7 @@ reportNorm++
   <div class="col-span-4 md:col-span-2">{ m.MachineName }</div>
   <div class="col-span-3 md:col-span-2">{ m.RessortName }</div>
   <div class="col-span-6 md:col-span-2 flex md:justify-end">
-    if len(m.Reports)>0 {
+    if reportFatal>0||reportNorm>0 {
     Offene Meldungen: (
     <span class="text-error">
       { strconv.Itoa(reportFatal) }
