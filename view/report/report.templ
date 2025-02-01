@@ -33,31 +33,37 @@ unsolved = true
 }
 }}
 if len(reports) > 0 && unsolved {
-<div class="bg-base-200 collapse">
+<div class="bg-base-200 collapse mt-4">
   <input type="checkbox" class="peer" />
-  <div class="collapse-title bg-error text-error-content peer-checked:bg-base-200 peer-checked:text-base-content">
-    Dieses Gerät hat offene Meldungen!
-    <br />
-    (klicken zum ansehen)
+  <div
+    class="collapse-title bg-error text-error-content peer-checked:bg-base-200 peer-checked:text-base-content flex items-center gap-4">
+    <span class="i-mdi-alert-octagram-outline text-6xl md:text-4xl"></span>
+    <span>
+      <span class="font-bold">Dieses Gerät hat bereits Meldungen!</span>
+      <br />
+      <span class="text-xs">(klicken zum ansehen)</span>
+    </span>
   </div>
   <div class="collapse-content grid grid-cols-1 gap-3">
     for _, r := range reports {
     if !r.Solved {
-    <div class="w-full border border-dashed border-opacity-30 grid grid-cols-[60px_auto]">
-      <div class="col-span-1 p-3 flex items-center">
-        if r.Fatal {
-        <span class="i-mdi-alert text-5xl text-error"></span>
-        }
-      </div>
-      <div class="col-span-1 p-3">
-        <span class="font-bold">{ r.UpdatedOn.Format("02.01.2006") }:</span>
-        <br />
-        { r.ReportInfo }
-      </div>
+    <div class={ "w-full border border-base-content grid grid-cols-[60px_auto]" , templ.KV("border-error", r.Fatal),
+      templ.KV("border-opacity-50 border-dashed ", !r.Fatal) }
+						>
+							<div class=" col-span-1 p-3 flex items-center">
+      if r.Fatal {
+      <span class="i-mdi-alert text-5xl text-error"></span>
+      }
     </div>
-    }
-    }
+    <div class="col-span-1 p-3">
+      <span class="font-bold">{ r.UpdatedOn.Format("02.01.2006") }:</span>
+      <br />
+      { r.ReportInfo }
+    </div>
   </div>
+  }
+  }
+</div>
 </div>
 }
 }

@@ -70,11 +70,37 @@ templ MachinesFilter(ressorts []models.Ressort) {
 templ MachinesList(machines []models.Machine) {
 if len(machines) > 0 {
 for _, m := range machines {
+{{
+// check if there are reports and count the fatal and non-fatal ones
+reportNorm := 0
+reportFatal := 0
+
+if len(m.Reports) > 0 {
+for _, r := range m.Reports {
+if r.Fatal && !r.Solved {
+reportFatal++
+} else if !r.Solved {
+reportNorm++
+}
+}
+}
+}}
 <div
-  class="hover:bg-base-200 cursor-pointer grid grid-cols-6 text-sm p-3 py-4 items-center gap-3 border-dashed border-b border-base-content border-opacity-50">
-  <div class="col-span-3">{ m.MachineName }</div>
-  <div class="col-span-2 md:col-span-2">{ m.RessortName }</div>
-  <div class="col-span-1 flex justify-end items-center">
+  class="hover:bg-base-200 cursor-pointer grid grid-cols-7 text-sm p-3 py-4 items-center gap-3 border-dashed border-b border-base-content border-opacity-50">
+  <div class="col-span-4 md:col-span-2">{ m.MachineName }</div>
+  <div class="col-span-3 md:col-span-2">{ m.RessortName }</div>
+  <div class="col-span-6 md:col-span-2 flex md:justify-end">
+    if len(m.Reports)>0 {
+    Offene Meldungen: (
+    <span class="text-error">
+      { strconv.Itoa(reportFatal) }
+    </span>/
+    <span class="text-warning">
+      { strconv.Itoa(reportNorm) }
+    </span>)
+    }
+  </div>
+  <div class="col-span-1 md:col-span-1 flex justify-end items-center">
     <a class="btn btn-sm btn-circle btn-primary" hx-get={ "/admin/machines/edit/" + m.ID } hx-target="#content">
       <span class="i-mdi-lead-pencil"></span>
     </a>
@@ -210,12 +236,15 @@ anySolved = true
       <span>noch nutzbar</span>
       }
     </div>
-    <div class="col-span-2">
+    <div class="col-span-1">
       if len(r.ReportReporter) > 0 {
       Gemeldet von: { r.ReportReporter }
       } else {
       anonyme Meldung
       }
+    </div>
+    <div class="col-span-1">
+      Meldedatum: { r.UpdatedOn.Format("02.01.2006") }
     </div>
     <div class="col-span-full">{ r.ReportInfo }</div>
     <div class="col-span-full w-full gap-3 flex mt-3 items-center justify-center flex-col md:flex-row">
@@ -250,12 +279,15 @@ anySolved = true
           <span>noch nutzbar</span>
           }
         </div>
-        <div class="col-span-2">
+        <div class="col-span-1">
           if len(r.ReportReporter) > 0 {
           Gemeldet von: { r.ReportReporter }
           } else {
           anonyme Meldung
           }
+        </div>
+        <div class="col-span-1">
+          Meldedatum: { r.UpdatedOn.Format("02.01.2006") }
         </div>
         <div class="col-span-full">{ r.ReportInfo }</div>
         <div class="col-span-full w-full gap-3 flex mt-3 items-center justify-center flex-col md:flex-row">

@@ -107,7 +107,6 @@ func (m *postgresDBRepo) MachineByID(id string) (models.Machine, error) {
 	var solved []sql.NullBool
 	var info []sql.NullString
 	var reporter []sql.NullString
-	// TODO this does not seem to be possible
 	var updated []sql.NullString
 
 	err := row.Scan(
@@ -196,14 +195,29 @@ func (m *postgresDBRepo) AllMachines(filter models.MachineFilter) ([]models.Mach
 		return machines, 0, err
 	}
 	query := fmt.Sprintf(
-		`SELECT m.id, m.machine_name, m.created_on, m.updated_on, r.id, r.ressort_name, r.slack_channel, m.qr_code
-  FROM machines m
-  LEFT OUTER JOIN ressorts r ON r.id = m.ressort_id
-	WHERE m.machine_name LIKE $1
-  %s
-  ORDER BY 
-  r.ressort_name ASC,
-  m.machine_name ASC
+		`SELECT 
+      m.id, 
+      m.machine_name, 
+      m.created_on, 
+      m.updated_on, 
+      r.id, 
+      r.ressort_name, 
+      r.slack_channel, 
+      m.qr_code,
+      array_agg(rp.id) AS report_id, 
+      array_agg(rp.fatal) AS report_fatal, 
+      array_agg(rp.solved) AS report_solved, 
+      array_agg(DATE(rp.updated_on)) AS updated_on
+    FROM machines m
+    LEFT OUTER JOIN ressorts r ON r.id = m.ressort_id
+    LEFT OUTER JOIN reports rp ON rp.machine_id = m.id
+    WHERE m.machine_name LIKE $1
+    %s
+    GROUP BY 
+    m.id, r.id
+    ORDER BY 
+    r.ressort_name ASC,
+    m.machine_name ASC
   `,
 		ressort,
 	)
@@ -219,6 +233,10 @@ func (m *postgresDBRepo) AllMachines(filter models.MachineFilter) ([]models.Mach
 		var machine models.Machine
 
 		var qr sql.NullString
+		var reportID []sql.NullInt32
+		var fatal []sql.NullBool
+		var solved []sql.NullBool
+		var updated []sql.NullString
 
 		err := rows.Scan(
 			&machine.ID,
@@ -229,6 +247,10 @@ func (m *postgresDBRepo) AllMachines(filter models.MachineFilter) ([]models.Mach
 			&machine.RessortName,
 			&machine.SlackChannel,
 			&qr,
+			pq.Array(&reportID),
+			pq.Array(&fatal),
+			pq.Array(&solved),
+			pq.Array(&updated),
 		)
 
 		if err != nil {
@@ -237,6 +259,24 @@ func (m *postgresDBRepo) AllMachines(filter models.MachineFilter) ([]models.Mach
 
 		if qr.Valid {
 			machine.QR = qr.String
+		}
+
+		if reportID[0].Valid {
+			for i := range reportID {
+
+				updatedOn, err := time.Parse("2006-01-02", updated[i].String)
+				if err != nil {
+					return machines, 0, err
+				}
+
+				machine.Reports = append(machine.Reports, models.Report{
+					ID:        int(reportID[i].Int32),
+					MachineID: machine.ID,
+					Fatal:     fatal[i].Bool,
+					Solved:    solved[i].Bool,
+					UpdatedOn: updatedOn,
+				})
+			}
 		}
 
 		machines = append(machines, machine)
