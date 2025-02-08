@@ -25,3 +25,13 @@ type BillData struct {
 	CreatedOn     time.Time
 	UpdatedOn     time.Time
 }
+
+type BillItem struct {
+	ID          int
+	Description string
+	UnitPrice   float64
+	Count       float64
+	Price       float64
+	CreatedOn   time.Time
+	UpdatedOn   time.Time
+}

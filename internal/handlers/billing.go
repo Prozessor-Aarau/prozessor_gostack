@@ -168,3 +168,15 @@ func (m *Repository) HandleBillingPayment(w http.ResponseWriter, r *http.Request
 
 	return rendering(w, r, bills.PayButton(bill))
 }
+
+// HandleBillCreateIndex is the handler for the Bill creation form
+func (m *Repository) HandleBillCreateIndex(w http.ResponseWriter, r *http.Request) error {
+	// return an empty form
+	return rendering(w, r, bills.CustomBillForm())
+}
+
+// HandleBillCreateNewItem returns an empty billing item
+func (m *Repository) HandleBillCreateNewItem(w http.ResponseWriter, r *http.Request) error {
+	// return an empty form
+	return rendering(w, r, bills.BillItem(models.BillItem{}))
+}
