@@ -231,11 +231,11 @@ elementid := map[string]string{"eid": uuid.New().String()}
   </td>
   <td>
     <input name="amount" type="number" class="input input-sm input-bordered max-w-20" min="0" step="1" x-model="Count"
-      @change="getFinalTotal" />
+      @keyup="getFinalTotal" @change="getFinalTotal" />
   </td>
   <td>
     <input name="price" type="number" class="input input-sm input-bordered max-w-20" min="0" step="0.05"
-      x-model="UnitPrice" @change="getFinalTotal" />
+      x-model="UnitPrice" @keyup="getFinalTotal" @change="getFinalTotal" />
   </td>
   <td class="font-bold text-right subtotal" x-text="(Math.round(Count * UnitPrice * 100) / 100).toFixed(2)"></td>
 </tr>
