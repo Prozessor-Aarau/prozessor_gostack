@@ -109,8 +109,8 @@ templ CustomBillForm() {
             <th class="text-right">Total</th>
           </tr>
         </thead>
-        <tbody>
-          <tr id="endrow">
+        <tbody id="rowbody">
+          <tr hx-on::after-swap="hideArrows()" id="endrow">
             <th>
               <button type="button" class="btn btn-outline btn-xs btn-circle btn-success"
                 hx-get="/admin/billing/create/item" hx-target="#endrow" hx-swap="beforebegin">
@@ -171,6 +171,38 @@ templ CustomBillForm() {
   function removeItem(eid) {
     document.getElementById(eid).remove();
     getFinalTotal();
+    hideArrows();
+  }
+
+  function moveItemUp(eid) {
+    document.getElementById(eid).previousSibling.before(document.getElementById(eid))
+    hideArrows()
+  }
+
+  function moveItemDown(eid) {
+    document.getElementById(eid).nextSibling.after(document.getElementById(eid))
+    hideArrows()
+  }
+
+  function hideArrows() {
+    let children = document.getElementById("rowbody").children
+
+    for (let i = 0; i < children.length - 1; i++) {
+      let uArrow = children[i].getElementsByClassName("uarrow")[0]
+      let dArrow = children[i].getElementsByClassName("darrow")[0]
+
+      uArrow.classList.remove("invisible")
+      dArrow.classList.remove("invisible")
+
+      if (i === 0) {
+        uArrow.classList.add("invisible")
+        if (children.length === 2) {
+          dArrow.classList.add("invisible")
+        }
+      } else if (i === children.length - 2) {
+        dArrow.classList.add("invisible")
+      }
+    }
   }
 </script>
 }
@@ -189,10 +221,10 @@ elementid := map[string]string{"eid": uuid.New().String()}
   </th>
   <td class="align-bottom" x-data={ templ.JSONString(elementid) }>
     <span
-      class="i-mdi-arrow-up-drop-circle-outline hover:i-mdi-arrow-up-drop-circle text-xl cursor-pointer hover:text-primary"
-      @click="document.getElementById(eid).previousSibling.before(document.getElementById(eid))"></span><span
-      class="i-mdi-arrow-down-drop-circle-outline hover:i-mdi-arrow-down-drop-circle text-xl cursor-pointer hover:text-primary"
-      @click="document.getElementById(eid).nextSibling.after(document.getElementById(eid))"></span>
+      class="darrow i-mdi-arrow-down-drop-circle-outline hover:i-mdi-arrow-down-drop-circle text-xl cursor-pointer hover:text-primary"
+      @click="moveItemDown(eid)"></span><span
+      class="uarrow i-mdi-arrow-up-drop-circle-outline hover:i-mdi-arrow-up-drop-circle text-xl cursor-pointer hover:text-primary"
+      @click="moveItemUp(eid)"></span>
   </td>
   <td>
     <input type="text" class="w-full input-sm input input-bordered" value={ item.Description } />
