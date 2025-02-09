@@ -11,6 +11,7 @@ import (
 	"github.com/faebut/prozessor_gostack/internal/models"
 	"github.com/faebut/prozessor_gostack/view/bills"
 	"github.com/go-chi/chi/v5"
+	"github.com/google/uuid"
 )
 
 // HandleLogisticsIndex is the logistics page handler
@@ -172,11 +173,95 @@ func (m *Repository) HandleBillingPayment(w http.ResponseWriter, r *http.Request
 // HandleBillCreateIndex is the handler for the Bill creation form
 func (m *Repository) HandleBillCreateIndex(w http.ResponseWriter, r *http.Request) error {
 	// return an empty form
-	return rendering(w, r, bills.CustomBillForm())
+	return rendering(w, r, bills.CustomBillForm(models.BillData{}))
 }
 
 // HandleBillCreateNewItem returns an empty billing item
 func (m *Repository) HandleBillCreateNewItem(w http.ResponseWriter, r *http.Request) error {
+	var item models.BillItem
+
+	item.ID = uuid.New().String()
+
 	// return an empty form
-	return rendering(w, r, bills.BillItem(models.BillItem{}))
+	return rendering(w, r, bills.BillItem(item))
+}
+
+func (m *Repository) HandleBillCreatePost(w http.ResponseWriter, r *http.Request) error {
+	// parsForm.e form
+	r.ParseForm()
+
+	// create bill item
+
+	var bill models.BillData
+
+	// push all item fields to slices
+	var item_id []string
+	var item_position []int
+	var item_description []string
+	var item_count []float64
+	var item_unit_price []float64
+
+	for key, value := range r.Form {
+		if key == "item_id" {
+			for i := 0; i < len(value); i++ {
+				item_id = append(item_id, value[i])
+			}
+		}
+		if key == "item_position" {
+			for i := 0; i < len(value); i++ {
+				position, err := strconv.Atoi(value[i])
+				if err != nil {
+					return err
+				}
+				item_position = append(item_position, position)
+			}
+		}
+		if key == "item_description" {
+			for i := 0; i < len(value); i++ {
+				item_description = append(item_description, value[i])
+			}
+		}
+		if key == "item_count" {
+			for i := 0; i < len(value); i++ {
+				count, err := strconv.ParseFloat(value[i], 64)
+				if err != nil {
+					return err
+				}
+				item_count = append(item_count, count)
+			}
+		}
+		if key == "item_unit_price" {
+			for i := 0; i < len(value); i++ {
+				price, err := strconv.ParseFloat(value[i], 64)
+				if err != nil {
+					return err
+				}
+				item_unit_price = append(item_unit_price, price)
+			}
+		}
+	}
+	// build items and push to slice
+	var items []models.BillItem
+
+	for i := 0; i < len(item_id); i++ {
+		item := models.BillItem{
+			ID:          item_id[i],
+			Position:    item_position[i],
+			Description: item_description[i],
+			Count:       item_count[i],
+			UnitPrice:   item_unit_price[i],
+		}
+
+		items = append(items, item)
+	}
+
+	for _, item := range items {
+		log.Println(item)
+	}
+
+	bill.Items = items
+
+	bill.Message = "Resent Form"
+
+	return rendering(w, r, bills.CustomBillForm(bill))
 }

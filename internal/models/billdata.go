@@ -1,6 +1,8 @@
 package models
 
-import "time"
+import (
+	"time"
+)
 
 type BillData struct {
 	ID            int
@@ -15,7 +17,7 @@ type BillData struct {
 	Number        string
 	Amount        float64
 	Infos         string
-	Products      []string
+	Items         []BillItem
 	WithMessage   bool
 	Message       string
 	WithReference bool
@@ -27,7 +29,8 @@ type BillData struct {
 }
 
 type BillItem struct {
-	ID          int
+	ID          string
+	Position    int
 	Description string
 	UnitPrice   float64
 	Count       float64

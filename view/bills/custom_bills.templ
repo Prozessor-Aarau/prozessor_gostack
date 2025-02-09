@@ -1,160 +1,178 @@
 package bills
 
 import (
-"github.com/faebut/prozessor_gostack/internal/models"
-"github.com/faebut/prozessor_gostack/view/ui"
-"github.com/google/uuid"
-"strconv"
+	"github.com/faebut/prozessor_gostack/internal/models"
+	"github.com/faebut/prozessor_gostack/view/ui"
+	"strconv"
 )
 
-templ CustomBillForm() {
-<form class="gap-3" novalidate x-data="{ extern: false }">
-  @ui.CSRF()
-  <div class="prose w-full">
-    <h2>Neue Rechnung erstellen</h2>
-  </div>
-  <div class="form-control w-full mt-4">
-    <label class="label cursor-pointer justify-start">
-      <input id="toggleExtern" name="extern" type="checkbox" class="toggle toggle-success" x-model="extern" />
-      <span class="label-text pl-3">Mitglied / Individuelle Adresse</span>
-    </label>
-  </div>
-  <!-- intern member select -->
-  <div x-show="! extern" class="w-full mt-3 gap-3 grid grid-cols-2">
-    <form id="filterForm" class="mb-3 w-full col-span-2 md:col-span-1" novalidate>
-      @ui.CSRF()
-      <label class="input input-bordered flex items-center gap-2">
-        <span class="text-3xl i-mdi-magnify"></span>
-        <input type="search" id="search_term" name="search_term" class="grow"
-          placeholder="Suche nach Name, Vorname oder Ort..." hx-post={ "/admin/visitors/selectbox/" }
-          hx-trigger="input changed delay:500ms, search" hx-target="#memberSelect" />
-        <button id="fieldreset" class="ml-3 btn btn-neutral btn-outline btn-xs btn-circle">
-          <span class="i-mdi-close"></span>
-        </button>
-      </label>
-    </form>
-    <div id="memberSelect" class="mb-3 col-span-2 md:col-span-1" hx-get={ "/admin/visitors/selectbox/" }
-      hx-trigger="load"></div>
-  </div>
-  <!-- extern address -->
-  <div x-show="extern" class="w-full mt-3 gap-3 grid grid-cols-8">
-    <label class="form-control w-full col-span-full md:col-span-4">
-      <div class="label">
-        <span class="label-text">Firma</span>
-      </div>
-      <input class="input input-bordered w-full" name="company" type="text" />
-    </label>
-    <label class="form-control w-full col-span-full md:col-span-2">
-      <div class="label">
-        <span class="label-text">Vorname</span>
-      </div>
-      <input class="input input-bordered w-full" name="firstname" type="text" />
-    </label>
-    <label class="form-control w-full col-span-full md:col-span-2">
-      <div class="label">
-        <span class="label-text">Familienname</span>
-      </div>
-      <input class="input input-bordered w-full" name="familyname" type="text" />
-    </label>
-    <label class="form-control w-full col-span-full md:col-span-3">
-      <div class="label">
-        <span class="label-text">Strasse</span>
-      </div>
-      <input class="input input-bordered w-full" name="street" type="text" />
-    </label>
-    <label class="form-control w-full col-span-full md:col-span-1">
-      <div class="label">
-        <span class="label-text">Nummer</span>
-      </div>
-      <input class="input input-bordered w-full" name="number" type="text" />
-    </label>
-    <label class="form-control w-full col-span-full md:col-span-1">
-      <div class="label">
-        <span class="label-text">PLZ</span>
-      </div>
-      <input class="input input-bordered w-full" name="postcode" type="text" />
-    </label>
-    <label class="form-control w-full col-span-full md:col-span-3">
-      <div class="label">
-        <span class="label-text">Ort</span>
-      </div>
-      <input class="input input-bordered w-full" name="city" type="text" />
-    </label>
-    <label class="form-control w-full col-span-full md:col-span-4">
-      <div class="label">
-        <span class="label-text">Telefon</span>
-      </div>
-      <input class="input input-bordered w-full" name="phone" type="text" />
-    </label>
-    <label class="form-control w-full col-span-full md:col-span-4">
-      <div class="label">
-        <span class="label-text">E-Mail</span>
-      </div>
-      <input class="input input-bordered w-full" name="email" type="text" />
-    </label>
-  </div>
-  <!-- positions for bill -->
-  <div class="my-6 card bg-base-300 w-full shadow-xl">
-    <div class="card-body">
-      <h2 class="card-title">Positionen</h2>
-      <table class="table">
-        <!-- head -->
-        <thead>
-          <tr>
-            <th></th>
-            <th>Pos.</th>
-            <th>Beschreibung</th>
-            <th>Menge</th>
-            <th>Preis</th>
-            <th class="text-right">Total</th>
-          </tr>
-        </thead>
-        <tbody id="rowbody">
-          <tr hx-on::after-swap="hideArrows()" id="endrow">
-            <th>
-              <button type="button" class="btn btn-outline btn-xs btn-circle btn-success"
-                hx-get="/admin/billing/create/item" hx-target="#endrow" hx-swap="beforebegin">
-                <span class="i-mdi-plus"></span>
-              </button>
-            </th>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td class="font-bold text-right">TOTAL</td>
-            <td id="finaltotal" class="font-bold text-right">0.00</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-  <!-- payment info -->
-  <div class="w-full mt-3 gap-3 grid grid-cols-1">
-    <label class="form-control w-full col-span-full md:col-span-4">
-      <div class="label">
-        <span class="label-text">Mitteilung / Zahlungszweck</span>
-      </div>
-      <input class="input input-bordered w-full" name="message" type="text" />
-    </label>
-    <label class="form-control w-full col-span-full md:col-span-4">
-      <div class="label">
-        <span class="label-text">Interne Informationen</span>
-      </div>
-      <textarea class="textarea textarea-bordered w-full h-24" name="infos"></textarea>
-    </label>
-  </div>
-  <!-- action buttons -->
-  <div class="col-span-full gap-3 flex mt-6 items-center justify-center flex-col md:flex-row">
-    <a class="btn btn-success" hx-post="/admin/billing/" hx-target="#main">
-      Rechnung erstellen
-    </a>
-    <a href="/admin/billing" class="btn btn-warning">
-      <span class="i-mdi-cancel-bold"></span>
-      Abbrechen
-    </a>
-  </div>
-</form>
-<script>
-  let finaltotal = document.getElementById("finaltotal");
+templ CustomBillForm(bill models.BillData) {
+	<form class="gap-3" novalidate x-data="{ extern: false }">
+		@ui.CSRF()
+		<div class="prose w-full">
+			<h2>Neue Rechnung erstellen</h2>
+		</div>
+		<div class="form-control w-full mt-4">
+			<label class="label cursor-pointer justify-start">
+				<input id="toggleExtern" name="extern" type="checkbox" class="toggle toggle-success" x-model="extern"/>
+				<span class="label-text pl-3">Mitglied / Individuelle Adresse</span>
+			</label>
+		</div>
+		<!-- intern member select -->
+		<div x-show="! extern" class="w-full mt-3 gap-3 grid grid-cols-2">
+			<form id="filterForm" class="mb-3 w-full col-span-2 md:col-span-1" novalidate>
+				@ui.CSRF()
+				<label class="input input-bordered flex items-center gap-2">
+					<span class="text-3xl i-mdi-magnify"></span>
+					<input
+						type="search"
+						id="search_term"
+						name="search_term"
+						class="grow"
+						placeholder="Suche nach Name, Vorname oder Ort..."
+						hx-post={ "/admin/visitors/selectbox/" }
+						hx-trigger="input changed delay:500ms, search"
+						hx-target="#memberSelect"
+					/>
+					<button id="fieldreset" class="ml-3 btn btn-neutral btn-outline btn-xs btn-circle">
+						<span class="i-mdi-close"></span>
+					</button>
+				</label>
+			</form>
+			<div
+				id="memberSelect"
+				class="mb-3 col-span-2 md:col-span-1"
+				hx-get={ "/admin/visitors/selectbox/" }
+				hx-trigger="load"
+			></div>
+		</div>
+		<!-- extern address -->
+		<div x-show="extern" class="w-full mt-3 gap-3 grid grid-cols-8">
+			<label class="form-control w-full col-span-full md:col-span-4">
+				<div class="label">
+					<span class="label-text">Firma</span>
+				</div>
+				<input class="input input-bordered w-full" name="company" type="text"/>
+			</label>
+			<label class="form-control w-full col-span-full md:col-span-2">
+				<div class="label">
+					<span class="label-text">Vorname</span>
+				</div>
+				<input class="input input-bordered w-full" name="firstname" type="text"/>
+			</label>
+			<label class="form-control w-full col-span-full md:col-span-2">
+				<div class="label">
+					<span class="label-text">Familienname</span>
+				</div>
+				<input class="input input-bordered w-full" name="familyname" type="text"/>
+			</label>
+			<label class="form-control w-full col-span-full md:col-span-3">
+				<div class="label">
+					<span class="label-text">Strasse</span>
+				</div>
+				<input class="input input-bordered w-full" name="street" type="text"/>
+			</label>
+			<label class="form-control w-full col-span-full md:col-span-1">
+				<div class="label">
+					<span class="label-text">Nummer</span>
+				</div>
+				<input class="input input-bordered w-full" name="number" type="text"/>
+			</label>
+			<label class="form-control w-full col-span-full md:col-span-1">
+				<div class="label">
+					<span class="label-text">PLZ</span>
+				</div>
+				<input class="input input-bordered w-full" name="postcode" type="text"/>
+			</label>
+			<label class="form-control w-full col-span-full md:col-span-3">
+				<div class="label">
+					<span class="label-text">Ort</span>
+				</div>
+				<input class="input input-bordered w-full" name="city" type="text"/>
+			</label>
+			<label class="form-control w-full col-span-full md:col-span-4">
+				<div class="label">
+					<span class="label-text">Telefon</span>
+				</div>
+				<input class="input input-bordered w-full" name="phone" type="text"/>
+			</label>
+			<label class="form-control w-full col-span-full md:col-span-4">
+				<div class="label">
+					<span class="label-text">E-Mail</span>
+				</div>
+				<input class="input input-bordered w-full" name="email" type="text"/>
+			</label>
+		</div>
+		<!-- positions for bill -->
+		<div class="my-6 card bg-base-300 w-full shadow-xl">
+			<div class="card-body">
+				<h2 class="card-title">Positionen</h2>
+				<table class="table">
+					<!-- head -->
+					<thead>
+						<tr>
+							<th></th>
+							<th>Pos.</th>
+							<th>Beschreibung</th>
+							<th>Menge</th>
+							<th>Preis</th>
+							<th class="text-right">Total</th>
+						</tr>
+					</thead>
+					<tbody id="rowbody">
+						for _, item := range bill.Items {
+							@BillItem(item)
+						}
+						<tr hx-on::after-swap="hideArrows()" id="endrow">
+							<th>
+								<button
+									type="button"
+									class="btn btn-outline btn-xs btn-circle btn-success"
+									hx-get="/admin/billing/create/item"
+									hx-target="#endrow"
+									hx-swap="beforebegin"
+								>
+									<span class="i-mdi-plus"></span>
+								</button>
+							</th>
+							<td></td>
+							<td></td>
+							<td></td>
+							<td class="font-bold text-right">TOTAL</td>
+							<td id="finaltotal" class="font-bold text-right">0.00</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+		</div>
+		<!-- payment info -->
+		<div class="w-full mt-3 gap-3 grid grid-cols-1">
+			<label class="form-control w-full col-span-full md:col-span-4">
+				<div class="label">
+					<span class="label-text">Mitteilung / Zahlungszweck</span>
+				</div>
+				<input class="input input-bordered w-full" name="message" type="text" value={ bill.Message }/>
+			</label>
+			<label class="form-control w-full col-span-full md:col-span-4">
+				<div class="label">
+					<span class="label-text">Interne Informationen</span>
+				</div>
+				<textarea class="textarea textarea-bordered w-full h-24" name="infos"></textarea>
+			</label>
+		</div>
+		<!-- action buttons -->
+		<div class="col-span-full gap-3 flex mt-6 items-center justify-center flex-col md:flex-row">
+			<a class="btn btn-success" hx-post="/admin/billing/create" hx-target="#main" hx-on::after-request="hideArrows()">
+				Rechnung erstellen
+			</a>
+			<a href="/admin/billing" class="btn btn-warning">
+				<span class="i-mdi-cancel-bold"></span>
+				Abbrechen
+			</a>
+		</div>
+	</form>
+	<script>
+  var finaltotal = document.getElementById("finaltotal");
 
   // get sum of all totals and write it to final total
   function getFinalTotal() {
@@ -162,7 +180,9 @@ templ CustomBillForm() {
     let total = 0;
 
     for (let i = 0; i < totals.length; i++) {
-      total += parseFloat(totals[i].innerText)
+      if (totals[i].innerText.length > 0) {
+        total += parseFloat(totals[i].innerText)
+      }
     }
 
     finaltotal.innerText = (Math.round(total * 100) / 100).toFixed(2)
@@ -190,9 +210,11 @@ templ CustomBillForm() {
     for (let i = 0; i < children.length - 1; i++) {
       let uArrow = children[i].getElementsByClassName("uarrow")[0]
       let dArrow = children[i].getElementsByClassName("darrow")[0]
+      let position = children[i].getElementsByClassName("pfield")[0]
 
       uArrow.classList.remove("invisible")
       dArrow.classList.remove("invisible")
+      position.value = i + 1
 
       if (i === 0) {
         uArrow.classList.add("invisible")
@@ -204,39 +226,63 @@ templ CustomBillForm() {
       }
     }
   }
+
+  // fire once
+  hideArrows();
+  getFinalTotal();
 </script>
 }
 
 templ BillItem(item models.BillItem) {
-{{
-elementid := map[string]string{"eid": uuid.New().String()}
-}}
-<tr id={ elementid["eid"] } x-data={ templ.JSONString(item) }>
-  <th>
-    <button x-data={ templ.JSONString(elementid) } type="button" class="btn btn-outline btn-xs btn-circle btn-error"
-      @click="removeItem(eid)">
-      <span class="i-mdi-close"></span>
-    </button>
-    <input type="hidden" value={ strconv.Itoa(item.ID) } />
-  </th>
-  <td class="align-bottom" x-data={ templ.JSONString(elementid) }>
-    <span
-      class="darrow i-mdi-arrow-down-drop-circle-outline hover:i-mdi-arrow-down-drop-circle text-xl cursor-pointer hover:text-primary"
-      @click="moveItemDown(eid)"></span><span
-      class="uarrow i-mdi-arrow-up-drop-circle-outline hover:i-mdi-arrow-up-drop-circle text-xl cursor-pointer hover:text-primary"
-      @click="moveItemUp(eid)"></span>
-  </td>
-  <td>
-    <input type="text" class="w-full input-sm input input-bordered" value={ item.Description } />
-  </td>
-  <td>
-    <input name="amount" type="number" class="input input-sm input-bordered max-w-20" min="0" step="1" x-model="Count"
-      @keyup="getFinalTotal" @change="getFinalTotal" />
-  </td>
-  <td>
-    <input name="price" type="number" class="input input-sm input-bordered max-w-20" min="0" step="0.05"
-      x-model="UnitPrice" @keyup="getFinalTotal" @change="getFinalTotal" />
-  </td>
-  <td class="font-bold text-right subtotal" x-text="(Math.round(Count * UnitPrice * 100) / 100).toFixed(2)"></td>
-</tr>
+	<tr id={ item.ID } x-data={ templ.JSONString(item) }>
+		<th>
+			<button type="button" class="btn btn-outline btn-xs btn-circle btn-error" @click="removeItem(ID)">
+				<span class="i-mdi-close"></span>
+			</button>
+			<input type="hidden" name="item_id" value={ item.ID }/>
+			<input type="hidden" class="pfield" name="item_position" value={ strconv.Itoa(item.Position) }/>
+		</th>
+		<td class="align-bottom">
+			<span
+				class="darrow i-mdi-arrow-down-drop-circle-outline hover:i-mdi-arrow-down-drop-circle text-xl cursor-pointer hover:text-primary"
+				@click="moveItemDown(ID)"
+			></span><span
+	class="uarrow i-mdi-arrow-up-drop-circle-outline hover:i-mdi-arrow-up-drop-circle text-xl cursor-pointer hover:text-primary"
+	@click="moveItemUp(ID)"
+></span>
+		</td>
+		<td>
+			<input
+				type="text"
+				class="w-full input-sm input input-bordered"
+				name="item_description"
+				value={ item.Description }
+			/>
+		</td>
+		<td>
+			<input
+				name="item_count"
+				type="number"
+				class="input input-sm input-bordered max-w-20"
+				min="0"
+				step="1"
+				x-model="Count"
+				@keyup="getFinalTotal"
+				@change="getFinalTotal"
+			/>
+		</td>
+		<td>
+			<input
+				name="item_unit_price"
+				type="number"
+				class="input input-sm input-bordered max-w-20"
+				min="0"
+				step="0.05"
+				x-model="UnitPrice"
+				@keyup="getFinalTotal"
+				@change="getFinalTotal"
+			/>
+		</td>
+		<td class="font-bold text-right subtotal" x-text="(Math.round(Count * UnitPrice * 100) / 100).toFixed(2)"></td>
+	</tr>
 }

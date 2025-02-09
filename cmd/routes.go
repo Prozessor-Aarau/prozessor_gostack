@@ -235,6 +235,7 @@ func routes(app *config.AppConfig) http.Handler {
 				mux.Use(CheckPermission("AddFinances"))
 				mux.Get("/billing/create", handlers.Make(handlers.Repo.HandleBillCreateIndex))
 				mux.Get("/billing/create/item", handlers.Make(handlers.Repo.HandleBillCreateNewItem))
+				mux.Post("/billing/create", handlers.Make(handlers.Repo.HandleBillCreatePost))
 			})
 		})
 	})
