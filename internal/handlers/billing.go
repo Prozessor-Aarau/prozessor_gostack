@@ -276,7 +276,11 @@ func (m *Repository) HandleBillCreatePost(w http.ResponseWriter, r *http.Request
 	form := forms.New(r.Form)
 	formErrors := bills.FormErrors{}
 
-	log.Println("extern: ", strconv.FormatBool(extern))
+	// set extern toggle state
+	formErrors.Extern = extern
+
+	// check validity of fields
+	form.Required("message", "infos")
 
 	if !extern {
 		form.Required("member")
