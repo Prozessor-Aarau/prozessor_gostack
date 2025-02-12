@@ -174,7 +174,7 @@ func (m *Repository) HandleBillingPayment(w http.ResponseWriter, r *http.Request
 // HandleBillCreateIndex is the handler for the Bill creation form
 func (m *Repository) HandleBillCreateIndex(w http.ResponseWriter, r *http.Request) error {
 	// return an empty form
-	return rendering(w, r, bills.CustomBillForm(models.BillData{}))
+	return rendering(w, r, bills.CustomBillForm(models.BillData{}, bills.FormErrors{}))
 }
 
 // HandleBillCreateNewItem returns an empty billing item
@@ -274,6 +274,7 @@ func (m *Repository) HandleBillCreatePost(w http.ResponseWriter, r *http.Request
 
 	// create a form to start validation
 	form := forms.New(r.Form)
+	formErrors := bills.FormErrors{}
 
 	log.Println("extern: ", strconv.FormatBool(extern))
 
@@ -305,5 +306,5 @@ func (m *Repository) HandleBillCreatePost(w http.ResponseWriter, r *http.Request
 
 	bill.Message = "Resent Form"
 
-	return rendering(w, r, bills.CustomBillForm(bill))
+	return rendering(w, r, bills.CustomBillForm(bill, formErrors))
 }

@@ -6,7 +6,20 @@ import (
 "strconv"
 )
 
-templ CustomBillForm(bill models.BillData) {
+type FormErrors struct {
+Extern bool
+VisitorID string
+Firma string
+FirstName string
+FamilyName string
+Street string
+Number string
+Postcode string
+City string
+Message string
+}
+
+templ CustomBillForm(bill models.BillData, errors FormErrors) {
 <form class="gap-3" novalidate x-data="{ extern: false }">
   @ui.CSRF()
   <div class="prose w-full">
