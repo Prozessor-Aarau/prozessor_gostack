@@ -269,31 +269,49 @@ func (m *Repository) HandleBillCreatePost(w http.ResponseWriter, r *http.Request
 
 	// get form field
 	// first check if its a registered person or not for address
-	// TODO save extern field somewhere and use it in the form
 	extern := r.Form.Get("extern") == "on"
 
 	// create a form to start validation
 	form := forms.New(r.Form)
 	formErrors := bills.FormErrors{}
 
+	// check if there are items and set error if not
+	if len(bill.Items) == 0 {
+		formErrors.Items = "Mindestens eine Position hinzufügen"
+	}
+
 	// set extern toggle state
 	formErrors.Extern = extern
 
 	// check validity of fields
 	form.Required("message", "infos")
+	formErrors.Message = form.Errors.Get("message")
+	formErrors.Infos = form.Errors.Get("infos")
+
+	// get fields
+	bill.Message = r.Form.Get("message")
+	bill.Infos = r.Form.Get("infos")
 
 	if !extern {
+		// check validity
 		form.Required("member")
+		formErrors.Member = form.Errors.Get("member")
 
 		bill.Visitor.ID = r.Form.Get("member")
-
-		bill.Infos = "was Address with Member and ID: " + bill.Visitor.ID
 	} else {
+		// check validity
 		form.Required("street", "number", "postcode", "city")
 		form.IsPostcode("postcode")
 		// check if firma or name is set
 		form.OneOf("firma", "firstname")
 		form.OneOf("firma", "familyname")
+		formErrors.Street = form.Errors.Get("street")
+		formErrors.Number = form.Errors.Get("number")
+		formErrors.Postcode = form.Errors.Get("postcode")
+		formErrors.City = form.Errors.Get("city")
+		formErrors.Firma = form.Errors.Get("firma")
+		formErrors.FirstName = form.Errors.Get("firstname")
+		formErrors.FamilyName = form.Errors.Get("familyname")
 
 		// set fields
 		bill.Firma = r.Form.Get("firma")
@@ -303,12 +321,7 @@ func (m *Repository) HandleBillCreatePost(w http.ResponseWriter, r *http.Request
 		bill.Number = r.Form.Get("number")
 		bill.Postcode = r.Form.Get("postcode")
 		bill.City = r.Form.Get("city")
-
-		bill.Infos = "This is with an extern Address"
-
 	}
-
-	bill.Message = "Resent Form"
 
 	return rendering(w, r, bills.CustomBillForm(bill, formErrors))
 }

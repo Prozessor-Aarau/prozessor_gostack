@@ -8,7 +8,7 @@ import (
 
 type FormErrors struct {
 	Extern     bool
-	VisitorID  string
+	Member     string
 	Firma      string
 	FirstName  string
 	FamilyName string
@@ -17,6 +17,8 @@ type FormErrors struct {
 	Postcode   string
 	City       string
 	Message    string
+	Infos      string
+	Items      string
 }
 
 templ CustomBillForm(bill models.BillData, errors FormErrors) {
@@ -64,49 +66,119 @@ templ CustomBillForm(bill models.BillData, errors FormErrors) {
 		<div x-show="Extern" class="w-full mt-3 gap-3 grid grid-cols-8">
 			<label class="form-control w-full col-span-full md:col-span-4">
 				<div class="label">
-					<span class="label-text">Firma</span>
+					<span class="label-text">Firma <span class="text-error font-extrabold">**</span></span>
 				</div>
-				<input class="input input-bordered w-full" name="firma" type="text" value={ bill.Firma }/>
+				<input
+					class={ "input input-bordered w-full" , templ.KV("input-error", len(errors.Firma)> 0) }
+					name="firma"
+					type="text"
+					value={ bill.Firma }
+				/>
+				if len(errors.Firma) > 0 {
+					<div class="label">
+						<span class="label-text text-error">{ errors.Firma }</span>
+					</div>
+				}
 			</label>
 			<label class="form-control w-full col-span-full md:col-span-2">
 				<div class="label">
-					<span class="label-text">Vorname</span>
+					<span class="label-text">Vorname <span class="text-error font-extrabold">**</span></span>
 				</div>
-				<input class="input input-bordered w-full" name="firstname" type="text" value={ bill.FirstName }/>
+				<input
+					class={ "input input-bordered w-full" , templ.KV("input-error", len(errors.FirstName)> 0) }
+					name="firstname"
+					type="text"
+					value={ bill.FirstName }
+				/>
+				if len(errors.FirstName) > 0 {
+					<div class="label">
+						<span class="label-text text-error">{ errors.FirstName }</span>
+					</div>
+				}
 			</label>
 			<label class="form-control w-full col-span-full md:col-span-2">
 				<div class="label">
-					<span class="label-text">Familienname</span>
+					<span class="label-text">Familienname <span class="text-error font-extrabold">**</span></span>
 				</div>
-				<input class="input input-bordered w-full" name="familyname" type="text" value={ bill.FamilyName }/>
+				<input
+					class={ "input input-bordered w-full" , templ.KV("input-error", len(errors.FamilyName)> 0) }
+					name="familyname"
+					type="text"
+					value={ bill.FamilyName }
+				/>
+				if len(errors.FamilyName) > 0 {
+					<div class="label">
+						<span class="label-text text-error">{ errors.FamilyName }</span>
+					</div>
+				}
 			</label>
 			<label class="form-control w-full col-span-full md:col-span-3">
 				<div class="label">
-					<span class="label-text">Strasse</span>
+					<span class="label-text">Strasse <span class="text-error font-extrabold">*</span></span>
 				</div>
-				<input class="input input-bordered w-full" name="street" type="text" value={ bill.City }/>
+				<input
+					class={ "input input-bordered w-full" , templ.KV("input-error", len(errors.Street)> 0) }
+					name="street"
+					type="text"
+					value={ bill.Street }
+				/>
+				if len(errors.Street) > 0 {
+					<div class="label">
+						<span class="label-text text-error">{ errors.Street }</span>
+					</div>
+				}
 			</label>
 			<label class="form-control w-full col-span-full md:col-span-1">
 				<div class="label">
-					<span class="label-text">Nummer</span>
+					<span class="label-text">Nummer <span class="text-error font-extrabold">*</span></span>
 				</div>
-				<input class="input input-bordered w-full" name="number" type="text" value={ bill.Number }/>
+				<input
+					class={ "input input-bordered w-full" , templ.KV("input-error", len(errors.Number)> 0) }
+					name="number"
+					type="text"
+					value={ bill.Number }
+				/>
+				if len(errors.Number) > 0 {
+					<div class="label">
+						<span class="label-text text-error">{ errors.Number }</span>
+					</div>
+				}
 			</label>
 			<label class="form-control w-full col-span-full md:col-span-1">
 				<div class="label">
-					<span class="label-text">PLZ</span>
+					<span class="label-text">PLZ <span class="text-error font-extrabold">*</span></span>
 				</div>
-				<input class="input input-bordered w-full" name="postcode" type="text" value={ bill.Postcode }/>
+				<input
+					class={ "input input-bordered w-full" , templ.KV("input-error", len(errors.Postcode)> 0) }
+					name="postcode"
+					type="text"
+					value={ bill.Postcode }
+				/>
+				if len(errors.Postcode) > 0 {
+					<div class="label">
+						<span class="label-text text-error">{ errors.Postcode }</span>
+					</div>
+				}
 			</label>
 			<label class="form-control w-full col-span-full md:col-span-3">
 				<div class="label">
-					<span class="label-text">Ort</span>
+					<span class="label-text">Ort <span class="text-error font-extrabold">*</span></span>
 				</div>
-				<input class="input input-bordered w-full" name="city" type="text" value={ bill.City }/>
+				<input
+					class={ "input input-bordered w-full" , templ.KV("input-error", len(errors.City)> 0) }
+					name="city"
+					type="text"
+					value={ bill.City }
+				/>
+				if len(errors.City) > 0 {
+					<div class="label">
+						<span class="label-text text-error">{ errors.City }</span>
+					</div>
+				}
 			</label>
 		</div>
 		<!-- positions for bill -->
-		<div class="my-6 card bg-base-300 w-full shadow-xl">
+		<div class={ "my-6 card bg-base-300 w-full" , templ.KV("border border-error mb-0", len(errors.Items)>0) }>
 			<div class="card-body">
 				<h2 class="card-title">Positionen</h2>
 				<table class="table">
@@ -147,20 +219,51 @@ templ CustomBillForm(bill models.BillData, errors FormErrors) {
 				</table>
 			</div>
 		</div>
+		if len(errors.Items) > 0 {
+			<div class="label">
+				<span class="label-text text-error">{ errors.Items }</span>
+			</div>
+		}
 		<!-- payment info -->
 		<div class="w-full mt-3 gap-3 grid grid-cols-1">
 			<label class="form-control w-full col-span-full md:col-span-4">
 				<div class="label">
-					<span class="label-text">Mitteilung / Zahlungszweck</span>
+					<span class="label-text">Mitteilung / Zahlungszweck <span class="text-error font-extrabold">*</span></span>
 				</div>
-				<input class="input input-bordered w-full" name="message" type="text" value={ bill.Message }/>
+				<input
+					class={ "input input-bordered w-full" , templ.KV("input-error", len(errors.Message)> 0) }
+					name="message"
+					type="text"
+					value={ bill.Message }
+				/>
+				if len(errors.Message) > 0 {
+					<div class="label">
+						<span class="label-text text-error">{ errors.Message }</span>
+					</div>
+				}
 			</label>
 			<label class="form-control w-full col-span-full md:col-span-4">
 				<div class="label">
-					<span class="label-text">Interne Informationen</span>
+					<span class="label-text">Interne Informationen <span class="text-error font-extrabold">*</span></span>
 				</div>
-				<textarea class="textarea textarea-bordered w-full h-24" name="infos">{ bill.Infos }</textarea>
+				<textarea
+					class={ "textarea textarea-bordered w-full h-24" , templ.KV("textarea-error", len(errors.Infos)> 0) }
+					name="infos"
+				>{ bill.Infos }</textarea>
+				if len(errors.Infos) > 0 {
+					<div class="label">
+						<span class="label-text text-error">{ errors.Infos }</span>
+					</div>
+				}
 			</label>
+			<div class="col-span-full text-sm">
+				<span class="text-error font-extrabold">*</span> diese Felder sind zwingend
+				auszufüllen
+			</div>
+			<div class="col-span-full text-sm">
+				<span class="text-error font-extrabold">**</span> mindestens eine Angabe nötig
+				(entweder/oder)
+			</div>
 		</div>
 		<!-- action buttons -->
 		<div class="col-span-full gap-3 flex mt-6 items-center justify-center flex-col md:flex-row">
