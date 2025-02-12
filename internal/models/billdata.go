@@ -9,6 +9,7 @@ type BillData struct {
 	Purpose       string
 	Visitor       Visitor
 	WithAddress   bool
+	Firma         string
 	FirstName     string
 	FamilyName    string
 	Street        string

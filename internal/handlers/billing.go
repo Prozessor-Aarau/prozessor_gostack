@@ -8,6 +8,7 @@ import (
 	"strconv"
 
 	"github.com/faebut/prozessor_gostack/internal/billing"
+	"github.com/faebut/prozessor_gostack/internal/forms"
 	"github.com/faebut/prozessor_gostack/internal/models"
 	"github.com/faebut/prozessor_gostack/view/bills"
 	"github.com/go-chi/chi/v5"
@@ -271,14 +272,35 @@ func (m *Repository) HandleBillCreatePost(w http.ResponseWriter, r *http.Request
 	// TODO save extern field somewhere and use it in the form
 	extern := r.Form.Get("extern") == "on"
 
+	// create a form to start validation
+	form := forms.New(r.Form)
+
 	log.Println("extern: ", strconv.FormatBool(extern))
 
 	if !extern {
+		form.Required("member")
+
 		bill.Visitor.ID = r.Form.Get("member")
 
 		bill.Infos = "was Address with Member and ID: " + bill.Visitor.ID
 	} else {
+		form.Required("street", "number", "postcode", "city")
+		// TODO check if it is a valid PostCode
+		// check if firma or name is set
+		form.OneOf("firma", "firstname")
+		form.OneOf("firma", "familyname")
+
+		// set fields
+		bill.Firma = r.Form.Get("firma")
+		bill.FirstName = r.Form.Get("firstname")
+		bill.FamilyName = r.Form.Get("familyname")
+		bill.Street = r.Form.Get("street")
+		bill.Number = r.Form.Get("number")
+		bill.Postcode = r.Form.Get("postcode")
+		bill.City = r.Form.Get("city")
+
 		bill.Infos = "This is with an extern Address"
+
 	}
 
 	bill.Message = "Resent Form"

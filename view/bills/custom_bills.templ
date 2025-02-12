@@ -43,55 +43,43 @@ templ CustomBillForm(bill models.BillData) {
       <div class="label">
         <span class="label-text">Firma</span>
       </div>
-      <input class="input input-bordered w-full" name="company" type="text" />
+      <input class="input input-bordered w-full" name="firma" type="text" value={ bill.Firma } />
     </label>
     <label class="form-control w-full col-span-full md:col-span-2">
       <div class="label">
         <span class="label-text">Vorname</span>
       </div>
-      <input class="input input-bordered w-full" name="firstname" type="text" />
+      <input class="input input-bordered w-full" name="firstname" type="text" value={ bill.FirstName } />
     </label>
     <label class="form-control w-full col-span-full md:col-span-2">
       <div class="label">
         <span class="label-text">Familienname</span>
       </div>
-      <input class="input input-bordered w-full" name="familyname" type="text" />
+      <input class="input input-bordered w-full" name="familyname" type="text" value={ bill.FamilyName } />
     </label>
     <label class="form-control w-full col-span-full md:col-span-3">
       <div class="label">
         <span class="label-text">Strasse</span>
       </div>
-      <input class="input input-bordered w-full" name="street" type="text" />
+      <input class="input input-bordered w-full" name="street" type="text" value={ bill.City } />
     </label>
     <label class="form-control w-full col-span-full md:col-span-1">
       <div class="label">
         <span class="label-text">Nummer</span>
       </div>
-      <input class="input input-bordered w-full" name="number" type="text" />
+      <input class="input input-bordered w-full" name="number" type="text" value={ bill.Number } />
     </label>
     <label class="form-control w-full col-span-full md:col-span-1">
       <div class="label">
         <span class="label-text">PLZ</span>
       </div>
-      <input class="input input-bordered w-full" name="postcode" type="text" />
+      <input class="input input-bordered w-full" name="postcode" type="text" value={ bill.Postcode } />
     </label>
     <label class="form-control w-full col-span-full md:col-span-3">
       <div class="label">
         <span class="label-text">Ort</span>
       </div>
-      <input class="input input-bordered w-full" name="city" type="text" />
-    </label>
-    <label class="form-control w-full col-span-full md:col-span-4">
-      <div class="label">
-        <span class="label-text">Telefon</span>
-      </div>
-      <input class="input input-bordered w-full" name="phone" type="text" />
-    </label>
-    <label class="form-control w-full col-span-full md:col-span-4">
-      <div class="label">
-        <span class="label-text">E-Mail</span>
-      </div>
-      <input class="input input-bordered w-full" name="email" type="text" />
+      <input class="input input-bordered w-full" name="city" type="text" value={ bill.City } />
     </label>
   </div>
   <!-- positions for bill -->
