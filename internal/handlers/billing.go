@@ -189,6 +189,11 @@ func (m *Repository) HandleBillCreateNewItem(w http.ResponseWriter, r *http.Requ
 func (m *Repository) HandleBillCreatePost(w http.ResponseWriter, r *http.Request) error {
 	// parsForm.e form
 	r.ParseForm()
+	// show all values
+	// for key, value := range r.Form {
+	//
+	// 	fmt.Printf("%s = %s\n", key, value)
+	// }
 
 	// create bill item
 
@@ -260,6 +265,21 @@ func (m *Repository) HandleBillCreatePost(w http.ResponseWriter, r *http.Request
 	}
 
 	bill.Items = items
+
+	// get form field
+	// first check if its a registered person or not for address
+	// TODO save extern field somewhere and use it in the form
+	extern := r.Form.Get("extern") == "on"
+
+	log.Println("extern: ", strconv.FormatBool(extern))
+
+	if !extern {
+		bill.Visitor.ID = r.Form.Get("member")
+
+		bill.Infos = "was Address with Member and ID: " + bill.Visitor.ID
+	} else {
+		bill.Infos = "This is with an extern Address"
+	}
 
 	bill.Message = "Resent Form"
 
