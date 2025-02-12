@@ -182,3 +182,16 @@ func (f *Form) IsHigher(field string, value int) {
 		}
 	}
 }
+
+// IsPostcode checks, if number is CH postcode
+func (f *Form) IsPostcode(field string) {
+	if !f.IsEmpty(field) {
+		number, _ := strconv.Atoi(f.Get(field))
+		if number < 1000 || number > 9999 {
+			f.Errors.Add(
+				field,
+				"Gültige CH Postleitzahl angeben",
+			)
+		}
+	}
+}

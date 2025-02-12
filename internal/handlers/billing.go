@@ -285,7 +285,7 @@ func (m *Repository) HandleBillCreatePost(w http.ResponseWriter, r *http.Request
 		bill.Infos = "was Address with Member and ID: " + bill.Visitor.ID
 	} else {
 		form.Required("street", "number", "postcode", "city")
-		// TODO check if it is a valid PostCode
+		form.IsPostcode("postcode")
 		// check if firma or name is set
 		form.OneOf("firma", "firstname")
 		form.OneOf("firma", "familyname")
