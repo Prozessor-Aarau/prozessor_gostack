@@ -6,6 +6,7 @@ import (
 	"math"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/faebut/prozessor_gostack/internal/billing"
@@ -174,8 +175,13 @@ func (m *Repository) HandleBillingPayment(w http.ResponseWriter, r *http.Request
 
 // HandleBillCreateIndex is the handler for the Bill creation form
 func (m *Repository) HandleBillCreateIndex(w http.ResponseWriter, r *http.Request) error {
+	// get categories
+	categories, err := m.DB.GetBillCategories()
+	if err != nil {
+		return err
+	}
 	// return an empty form
-	return rendering(w, r, bills.CustomBillForm(models.BillData{}, bills.FormErrors{}))
+	return rendering(w, r, bills.CustomBillForm(models.BillData{}, bills.FormErrors{}, categories))
 }
 
 // HandleBillCreateNewItem returns an empty billing item
@@ -196,6 +202,12 @@ func (m *Repository) HandleBillCreatePost(w http.ResponseWriter, r *http.Request
 	//
 	// 	fmt.Printf("%s = %s\n", key, value)
 	// }
+
+	// get categories
+	categories, err := m.DB.GetBillCategories()
+	if err != nil {
+		return err
+	}
 
 	// create bill item
 	var bill models.BillData
@@ -305,15 +317,17 @@ func (m *Repository) HandleBillCreatePost(w http.ResponseWriter, r *http.Request
 	formErrors.Extern = extern
 
 	// check validity of fields
-	form.Required("message", "infos", "date")
+	form.Required("purpose", "message", "infos", "date")
 	formErrors.Message = form.Errors.Get("message")
 	formErrors.Infos = form.Errors.Get("infos")
 	formErrors.Date = form.Errors.Get("date")
+	formErrors.Purpose = form.Errors.Get("purpose")
 
 	// get fields
 	bill.Date, _ = time.Parse("2006-01-02", r.Form.Get("date"))
 	bill.Message = r.Form.Get("message")
 	bill.Infos = r.Form.Get("infos")
+	bill.Purpose = strings.ToLower(r.Form.Get("purpose"))
 
 	if !extern {
 		// check validity
@@ -349,7 +363,7 @@ func (m *Repository) HandleBillCreatePost(w http.ResponseWriter, r *http.Request
 	// what to do if form not valid
 	if !form.Valid() {
 		// send the data to the template
-		return rendering(w, r, bills.CustomBillForm(bill, formErrors))
+		return rendering(w, r, bills.CustomBillForm(bill, formErrors, categories))
 	}
 
 	// what to do if everything is okay
@@ -373,7 +387,7 @@ func (m *Repository) HandleBillCreatePost(w http.ResponseWriter, r *http.Request
 	bill.Amount = total
 
 	// create bill
-	_, _, err := billing.CreateBill(bill, m.DB)
+	_, _, err = billing.CreateBill(bill, m.DB)
 	if err != nil {
 		return err
 	}

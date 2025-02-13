@@ -4,6 +4,8 @@ import (
 "github.com/faebut/prozessor_gostack/internal/models"
 "github.com/faebut/prozessor_gostack/internal/render"
 "github.com/faebut/prozessor_gostack/view/ui"
+"golang.org/x/text/cases"
+"golang.org/x/text/language"
 "strconv"
 )
 
@@ -17,6 +19,7 @@ Street string
 Number string
 Postcode string
 City string
+Purpose string
 Date string
 Message string
 Infos string
@@ -31,7 +34,7 @@ Count string
 UnitPrice string
 }
 
-templ CustomBillForm(bill models.BillData, errors FormErrors) {
+templ CustomBillForm(bill models.BillData, errors FormErrors, categories []string) {
 <form class="gap-3" novalidate x-data={ templ.JSONString(errors) }>
   @ui.CSRF()
   <div class="prose w-full">
@@ -220,6 +223,26 @@ templ CustomBillForm(bill models.BillData, errors FormErrors) {
   }
   <!-- payment info -->
   <div class="w-full mt-3 gap-3 grid grid-cols-1">
+    <label class="form-control w-full col-span-full md:col-span-4 dropdown dropdown-bottom">
+      <div class="label">
+        <span class="label-text">Kategorie (wenn möglich aus vorhandenen) <span
+            class="text-error font-extrabold">*</span></span>
+      </div>
+      <input type="text" id="purpose" name="purpose" list="purposelist" class={ "input input-bordered" ,
+        templ.KV("input-error", len(errors.Purpose)> 0) }
+      value={ bill.Purpose }
+      />
+      <datalist id="purposelist">
+        for _, c := range categories {
+        <option>{ cases.Title(language.English, cases.NoLower).String(c) }</option>
+        }
+      </datalist>
+      if len(errors.Purpose) > 0 {
+      <div class="label">
+        <span class="label-text text-error">{ errors.Purpose }</span>
+      </div>
+      }
+    </label>
     <label class="form-control w-full col-span-full md:col-span-4">
       <div class="label">
         <span class="label-text">Rechnungsdatum <span class="text-error font-extrabold">*</span></span>
