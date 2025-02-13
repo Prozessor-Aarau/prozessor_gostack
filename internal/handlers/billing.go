@@ -184,7 +184,7 @@ func (m *Repository) HandleBillCreateNewItem(w http.ResponseWriter, r *http.Requ
 	item.ID = uuid.New().String()
 
 	// return an empty form
-	return rendering(w, r, bills.BillItem(item))
+	return rendering(w, r, bills.BillItem(item, []bills.ItemError{}))
 }
 
 func (m *Repository) HandleBillCreatePost(w http.ResponseWriter, r *http.Request) error {
@@ -197,7 +197,6 @@ func (m *Repository) HandleBillCreatePost(w http.ResponseWriter, r *http.Request
 	// }
 
 	// create bill item
-
 	var bill models.BillData
 
 	// push all item fields to slices
@@ -229,19 +228,13 @@ func (m *Repository) HandleBillCreatePost(w http.ResponseWriter, r *http.Request
 		}
 		if key == "item_count" {
 			for i := 0; i < len(value); i++ {
-				count, err := strconv.ParseFloat(value[i], 64)
-				if err != nil {
-					return err
-				}
+				count, _ := strconv.ParseFloat(value[i], 64)
 				item_count = append(item_count, count)
 			}
 		}
 		if key == "item_unit_price" {
 			for i := 0; i < len(value); i++ {
-				price, err := strconv.ParseFloat(value[i], 64)
-				if err != nil {
-					return err
-				}
+				price, _ := strconv.ParseFloat(value[i], 64)
 				item_unit_price = append(item_unit_price, price)
 			}
 		}
@@ -261,8 +254,32 @@ func (m *Repository) HandleBillCreatePost(w http.ResponseWriter, r *http.Request
 		items = append(items, item)
 	}
 
-	for _, item := range items {
-		log.Println(item)
+	// check if the necessary fields are set for the items (validation)
+	var itemErrors []bills.ItemError
+
+	for _, i := range items {
+		isError := false
+		var iError bills.ItemError
+
+		if len(i.Description) < 1 {
+			iError.Description = "Feld ist obligatorisch"
+			isError = true
+		}
+
+		if i.Count == 0 {
+			iError.Count = "Feld ist obligatorisch"
+			isError = true
+		}
+
+		if i.UnitPrice == 0 {
+			iError.UnitPrice = "Feld ist obligatorisch"
+			isError = true
+		}
+
+		if isError {
+			iError.ID = i.ID
+			itemErrors = append(itemErrors, iError)
+		}
 	}
 
 	bill.Items = items
@@ -274,10 +291,11 @@ func (m *Repository) HandleBillCreatePost(w http.ResponseWriter, r *http.Request
 	// create a form to start validation
 	form := forms.New(r.Form)
 	formErrors := bills.FormErrors{}
+	formErrors.Items = itemErrors
 
 	// check if there are items and set error if not
 	if len(bill.Items) == 0 {
-		formErrors.Items = "Mindestens eine Position hinzufügen"
+		formErrors.Item = "Mindestens eine Position hinzufügen"
 	}
 
 	// set extern toggle state

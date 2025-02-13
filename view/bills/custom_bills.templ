@@ -18,7 +18,15 @@ Postcode string
 City string
 Message string
 Infos string
-Items string
+Item string
+Items []ItemError
+}
+
+type ItemError struct {
+ID string
+Description string
+Count string
+UnitPrice string
 }
 
 templ CustomBillForm(bill models.BillData, errors FormErrors) {
@@ -160,7 +168,9 @@ templ CustomBillForm(bill models.BillData, errors FormErrors) {
     </label>
   </div>
   <!-- positions for bill -->
-  <div class={ "my-6 card bg-base-300 w-full" , templ.KV("border border-error mb-0", len(errors.Items)>0) }>
+  <div class={ "my-6 card bg-base-300 w-full" , templ.KV("border border-error mb-0", (len(errors.Item)>0) ||
+    len(errors.Items)>0) }
+    >
     <div class="card-body">
       <h2 class="card-title">Positionen</h2>
       <table class="table">
@@ -177,7 +187,7 @@ templ CustomBillForm(bill models.BillData, errors FormErrors) {
         </thead>
         <tbody id="rowbody">
           for _, item := range bill.Items {
-          @BillItem(item)
+          @BillItem(item, errors.Items)
           }
           <tr hx-on::after-swap="hideArrows()" id="endrow">
             <th>
@@ -196,9 +206,14 @@ templ CustomBillForm(bill models.BillData, errors FormErrors) {
       </table>
     </div>
   </div>
-  if len(errors.Items) > 0 {
+  if len(errors.Item) > 0 || len(errors.Items) > 0 {
   <div class="label">
-    <span class="label-text text-error">{ errors.Items }</span>
+    <span class="label-text text-error">
+      { errors.Item }
+      if len(errors.Items) > 0 {
+      Ein oder mehrere Felder sind fehlerhaft
+      }
+    </span>
   </div>
   }
   <!-- payment info -->
@@ -328,7 +343,18 @@ templ CustomBillForm(bill models.BillData, errors FormErrors) {
 </script>
 }
 
-templ BillItem(item models.BillItem) {
+templ BillItem(item models.BillItem, errors []ItemError) {
+<!-- get error belonging to this item -->
+{{
+var iError ItemError
+
+for _, e := range errors {
+if e.ID == item.ID {
+iError = e
+break
+}
+}
+}}
 <tr id={ item.ID } x-data={ templ.JSONString(item) }>
   <th>
     <button type="button" class="btn btn-outline btn-xs btn-circle btn-error" @click="removeItem(ID)">
@@ -345,16 +371,31 @@ templ BillItem(item models.BillItem) {
       @click="moveItemUp(ID)"></span>
   </td>
   <td>
-    <input type="text" class="w-full input-sm input input-bordered" name="item_description" value={ item.Description
-      } />
+    <input type="text" class={ "w-full input-sm input input-bordered" , templ.KV("input-error", len(iError.Description)>
+    0) }
+    name="item_description"
+    value={ item.Description }
+    />
   </td>
   <td>
-    <input name="item_count" type="number" class="input input-sm input-bordered max-w-20" min="0" step="1"
-      x-model="Count" @keyup="getFinalTotal" @change="getFinalTotal" />
+    <input name="item_count" type="number" class={ "input input-sm input-bordered max-w-20" , templ.KV("input-error",
+      len(iError.Count)> 0) }
+    min="0"
+    step="1"
+    x-model="Count"
+    @keyup="getFinalTotal"
+    @change="getFinalTotal"
+    />
   </td>
   <td>
-    <input name="item_unit_price" type="number" class="input input-sm input-bordered max-w-20" min="0" step="0.05"
-      x-model="UnitPrice" @keyup="getFinalTotal" @change="getFinalTotal" />
+    <input name="item_unit_price" type="number" class={ "input input-sm input-bordered max-w-20" ,
+      templ.KV("input-error", len(iError.UnitPrice)> 0) }
+    min="0"
+    step="0.05"
+    x-model="UnitPrice"
+    @keyup="getFinalTotal"
+    @change="getFinalTotal"
+    />
   </td>
   <td class="font-bold text-right subtotal" x-text="(Math.round(Count * UnitPrice * 100) / 100).toFixed(2)"></td>
 </tr>
