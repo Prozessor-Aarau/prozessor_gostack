@@ -6,6 +6,7 @@ import (
 
 type BillData struct {
 	ID            int
+	Date          time.Time
 	Purpose       string
 	Visitor       Visitor
 	WithAddress   bool

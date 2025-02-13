@@ -6,6 +6,7 @@ import (
 	"math"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/faebut/prozessor_gostack/internal/billing"
 	"github.com/faebut/prozessor_gostack/internal/forms"
@@ -302,11 +303,13 @@ func (m *Repository) HandleBillCreatePost(w http.ResponseWriter, r *http.Request
 	formErrors.Extern = extern
 
 	// check validity of fields
-	form.Required("message", "infos")
+	form.Required("message", "infos", "date")
 	formErrors.Message = form.Errors.Get("message")
 	formErrors.Infos = form.Errors.Get("infos")
+	formErrors.Date = form.Errors.Get("date")
 
 	// get fields
+	bill.Date, _ = time.Parse("2006-01-02", r.Form.Get("date"))
 	bill.Message = r.Form.Get("message")
 	bill.Infos = r.Form.Get("infos")
 

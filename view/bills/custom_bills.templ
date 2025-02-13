@@ -2,6 +2,7 @@ package bills
 
 import (
 "github.com/faebut/prozessor_gostack/internal/models"
+"github.com/faebut/prozessor_gostack/internal/render"
 "github.com/faebut/prozessor_gostack/view/ui"
 "strconv"
 )
@@ -16,6 +17,7 @@ Street string
 Number string
 Postcode string
 City string
+Date string
 Message string
 Infos string
 Item string
@@ -218,6 +220,23 @@ templ CustomBillForm(bill models.BillData, errors FormErrors) {
   }
   <!-- payment info -->
   <div class="w-full mt-3 gap-3 grid grid-cols-1">
+    <label class="form-control w-full col-span-full md:col-span-4">
+      <div class="label">
+        <span class="label-text">Rechnungsdatum <span class="text-error font-extrabold">*</span></span>
+      </div>
+      <input type="date" id="date" name="date" class={ "input input-bordered" , templ.KV("input-error",
+        len(errors.Date)> 0) }
+      if render.RealDate(bill.Date) {
+      value={ render.HumanDate(bill.Date) }
+      }
+      required
+      />
+      if len(errors.Date) > 0 {
+      <div class="label">
+        <span class="label-text text-error">{ errors.Date }</span>
+      </div>
+      }
+    </label>
     <label class="form-control w-full col-span-full md:col-span-4">
       <div class="label">
         <span class="label-text">Mitteilung / Zahlungszweck <span class="text-error font-extrabold">*</span></span>
