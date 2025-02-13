@@ -386,6 +386,9 @@ func (m *Repository) HandleBillCreatePost(w http.ResponseWriter, r *http.Request
 	}
 	bill.Amount = total
 
+	// set bill to custom
+	bill.Custom = true
+
 	// create bill
 	_, _, err = billing.CreateBill(bill, m.DB)
 	if err != nil {

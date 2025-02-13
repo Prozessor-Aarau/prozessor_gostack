@@ -26,6 +26,7 @@ type BillData struct {
 	Reference     string
 	FileName      string
 	Paid          bool
+	Custom        bool
 	CreatedOn     time.Time
 	UpdatedOn     time.Time
 }

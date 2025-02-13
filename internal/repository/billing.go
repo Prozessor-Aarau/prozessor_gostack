@@ -20,6 +20,7 @@ func (m *postgresDBRepo) CreateBill(b models.BillData) (int, error) {
     purpose, 
     visitor_id, 
     with_address, 
+    firma,
     first_name, 
     family_name, 
     street, 
@@ -32,15 +33,17 @@ func (m *postgresDBRepo) CreateBill(b models.BillData) (int, error) {
     message,
     with_reference,
     reference,
+    custom,
     created_on, 
     updated_on)
-  VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
+  VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)
   RETURNING id`
 
 	err := m.DB.QueryRowContext(ctx, stmt,
 		b.Purpose,
 		NewNullString(b.Visitor.ID),
 		b.WithAddress,
+		NewNullString(b.Firma),
 		NewNullString(b.FirstName),
 		NewNullString(b.FamilyName),
 		NewNullString(b.Street),
@@ -53,6 +56,7 @@ func (m *postgresDBRepo) CreateBill(b models.BillData) (int, error) {
 		NewNullString(b.Message),
 		b.WithReference,
 		NewNullString(b.Reference),
+		b.Custom,
 		time.Now(),
 		time.Now(),
 	).Scan(&id)
@@ -128,7 +132,7 @@ func (m *postgresDBRepo) GetAllBills(page int, filter models.BillFilter) ([]mode
 
 	offset := 10 * (page - 1)
 
-	query := fmt.Sprintf(`SELECT b.id, b.purpose, b.with_address, b.first_name, b.family_name, b.street, b.number, b.postcode, b.city, b.infos, b.with_message, b.message, b.with_reference, b.reference, b.file_name, b.paid, b.amount, b.created_on, b.updated_on, v.id, v.first_name, v.family_name, v.address, v.postcode, v.city, v.ressort_id
+	query := fmt.Sprintf(`SELECT b.id, b.purpose, b.with_address, b.firma, b.first_name, b.family_name, b.street, b.number, b.postcode, b.city, b.infos, b.with_message, b.message, b.with_reference, b.reference, b.custom, b.file_name, b.paid, b.amount, b.created_on, b.updated_on, v.id, v.first_name, v.family_name, v.address, v.postcode, v.city, v.ressort_id
   FROM billing b
   LEFT OUTER JOIN visitors v ON v.id = b.visitor_id
     WHERE (b.id::varchar(20) LIKE LOWER($1)
@@ -156,6 +160,7 @@ func (m *postgresDBRepo) GetAllBills(page int, filter models.BillFilter) ([]mode
 		var b models.BillData
 
 		// start handling null types
+		var aFirma sql.NullString
 		var aFirstName sql.NullString
 		var aFamilyName sql.NullString
 		var aStreet sql.NullString
@@ -177,6 +182,7 @@ func (m *postgresDBRepo) GetAllBills(page int, filter models.BillFilter) ([]mode
 			&b.ID,
 			&b.Purpose,
 			&b.WithAddress,
+			&aFirma,
 			&aFirstName,
 			&aFamilyName,
 			&aStreet,
@@ -188,6 +194,7 @@ func (m *postgresDBRepo) GetAllBills(page int, filter models.BillFilter) ([]mode
 			&message,
 			&b.WithReference,
 			&reference,
+			&b.Custom,
 			&filename,
 			&b.Paid,
 			&b.Amount,
@@ -207,6 +214,9 @@ func (m *postgresDBRepo) GetAllBills(page int, filter models.BillFilter) ([]mode
 		}
 
 		// handling null types
+		if aFirma.Valid {
+			b.Firma = aFirma.String
+		}
 		if aFirstName.Valid {
 			b.FirstName = aFirstName.String
 		}
