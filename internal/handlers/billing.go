@@ -241,6 +241,7 @@ func (m *Repository) HandleBillCreatePost(w http.ResponseWriter, r *http.Request
 		}
 	}
 	// build items and push to slice
+	form := forms.New(r.Form)
 	var items []models.BillItem
 
 	for i := 0; i < len(item_id); i++ {
@@ -280,6 +281,7 @@ func (m *Repository) HandleBillCreatePost(w http.ResponseWriter, r *http.Request
 		if isError {
 			iError.ID = i.ID
 			itemErrors = append(itemErrors, iError)
+			form.Errors.Add("item", "Feld ist obligatorisch")
 		}
 	}
 
@@ -290,12 +292,12 @@ func (m *Repository) HandleBillCreatePost(w http.ResponseWriter, r *http.Request
 	extern := r.Form.Get("extern") == "on"
 
 	// create a form to start validation
-	form := forms.New(r.Form)
 	formErrors := bills.FormErrors{}
 	formErrors.Items = itemErrors
 
 	// check if there are items and set error if not
 	if len(bill.Items) == 0 {
+		form.Errors.Add("items", "Mindestens eine Position hinzufügen")
 		formErrors.Item = "Mindestens eine Position hinzufügen"
 	}
 
@@ -344,5 +346,12 @@ func (m *Repository) HandleBillCreatePost(w http.ResponseWriter, r *http.Request
 		bill.City = r.Form.Get("city")
 	}
 
-	return rendering(w, r, bills.CustomBillForm(bill, formErrors))
+	// what to do if form not valid
+	if !form.Valid() {
+		// send the data to the template
+		return rendering(w, r, bills.CustomBillForm(bill, formErrors))
+	}
+
+	// what to do if everything is okay
+	return hxRedirect(w, r, "/admin/billing")
 }
