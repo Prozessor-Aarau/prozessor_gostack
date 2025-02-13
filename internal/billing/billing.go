@@ -43,7 +43,6 @@ func CreateBill(data models.BillData, m repository.DatabaseRepo) (string, int, e
 	// set bill data
 	// address
 	if len(data.Visitor.Address) > 0 && data.Visitor.Address != "no address" {
-		data.WithAddress = true
 		exploded := strings.Split(data.Visitor.Address, " ")
 		data.Number = exploded[len(exploded)-1]
 
@@ -56,11 +55,20 @@ func CreateBill(data models.BillData, m repository.DatabaseRepo) (string, int, e
 			}
 		}
 
-		bill.PayeeName = data.Visitor.FirstName + " " + data.Visitor.FamilyName
+		data.FirstName = data.Visitor.FirstName
+		data.FamilyName = data.Visitor.FamilyName
+		data.Postcode = data.Visitor.Postcode
+		data.City = data.Visitor.City
+	}
+
+	// now if any address exists, write it to the bill struct
+	if len(data.Street) > 0 {
+		data.WithAddress = true
+		bill.PayeeName = data.FirstName + " " + data.FamilyName
+		bill.PayeeZIPCode = data.Postcode
+		bill.PayeePlace = data.City
 		bill.PayeeStreet = data.Street
 		bill.PayeeNumber = data.Number
-		bill.PayeeZIPCode = data.Visitor.Postcode
-		bill.PayeePlace = data.Visitor.City
 		bill.PayeeCountry = "CH"
 	}
 
