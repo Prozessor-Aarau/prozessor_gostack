@@ -353,5 +353,30 @@ func (m *Repository) HandleBillCreatePost(w http.ResponseWriter, r *http.Request
 	}
 
 	// what to do if everything is okay
+	// build BillData first
+	if !extern {
+		// get all of visitor
+		visitor, err := m.DB.VisitorByID(bill.Visitor.ID)
+		if err != nil {
+			return err
+		}
+		bill.Visitor = visitor
+	}
+
+	// get total
+	var total float64
+	for _, i := range bill.Items {
+		price := (math.Round(i.Count*100*i.UnitPrice) / 100)
+
+		total += price
+	}
+	bill.Amount = total
+
+	// create bill
+	_, _, err := billing.CreateBill(bill, m.DB)
+	if err != nil {
+		return err
+	}
+
 	return hxRedirect(w, r, "/admin/billing")
 }
