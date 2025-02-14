@@ -438,6 +438,47 @@ func (m *postgresDBRepo) GetBillByID(id int) (models.BillData, error) {
 		b.Visitor.Ressort.ID = int(vRessortID.Int32)
 	}
 
+	// get bill items
+	billQuery := `SELECT id, position, description, unit_price, count, created_on, updated_on
+	 FROM bill_items
+	 WHERE bill_id = $1`
+
+	rows, err := m.DB.QueryContext(ctx, billQuery, id)
+	if err != nil {
+		return b, err
+	}
+
+	defer rows.Close()
+
+	var items []models.BillItem
+
+	for rows.Next() {
+		var i models.BillItem
+
+		err := rows.Scan(
+			&i.ID,
+			&i.Position,
+			&i.Description,
+			&i.UnitPrice,
+			&i.Count,
+			&i.CreatedOn,
+			&i.UpdatedOn,
+		)
+
+		if err != nil {
+			return b, err
+		}
+
+		items = append(items, i)
+	}
+
+	if err = rows.Err(); err != nil {
+		return b, err
+	}
+
+	// add items to the bill
+	b.Items = items
+
 	return b, nil
 }
 

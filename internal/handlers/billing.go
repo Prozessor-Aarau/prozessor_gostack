@@ -397,3 +397,26 @@ func (m *Repository) HandleBillCreatePost(w http.ResponseWriter, r *http.Request
 
 	return hxRedirect(w, r, "/admin/billing")
 }
+
+// HandleBillEditIndex is the handler for the Bill creation form
+func (m *Repository) HandleBillEditIndex(w http.ResponseWriter, r *http.Request) error {
+	bID, err := strconv.Atoi(chi.URLParam(r, "id"))
+	if err != nil {
+		log.Println("Error converting bill id to int", err)
+		return err
+	}
+
+	bill, err := m.DB.GetBillByID(bID)
+	if err != nil {
+		log.Println("Error getting bill from database:", err)
+		return err
+	}
+
+	// get categories
+	categories, err := m.DB.GetBillCategories()
+	if err != nil {
+		return err
+	}
+	// return an empty form
+	return rendering(w, r, bills.CustomBillForm(bill, bills.FormErrors{Edit: true}, categories))
+}
