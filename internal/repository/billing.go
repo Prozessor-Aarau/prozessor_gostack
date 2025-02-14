@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/faebut/prozessor_gostack/internal/models"
+	"github.com/google/uuid"
 )
 
 // CreateBill puts a new bill into the database and returns the id
@@ -63,6 +64,48 @@ func (m *postgresDBRepo) CreateBill(b models.BillData) (int, error) {
 
 	if err != nil {
 		return 0, err
+	}
+
+	// handle items and push them to the database
+	if len(b.Items) > 0 {
+
+		// create slices
+		var ids []uuid.UUID
+		var billIDs []int
+		var positions []int
+		var descriptions []string
+		var unitPrices []float64
+		var counts []float64
+
+		for _, i := range b.Items {
+			uid, err := uuid.Parse(i.ID)
+			if err != nil {
+				return 0, err
+			}
+			ids = append(ids, uid)
+			billIDs = append(billIDs, id)
+			positions = append(positions, i.Position)
+			descriptions = append(descriptions, i.Description)
+			unitPrices = append(unitPrices, i.UnitPrice)
+			counts = append(counts, i.Count)
+		}
+
+		bStmt := `
+    INSERT INTO bill_items (id, bill_id, position, description, unit_price, count)
+    VALUES (
+      UNNEST($1::UUID[]), 
+      UNNEST($2::INT[]), 
+      UNNEST($3::INT[]), 
+      UNNEST($4::TEXT[]), 
+      UNNEST($5::REAL[]), 
+      UNNEST($6::REAL[]) 
+    )`
+
+		_, err := m.DB.ExecContext(ctx, bStmt, ids, billIDs, positions, descriptions, unitPrices, counts)
+
+		if err != nil {
+			return 0, err
+		}
 	}
 
 	return id, nil

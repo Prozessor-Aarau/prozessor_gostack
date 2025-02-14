@@ -37,7 +37,6 @@ type BillItem struct {
 	Description string
 	UnitPrice   float64
 	Count       float64
-	Price       float64
 	CreatedOn   time.Time
 	UpdatedOn   time.Time
 }
