@@ -524,6 +524,7 @@ func (m *Repository) HandleLogisticsCreateBillPost(w http.ResponseWriter, r *htt
 	// create bill
 	file, billID, err := billing.CreateBill(
 		models.BillData{
+			Date:    time.Now(),
 			Purpose: "lagerplatz",
 			Visitor: visitor,
 			Amount:  total,

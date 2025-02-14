@@ -30,6 +30,7 @@ func (m *postgresDBRepo) CreateBill(b models.BillData) (int, error) {
     city,
     amount,
     infos,
+    date,
     with_message,
     message,
     with_reference,
@@ -37,7 +38,7 @@ func (m *postgresDBRepo) CreateBill(b models.BillData) (int, error) {
     custom,
     created_on, 
     updated_on)
-  VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)
+  VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20)
   RETURNING id`
 
 	err := m.DB.QueryRowContext(ctx, stmt,
@@ -53,6 +54,7 @@ func (m *postgresDBRepo) CreateBill(b models.BillData) (int, error) {
 		NewNullString(b.City),
 		NewNullFloat64(b.Amount),
 		NewNullString(b.Infos),
+		b.Date,
 		b.WithMessage,
 		NewNullString(b.Message),
 		b.WithReference,
@@ -175,7 +177,7 @@ func (m *postgresDBRepo) GetAllBills(page int, filter models.BillFilter) ([]mode
 
 	offset := 10 * (page - 1)
 
-	query := fmt.Sprintf(`SELECT b.id, b.purpose, b.with_address, b.firma, b.first_name, b.family_name, b.street, b.number, b.postcode, b.city, b.infos, b.with_message, b.message, b.with_reference, b.reference, b.custom, b.file_name, b.paid, b.amount, b.created_on, b.updated_on, v.id, v.first_name, v.family_name, v.address, v.postcode, v.city, v.ressort_id
+	query := fmt.Sprintf(`SELECT b.id, b.purpose, b.with_address, b.firma, b.first_name, b.family_name, b.street, b.number, b.postcode, b.city, b.infos, b.date, b.with_message, b.message, b.with_reference, b.reference, b.custom, b.file_name, b.paid, b.amount, b.created_on, b.updated_on, v.id, v.first_name, v.family_name, v.address, v.postcode, v.city, v.ressort_id
   FROM billing b
   LEFT OUTER JOIN visitors v ON v.id = b.visitor_id
     WHERE (b.id::varchar(20) LIKE LOWER($1)
@@ -233,6 +235,7 @@ func (m *postgresDBRepo) GetAllBills(page int, filter models.BillFilter) ([]mode
 			&aPostcode,
 			&aCity,
 			&b.Infos,
+			&b.Date,
 			&b.WithMessage,
 			&message,
 			&b.WithReference,
@@ -324,7 +327,7 @@ func (m *postgresDBRepo) GetBillByID(id int) (models.BillData, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	query := `SELECT b.id, b.purpose, b.with_address, b.first_name, b.family_name, b.street, b.number, b.postcode, b.city, b.infos, b.with_message, b.message, b.with_reference, b.reference, b.file_name, b.paid, b.amount, b.created_on, b.updated_on, v.id, v.first_name, v.family_name, v.address, v.postcode, v.city, v.ressort_id
+	query := `SELECT b.id, b.purpose, b.with_address, b.first_name, b.family_name, b.street, b.number, b.postcode, b.city, b.infos, b.date, b.with_message, b.message, b.with_reference, b.reference, b.file_name, b.paid, b.amount, b.created_on, b.updated_on, v.id, v.first_name, v.family_name, v.address, v.postcode, v.city, v.ressort_id
   FROM billing b
   LEFT OUTER JOIN visitors v ON v.id = b.visitor_id
   WHERE b.id = $1`
@@ -362,6 +365,7 @@ func (m *postgresDBRepo) GetBillByID(id int) (models.BillData, error) {
 		&aPostcode,
 		&aCity,
 		&b.Infos,
+		&b.Date,
 		&b.WithMessage,
 		&message,
 		&b.WithReference,
@@ -479,7 +483,7 @@ func (m *postgresDBRepo) SetBillPayment(b models.BillData) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	stmt := "UPDATE billing SET paid = $1 WHERE id = $2"
+	stmt := "UPDATE billing SET paid = $1, updated_on = NOW() WHERE id = $2"
 
 	_, err := m.DB.ExecContext(ctx, stmt, b.Paid, b.ID)
 
