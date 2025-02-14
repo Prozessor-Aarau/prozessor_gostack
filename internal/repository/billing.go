@@ -327,7 +327,7 @@ func (m *postgresDBRepo) GetBillByID(id int) (models.BillData, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	query := `SELECT b.id, b.purpose, b.with_address, b.first_name, b.family_name, b.street, b.number, b.postcode, b.city, b.infos, b.date, b.with_message, b.message, b.with_reference, b.reference, b.file_name, b.paid, b.amount, b.created_on, b.updated_on, v.id, v.first_name, v.family_name, v.address, v.postcode, v.city, v.ressort_id
+	query := `SELECT b.id, b.purpose, b.with_address, b.firma, b.first_name, b.family_name, b.street, b.number, b.postcode, b.city, b.infos, b.date, b.with_message, b.message, b.with_reference, b.reference, b.file_name, b.paid, b.amount, b.created_on, b.updated_on, v.id, v.first_name, v.family_name, v.address, v.postcode, v.city, v.ressort_id
   FROM billing b
   LEFT OUTER JOIN visitors v ON v.id = b.visitor_id
   WHERE b.id = $1`
@@ -337,6 +337,7 @@ func (m *postgresDBRepo) GetBillByID(id int) (models.BillData, error) {
 	var b models.BillData
 
 	// start handling null types
+	var aFirma sql.NullString
 	var aFirstName sql.NullString
 	var aFamilyName sql.NullString
 	var aStreet sql.NullString
@@ -358,6 +359,7 @@ func (m *postgresDBRepo) GetBillByID(id int) (models.BillData, error) {
 		&b.ID,
 		&b.Purpose,
 		&b.WithAddress,
+		&aFirma,
 		&aFirstName,
 		&aFamilyName,
 		&aStreet,
@@ -389,6 +391,9 @@ func (m *postgresDBRepo) GetBillByID(id int) (models.BillData, error) {
 	}
 
 	// handling null types
+	if aFirma.Valid {
+		b.Firma = aFirma.String
+	}
 	if aFirstName.Valid {
 		b.FirstName = aFirstName.String
 	}
@@ -437,6 +442,47 @@ func (m *postgresDBRepo) GetBillByID(id int) (models.BillData, error) {
 	if vRessortID.Valid {
 		b.Visitor.Ressort.ID = int(vRessortID.Int32)
 	}
+
+	// get bill items
+	billQuery := `SELECT id, position, description, unit_price, count, created_on, updated_on
+	 FROM bill_items
+	 WHERE bill_id = $1`
+
+	rows, err := m.DB.QueryContext(ctx, billQuery, id)
+	if err != nil {
+		return b, err
+	}
+
+	defer rows.Close()
+
+	var items []models.BillItem
+
+	for rows.Next() {
+		var i models.BillItem
+
+		err := rows.Scan(
+			&i.ID,
+			&i.Position,
+			&i.Description,
+			&i.UnitPrice,
+			&i.Count,
+			&i.CreatedOn,
+			&i.UpdatedOn,
+		)
+
+		if err != nil {
+			return b, err
+		}
+
+		items = append(items, i)
+	}
+
+	if err = rows.Err(); err != nil {
+		return b, err
+	}
+
+	// add items to the bill
+	b.Items = items
 
 	return b, nil
 }

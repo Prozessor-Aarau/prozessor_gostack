@@ -10,6 +10,7 @@ import (
 )
 
 type FormErrors struct {
+Edit bool
 Extern bool
 Member string
 Firma string
@@ -38,7 +39,11 @@ templ CustomBillForm(bill models.BillData, errors FormErrors, categories []strin
 <form class="gap-3" novalidate x-data={ templ.JSONString(errors) }>
   @ui.CSRF()
   <div class="prose w-full">
+    if errors.Edit {
+    <h2>Rechnung Nr. { strconv.Itoa(bill.ID) } Bearbeiten</h2>
+    } else {
     <h2>Neue Rechnung erstellen</h2>
+    }
   </div>
   <!-- toggle intern/extern -->
   <div class="form-control w-full mt-4">
@@ -225,8 +230,9 @@ templ CustomBillForm(bill models.BillData, errors FormErrors, categories []strin
   <div class="w-full mt-3 gap-3 grid grid-cols-1">
     <label class="form-control w-full col-span-full md:col-span-4 dropdown dropdown-bottom">
       <div class="label">
-        <span class="label-text">Kategorie (wenn möglich aus vorhandenen) <span
-            class="text-error font-extrabold">*</span></span>
+        <span class="label-text">
+          Kategorie (wenn möglich aus vorhandenen) <span class="text-error font-extrabold">*</span>
+        </span>
       </div>
       <input type="text" id="purpose" name="purpose" list="purposelist" class={ "input input-bordered" ,
         templ.KV("input-error", len(errors.Purpose)> 0) }
@@ -299,9 +305,15 @@ templ CustomBillForm(bill models.BillData, errors FormErrors, categories []strin
   </div>
   <!-- action buttons -->
   <div class="col-span-full gap-3 flex mt-6 items-center justify-center flex-col md:flex-row">
-    <a class="btn btn-success" hx-post="/admin/billing/create" hx-target="#content" hx-on::after-request="hideArrows()">
+    if errors.Edit {
+    <a class="btn btn-success" hx-post={ "/admin/billing/edit/" + strconv.Itoa(bill.ID) } hx-target="#content">
+      Rechnung bearbeiten
+    </a>
+    } else {
+    <a class="btn btn-success" hx-post="/admin/billing/create" hx-target="#content">
       Rechnung erstellen
     </a>
+    }
     <a href="/admin/billing" class="btn btn-warning">
       <span class="i-mdi-cancel-bold"></span>
       Abbrechen
@@ -324,6 +336,7 @@ templ CustomBillForm(bill models.BillData, errors FormErrors, categories []strin
     }
 
     finaltotal.innerText = (Math.round(total * 100) / 100).toFixed(2)
+    console.log("getting total")
   }
 
   function removeItem(eid) {
@@ -379,9 +392,12 @@ templ CustomBillForm(bill models.BillData, errors FormErrors, categories []strin
     }
   }
 
-  // fire once
-  hideArrows();
-  getFinalTotal();
+  // fire once page is loaded
+  document.body.addEventListener('htmx:afterSettle', function (evt) {
+    evt.preventDefault();
+    getFinalTotal();
+    hideArrows();
+  });
 </script>
 }
 

@@ -194,14 +194,11 @@ func (m *Repository) HandleBillCreateNewItem(w http.ResponseWriter, r *http.Requ
 	return rendering(w, r, bills.BillItem(item, []bills.ItemError{}))
 }
 
-func (m *Repository) HandleBillCreatePost(w http.ResponseWriter, r *http.Request) error {
-	// parsForm.e form
+func (m *Repository) HandleBillCreateEditPost(w http.ResponseWriter, r *http.Request) error {
+	// set initial value
+	edit := false
+	// parse form
 	r.ParseForm()
-	// show all values
-	// for key, value := range r.Form {
-	//
-	// 	fmt.Printf("%s = %s\n", key, value)
-	// }
 
 	// get categories
 	categories, err := m.DB.GetBillCategories()
@@ -211,6 +208,19 @@ func (m *Repository) HandleBillCreatePost(w http.ResponseWriter, r *http.Request
 
 	// create bill item
 	var bill models.BillData
+
+	// get route from request url
+	exploded := strings.Split(r.RequestURI, "/")
+	if exploded[3] == "edit" {
+		id, err := strconv.Atoi(chi.URLParam(r, "id"))
+		if err != nil {
+			log.Println("Error converting string to int:", err)
+			return err
+		}
+		bill.ID = id
+		edit = true
+
+	}
 
 	// push all item fields to slices
 	var item_id []string
@@ -306,6 +316,8 @@ func (m *Repository) HandleBillCreatePost(w http.ResponseWriter, r *http.Request
 	// create a form to start validation
 	formErrors := bills.FormErrors{}
 	formErrors.Items = itemErrors
+	// set edit if it's edit
+	formErrors.Edit = edit
 
 	// check if there are items and set error if not
 	if len(bill.Items) == 0 {
@@ -389,11 +401,38 @@ func (m *Repository) HandleBillCreatePost(w http.ResponseWriter, r *http.Request
 	// set bill to custom
 	bill.Custom = true
 
-	// create bill
-	_, _, err = billing.CreateBill(bill, m.DB)
-	if err != nil {
-		return err
+	if !edit {
+		// create bill
+		_, _, err = billing.CreateBill(bill, m.DB)
+		if err != nil {
+			return err
+		}
+	} else {
+		log.Println("doing stuff for editing")
 	}
 
 	return hxRedirect(w, r, "/admin/billing")
+}
+
+// HandleBillEditIndex is the handler for the Bill creation form
+func (m *Repository) HandleBillEditIndex(w http.ResponseWriter, r *http.Request) error {
+	bID, err := strconv.Atoi(chi.URLParam(r, "id"))
+	if err != nil {
+		log.Println("Error converting bill id to int", err)
+		return err
+	}
+
+	bill, err := m.DB.GetBillByID(bID)
+	if err != nil {
+		log.Println("Error getting bill from database:", err)
+		return err
+	}
+
+	// get categories
+	categories, err := m.DB.GetBillCategories()
+	if err != nil {
+		return err
+	}
+	// return an empty form
+	return rendering(w, r, bills.CustomBillForm(bill, bills.FormErrors{Edit: true, Extern: len(bill.Visitor.ID) < 1}, categories))
 }
