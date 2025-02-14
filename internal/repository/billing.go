@@ -186,7 +186,7 @@ func (m *postgresDBRepo) GetAllBills(page int, filter models.BillFilter) ([]mode
     %s
     %s
     ORDER BY 
-    b.updated_on DESC
+    b.date DESC
     OFFSET $2
     LIMIT 10  
   `,
