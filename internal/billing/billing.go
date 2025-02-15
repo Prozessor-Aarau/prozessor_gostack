@@ -6,7 +6,6 @@ import (
 	"os"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/faebut/prozessor_gostack/internal/models"
 	"github.com/faebut/prozessor_gostack/internal/qrbill"
@@ -88,7 +87,11 @@ func CreateBill(data models.BillData, m repository.DatabaseRepo) (string, int, e
 	bill.Amount = strconv.FormatFloat(data.Amount, 'f', 2, 64)
 
 	// create bill and return id
-	data.ID, err = m.CreateBill(data)
+	if data.ID > 0 {
+		err = m.UpdateBill(data)
+	} else {
+		data.ID, err = m.CreateBill(data)
+	}
 	if err != nil {
 		return "", 0, err
 	}
@@ -107,7 +110,7 @@ func CreateBill(data models.BillData, m repository.DatabaseRepo) (string, int, e
 
 	// generate file name
 	// set time string for default filename
-	timeString := time.Now().Format("060102")
+	timeString := data.Date.Format("060102")
 	data.FileName = fmt.Sprintf("%s_%d_%s.pdf", timeString, data.ID, data.Purpose)
 
 	combinedPath := filepath + data.FileName

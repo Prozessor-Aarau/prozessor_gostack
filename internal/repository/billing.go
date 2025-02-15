@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/faebut/prozessor_gostack/internal/models"
@@ -548,6 +549,148 @@ func (m *postgresDBRepo) DeleteBill(id int) error {
 	stmt := "DELETE FROM billing WHERE id = $1"
 
 	_, err := m.DB.ExecContext(ctx, stmt, id)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// UpdateBill updates a bill and its items in the database
+func (m *postgresDBRepo) UpdateBill(b models.BillData) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	stmt := `UPDATE billing SET
+    purpose = $1, 
+    visitor_id = $2, 
+    with_address = $3, 
+    firma = $4,
+    first_name = $5, 
+    family_name = $6, 
+    street = $7, 
+    number = $8, 
+    postcode = $9,  
+    city = $10,
+    amount = $11,
+    infos = $12,
+    date = $13,
+    with_message = $14,
+    message = $15,
+    with_reference = $16,
+    reference = $17,
+    custom = $18,
+    updated_on = NOW()
+  WHERE id = $19`
+
+	_, err := m.DB.ExecContext(ctx, stmt,
+		b.Purpose,
+		NewNullString(b.Visitor.ID),
+		b.WithAddress,
+		NewNullString(b.Firma),
+		NewNullString(b.FirstName),
+		NewNullString(b.FamilyName),
+		NewNullString(b.Street),
+		NewNullString(b.Number),
+		NewNullString(b.Postcode),
+		NewNullString(b.City),
+		NewNullFloat64(b.Amount),
+		NewNullString(b.Infos),
+		b.Date,
+		b.WithMessage,
+		NewNullString(b.Message),
+		b.WithReference,
+		NewNullString(b.Reference),
+		b.Custom,
+		b.ID,
+	)
+
+	if err != nil {
+		return err
+	}
+
+	// handle items if there are any
+	// first delete items that have been deleted
+
+	// create slices for items
+	var ids []uuid.UUID
+	var billIDs []int
+	var positions []int
+	var descriptions []string
+	var unitPrices []float64
+	var counts []float64
+
+	for _, i := range b.Items {
+		uid, err := uuid.Parse(i.ID)
+		if err != nil {
+			return err
+		}
+		ids = append(ids, uid)
+		billIDs = append(billIDs, b.ID)
+		positions = append(positions, i.Position)
+		descriptions = append(descriptions, i.Description)
+		unitPrices = append(unitPrices, i.UnitPrice)
+		counts = append(counts, i.Count)
+	}
+
+	log.Println("ids", ids)
+	log.Println("positions", positions)
+
+	// delete what was deleted
+	deleteStmt := `DELETE FROM bill_items WHERE bill_id = $1 AND NOT (id = ANY($2))`
+
+	_, err = m.DB.ExecContext(ctx, deleteStmt, b.ID, ids)
+
+	if err != nil {
+		return err
+	}
+
+	// update, whats already there
+	updateStmt := `UPDATE bill_items
+  SET
+    position = uposition, 
+    description = udescription,
+    unit_price = uunit_price,
+    count = ucount, 
+    updated_on = NOW()
+  FROM
+    (
+      SELECT *
+      FROM
+        UNNEST(
+          $1::UUID[],
+          $2::INT[],
+          $3::TEXT[],
+          $4::REAL[],
+          $5::REAL[]
+        )
+        AS t(uid, uposition, udescription, uunit_price, ucount)
+    ) AS update
+  WHERE id = uid`
+
+	_, err = m.DB.ExecContext(ctx, updateStmt, ids, positions, descriptions, unitPrices, counts)
+
+	if err != nil {
+		return err
+	}
+
+	// add whats new
+	// TODO could also maybe combine with "on conflict do update"
+
+	bStmt := `
+    INSERT INTO bill_items (id, bill_id, position, description, unit_price, count)
+    VALUES (
+      UNNEST($1::UUID[]), 
+      UNNEST($2::INT[]), 
+      UNNEST($3::INT[]), 
+      UNNEST($4::TEXT[]), 
+      UNNEST($5::REAL[]), 
+      UNNEST($6::REAL[]) 
+    )
+    ON CONFLICT (id) DO NOTHING`
+
+	_, err = m.DB.ExecContext(ctx, bStmt, ids, billIDs, positions, descriptions, unitPrices, counts)
 
 	if err != nil {
 		return err

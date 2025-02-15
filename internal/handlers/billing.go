@@ -408,7 +408,12 @@ func (m *Repository) HandleBillCreateEditPost(w http.ResponseWriter, r *http.Req
 			return err
 		}
 	} else {
+		// TODO handle editing of bill if everything is okay
 		log.Println("doing stuff for editing")
+		_, _, err = billing.CreateBill(bill, m.DB)
+		if err != nil {
+			return err
+		}
 	}
 
 	return hxRedirect(w, r, "/admin/billing")
