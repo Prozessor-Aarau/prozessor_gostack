@@ -306,18 +306,28 @@ templ CustomBillForm(bill models.BillData, errors FormErrors, categories []strin
   <!-- action buttons -->
   <div class="col-span-full gap-3 flex mt-6 items-center justify-center flex-col md:flex-row">
     if errors.Edit {
-    <a class="btn btn-success" hx-post={ "/admin/billing/edit/" + strconv.Itoa(bill.ID) } hx-target="#content">
+    <<<<<<< HEAD <a class="btn btn-success" hx-post={ "/admin/billing/edit/" + strconv.Itoa(bill.ID) }
+      hx-target="#content">
       Rechnung bearbeiten
-    </a>
-    } else {
-    <a class="btn btn-success" hx-post="/admin/billing/create" hx-target="#content">
-      Rechnung erstellen
-    </a>
-    }
-    <a href="/admin/billing" class="btn btn-warning">
-      <span class="i-mdi-cancel-bold"></span>
-      Abbrechen
-    </a>
+      </a>
+      } else {
+      <a class="btn btn-success" hx-post="/admin/billing/create" hx-target="#content">
+        =======
+        <a class="btn btn-success" hx-post="/admin/billing/edit" hx-target="#content"
+          hx-on::after-request="hideArrows()">
+          Rechnung bearbeiten
+        </a>
+        } else {
+        <a class="btn btn-success" hx-post="/admin/billing/create" hx-target="#content"
+          hx-on::after-request="hideArrows()">
+          >>>>>>> 906129395c1e428bfbf839739a332923f61363a5
+          Rechnung erstellen
+        </a>
+        }
+        <a href="/admin/billing" class="btn btn-warning">
+          <span class="i-mdi-cancel-bold"></span>
+          Abbrechen
+        </a>
   </div>
 </form>
 @templ.JSONScript("memErr", errors.Member)
