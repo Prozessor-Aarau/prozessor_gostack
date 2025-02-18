@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/faebut/prozessor_gostack/internal/models"
@@ -571,9 +570,11 @@ func (m *postgresDBRepo) DeleteBill(id int) error {
 }
 
 // UpdateBill updates a bill and its items in the database
-func (m *postgresDBRepo) UpdateBill(b models.BillData) error {
+func (m *postgresDBRepo) UpdateBill(b models.BillData) (string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
+
+	var filename string
 
 	stmt := `UPDATE billing SET
     purpose = $1, 
@@ -595,9 +596,10 @@ func (m *postgresDBRepo) UpdateBill(b models.BillData) error {
     reference = $17,
     custom = $18,
     updated_on = NOW()
-  WHERE id = $19`
+  WHERE id = $19
+  RETURNING file_name`
 
-	_, err := m.DB.ExecContext(ctx, stmt,
+	err := m.DB.QueryRowContext(ctx, stmt,
 		b.Purpose,
 		NewNullString(b.Visitor.ID),
 		b.WithAddress,
@@ -617,10 +619,10 @@ func (m *postgresDBRepo) UpdateBill(b models.BillData) error {
 		NewNullString(b.Reference),
 		b.Custom,
 		b.ID,
-	)
+	).Scan(&filename)
 
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	// handle items if there are any
@@ -637,7 +639,7 @@ func (m *postgresDBRepo) UpdateBill(b models.BillData) error {
 	for _, i := range b.Items {
 		uid, err := uuid.Parse(i.ID)
 		if err != nil {
-			return err
+			return filename, err
 		}
 		ids = append(ids, uid)
 		billIDs = append(billIDs, b.ID)
@@ -647,49 +649,16 @@ func (m *postgresDBRepo) UpdateBill(b models.BillData) error {
 		counts = append(counts, i.Count)
 	}
 
-	log.Println("ids", ids)
-	log.Println("positions", positions)
-
 	// delete what was deleted
 	deleteStmt := `DELETE FROM bill_items WHERE bill_id = $1 AND NOT (id = ANY($2))`
 
 	_, err = m.DB.ExecContext(ctx, deleteStmt, b.ID, ids)
 
 	if err != nil {
-		return err
+		return filename, err
 	}
 
-	// update, whats already there
-	// updateStmt := `UPDATE bill_items
-	//  SET
-	//    position = uposition,
-	//    description = udescription,
-	//    unit_price = uunit_price,
-	//    count = ucount,
-	//    updated_on = NOW()
-	//  FROM
-	//    (
-	//      SELECT *
-	//      FROM
-	//        UNNEST(
-	//          $1::UUID[],
-	//          $2::INT[],
-	//          $3::TEXT[],
-	//          $4::REAL[],
-	//          $5::REAL[]
-	//        )
-	//        AS t(uid, uposition, udescription, uunit_price, ucount)
-	//    ) AS update
-	//  WHERE id = uid`
-	//
-	// _, err = m.DB.ExecContext(ctx, updateStmt, ids, positions, descriptions, unitPrices, counts)
-	//
-	// if err != nil {
-	// 	return err
-	// }
-
 	// add whats new
-	// TODO could also maybe combine with "on conflict do update"
 
 	bStmt := `
     INSERT INTO bill_items (id, bill_id, position, description, unit_price, count)
@@ -713,8 +682,8 @@ func (m *postgresDBRepo) UpdateBill(b models.BillData) error {
 	_, err = m.DB.ExecContext(ctx, bStmt, ids, billIDs, positions, descriptions, unitPrices, counts)
 
 	if err != nil {
-		return err
+		return filename, err
 	}
 
-	return nil
+	return filename, nil
 }

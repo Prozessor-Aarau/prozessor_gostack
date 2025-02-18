@@ -401,19 +401,10 @@ func (m *Repository) HandleBillCreateEditPost(w http.ResponseWriter, r *http.Req
 	// set bill to custom
 	bill.Custom = true
 
-	if !edit {
-		// create bill
-		_, _, err = billing.CreateBill(bill, m.DB)
-		if err != nil {
-			return err
-		}
-	} else {
-		// TODO handle editing of bill if everything is okay
-		log.Println("doing stuff for editing")
-		_, _, err = billing.CreateBill(bill, m.DB)
-		if err != nil {
-			return err
-		}
+	// create bill
+	_, _, err = billing.CreateBill(bill, m.DB)
+	if err != nil {
+		return err
 	}
 
 	return hxRedirect(w, r, "/admin/billing")
@@ -439,5 +430,13 @@ func (m *Repository) HandleBillEditIndex(w http.ResponseWriter, r *http.Request)
 		return err
 	}
 	// return an empty form
-	return rendering(w, r, bills.CustomBillForm(bill, bills.FormErrors{Edit: true, Extern: len(bill.Visitor.ID) < 1}, categories))
+	return rendering(
+		w,
+		r,
+		bills.CustomBillForm(
+			bill,
+			bills.FormErrors{Edit: true, Extern: len(bill.Visitor.ID) < 1},
+			categories,
+		),
+	)
 }

@@ -88,7 +88,9 @@ func CreateBill(data models.BillData, m repository.DatabaseRepo) (string, int, e
 
 	// create bill and return id
 	if data.ID > 0 {
-		err = m.UpdateBill(data)
+		data.FileName, err = m.UpdateBill(data)
+		// delete old file
+		DeleteBill(data)
 	} else {
 		data.ID, err = m.CreateBill(data)
 	}
