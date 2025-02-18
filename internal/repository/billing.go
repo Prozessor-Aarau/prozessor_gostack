@@ -104,7 +104,16 @@ func (m *postgresDBRepo) CreateBill(b models.BillData) (int, error) {
       UNNEST($6::REAL[]) 
     )`
 
-		_, err := m.DB.ExecContext(ctx, bStmt, ids, billIDs, positions, descriptions, unitPrices, counts)
+		_, err := m.DB.ExecContext(
+			ctx,
+			bStmt,
+			ids,
+			billIDs,
+			positions,
+			descriptions,
+			unitPrices,
+			counts,
+		)
 
 		if err != nil {
 			return 0, err
@@ -131,7 +140,10 @@ func (m *postgresDBRepo) SetBillPath(path string, id int) error {
 }
 
 // GetAllBills gets all bills
-func (m *postgresDBRepo) GetAllBills(page int, filter models.BillFilter) ([]models.BillData, int, error) {
+func (m *postgresDBRepo) GetAllBills(
+	page int,
+	filter models.BillFilter,
+) ([]models.BillData, int, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
@@ -178,7 +190,8 @@ func (m *postgresDBRepo) GetAllBills(page int, filter models.BillFilter) ([]mode
 
 	offset := 10 * (page - 1)
 
-	query := fmt.Sprintf(`SELECT b.id, b.purpose, b.with_address, b.firma, b.first_name, b.family_name, b.street, b.number, b.postcode, b.city, b.infos, b.date, b.with_message, b.message, b.with_reference, b.reference, b.custom, b.file_name, b.paid, b.amount, b.created_on, b.updated_on, v.id, v.first_name, v.family_name, v.address, v.postcode, v.city, v.ressort_id
+	query := fmt.Sprintf(
+		`SELECT b.id, b.purpose, b.with_address, b.firma, b.first_name, b.family_name, b.street, b.number, b.postcode, b.city, b.infos, b.date, b.with_message, b.message, b.with_reference, b.reference, b.custom, b.file_name, b.paid, b.amount, b.created_on, b.updated_on, v.id, v.first_name, v.family_name, v.address, v.postcode, v.city, v.ressort_id
   FROM billing b
   LEFT OUTER JOIN visitors v ON v.id = b.visitor_id
     WHERE (b.id::varchar(20) LIKE LOWER($1)
@@ -647,33 +660,33 @@ func (m *postgresDBRepo) UpdateBill(b models.BillData) error {
 	}
 
 	// update, whats already there
-	updateStmt := `UPDATE bill_items
-  SET
-    position = uposition, 
-    description = udescription,
-    unit_price = uunit_price,
-    count = ucount, 
-    updated_on = NOW()
-  FROM
-    (
-      SELECT *
-      FROM
-        UNNEST(
-          $1::UUID[],
-          $2::INT[],
-          $3::TEXT[],
-          $4::REAL[],
-          $5::REAL[]
-        )
-        AS t(uid, uposition, udescription, uunit_price, ucount)
-    ) AS update
-  WHERE id = uid`
-
-	_, err = m.DB.ExecContext(ctx, updateStmt, ids, positions, descriptions, unitPrices, counts)
-
-	if err != nil {
-		return err
-	}
+	// updateStmt := `UPDATE bill_items
+	//  SET
+	//    position = uposition,
+	//    description = udescription,
+	//    unit_price = uunit_price,
+	//    count = ucount,
+	//    updated_on = NOW()
+	//  FROM
+	//    (
+	//      SELECT *
+	//      FROM
+	//        UNNEST(
+	//          $1::UUID[],
+	//          $2::INT[],
+	//          $3::TEXT[],
+	//          $4::REAL[],
+	//          $5::REAL[]
+	//        )
+	//        AS t(uid, uposition, udescription, uunit_price, ucount)
+	//    ) AS update
+	//  WHERE id = uid`
+	//
+	// _, err = m.DB.ExecContext(ctx, updateStmt, ids, positions, descriptions, unitPrices, counts)
+	//
+	// if err != nil {
+	// 	return err
+	// }
 
 	// add whats new
 	// TODO could also maybe combine with "on conflict do update"
@@ -688,7 +701,14 @@ func (m *postgresDBRepo) UpdateBill(b models.BillData) error {
       UNNEST($5::REAL[]), 
       UNNEST($6::REAL[]) 
     )
-    ON CONFLICT (id) DO NOTHING`
+    ON CONFLICT (id) DO UPDATE
+    SET
+        position = EXCLUDED.position, 
+        description = EXCLUDED.description,
+        unit_price = EXCLUDED.unit_price,
+        count = EXCLUDED.count, 
+        updated_on = NOW()
+    `
 
 	_, err = m.DB.ExecContext(ctx, bStmt, ids, billIDs, positions, descriptions, unitPrices, counts)
 
