@@ -15,6 +15,7 @@ static/qr_codes/**
 static/labels/**
 static/uploads/**
 static/bills/**
+static/css/tailwind.css
 
 # Binaries for programs and plugins
 *.exe
