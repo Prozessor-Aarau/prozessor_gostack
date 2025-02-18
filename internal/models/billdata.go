@@ -1,12 +1,16 @@
 package models
 
-import "time"
+import (
+	"time"
+)
 
 type BillData struct {
 	ID            int
+	Date          time.Time
 	Purpose       string
 	Visitor       Visitor
 	WithAddress   bool
+	Firma         string
 	FirstName     string
 	FamilyName    string
 	Street        string
@@ -15,13 +19,24 @@ type BillData struct {
 	Number        string
 	Amount        float64
 	Infos         string
-	Products      []string
+	Items         []BillItem
 	WithMessage   bool
 	Message       string
 	WithReference bool
 	Reference     string
 	FileName      string
 	Paid          bool
+	Custom        bool
 	CreatedOn     time.Time
 	UpdatedOn     time.Time
+}
+
+type BillItem struct {
+	ID          string
+	Position    int
+	Description string
+	UnitPrice   float64
+	Count       float64
+	CreatedOn   time.Time
+	UpdatedOn   time.Time
 }

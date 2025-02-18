@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/faebut/prozessor_gostack/internal/models"
+	"github.com/google/uuid"
 )
 
 // CreateBill puts a new bill into the database and returns the id
@@ -20,6 +21,7 @@ func (m *postgresDBRepo) CreateBill(b models.BillData) (int, error) {
     purpose, 
     visitor_id, 
     with_address, 
+    firma,
     first_name, 
     family_name, 
     street, 
@@ -28,37 +30,93 @@ func (m *postgresDBRepo) CreateBill(b models.BillData) (int, error) {
     city,
     amount,
     infos,
+    date,
     with_message,
     message,
     with_reference,
     reference,
+    custom,
     created_on, 
     updated_on)
-  VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
+  VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20)
   RETURNING id`
 
 	err := m.DB.QueryRowContext(ctx, stmt,
 		b.Purpose,
 		NewNullString(b.Visitor.ID),
 		b.WithAddress,
-		NewNullString(b.Visitor.FirstName),
-		NewNullString(b.Visitor.FamilyName),
+		NewNullString(b.Firma),
+		NewNullString(b.FirstName),
+		NewNullString(b.FamilyName),
 		NewNullString(b.Street),
 		NewNullString(b.Number),
-		NewNullString(b.Visitor.Postcode),
-		NewNullString(b.Visitor.City),
+		NewNullString(b.Postcode),
+		NewNullString(b.City),
 		NewNullFloat64(b.Amount),
 		NewNullString(b.Infos),
+		b.Date,
 		b.WithMessage,
 		NewNullString(b.Message),
 		b.WithReference,
 		NewNullString(b.Reference),
+		b.Custom,
 		time.Now(),
 		time.Now(),
 	).Scan(&id)
 
 	if err != nil {
 		return 0, err
+	}
+
+	// handle items and push them to the database
+	if len(b.Items) > 0 {
+
+		// create slices
+		var ids []uuid.UUID
+		var billIDs []int
+		var positions []int
+		var descriptions []string
+		var unitPrices []float64
+		var counts []float64
+
+		for _, i := range b.Items {
+			uid, err := uuid.Parse(i.ID)
+			if err != nil {
+				return 0, err
+			}
+			ids = append(ids, uid)
+			billIDs = append(billIDs, id)
+			positions = append(positions, i.Position)
+			descriptions = append(descriptions, i.Description)
+			unitPrices = append(unitPrices, i.UnitPrice)
+			counts = append(counts, i.Count)
+		}
+
+		bStmt := `
+    INSERT INTO bill_items (id, bill_id, position, description, unit_price, count)
+    VALUES (
+      UNNEST($1::UUID[]), 
+      UNNEST($2::INT[]), 
+      UNNEST($3::INT[]), 
+      UNNEST($4::TEXT[]), 
+      UNNEST($5::REAL[]), 
+      UNNEST($6::REAL[]) 
+    )`
+
+		_, err := m.DB.ExecContext(
+			ctx,
+			bStmt,
+			ids,
+			billIDs,
+			positions,
+			descriptions,
+			unitPrices,
+			counts,
+		)
+
+		if err != nil {
+			return 0, err
+		}
 	}
 
 	return id, nil
@@ -81,7 +139,10 @@ func (m *postgresDBRepo) SetBillPath(path string, id int) error {
 }
 
 // GetAllBills gets all bills
-func (m *postgresDBRepo) GetAllBills(page int, filter models.BillFilter) ([]models.BillData, int, error) {
+func (m *postgresDBRepo) GetAllBills(
+	page int,
+	filter models.BillFilter,
+) ([]models.BillData, int, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
@@ -128,7 +189,8 @@ func (m *postgresDBRepo) GetAllBills(page int, filter models.BillFilter) ([]mode
 
 	offset := 10 * (page - 1)
 
-	query := fmt.Sprintf(`SELECT b.id, b.purpose, b.with_address, b.first_name, b.family_name, b.street, b.number, b.postcode, b.city, b.infos, b.with_message, b.message, b.with_reference, b.reference, b.file_name, b.paid, b.amount, b.created_on, b.updated_on, v.id, v.first_name, v.family_name, v.address, v.postcode, v.city, v.ressort_id
+	query := fmt.Sprintf(
+		`SELECT b.id, b.purpose, b.with_address, b.firma, b.first_name, b.family_name, b.street, b.number, b.postcode, b.city, b.infos, b.date, b.with_message, b.message, b.with_reference, b.reference, b.custom, b.file_name, b.paid, b.amount, b.created_on, b.updated_on, v.id, v.first_name, v.family_name, v.address, v.postcode, v.city, v.ressort_id
   FROM billing b
   LEFT OUTER JOIN visitors v ON v.id = b.visitor_id
     WHERE (b.id::varchar(20) LIKE LOWER($1)
@@ -137,7 +199,7 @@ func (m *postgresDBRepo) GetAllBills(page int, filter models.BillFilter) ([]mode
     %s
     %s
     ORDER BY 
-    b.updated_on DESC
+    b.date DESC
     OFFSET $2
     LIMIT 10  
   `,
@@ -156,6 +218,7 @@ func (m *postgresDBRepo) GetAllBills(page int, filter models.BillFilter) ([]mode
 		var b models.BillData
 
 		// start handling null types
+		var aFirma sql.NullString
 		var aFirstName sql.NullString
 		var aFamilyName sql.NullString
 		var aStreet sql.NullString
@@ -177,6 +240,7 @@ func (m *postgresDBRepo) GetAllBills(page int, filter models.BillFilter) ([]mode
 			&b.ID,
 			&b.Purpose,
 			&b.WithAddress,
+			&aFirma,
 			&aFirstName,
 			&aFamilyName,
 			&aStreet,
@@ -184,10 +248,12 @@ func (m *postgresDBRepo) GetAllBills(page int, filter models.BillFilter) ([]mode
 			&aPostcode,
 			&aCity,
 			&b.Infos,
+			&b.Date,
 			&b.WithMessage,
 			&message,
 			&b.WithReference,
 			&reference,
+			&b.Custom,
 			&filename,
 			&b.Paid,
 			&b.Amount,
@@ -207,6 +273,9 @@ func (m *postgresDBRepo) GetAllBills(page int, filter models.BillFilter) ([]mode
 		}
 
 		// handling null types
+		if aFirma.Valid {
+			b.Firma = aFirma.String
+		}
 		if aFirstName.Valid {
 			b.FirstName = aFirstName.String
 		}
@@ -271,7 +340,7 @@ func (m *postgresDBRepo) GetBillByID(id int) (models.BillData, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	query := `SELECT b.id, b.purpose, b.with_address, b.first_name, b.family_name, b.street, b.number, b.postcode, b.city, b.infos, b.with_message, b.message, b.with_reference, b.reference, b.file_name, b.paid, b.amount, b.created_on, b.updated_on, v.id, v.first_name, v.family_name, v.address, v.postcode, v.city, v.ressort_id
+	query := `SELECT b.id, b.purpose, b.with_address, b.firma, b.first_name, b.family_name, b.street, b.number, b.postcode, b.city, b.infos, b.date, b.with_message, b.message, b.with_reference, b.reference, b.file_name, b.paid, b.amount, b.created_on, b.updated_on, v.id, v.first_name, v.family_name, v.address, v.postcode, v.city, v.ressort_id
   FROM billing b
   LEFT OUTER JOIN visitors v ON v.id = b.visitor_id
   WHERE b.id = $1`
@@ -281,6 +350,7 @@ func (m *postgresDBRepo) GetBillByID(id int) (models.BillData, error) {
 	var b models.BillData
 
 	// start handling null types
+	var aFirma sql.NullString
 	var aFirstName sql.NullString
 	var aFamilyName sql.NullString
 	var aStreet sql.NullString
@@ -302,6 +372,7 @@ func (m *postgresDBRepo) GetBillByID(id int) (models.BillData, error) {
 		&b.ID,
 		&b.Purpose,
 		&b.WithAddress,
+		&aFirma,
 		&aFirstName,
 		&aFamilyName,
 		&aStreet,
@@ -309,6 +380,7 @@ func (m *postgresDBRepo) GetBillByID(id int) (models.BillData, error) {
 		&aPostcode,
 		&aCity,
 		&b.Infos,
+		&b.Date,
 		&b.WithMessage,
 		&message,
 		&b.WithReference,
@@ -332,6 +404,9 @@ func (m *postgresDBRepo) GetBillByID(id int) (models.BillData, error) {
 	}
 
 	// handling null types
+	if aFirma.Valid {
+		b.Firma = aFirma.String
+	}
 	if aFirstName.Valid {
 		b.FirstName = aFirstName.String
 	}
@@ -381,6 +456,47 @@ func (m *postgresDBRepo) GetBillByID(id int) (models.BillData, error) {
 		b.Visitor.Ressort.ID = int(vRessortID.Int32)
 	}
 
+	// get bill items
+	billQuery := `SELECT id, position, description, unit_price, count, created_on, updated_on
+	 FROM bill_items
+	 WHERE bill_id = $1`
+
+	rows, err := m.DB.QueryContext(ctx, billQuery, id)
+	if err != nil {
+		return b, err
+	}
+
+	defer rows.Close()
+
+	var items []models.BillItem
+
+	for rows.Next() {
+		var i models.BillItem
+
+		err := rows.Scan(
+			&i.ID,
+			&i.Position,
+			&i.Description,
+			&i.UnitPrice,
+			&i.Count,
+			&i.CreatedOn,
+			&i.UpdatedOn,
+		)
+
+		if err != nil {
+			return b, err
+		}
+
+		items = append(items, i)
+	}
+
+	if err = rows.Err(); err != nil {
+		return b, err
+	}
+
+	// add items to the bill
+	b.Items = items
+
 	return b, nil
 }
 
@@ -426,7 +542,7 @@ func (m *postgresDBRepo) SetBillPayment(b models.BillData) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	stmt := "UPDATE billing SET paid = $1 WHERE id = $2"
+	stmt := "UPDATE billing SET paid = $1, updated_on = NOW() WHERE id = $2"
 
 	_, err := m.DB.ExecContext(ctx, stmt, b.Paid, b.ID)
 
@@ -451,4 +567,123 @@ func (m *postgresDBRepo) DeleteBill(id int) error {
 	}
 
 	return nil
+}
+
+// UpdateBill updates a bill and its items in the database
+func (m *postgresDBRepo) UpdateBill(b models.BillData) (string, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	var filename string
+
+	stmt := `UPDATE billing SET
+    purpose = $1, 
+    visitor_id = $2, 
+    with_address = $3, 
+    firma = $4,
+    first_name = $5, 
+    family_name = $6, 
+    street = $7, 
+    number = $8, 
+    postcode = $9,  
+    city = $10,
+    amount = $11,
+    infos = $12,
+    date = $13,
+    with_message = $14,
+    message = $15,
+    with_reference = $16,
+    reference = $17,
+    custom = $18,
+    updated_on = NOW()
+  WHERE id = $19
+  RETURNING file_name`
+
+	err := m.DB.QueryRowContext(ctx, stmt,
+		b.Purpose,
+		NewNullString(b.Visitor.ID),
+		b.WithAddress,
+		NewNullString(b.Firma),
+		NewNullString(b.FirstName),
+		NewNullString(b.FamilyName),
+		NewNullString(b.Street),
+		NewNullString(b.Number),
+		NewNullString(b.Postcode),
+		NewNullString(b.City),
+		NewNullFloat64(b.Amount),
+		NewNullString(b.Infos),
+		b.Date,
+		b.WithMessage,
+		NewNullString(b.Message),
+		b.WithReference,
+		NewNullString(b.Reference),
+		b.Custom,
+		b.ID,
+	).Scan(&filename)
+
+	if err != nil {
+		return "", err
+	}
+
+	// handle items if there are any
+	// first delete items that have been deleted
+
+	// create slices for items
+	var ids []uuid.UUID
+	var billIDs []int
+	var positions []int
+	var descriptions []string
+	var unitPrices []float64
+	var counts []float64
+
+	for _, i := range b.Items {
+		uid, err := uuid.Parse(i.ID)
+		if err != nil {
+			return filename, err
+		}
+		ids = append(ids, uid)
+		billIDs = append(billIDs, b.ID)
+		positions = append(positions, i.Position)
+		descriptions = append(descriptions, i.Description)
+		unitPrices = append(unitPrices, i.UnitPrice)
+		counts = append(counts, i.Count)
+	}
+
+	// delete what was deleted
+	deleteStmt := `DELETE FROM bill_items WHERE bill_id = $1 AND NOT (id = ANY($2))`
+
+	_, err = m.DB.ExecContext(ctx, deleteStmt, b.ID, ids)
+
+	if err != nil {
+		return filename, err
+	}
+
+	// add whats new
+
+	bStmt := `
+    INSERT INTO bill_items (id, bill_id, position, description, unit_price, count)
+    VALUES (
+      UNNEST($1::UUID[]), 
+      UNNEST($2::INT[]), 
+      UNNEST($3::INT[]), 
+      UNNEST($4::TEXT[]), 
+      UNNEST($5::REAL[]), 
+      UNNEST($6::REAL[]) 
+    )
+    ON CONFLICT (id) DO UPDATE
+    SET
+        position = EXCLUDED.position, 
+        description = EXCLUDED.description,
+        unit_price = EXCLUDED.unit_price,
+        count = EXCLUDED.count, 
+        updated_on = NOW()
+    `
+
+	_, err = m.DB.ExecContext(ctx, bStmt, ids, billIDs, positions, descriptions, unitPrices, counts)
+
+	if err != nil {
+		return filename, err
+	}
+
+	return filename, nil
 }

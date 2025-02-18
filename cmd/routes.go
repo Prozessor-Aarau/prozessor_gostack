@@ -230,6 +230,15 @@ func routes(app *config.AppConfig) http.Handler {
 			mux.Post("/billing/list", handlers.Make(handlers.Repo.HandleBillingListFilter))
 			mux.Post("/billing/payment", handlers.Make(handlers.Repo.HandleBillingPayment))
 			mux.Delete("/billing/{id}", handlers.Make(handlers.Repo.HandleBillingDelete))
+			// create/edit billing
+			mux.Group(func(mux chi.Router) {
+				mux.Use(CheckPermission("AddFinances"))
+				mux.Get("/billing/create", handlers.Make(handlers.Repo.HandleBillCreateIndex))
+				mux.Get("/billing/create/item", handlers.Make(handlers.Repo.HandleBillCreateNewItem))
+				mux.Post("/billing/create", handlers.Make(handlers.Repo.HandleBillCreateEditPost))
+				mux.Get("/billing/edit/{id}", handlers.Make(handlers.Repo.HandleBillEditIndex))
+				mux.Post("/billing/edit/{id}", handlers.Make(handlers.Repo.HandleBillCreateEditPost))
+			})
 		})
 	})
 

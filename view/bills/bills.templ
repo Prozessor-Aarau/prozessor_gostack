@@ -65,7 +65,7 @@ templ billFilter(categories []string) {
   </form>
   if prm.AddFinances {
   <div class="border-base-content border-opacity-50 border-dashed border-t mt-4 pt-4">
-    <button type="button" class="btn btn-secondary btn-disabled" hx-get="/admin/billing/create" hx-target="#content">
+    <button type="button" class="btn btn-secondary" hx-get="/admin/billing/create" hx-target="#content">
       Rechnung
       erstellen
     </button>
@@ -90,7 +90,7 @@ for _, b := range bills {
 <div id={ "billdiv_" + strconv.Itoa(b.ID) }
   class="hover:bg-base-200 cursor-pointer grid grid-cols-8 text-sm p-3 py-4 items-center gap-3 border-dashed border-b border-base-content border-opacity-50">
   <div class="col-span-1">{ strconv.Itoa(b.ID) }</div>
-  <div class="col-span-3 md:col-span-2">{ b.CreatedOn.Format("02.01.2006") }</div>
+  <div class="col-span-3 md:col-span-2">{ b.Date.Format("02.01.2006") }</div>
   <div class="col-span-4 md:col-span-2">{ b.Purpose }</div>
   <div class="col-span-4 md:col-span-2">{ b.FirstName } { b.FamilyName }</div>
   <div class="col-span-4 md:col-span-1 text-right">
@@ -109,8 +109,8 @@ for _, b := range bills {
     @ui.CSRF()
     <input name="id" type="hidden" value={ strconv.Itoa(b.ID) } />
     <!-- edit button -->
-    <a class={ "btn btn-sm btn-circle btn-disabled" , templ.KV("btn-disabled", !prm.EditFinances) }
-      hx-get={ "/admin/billing/" + strconv.Itoa(b.ID) } hx-target="#content">
+    <a class={ "btn btn-sm btn-circle btn-accent" , templ.KV("btn-disabled", (!prm.EditFinances || !b.Custom)) }
+      hx-get={ "/admin/billing/edit/" + strconv.Itoa(b.ID) } hx-target="#content">
       <span class="i-mdi-lead-pencil"></span>
     </a>
     <!-- download button -->
