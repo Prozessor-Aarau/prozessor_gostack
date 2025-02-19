@@ -150,7 +150,11 @@ func (m *postgresDBRepo) AllBadges(filter models.BadgeFilter) ([]models.Badge, i
     end) as abo_valid
   FROM badges b
   LEFT OUTER JOIN visitors v ON v.id = b.visitor_id
-  LEFT OUTER JOIN abonnements a ON a.visitor_id = v.id
+  LEFT JOIN LATERAL 
+    (SELECT * FROM abonnements 
+    WHERE v.id = abonnements.visitor_id 
+    ORDER BY buydate DESC LIMIT 1) 
+    as a ON v.id = a.visitor_id
 	WHERE CAST(b.number AS TEXT) LIKE $1
   %s
   %s
