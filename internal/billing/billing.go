@@ -6,11 +6,14 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/faebut/prozessor_gostack/internal/models"
 	"github.com/faebut/prozessor_gostack/internal/qrbill"
 	"github.com/faebut/prozessor_gostack/internal/repository"
+	"github.com/goodsign/monday"
 	"github.com/joho/godotenv"
+	"github.com/signintech/gopdf"
 )
 
 // CreateBill creates a bill and returns the billdata including the path to the file
@@ -123,6 +126,15 @@ func CreateBill(data models.BillData, m repository.DatabaseRepo) (string, int, e
 		return "", 0, err
 	}
 
+	doc, err := bill.GoPdf()
+	if err != nil {
+		return "", 0, err
+	}
+
+	BillLetter(data, doc)
+
+	doc.WritePdf(filepath + "fancy_" + data.FileName)
+
 	// update filename in database
 	err = m.SetBillPath(data.FileName, data.ID)
 	if err != nil {
@@ -130,6 +142,293 @@ func CreateBill(data models.BillData, m repository.DatabaseRepo) (string, int, e
 	}
 
 	return combinedPath, data.ID, nil
+}
+
+func BillLetter(data models.BillData, pdf *gopdf.GoPdf) error {
+	var err error
+
+	// add fonts
+	err = pdf.AddTTFFont("fira-extralight", "./static/assets/FiraSans-ExtraLight.ttf")
+	if err != nil {
+		log.Print(err.Error())
+		return err
+	}
+
+	err = pdf.AddTTFFont("fira-regular", "./static/assets/FiraSans-Regular.ttf")
+	if err != nil {
+		log.Print(err.Error())
+		return err
+	}
+
+	err = pdf.AddTTFFont("fira-bold", "./static/assets/FiraSans-Bold.ttf")
+	if err != nil {
+		log.Print(err.Error())
+		return err
+	}
+
+	// set header
+	pdf.AddHeader(func() {
+		err := pdf.Image("./static/assets/logo.png", 184, 10.5, &gopdf.Rect{W: 18.3, H: 18.3})
+		if err != nil {
+			log.Fatal(err)
+			return
+		}
+
+		const (
+			xHeaderRight float64 = 109
+
+			yTitleOneLineOne, yTitleOneLineTwo, yTitleOneLineThree float64 = 12.3, 17.6, 22.9
+		)
+
+		err = pdf.SetFont("fira-extralight", "", 10)
+		if err != nil {
+			log.Fatal(err)
+			return
+		}
+
+		pdf.SetXY(xHeaderRight, yTitleOneLineOne)
+		pdf.CellWithOption(&gopdf.Rect{W: 70.4, H: 35.2},
+			"Verein Prozessor | Erlinsbacherstrasse 34 | 5000 Aarau",
+			gopdf.CellOption{Align: gopdf.Right})
+
+		pdf.SetXY(xHeaderRight, yTitleOneLineTwo)
+		pdf.CellWithOption(&gopdf.Rect{W: 70.4, H: 35.2},
+			"info@prozessor-aarau.ch | www.prozessor-aarau.ch",
+			gopdf.CellOption{Align: gopdf.Right})
+
+		pdf.SetXY(xHeaderRight, yTitleOneLineThree)
+		pdf.CellWithOption(&gopdf.Rect{W: 70.4, H: 35.2},
+			"IBAN ***REMOVED***",
+			gopdf.CellOption{Align: gopdf.Right})
+	})
+
+	// add page with header
+	pdf.AddPage()
+
+	// set positions and fontsize
+	const (
+		X          = 25
+		width      = 210 - 45
+		maxX       = X + width
+		addressY   = 50
+		infoblockY = 45
+		titleY     = 100
+
+		fontsize   = 11
+		titlesize  = 13
+		lineheight = 1.5 * 0.3527777777777777
+		newline    = fontsize * lineheight
+		paragraph  = 2 * newline
+
+		cellfont   = 9
+		cellheight = 8
+
+		tabletop = titleY + 7*newline
+	)
+
+	var (
+		bottomcell  = tabletop + float64((len(data.Items)+1)*cellheight+fontsize/5)
+		tablebottom = bottomcell + newline
+	)
+
+	// address
+	err = pdf.SetFont("fira-regular", "", fontsize)
+	if err != nil {
+		log.Fatal(err)
+		return err
+	}
+
+	var address []string
+
+	if len(data.Firma) > 0 {
+		address = append(address, data.Firma)
+	}
+	if len(data.FirstName) > 0 {
+		address = append(address, data.FirstName+" "+data.FamilyName)
+	}
+	address = append(address, data.Street+" "+data.Number)
+	address = append(address, data.Postcode+" "+data.City)
+
+	for i := 0; i < len(address); i++ {
+		pdf.SetXY(X, addressY+float64(i)*newline) //move to address
+		pdf.Cell(nil, address[i])                 //write line
+	}
+
+	// right items
+	err = pdf.SetFont("fira-extralight", "", fontsize)
+	if err != nil {
+		log.Fatal(err)
+		return err
+	}
+	pdf.SetXY(maxX-77, infoblockY)
+	pdf.CellWithOption(&gopdf.Rect{W: 35, H: 3.5},
+		"Nummer:",
+		gopdf.CellOption{Align: gopdf.Right})
+
+	pdf.SetXY(maxX-77, infoblockY+newline)
+	pdf.CellWithOption(&gopdf.Rect{W: 35, H: 3.5},
+		"Zweck:",
+		gopdf.CellOption{Align: gopdf.Right})
+
+	// values
+	err = pdf.SetFont("fira-regular", "", fontsize)
+	if err != nil {
+		log.Fatal(err)
+		return err
+	}
+	pdf.SetXY(maxX-40.5, infoblockY)
+	pdf.Cell(nil, "RG"+strconv.Itoa(data.ID))
+
+	pdf.SetXY(maxX-40.5, infoblockY+newline)
+	pdf.Cell(nil, data.Message)
+
+	// date
+	pdf.SetXY(maxX-35, addressY+float64(len(address)-1)*(newline))
+	pdf.CellWithOption(&gopdf.Rect{W: 35, H: 3.5},
+		"Aarau, "+monday.Format(time.Now(), "2. January 2006", monday.LocaleDeDE),
+		gopdf.CellOption{Align: gopdf.Right})
+
+	// title
+	err = pdf.SetFont("fira-bold", "", titlesize)
+	if err != nil {
+		log.Fatal(err)
+		return err
+	}
+
+	// title
+	pdf.SetXY(X, titleY)
+	pdf.Cell(nil, fmt.Sprintf("Rechnung: RG%s %s", strconv.Itoa(data.ID), data.Message))
+
+	// content
+	err = pdf.SetFont("fira-regular", "", fontsize)
+	if err != nil {
+		log.Fatal(err)
+		return err
+	}
+
+	// body
+	// greeting formula
+	pdf.SetXY(X, titleY+3*newline)
+	pdf.Cell(nil, "Sehr geehrte Damen und Herren")
+	// first textblock
+	pdf.SetXY(X, titleY+5*newline)
+	pdf.Cell(nil, "Besten Dank für den Auftrag. Wir erlauben uns folgende Rechnung zu stellen:")
+
+	// table
+
+	// set up table
+	table := pdf.NewTableLayout(X, tabletop, cellheight, len(data.Items))
+	table.AddColumn("POS", 10, "center")
+	table.AddColumn("BEZEICHNUNG", 92, "left")
+	table.AddColumn("MENGE", 16, "right")
+	table.AddColumn("PREIS", 22, "right")
+	table.AddColumn("TOTAL", 25, "right")
+
+	// add rows
+	for _, i := range data.Items {
+		table.AddRow([]string{
+			strconv.Itoa(i.Position),
+			i.Description,
+			strconv.FormatFloat(i.Count, 'f', 2, 64),
+			strconv.FormatFloat(i.UnitPrice, 'f', 2, 64) + " CHF",
+			strconv.FormatFloat(i.Count*i.UnitPrice, 'f', 2, 64) + " CHF",
+		})
+	}
+
+	// Set the style for table cells
+	table.SetTableStyle(gopdf.CellStyle{
+		BorderStyle: gopdf.BorderStyle{
+			Top:    true,
+			Left:   true,
+			Bottom: true,
+			Right:  true,
+			Width:  0.2,
+		},
+		FillColor: gopdf.RGBColor{R: 255, G: 255, B: 255},
+		TextColor: gopdf.RGBColor{R: 0, G: 0, B: 0},
+		FontSize:  cellfont,
+	})
+
+	// Set the style for table header
+	table.SetHeaderStyle(gopdf.CellStyle{
+		BorderStyle: gopdf.BorderStyle{
+			Bottom:   true,
+			Right:    true,
+			Width:    0.2,
+			RGBColor: gopdf.RGBColor{R: 0, G: 0, B: 0},
+		},
+		FillColor: gopdf.RGBColor{R: 255, G: 255, B: 255},
+		TextColor: gopdf.RGBColor{R: 0, G: 0, B: 0},
+		Font:      "fira-bold",
+		FontSize:  cellfont,
+	})
+
+	table.SetCellStyle(gopdf.CellStyle{
+		BorderStyle: gopdf.BorderStyle{
+			Right:    true,
+			Bottom:   true,
+			Width:    0.2,
+			RGBColor: gopdf.RGBColor{R: 0, G: 0, B: 0},
+		},
+		FillColor: gopdf.RGBColor{R: 255, G: 255, B: 255},
+		TextColor: gopdf.RGBColor{R: 0, G: 0, B: 0},
+		Font:      "fira-regular",
+		FontSize:  cellfont,
+	})
+
+	// Draw the table
+	table.DrawTable()
+
+	// TOTAL bottom
+	err = pdf.SetFont("fira-bold", "", cellfont)
+	if err != nil {
+		log.Fatal(err)
+		return err
+	}
+	pdf.SetXY(maxX-102, bottomcell)
+	pdf.CellWithOption(&gopdf.Rect{W: 100, H: 10},
+		"TOTAL         "+strconv.FormatFloat(data.Amount, 'f', 2, 64)+"CHF",
+		gopdf.CellOption{Align: gopdf.Right})
+
+	pdf.SetLineWidth(0.2)
+	pdf.Line(X, bottomcell+0.5+cellfont/3+(cellheight-cellfont/3)/2, maxX, bottomcell+0.5+cellfont/3+(cellheight-cellfont/3)/2)
+	pdf.Line(X, bottomcell+0.5+1+cellfont/3+(cellheight-cellfont/3)/2, maxX, bottomcell+0.5+1+cellfont/3+(cellheight-cellfont/3)/2)
+
+	// content
+	err = pdf.SetFont("fira-regular", "", fontsize)
+	if err != nil {
+		log.Fatal(err)
+		return err
+	}
+
+	// longer text
+	greetLines, err := pdf.SplitTextWithWordWrap(
+		fmt.Sprintf(
+			"Wir bitten Sie, die Rechnung bis %s mit dem beigefügten Einzahlungsschein zu begleichen.",
+			monday.Format(
+				time.Now().Add(30*time.Hour*24),
+				"2. January 2006",
+				monday.LocaleDeDE,
+			),
+		),
+		width,
+	)
+	if err != nil {
+		log.Fatal(err)
+		return err
+	}
+
+	for i := 0; i < len(greetLines); i++ {
+		pdf.SetXY(X, tablebottom+newline+float64(i)*newline)
+		pdf.Cell(nil, greetLines[i])
+	}
+
+	pdf.SetXY(X, tablebottom+4*newline)
+	pdf.Cell(nil, "Mit freundlichen Grüssen")
+	pdf.SetXY(X, tablebottom+6*newline)
+	pdf.Cell(nil, "Verein Prozessor")
+
+	return nil
 }
 
 // DeleteBill deletes a bill from the disk
