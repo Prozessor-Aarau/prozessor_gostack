@@ -132,7 +132,7 @@ func CreateBill(data models.BillData, m repository.DatabaseRepo) (string, int, e
 
 	// only to this for custom bills
 	if len(data.Items) > 0 {
-		letter, err := BillLetter(data)
+		letter, err := LetterWithItems(data)
 		if err != nil {
 			return "", 0, err
 		}
@@ -157,7 +157,7 @@ func CreateBill(data models.BillData, m repository.DatabaseRepo) (string, int, e
 	return combinedPath, data.ID, nil
 }
 
-func BillLetter(data models.BillData) (*gopdf.GoPdf, error) {
+func LetterWithItems(data models.BillData) (*gopdf.GoPdf, error) {
 	pdf := gopdf.GoPdf{}
 	pdf.Start(gopdf.Config{PageSize: *gopdf.PageSizeA4, Unit: gopdf.UnitMM})
 	var err error
@@ -327,7 +327,7 @@ func BillLetter(data models.BillData) (*gopdf.GoPdf, error) {
 	pdf.Cell(nil, "Sehr geehrte Damen und Herren")
 	// first textblock
 	pdf.SetXY(X, titleY+5*newline)
-	pdf.Cell(nil, "Besten Dank für den Auftrag. Wir erlauben uns folgende Rechnung zu stellen:")
+	pdf.Cell(nil, "Besten Dank für den Auftrag. Wir erlauben uns folgende Positionen in Rechnung zu stellen:")
 
 	// table
 
@@ -400,14 +400,17 @@ func BillLetter(data models.BillData) (*gopdf.GoPdf, error) {
 		log.Fatal(err)
 		return &pdf, err
 	}
-	pdf.SetXY(maxX-102, bottomcell)
-	pdf.CellWithOption(&gopdf.Rect{W: 100, H: 10},
-		"TOTAL         "+strconv.FormatFloat(data.Amount, 'f', 2, 64)+"CHF",
+	pdf.SetXY(maxX-45, bottomcell)
+	pdf.Cell(nil, "TOTAL")
+
+	pdf.SetXY(maxX-25, bottomcell)
+	pdf.CellWithOption(&gopdf.Rect{W: 23, H: 10},
+		strconv.FormatFloat(data.Amount, 'f', 2, 64)+" CHF",
 		gopdf.CellOption{Align: gopdf.Right})
 
 	pdf.SetLineWidth(0.2)
-	pdf.Line(X, bottomcell+0.5+cellfont/3+(cellheight-cellfont/3)/2, maxX, bottomcell+0.5+cellfont/3+(cellheight-cellfont/3)/2)
-	pdf.Line(X, bottomcell+0.5+1+cellfont/3+(cellheight-cellfont/3)/2, maxX, bottomcell+0.5+1+cellfont/3+(cellheight-cellfont/3)/2)
+	pdf.Line(X+118, bottomcell+0.5+cellfont/3+(cellheight-cellfont/3)/2, maxX, bottomcell+0.5+cellfont/3+(cellheight-cellfont/3)/2)
+	pdf.Line(X+118, bottomcell+0.5+1+cellfont/3+(cellheight-cellfont/3)/2, maxX, bottomcell+0.5+1+cellfont/3+(cellheight-cellfont/3)/2)
 
 	// content
 	err = pdf.SetFont("fira-regular", "", fontsize)
