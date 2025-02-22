@@ -292,7 +292,7 @@ func (m *postgresDBRepo) GetAllBills(
 			b.Postcode = aPostcode.String
 		}
 		if aCity.Valid {
-			b.City = aPostcode.String
+			b.City = aCity.String
 		}
 		if message.Valid {
 			b.Message = message.String
@@ -423,7 +423,7 @@ func (m *postgresDBRepo) GetBillByID(id int) (models.BillData, error) {
 		b.Postcode = aPostcode.String
 	}
 	if aCity.Valid {
-		b.City = aPostcode.String
+		b.City = aCity.String
 	}
 	if message.Valid {
 		b.Message = message.String

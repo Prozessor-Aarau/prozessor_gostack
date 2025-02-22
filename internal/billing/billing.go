@@ -66,7 +66,11 @@ func CreateBill(data models.BillData, m repository.DatabaseRepo) (string, int, e
 	// now if any address exists, write it to the bill struct
 	if len(data.Street) > 0 {
 		data.WithAddress = true
-		bill.PayeeName = data.FirstName + " " + data.FamilyName
+		if len(data.Firma) > 0 {
+			bill.PayeeName = data.Firma
+		} else {
+			bill.PayeeName = data.FirstName + " " + data.FamilyName
+		}
 		bill.PayeeZIPCode = data.Postcode
 		bill.PayeePlace = data.City
 		bill.PayeeStreet = data.Street
@@ -127,19 +131,22 @@ func CreateBill(data models.BillData, m repository.DatabaseRepo) (string, int, e
 	}
 
 	// TODO only to this for custom bills
-	letter, err := BillLetter(data)
-	if err != nil {
-		return "", 0, err
+	if len(data.Items) > 0 {
+		letter, err := BillLetter(data)
+		if err != nil {
+			return "", 0, err
+		}
+
+		// put invoice to next page
+		letter.AddPage()
+		// Import page 1
+		tpl1 := letter.ImportPage(combinedPath, 1, "/MediaBox")
+		// Draw pdf onto page
+		letter.UseImportedTemplate(tpl1, 0, 0, 210, 297)
+
+		letter.WritePdf(combinedPath)
+		letter.Close()
 	}
-
-	letter.AddPage()
-	// Import page 1
-	tpl1 := letter.ImportPage(combinedPath, 1, "/MediaBox")
-	// Draw pdf onto page
-	letter.UseImportedTemplate(tpl1, 0, 0, 210, 297)
-
-	letter.WritePdf(combinedPath)
-	letter.Close()
 
 	return combinedPath, data.ID, nil
 }
