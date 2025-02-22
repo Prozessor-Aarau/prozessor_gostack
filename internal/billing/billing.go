@@ -130,7 +130,7 @@ func CreateBill(data models.BillData, m repository.DatabaseRepo) (string, int, e
 		return "", 0, err
 	}
 
-	// TODO only to this for custom bills
+	// only to this for custom bills
 	if len(data.Items) > 0 {
 		letter, err := BillLetter(data)
 		if err != nil {
@@ -146,6 +146,12 @@ func CreateBill(data models.BillData, m repository.DatabaseRepo) (string, int, e
 
 		letter.WritePdf(combinedPath)
 		letter.Close()
+	}
+
+	// update filename in database
+	err = m.SetBillPath(data.FileName, data.ID)
+	if err != nil {
+		return "", 0, err
 	}
 
 	return combinedPath, data.ID, nil
