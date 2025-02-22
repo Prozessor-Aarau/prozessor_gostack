@@ -17,6 +17,7 @@ import (
 	"github.com/faebut/prozessor_gostack/view/layout"
 	"github.com/faebut/prozessor_gostack/view/logistics"
 	"github.com/go-chi/chi/v5"
+	"github.com/google/uuid"
 )
 
 // HandleLogisticsIndex is the logistics page handler
@@ -512,12 +513,30 @@ func (m *Repository) HandleLogisticsCreateBillPost(w http.ResponseWriter, r *htt
 	var selectedLogistics []models.Logistic
 	var total float64
 	var numString string
+	var items []models.BillItem
 	for _, l := range logList {
 		if form.BoxValue(strconv.Itoa(l.ID)) {
 			selectedLogistics = append(selectedLogistics, l)
 			// calculate total
 			total += l.Price
 			numString += "[" + strconv.Itoa(l.Number) + "]"
+
+			var unitprice float64
+			if l.Member {
+				unitprice = l.Category.PriceMember
+			} else {
+				unitprice = l.Category.Price
+			}
+
+			item := models.BillItem{
+				ID:          uuid.NewString(),
+				Position:    l.Number,
+				Description: l.Category.CatName + ": " + l.StartDate.Format("02.01.2006") + " - " + l.EndDate.Format("02.01.2006"),
+				UnitPrice:   unitprice,
+				Count:       calcPrice(l.StartDate, l.EndDate, 1),
+			}
+
+			items = append(items, item)
 		}
 	}
 
@@ -538,6 +557,7 @@ func (m *Repository) HandleLogisticsCreateBillPost(w http.ResponseWriter, r *htt
 				"Lagerplätze %s",
 				numString,
 			),
+			Items: items,
 		},
 		m.DB,
 	)

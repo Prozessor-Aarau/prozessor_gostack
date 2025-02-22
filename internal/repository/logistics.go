@@ -471,7 +471,7 @@ func (m *postgresDBRepo) LogisticsByVisitorID(vID string) ([]models.Logistic, er
 		return logistics, nil
 	}
 
-	query := `SELECT l.id, l.number, l.start_date, l.end_date, l.reminder, l.member, l.bill_id, l.price, c.id, c.cat_name 
+	query := `SELECT l.id, l.number, l.start_date, l.end_date, l.reminder, l.member, l.bill_id, l.price, c.id, c.cat_name, c.price, c.price_member 
     FROM logistics l
     LEFT OUTER JOIN logistics_categories c ON c.id = l.category
     WHERE l.visitor_id = $1
@@ -509,6 +509,8 @@ func (m *postgresDBRepo) LogisticsByVisitorID(vID string) ([]models.Logistic, er
 			&price,
 			&l.Category.ID,
 			&l.Category.CatName,
+			&l.Category.Price,
+			&l.Category.PriceMember,
 		)
 
 		// handling null types
