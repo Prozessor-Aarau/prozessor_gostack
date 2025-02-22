@@ -126,44 +126,46 @@ func CreateBill(data models.BillData, m repository.DatabaseRepo) (string, int, e
 		return "", 0, err
 	}
 
-	doc, err := bill.GoPdf()
+	// TODO only to this for custom bills
+	letter, err := BillLetter(data)
 	if err != nil {
 		return "", 0, err
 	}
 
-	BillLetter(data, doc)
+	letter.AddPage()
+	// Import page 1
+	tpl1 := letter.ImportPage(combinedPath, 1, "/MediaBox")
+	// Draw pdf onto page
+	letter.UseImportedTemplate(tpl1, 0, 0, 210, 297)
 
-	doc.WritePdf(filepath + "fancy_" + data.FileName)
-
-	// update filename in database
-	err = m.SetBillPath(data.FileName, data.ID)
-	if err != nil {
-		return "", 0, err
-	}
+	letter.WritePdf(combinedPath)
+	letter.Close()
 
 	return combinedPath, data.ID, nil
 }
 
-func BillLetter(data models.BillData, pdf *gopdf.GoPdf) error {
+func BillLetter(data models.BillData) (*gopdf.GoPdf, error) {
+	pdf := gopdf.GoPdf{}
+	pdf.Start(gopdf.Config{PageSize: *gopdf.PageSizeA4, Unit: gopdf.UnitMM})
 	var err error
 
 	// add fonts
 	err = pdf.AddTTFFont("fira-extralight", "./static/assets/FiraSans-ExtraLight.ttf")
 	if err != nil {
 		log.Print(err.Error())
-		return err
+		return &pdf, err
 	}
 
 	err = pdf.AddTTFFont("fira-regular", "./static/assets/FiraSans-Regular.ttf")
 	if err != nil {
 		log.Print(err.Error())
-		return err
+		return &pdf, err
 	}
 
 	err = pdf.AddTTFFont("fira-bold", "./static/assets/FiraSans-Bold.ttf")
 	if err != nil {
 		log.Print(err.Error())
-		return err
+		return &pdf, err
 	}
 
 	// set header
@@ -235,7 +237,7 @@ func BillLetter(data models.BillData, pdf *gopdf.GoPdf) error {
 	err = pdf.SetFont("fira-regular", "", fontsize)
 	if err != nil {
 		log.Fatal(err)
-		return err
+		return &pdf, err
 	}
 
 	var address []string
@@ -258,7 +260,7 @@ func BillLetter(data models.BillData, pdf *gopdf.GoPdf) error {
 	err = pdf.SetFont("fira-extralight", "", fontsize)
 	if err != nil {
 		log.Fatal(err)
-		return err
+		return &pdf, err
 	}
 	pdf.SetXY(maxX-77, infoblockY)
 	pdf.CellWithOption(&gopdf.Rect{W: 35, H: 3.5},
@@ -274,7 +276,7 @@ func BillLetter(data models.BillData, pdf *gopdf.GoPdf) error {
 	err = pdf.SetFont("fira-regular", "", fontsize)
 	if err != nil {
 		log.Fatal(err)
-		return err
+		return &pdf, err
 	}
 	pdf.SetXY(maxX-40.5, infoblockY)
 	pdf.Cell(nil, "RG"+strconv.Itoa(data.ID))
@@ -292,7 +294,7 @@ func BillLetter(data models.BillData, pdf *gopdf.GoPdf) error {
 	err = pdf.SetFont("fira-bold", "", titlesize)
 	if err != nil {
 		log.Fatal(err)
-		return err
+		return &pdf, err
 	}
 
 	// title
@@ -303,7 +305,7 @@ func BillLetter(data models.BillData, pdf *gopdf.GoPdf) error {
 	err = pdf.SetFont("fira-regular", "", fontsize)
 	if err != nil {
 		log.Fatal(err)
-		return err
+		return &pdf, err
 	}
 
 	// body
@@ -383,7 +385,7 @@ func BillLetter(data models.BillData, pdf *gopdf.GoPdf) error {
 	err = pdf.SetFont("fira-bold", "", cellfont)
 	if err != nil {
 		log.Fatal(err)
-		return err
+		return &pdf, err
 	}
 	pdf.SetXY(maxX-102, bottomcell)
 	pdf.CellWithOption(&gopdf.Rect{W: 100, H: 10},
@@ -398,7 +400,7 @@ func BillLetter(data models.BillData, pdf *gopdf.GoPdf) error {
 	err = pdf.SetFont("fira-regular", "", fontsize)
 	if err != nil {
 		log.Fatal(err)
-		return err
+		return &pdf, err
 	}
 
 	// longer text
@@ -415,7 +417,7 @@ func BillLetter(data models.BillData, pdf *gopdf.GoPdf) error {
 	)
 	if err != nil {
 		log.Fatal(err)
-		return err
+		return &pdf, err
 	}
 
 	for i := 0; i < len(greetLines); i++ {
@@ -428,7 +430,7 @@ func BillLetter(data models.BillData, pdf *gopdf.GoPdf) error {
 	pdf.SetXY(X, tablebottom+6*newline)
 	pdf.Cell(nil, "Verein Prozessor")
 
-	return nil
+	return &pdf, nil
 }
 
 // DeleteBill deletes a bill from the disk
