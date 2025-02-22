@@ -1,363 +1,327 @@
 package bills
 
 import (
-	"github.com/faebut/prozessor_gostack/internal/models"
-	"github.com/faebut/prozessor_gostack/internal/render"
-	"github.com/faebut/prozessor_gostack/view/ui"
-	"golang.org/x/text/cases"
-	"golang.org/x/text/language"
-	"strconv"
+"github.com/faebut/prozessor_gostack/internal/models"
+"github.com/faebut/prozessor_gostack/internal/render"
+"github.com/faebut/prozessor_gostack/view/ui"
+"golang.org/x/text/cases"
+"golang.org/x/text/language"
+"strconv"
 )
 
 type FormErrors struct {
-	Edit       bool
-	Extern     bool
-	Member     string
-	Firma      string
-	FirstName  string
-	FamilyName string
-	Street     string
-	Number     string
-	Postcode   string
-	City       string
-	Purpose    string
-	Date       string
-	Message    string
-	Infos      string
-	Item       string
-	Items      []ItemError
+Edit bool
+Extern bool
+Member string
+Firma string
+FirstName string
+FamilyName string
+Street string
+Number string
+Postcode string
+City string
+Purpose string
+Date string
+Message string
+Infos string
+Item string
+Items []ItemError
 }
 
 type ItemError struct {
-	ID          string
-	Description string
-	Count       string
-	UnitPrice   string
+ID string
+Description string
+Count string
+UnitPrice string
 }
 
 templ CustomBillForm(bill models.BillData, errors FormErrors, categories []string) {
-	<form class="gap-3" novalidate x-data={ templ.JSONString(errors) }>
-		@ui.CSRF()
-		<div class="prose w-full">
-			if errors.Edit {
-				<h2>Rechnung Nr. { strconv.Itoa(bill.ID) } Bearbeiten</h2>
-			} else {
-				<h2>Neue Rechnung erstellen</h2>
-			}
-		</div>
-		<!-- toggle intern/extern -->
-		<div class="form-control w-full mt-4">
-			<label class="label cursor-pointer justify-start">
-				<input id="toggleExtern" name="extern" type="checkbox" class="toggle toggle-success" x-model="Extern"/>
-				<span class="label-text pl-3">Mitglied / Individuelle Adresse</span>
-			</label>
-		</div>
-		<!-- intern member select -->
-		<div x-show="! Extern" class="w-full mt-3 gap-3 grid grid-cols-2">
-			<form id="filterForm" class="mb-3 w-full col-span-2 md:col-span-1" novalidate>
-				@ui.CSRF()
-				<label class="input input-bordered flex items-center gap-2">
-					<span class="text-3xl i-mdi-magnify"></span>
-					<input
-						type="search"
-						id="search_term"
-						name="search_term"
-						class="grow"
-						placeholder="Suche nach Name, Vorname oder Ort..."
-						hx-post={ "/admin/visitors/selectbox/" + bill.Visitor.ID }
-						hx-trigger="input changed delay:500ms, search"
-						hx-target="#memberSelect"
-					/>
-					<button id="fieldreset" class="ml-3 btn btn-neutral btn-outline btn-xs btn-circle">
-						<span class="i-mdi-close"></span>
-					</button>
-				</label>
-			</form>
-			<div
-				hx-on::after-swap="memberError()"
-				id="memberSelect"
-				class="mb-3 col-span-2 md:col-span-1"
-				hx-get={ "/admin/visitors/selectbox/" + bill.Visitor.ID }
-				hx-trigger="load"
-			></div>
-		</div>
-		<!-- extern address -->
-		<div x-show="Extern" class="w-full mt-3 gap-3 grid grid-cols-8">
-			<label class="form-control w-full col-span-full md:col-span-4">
-				<div class="label">
-					<span class="label-text">Firma <span class="text-error font-extrabold">**</span></span>
-				</div>
-				<input
-					class={ "input input-bordered w-full" , templ.KV("input-error", len(errors.Firma)> 0) }
-					name="firma"
-					type="text"
-					value={ bill.Firma }
-				/>
-				if len(errors.Firma) > 0 {
-					<div class="label">
-						<span class="label-text text-error">{ errors.Firma }</span>
-					</div>
-				}
-			</label>
-			<label class="form-control w-full col-span-full md:col-span-2">
-				<div class="label">
-					<span class="label-text">Vorname <span class="text-error font-extrabold">**</span></span>
-				</div>
-				<input
-					class={ "input input-bordered w-full" , templ.KV("input-error", len(errors.FirstName)> 0) }
-					name="firstname"
-					type="text"
-					value={ bill.FirstName }
-				/>
-				if len(errors.FirstName) > 0 {
-					<div class="label">
-						<span class="label-text text-error">{ errors.FirstName }</span>
-					</div>
-				}
-			</label>
-			<label class="form-control w-full col-span-full md:col-span-2">
-				<div class="label">
-					<span class="label-text">Familienname <span class="text-error font-extrabold">**</span></span>
-				</div>
-				<input
-					class={ "input input-bordered w-full" , templ.KV("input-error", len(errors.FamilyName)> 0) }
-					name="familyname"
-					type="text"
-					value={ bill.FamilyName }
-				/>
-				if len(errors.FamilyName) > 0 {
-					<div class="label">
-						<span class="label-text text-error">{ errors.FamilyName }</span>
-					</div>
-				}
-			</label>
-			<label class="form-control w-full col-span-full md:col-span-3">
-				<div class="label">
-					<span class="label-text">Strasse <span class="text-error font-extrabold">*</span></span>
-				</div>
-				<input
-					class={ "input input-bordered w-full" , templ.KV("input-error", len(errors.Street)> 0) }
-					name="street"
-					type="text"
-					value={ bill.Street }
-				/>
-				if len(errors.Street) > 0 {
-					<div class="label">
-						<span class="label-text text-error">{ errors.Street }</span>
-					</div>
-				}
-			</label>
-			<label class="form-control w-full col-span-full md:col-span-1">
-				<div class="label">
-					<span class="label-text">Nummer <span class="text-error font-extrabold">*</span></span>
-				</div>
-				<input
-					class={ "input input-bordered w-full" , templ.KV("input-error", len(errors.Number)> 0) }
-					name="number"
-					type="text"
-					value={ bill.Number }
-				/>
-				if len(errors.Number) > 0 {
-					<div class="label">
-						<span class="label-text text-error">{ errors.Number }</span>
-					</div>
-				}
-			</label>
-			<label class="form-control w-full col-span-full md:col-span-1">
-				<div class="label">
-					<span class="label-text">PLZ <span class="text-error font-extrabold">*</span></span>
-				</div>
-				<input
-					class={ "input input-bordered w-full" , templ.KV("input-error", len(errors.Postcode)> 0) }
-					name="postcode"
-					type="text"
-					value={ bill.Postcode }
-				/>
-				if len(errors.Postcode) > 0 {
-					<div class="label">
-						<span class="label-text text-error">{ errors.Postcode }</span>
-					</div>
-				}
-			</label>
-			<label class="form-control w-full col-span-full md:col-span-3">
-				<div class="label">
-					<span class="label-text">Ort <span class="text-error font-extrabold">*</span></span>
-				</div>
-				<input
-					class={ "input input-bordered w-full" , templ.KV("input-error", len(errors.City)> 0) }
-					name="city"
-					type="text"
-					value={ bill.City }
-				/>
-				if len(errors.City) > 0 {
-					<div class="label">
-						<span class="label-text text-error">{ errors.City }</span>
-					</div>
-				}
-			</label>
-		</div>
-		<!-- positions for bill -->
-		<div
-			class={ "my-6 card bg-base-300 w-full" , templ.KV("border border-error mb-0", (len(errors.Item)>0) ||
+<form class="gap-3" novalidate x-data={ templ.JSONString(errors) }>
+  @ui.CSRF()
+  <div class="prose w-full">
+    if errors.Edit {
+    <h2>Rechnung Nr. { strconv.Itoa(bill.ID) } Bearbeiten</h2>
+    } else {
+    <h2>Neue Rechnung erstellen</h2>
+    }
+  </div>
+  <!-- toggle intern/extern -->
+  <div class="form-control w-full mt-4">
+    <label class="label cursor-pointer justify-start">
+      <input id="toggleExtern" name="extern" type="checkbox" class="toggle toggle-success" x-model="Extern" />
+      <span class="label-text pl-3">Mitglied / Individuelle Adresse</span>
+    </label>
+  </div>
+  <!-- intern member select -->
+  <div x-show="! Extern" class="w-full mt-3 gap-3 grid grid-cols-2">
+    <form id="filterForm" class="mb-3 w-full col-span-2 md:col-span-1" novalidate>
+      @ui.CSRF()
+      <label class="input input-bordered flex items-center gap-2">
+        <span class="text-3xl i-mdi-magnify"></span>
+        <input type="search" id="search_term" name="search_term" class="grow"
+          placeholder="Suche nach Name, Vorname oder Ort..." hx-post={ "/admin/visitors/selectbox/" + bill.Visitor.ID }
+          hx-trigger="input changed delay:500ms, search" hx-target="#memberSelect" />
+        <button id="fieldreset" class="ml-3 btn btn-neutral btn-outline btn-xs btn-circle">
+          <span class="i-mdi-close"></span>
+        </button>
+      </label>
+    </form>
+    <div hx-on::after-swap="memberError()" id="memberSelect" class="mb-3 col-span-2 md:col-span-1"
+      hx-get={ "/admin/visitors/selectbox/" + bill.Visitor.ID } hx-trigger="load"></div>
+  </div>
+  <!-- extern address -->
+  <div x-show="Extern" class="w-full mt-3 gap-3 grid grid-cols-8">
+    <label class="form-control w-full col-span-full md:col-span-4">
+      <div class="label">
+        <span class="label-text">Firma <span class="text-error font-extrabold">**</span></span>
+      </div>
+      <input class={ "input input-bordered w-full" , templ.KV("input-error", len(errors.Firma)> 0) }
+      name="firma"
+      type="text"
+      value={ bill.Firma }
+      />
+      if len(errors.Firma) > 0 {
+      <div class="label">
+        <span class="label-text text-error">{ errors.Firma }</span>
+      </div>
+      }
+    </label>
+    <label class="form-control w-full col-span-full md:col-span-2">
+      <div class="label">
+        <span class="label-text">Vorname <span class="text-error font-extrabold">**</span></span>
+      </div>
+      <input class={ "input input-bordered w-full" , templ.KV("input-error", len(errors.FirstName)> 0) }
+      name="firstname"
+      type="text"
+      value={ bill.FirstName }
+      />
+      if len(errors.FirstName) > 0 {
+      <div class="label">
+        <span class="label-text text-error">{ errors.FirstName }</span>
+      </div>
+      }
+    </label>
+    <label class="form-control w-full col-span-full md:col-span-2">
+      <div class="label">
+        <span class="label-text">Familienname <span class="text-error font-extrabold">**</span></span>
+      </div>
+      <input class={ "input input-bordered w-full" , templ.KV("input-error", len(errors.FamilyName)> 0) }
+      name="familyname"
+      type="text"
+      value={ bill.FamilyName }
+      />
+      if len(errors.FamilyName) > 0 {
+      <div class="label">
+        <span class="label-text text-error">{ errors.FamilyName }</span>
+      </div>
+      }
+    </label>
+    <label class="form-control w-full col-span-full md:col-span-3">
+      <div class="label">
+        <span class="label-text">Strasse <span class="text-error font-extrabold">*</span></span>
+      </div>
+      <input class={ "input input-bordered w-full" , templ.KV("input-error", len(errors.Street)> 0) }
+      name="street"
+      type="text"
+      value={ bill.Street }
+      />
+      if len(errors.Street) > 0 {
+      <div class="label">
+        <span class="label-text text-error">{ errors.Street }</span>
+      </div>
+      }
+    </label>
+    <label class="form-control w-full col-span-full md:col-span-1">
+      <div class="label">
+        <span class="label-text">Nummer <span class="text-error font-extrabold">*</span></span>
+      </div>
+      <input class={ "input input-bordered w-full" , templ.KV("input-error", len(errors.Number)> 0) }
+      name="number"
+      type="text"
+      value={ bill.Number }
+      />
+      if len(errors.Number) > 0 {
+      <div class="label">
+        <span class="label-text text-error">{ errors.Number }</span>
+      </div>
+      }
+    </label>
+    <label class="form-control w-full col-span-full md:col-span-1">
+      <div class="label">
+        <span class="label-text">PLZ <span class="text-error font-extrabold">*</span></span>
+      </div>
+      <input class={ "input input-bordered w-full" , templ.KV("input-error", len(errors.Postcode)> 0) }
+      name="postcode"
+      type="text"
+      value={ bill.Postcode }
+      />
+      if len(errors.Postcode) > 0 {
+      <div class="label">
+        <span class="label-text text-error">{ errors.Postcode }</span>
+      </div>
+      }
+    </label>
+    <label class="form-control w-full col-span-full md:col-span-3">
+      <div class="label">
+        <span class="label-text">Ort <span class="text-error font-extrabold">*</span></span>
+      </div>
+      <input class={ "input input-bordered w-full" , templ.KV("input-error", len(errors.City)> 0) }
+      name="city"
+      type="text"
+      value={ bill.City }
+      />
+      if len(errors.City) > 0 {
+      <div class="label">
+        <span class="label-text text-error">{ errors.City }</span>
+      </div>
+      }
+    </label>
+  </div>
+  <!-- positions for bill -->
+  <div class={ "my-6 card bg-base-300 w-full" , templ.KV("border border-error mb-0", (len(errors.Item)>0) ||
     len(errors.Items)>0) }
-		>
-			<div class="card-body">
-				<h2 class="card-title">Positionen</h2>
-				<table class="table">
-					<!-- head -->
-					<thead>
-						<tr>
-							<th></th>
-							<th>Pos.</th>
-							<th>Beschreibung</th>
-							<th>Menge</th>
-							<th>Preis</th>
-							<th class="text-right">Total</th>
-						</tr>
-					</thead>
-					<tbody id="rowbody">
-						for _, item := range bill.Items {
-							@BillItem(item, errors.Items)
-						}
-						<tr hx-on::after-swap="hideArrows()" id="endrow">
-							<th>
-								<button
-									type="button"
-									class="btn btn-outline btn-xs btn-circle btn-success"
-									hx-get="/admin/billing/create/item"
-									hx-target="#endrow"
-									hx-swap="beforebegin"
-								>
-									<span class="i-mdi-plus"></span>
-								</button>
-							</th>
-							<td></td>
-							<td></td>
-							<td></td>
-							<td class="font-bold text-right">TOTAL</td>
-							<td id="finaltotal" class="font-bold text-right">0.00</td>
-						</tr>
-					</tbody>
-				</table>
-			</div>
-		</div>
-		if len(errors.Item) > 0 || len(errors.Items) > 0 {
-			<div class="label">
-				<span class="label-text text-error">
-					{ errors.Item }
-					if len(errors.Items) > 0 {
-						Ein oder mehrere Felder sind fehlerhaft
-					}
-				</span>
-			</div>
-		}
-		<!-- payment info -->
-		<div class="w-full mt-3 gap-3 grid grid-cols-1">
-			<label class="form-control w-full col-span-full md:col-span-4 dropdown dropdown-bottom">
-				<div class="label">
-					<span class="label-text">
-						Kategorie (wenn möglich aus vorhandenen) <span class="text-error font-extrabold">*</span>
-					</span>
-				</div>
-				<input
-					type="text"
-					id="purpose"
-					name="purpose"
-					list="purposelist"
-					class={ "input input-bordered" ,
+    >
+    <div class="card-body">
+      <h2 class="card-title">Positionen</h2>
+      <table class="table">
+        <!-- head -->
+        <thead>
+          <tr>
+            <th></th>
+            <th>Pos.</th>
+            <th>Beschreibung</th>
+            <th>Menge</th>
+            <th>Preis</th>
+            <th class="text-right">Total</th>
+          </tr>
+        </thead>
+        <tbody id="rowbody">
+          for _, item := range bill.Items {
+          @BillItem(item, errors.Items)
+          }
+          <tr hx-on::after-swap="hideArrows()" id="endrow">
+            <th>
+              <button type="button" class="btn btn-outline btn-xs btn-circle btn-success"
+                hx-get="/admin/billing/create/item" hx-target="#endrow" hx-swap="beforebegin">
+                <span class="i-mdi-plus"></span>
+              </button>
+            </th>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td class="font-bold text-right">TOTAL</td>
+            <td id="finaltotal" class="font-bold text-right">0.00</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  if len(errors.Item) > 0 || len(errors.Items) > 0 {
+  <div class="label">
+    <span class="label-text text-error">
+      { errors.Item }
+      if len(errors.Items) > 0 {
+      Ein oder mehrere Felder sind fehlerhaft
+      }
+    </span>
+  </div>
+  }
+  <!-- payment info -->
+  <div class="w-full mt-3 gap-3 grid grid-cols-1">
+    <label class="form-control w-full col-span-full md:col-span-4 dropdown dropdown-bottom">
+      <div class="label">
+        <span class="label-text">
+          Kategorie (wenn möglich aus vorhandenen) <span class="text-error font-extrabold">*</span>
+        </span>
+      </div>
+      <input type="text" id="purpose" name="purpose" list="purposelist" class={ "input input-bordered" ,
         templ.KV("input-error", len(errors.Purpose)> 0) }
-					value={ bill.Purpose }
-				/>
-				<datalist id="purposelist">
-					for _, c := range categories {
-						<option>{ cases.Title(language.English, cases.NoLower).String(c) }</option>
-					}
-				</datalist>
-				if len(errors.Purpose) > 0 {
-					<div class="label">
-						<span class="label-text text-error">{ errors.Purpose }</span>
-					</div>
-				}
-			</label>
-			<label class="form-control w-full col-span-full md:col-span-4">
-				<div class="label">
-					<span class="label-text">Rechnungsdatum <span class="text-error font-extrabold">*</span></span>
-				</div>
-				<input
-					type="date"
-					id="date"
-					name="date"
-					class={ "input input-bordered" , templ.KV("input-error",
+      value={ bill.Purpose }
+      />
+      <datalist id="purposelist">
+        for _, c := range categories {
+        <option>{ cases.Title(language.English, cases.NoLower).String(c) }</option>
+        }
+      </datalist>
+      if len(errors.Purpose) > 0 {
+      <div class="label">
+        <span class="label-text text-error">{ errors.Purpose }</span>
+      </div>
+      }
+    </label>
+    <label class="form-control w-full col-span-full md:col-span-4">
+      <div class="label">
+        <span class="label-text">Rechnungsdatum <span class="text-error font-extrabold">*</span></span>
+      </div>
+      <input type="date" id="date" name="date" class={ "input input-bordered" , templ.KV("input-error",
         len(errors.Date)> 0) }
-					if render.RealDate(bill.Date) {
-						value={ render.HumanDate(bill.Date) }
-					}
-					required
-				/>
-				if len(errors.Date) > 0 {
-					<div class="label">
-						<span class="label-text text-error">{ errors.Date }</span>
-					</div>
-				}
-			</label>
-			<label class="form-control w-full col-span-full md:col-span-4">
-				<div class="label">
-					<span class="label-text">Mitteilung / Zahlungszweck <span class="text-error font-extrabold">*</span></span>
-				</div>
-				<input
-					class={ "input input-bordered w-full" , templ.KV("input-error", len(errors.Message)> 0) }
-					name="message"
-					type="text"
-					value={ bill.Message }
-				/>
-				if len(errors.Message) > 0 {
-					<div class="label">
-						<span class="label-text text-error">{ errors.Message }</span>
-					</div>
-				}
-			</label>
-			<label class="form-control w-full col-span-full md:col-span-4">
-				<div class="label">
-					<span class="label-text">Interne Informationen <span class="text-error font-extrabold">*</span></span>
-				</div>
-				<textarea
-					class={ "textarea textarea-bordered w-full h-24" , templ.KV("textarea-error", len(errors.Infos)> 0) }
-					name="infos"
-				>{ bill.Infos }</textarea>
-				if len(errors.Infos) > 0 {
-					<div class="label">
-						<span class="label-text text-error">{ errors.Infos }</span>
-					</div>
-				}
-			</label>
-			<div class="col-span-full text-sm">
-				<span class="text-error font-extrabold">*</span> diese Felder sind zwingend
-				auszufüllen
-			</div>
-			<div class="col-span-full text-sm">
-				<span class="text-error font-extrabold">**</span> mindestens eine Angabe nötig
-				(entweder/oder)
-			</div>
-		</div>
-		<!-- action buttons -->
-		<div class="col-span-full gap-3 flex mt-6 items-center justify-center flex-col md:flex-row">
-			if errors.Edit {
-				<a class="btn btn-success" hx-post={ "/admin/billing/edit/" + strconv.Itoa(bill.ID) } hx-target="#content">
-					Rechnung bearbeiten
-				</a>
-			} else {
-				<a class="btn btn-success" hx-post="/admin/billing/create" hx-target="#content">
-					Rechnung erstellen
-				</a>
-			}
-			<a href="/admin/billing" class="btn btn-warning">
-				<span class="i-mdi-cancel-bold"></span>
-				Abbrechen
-			</a>
-		</div>
-	</form>
-	@templ.JSONScript("memErr", errors.Member)
-	<script>
+      if render.RealDate(bill.Date) {
+      value={ render.HumanDate(bill.Date) }
+      }
+      required
+      />
+      if len(errors.Date) > 0 {
+      <div class="label">
+        <span class="label-text text-error">{ errors.Date }</span>
+      </div>
+      }
+    </label>
+    <label class="form-control w-full col-span-full md:col-span-4">
+      <div class="label">
+        <span class="label-text">Mitteilung / Zahlungszweck <span class="text-error font-extrabold">*</span></span>
+      </div>
+      <input class={ "input input-bordered w-full" , templ.KV("input-error", len(errors.Message)> 0) }
+      name="message"
+      type="text"
+      value={ bill.Message }
+      />
+      if len(errors.Message) > 0 {
+      <div class="label">
+        <span class="label-text text-error">{ errors.Message }</span>
+      </div>
+      }
+    </label>
+    <label class="form-control w-full col-span-full md:col-span-4">
+      <div class="label">
+        <span class="label-text">Interne Informationen <span class="text-error font-extrabold">*</span></span>
+      </div>
+      <textarea class={ "textarea textarea-bordered w-full h-24" , templ.KV("textarea-error", len(errors.Infos)> 0) }
+        name="infos"
+        >{ bill.Infos }</textarea>
+      if len(errors.Infos) > 0 {
+      <div class="label">
+        <span class="label-text text-error">{ errors.Infos }</span>
+      </div>
+      }
+    </label>
+    <div class="col-span-full text-sm">
+      <span class="text-error font-extrabold">*</span> diese Felder sind zwingend
+      auszufüllen
+    </div>
+    <div class="col-span-full text-sm">
+      <span class="text-error font-extrabold">**</span> mindestens eine Angabe nötig
+      (entweder/oder)
+    </div>
+  </div>
+  <!-- action buttons -->
+  <div class="col-span-full gap-3 flex mt-6 items-center justify-center flex-col md:flex-row">
+    if errors.Edit {
+    <a class="btn btn-success" hx-post={ "/admin/billing/edit/" + strconv.Itoa(bill.ID) } hx-target="#content">
+      Rechnung bearbeiten
+    </a>
+    } else {
+    <a class="btn btn-success" hx-post="/admin/billing/create" hx-target="#content">
+      Rechnung erstellen
+    </a>
+    }
+    <a href="/admin/billing" class="btn btn-warning">
+      <span class="i-mdi-cancel-bold"></span>
+      Abbrechen
+    </a>
+  </div>
+</form>
+@templ.JSONScript("memErr", errors.Member)
+<script>
   var finaltotal = document.getElementById("finaltotal");
 
   // get sum of all totals and write it to final total
@@ -372,7 +336,6 @@ templ CustomBillForm(bill models.BillData, errors FormErrors, categories []strin
     }
 
     finaltotal.innerText = (Math.round(total * 100) / 100).toFixed(2)
-    console.log("getting total")
   }
 
   function removeItem(eid) {
@@ -438,69 +401,58 @@ templ CustomBillForm(bill models.BillData, errors FormErrors, categories []strin
 }
 
 templ BillItem(item models.BillItem, errors []ItemError) {
-	<!-- get error belonging to this item -->
-	{{
+{{
 var iError ItemError
 
 for _, e := range errors {
-	if e.ID == item.ID {
-		iError = e
-		break
-	}
+if e.ID == item.ID {
+iError = e
+break
 }
-	}}
-	<tr id={ item.ID } x-data={ templ.JSONString(item) }>
-		<th>
-			<button type="button" class="btn btn-outline btn-xs btn-circle btn-error" @click="removeItem(ID)">
-				<span class="i-mdi-close"></span>
-			</button>
-			<input type="hidden" name="item_id" value={ item.ID }/>
-			<input type="hidden" class="pfield" name="item_position" value={ strconv.Itoa(item.Position) }/>
-		</th>
-		<td class="align-bottom">
-			<span
-				class="darrow i-mdi-arrow-down-drop-circle-outline hover:i-mdi-arrow-down-drop-circle text-xl cursor-pointer hover:text-primary"
-				@click="moveItemDown(ID)"
-			></span><span
-	class="uarrow i-mdi-arrow-up-drop-circle-outline hover:i-mdi-arrow-up-drop-circle text-xl cursor-pointer hover:text-primary"
-	@click="moveItemUp(ID)"
-></span>
-		</td>
-		<td>
-			<input
-				type="text"
-				class={ "w-full input-sm input input-bordered" , templ.KV("input-error", len(iError.Description)>
+}
+}}
+<tr id={ item.ID } x-data={ templ.JSONString(item) }>
+  <th>
+    <button type="button" class="btn btn-outline btn-xs btn-circle btn-error" @click="removeItem(ID)">
+      <span class="i-mdi-close"></span>
+    </button>
+    <input type="hidden" name="item_id" value={ item.ID } />
+    <input type="hidden" class="pfield" name="item_position" value={ strconv.Itoa(item.Position) } />
+  </th>
+  <td class="align-bottom">
+    <span
+      class="darrow i-mdi-arrow-down-drop-circle-outline hover:i-mdi-arrow-down-drop-circle text-xl cursor-pointer hover:text-primary"
+      @click="moveItemDown(ID)"></span><span
+      class="uarrow i-mdi-arrow-up-drop-circle-outline hover:i-mdi-arrow-up-drop-circle text-xl cursor-pointer hover:text-primary"
+      @click="moveItemUp(ID)"></span>
+  </td>
+  <td>
+    <input type="text" class={ "w-full input-sm input input-bordered" , templ.KV("input-error", len(iError.Description)>
     0) }
-				name="item_description"
-				value={ item.Description }
-			/>
-		</td>
-		<td>
-			<input
-				name="item_count"
-				type="number"
-				class={ "input input-sm input-bordered max-w-20" , templ.KV("input-error",
+    name="item_description"
+    value={ item.Description }
+    />
+  </td>
+  <td>
+    <input name="item_count" type="number" class={ "input input-sm input-bordered max-w-20" , templ.KV("input-error",
       len(iError.Count)> 0) }
-				min="0"
-				step="1"
-				x-model="Count"
-				@keyup="getFinalTotal"
-				@change="getFinalTotal"
-			/>
-		</td>
-		<td>
-			<input
-				name="item_unit_price"
-				type="number"
-				class={ "input input-sm input-bordered max-w-20" ,
+    min="0"
+    step="1"
+    x-model="Count"
+    @keyup="getFinalTotal"
+    @change="getFinalTotal"
+    />
+  </td>
+  <td>
+    <input name="item_unit_price" type="number" class={ "input input-sm input-bordered max-w-20" ,
       templ.KV("input-error", len(iError.UnitPrice)> 0) }
-				min="0"
-				step="0.05"
-				x-model="UnitPrice"
-				@keyup="getFinalTotal"
-				@change="getFinalTotal"
-			/>
-		</td>
-		<td class="font-bold text-right subtotal" x-text="(Math.round(Count * UnitPrice * 100) / 100).toFixed(2)"></td>
-	</tr>
+    min="0"
+    step="0.05"
+    x-model="UnitPrice"
+    @keyup="getFinalTotal"
+    @change="getFinalTotal"
+    />
+  </td>
+  <td class="font-bold text-right subtotal" x-text="(Math.round(Count * UnitPrice * 100) / 100).toFixed(2)"></td>
+</tr>
 }
