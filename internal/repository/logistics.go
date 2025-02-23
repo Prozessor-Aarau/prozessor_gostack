@@ -54,12 +54,13 @@ func (m *postgresDBRepo) LogisticsByID(id int) (models.Logistic, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	query := `SELECT l.id, l.number, l.start_date, l.end_date, l.reminder, l.member, l.unit_price, l.bill_id, l.price, l.label, c.id, c.cat_name, v.id, v.first_name, v.family_name, v.phone, v.email, l.created_on, l.updated_on
+	query := `SELECT l.id, l.number, l.start_date, l.end_date, l.reminder, l.member, l.unit_price, l.bill_id, b.paid, l.price, l.label, c.id, c.cat_name, v.id, v.first_name, v.family_name, v.phone, v.email, l.created_on, l.updated_on 
     FROM logistics l
     LEFT OUTER JOIN visitors v ON v.id = l.visitor_id
     LEFT OUTER JOIN logistics_categories c ON c.id = l.category
-    WHERE l.id = $1
-    `
+    LEFT OUTER JOIN billing b ON b.id = l.bill_id
+    WHERE l.id = $1`
+
 	row := m.DB.QueryRowContext(ctx, query, id)
 
 	var l models.Logistic
@@ -88,6 +89,7 @@ func (m *postgresDBRepo) LogisticsByID(id int) (models.Logistic, error) {
 		&member,
 		&unitPrice,
 		&billID,
+		&l.BillPaid,
 		&price,
 		&label,
 		&l.Category.ID,
