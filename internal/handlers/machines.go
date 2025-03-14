@@ -25,6 +25,8 @@ func (m *Repository) HandleMachinesIndex(w http.ResponseWriter, r *http.Request)
 	}
 
 	ressorts, err := m.DB.AllRessorts()
+	ressorts = ressorts[:len(ressorts)-1]
+
 	if err != nil {
 		log.Println("could not get ressorts from DB: ", err)
 		m.DB.CreateLog(
@@ -95,6 +97,8 @@ func (m *Repository) HandleMachinesListFilter(w http.ResponseWriter, r *http.Req
 func (m *Repository) HandleMachinesCreateIndex(w http.ResponseWriter, r *http.Request) error {
 	// send the data to the template
 	ressorts, err := m.DB.AllRessorts()
+	ressorts = ressorts[:len(ressorts)-1]
+
 	if err != nil {
 		log.Println("could not get ressorts from DB: ", err)
 		m.DB.CreateLog(
@@ -139,6 +143,7 @@ func (m *Repository) HandleMachinesCreate(w http.ResponseWriter, r *http.Request
 	// what to do if form not valid
 	if !form.Valid() {
 		ressorts, err := m.DB.AllRessorts()
+		ressorts = ressorts[:len(ressorts)-1]
 		if err != nil {
 			log.Println("could not get ressorts from DB: ", err)
 			m.DB.CreateLog(
@@ -179,6 +184,8 @@ func (m *Repository) HandleMachinesCreate(w http.ResponseWriter, r *http.Request
 func (m *Repository) HandleMachinesEditIndex(w http.ResponseWriter, r *http.Request) error {
 	// send the data to the template
 	ressorts, err := m.DB.AllRessorts()
+	ressorts = ressorts[:len(ressorts)-1]
+
 	if err != nil {
 		log.Println("could not get ressorts from DB: ", err)
 		m.DB.CreateLog(
@@ -238,6 +245,8 @@ func (m *Repository) HandleMachinesEdit(w http.ResponseWriter, r *http.Request) 
 	// what to do if form not valid
 	if !form.Valid() {
 		ressorts, err := m.DB.AllRessorts()
+		ressorts = ressorts[:len(ressorts)-1]
+
 		if err != nil {
 			log.Println("could not get ressorts from DB: ", err)
 			m.DB.CreateLog(
