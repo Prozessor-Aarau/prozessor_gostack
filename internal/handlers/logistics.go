@@ -172,6 +172,8 @@ func (m *Repository) HandleLogisticsCreateIndex(w http.ResponseWriter, r *http.R
 func (m *Repository) HandleLogisticsCreateAndEdit(w http.ResponseWriter, r *http.Request) error {
 	categories, err := m.DB.AllLogisticCategories()
 
+	// TODO check if enddate is after startdate
+
 	if err != nil {
 		return err
 	}

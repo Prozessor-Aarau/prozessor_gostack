@@ -27,7 +27,7 @@ func (m *postgresDBRepo) AllLogisticCategories() ([]models.LogisticCategory, err
 	for rows.Next() {
 		var l models.LogisticCategory
 
-		err := rows.Scan(
+		err = rows.Scan(
 			&l.ID,
 			&l.CatName,
 			&l.Price,
@@ -72,6 +72,7 @@ func (m *postgresDBRepo) LogisticsByID(id int) (models.Logistic, error) {
 	var member sql.NullBool
 	var unitPrice sql.NullFloat64
 	var billID sql.NullInt32
+	var billPaid sql.NullBool
 	var price sql.NullFloat64
 	var label sql.NullString
 	var visID sql.NullString
@@ -89,7 +90,7 @@ func (m *postgresDBRepo) LogisticsByID(id int) (models.Logistic, error) {
 		&member,
 		&unitPrice,
 		&billID,
-		&l.BillPaid,
+		&billPaid,
 		&price,
 		&label,
 		&l.Category.ID,
@@ -121,6 +122,9 @@ func (m *postgresDBRepo) LogisticsByID(id int) (models.Logistic, error) {
 	}
 	if billID.Valid {
 		l.BillID = int(billID.Int32)
+	}
+	if billPaid.Valid {
+		l.BillPaid = billPaid.Bool
 	}
 	if price.Valid {
 		l.Price = price.Float64
