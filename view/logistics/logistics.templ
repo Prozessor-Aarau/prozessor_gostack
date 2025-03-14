@@ -242,6 +242,7 @@ for _, cat := range categories {
 	}}
 	<form
 		class="grid grid-cols-2 items-center gap-3 "
+    id="postForm"
 		novalidate
 	>
 		<input type="hidden" name="id" value={ strconv.Itoa(l.ID) }/>
@@ -495,6 +496,7 @@ for _, cat := range categories {
 								<a
 									id="updateButton"
 									hx-post={ postUrl }
+                  hx-include="#postForm"
 									class="btn btn-success"
 									hx-target="#content"
 									x-bind:disabled="!$store.updateState.laterDate && !$store.updateState.newMember"
