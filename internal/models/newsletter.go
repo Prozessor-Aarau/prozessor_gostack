@@ -25,6 +25,7 @@ type NewsletterTemplate struct {
 
 type Newsletter struct {
 	ID          int
+	Title       string
 	Description string
 	Members     bool
 	Template    NewsletterTemplate

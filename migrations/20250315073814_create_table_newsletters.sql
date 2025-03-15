@@ -11,6 +11,7 @@ CREATE TABLE newsletter_templates (
 
 CREATE TABLE newsletters (
   id serial PRIMARY KEY,
+  title TEXT NOT NULL,
   description TEXT NOT NULL,
   template_id INT REFERENCES newsletter_templates(id) ON DELETE CASCADE NOT NULL,
   members BOOL DEFAULT false,

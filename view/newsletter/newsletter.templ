@@ -1,0 +1,129 @@
+package newsletter
+
+import (
+	"github.com/faebut/prozessor_gostack/internal/models"
+	"github.com/faebut/prozessor_gostack/view/layout"
+	"github.com/faebut/prozessor_gostack/view/ui"
+	"strconv"
+)
+
+templ Newsletters(visitor models.Visitor) {
+	@layout.App(true, visitor) {
+		{{ prm := ctx.Value("permission").(models.Role) }}
+		<div class="prose mb-10">
+			<h1>Newsletter</h1>
+		</div>
+		<div id="content">
+			<div id="newsletterList" hx-get="/admin/newsletter/list" hx-trigger="load"></div>
+			if prm.AddNewsletter {
+				<div>
+					<button type="button" class="mt-3 btn btn-primary" hx-target="#content" hx-get="/admin/newsletter/create">
+						<span class="i-mdi-newspaper-plus"></span> Newsletter hinzufügen
+					</button>
+				</div>
+			}
+		</div>
+	}
+}
+
+templ NewsletterList(newsletters []models.Newsletter) {
+	{{ prm := ctx.Value("permission").(models.Role) }}
+	if len(newsletters) > 0 {
+		for _, n := range newsletters {
+			<div
+				class="hover:bg-base-200 cursor-pointer grid grid-cols-6 text-sm p-3 py-4 items-center gap-3 border-dashed border-b border-base-content border-opacity-50"
+			>
+				<div class="col-span-1">ID: { strconv.Itoa(n.ID) }</div>
+				<div class="col-span-1 text-2xl flex items-center">
+					<span class="font-bold">{ n.Title }</span>
+					{ n.Description }
+				</div>
+				<div class="col-span-4 md:col-span-1">{ n.Template.Name }</div>
+				<div class="col-span-5 md:col-span-2 text-right md:text-left">
+					{ strconv.FormatBool(n.Members) }
+				</div>
+				<div class="col-span-1 flex justify-end items-center">
+					<a
+						class={ "btn btn-sm btn-circle btn-primary" , templ.KV("btn-disabled", !prm.AddNewsletter) }
+						hx-get={ "/admin/newsletter/" + strconv.Itoa(n.ID) }
+						hx-target="#main"
+					>
+						<span class="i-mdi-lead-pencil"></span>
+					</a>
+				</div>
+			</div>
+		}
+	} else {
+		<div class="my-10">
+			@layout.Warning("keine Suchergebnisse")
+		</div>
+	}
+}
+
+type NewsletterErrors struct {
+	Title       string
+	Description string
+}
+
+templ NewsletterCreate(n models.Newsletter, errors NewsletterErrors) {
+	<form class="flex flex-wrap gap-3" novalidate>
+		@ui.CSRF()
+		<div class="prose col-span-full">
+			<h2>Neuen Newsletter erstellen</h2>
+		</div>
+		<label class="form-control w-full">
+			<div class="label">
+				<span class="label-text">Titel <span class="text-error font-extrabold">*</span></span>
+			</div>
+			<input
+				type="text"
+				placeholder="Badge Nummer"
+				class={ "input input-bordered w-full" , templ.KV("input-error",
+      len(errors.Title)>0) }
+				value={ n.Title }
+				name="title"
+				required
+			/>
+			if len(errors.Title) > 0 {
+				<div class="label">
+					<span class="label-text text-error">{ errors.Title }</span>
+				</div>
+			}
+		</label>
+		<div class="flex w-full gap-3 items-end">
+			<label id="badge" class="form-control w-full">
+				<div class="label">
+					<span class="label-text">
+						Beschrieb <span class="text-error font-extrabold">*</span>
+					</span>
+				</div>
+				<input
+					type="text"
+					placeholder="Kurzbeschrieb"
+					class={ "input input-bordered w-full" , templ.KV("input-error",
+        len(errors.Description)> 0) }
+					value={ n.Description }
+					name="description"
+					required
+				/>
+				if len(errors.Description) > 0 {
+					<div class="label">
+						<span class="label-text text-error">{ errors.Description }</span>
+					</div>
+				}
+			</label>
+		</div>
+		<div class=" col-span-full text-sm mt-3">
+			<span class="text-error font-extrabold">*</span> diese Felder sind zwingend auszufüllen.
+		</div>
+		<div class="col-span-full w-full gap-3 flex mt-3 items-center justify-center flex-col md:flex-row">
+			<a class="btn btn-success" hx-post="/admin/newsletter/create" hx-target="#content">
+				Speichern
+			</a>
+			<a href="/admin/newsletter" class="btn btn-warning">
+				<span class="i-mdi-cancel-bold"></span>
+				Abbrechen
+			</a>
+		</div>
+	</form>
+}

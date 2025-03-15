@@ -84,6 +84,8 @@ type DatabaseRepo interface {
 	LogisticsByVisitorID(vID string) ([]models.Logistic, error)
 	UpdateLogisticsBillID(billID int, logistics []int) error
 	UpdateBill(b models.BillData) (string, error)
+	// newsletter
+	GetAllNewsletters() ([]models.Newsletter, int, error)
 }
 
 type postgresDBRepo struct {
