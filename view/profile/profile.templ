@@ -70,53 +70,48 @@ templ ProfileForm(
 		@ui.CSRF()
 		<input type="hidden" name="ref" value={ referer }/>
 		<input type="hidden" name="route" value={ route }/>
-		<label class="form-control col-span-4 md:col-span-2">
-			<div class="label">
-				<span class="label-text">Vorname <span class="text-error font-extrabold">*</span></span>
-			</div>
+		<fieldset class="fieldset col-span-4 md:col-span-2">
+			<legend class="fieldset-legend">Vorname <span class="text-error font-extrabold">*</span></legend>
 			<input
 				type="text"
 				id="first_name"
 				name="first_name"
-				class={ "input" , templ.KV("input-error",
+				class={ "input w-full" , templ.KV("input-error",
       len(errors.FirstName)> 0) }
 				value={ profile.FirstName }
 				required
 			/>
 			if len(errors.FirstName) > 0 {
-				<div class="label">
-					<span class="label-text text-error">{ errors.FirstName }</span>
-				</div>
+				<p class="fieldset-label text-error mt-0 mb-0">
+					{ errors.FirstName }
+				</p>
 			}
-		</label>
-		<label class="form-control col-span-4 md:col-span-2">
-			<div class="label">
-				<span class="label-text">Familienname <span class="text-error font-extrabold">*</span></span>
-			</div>
+		</fieldset>
+		<fieldset class="fieldset col-span-4 md:col-span-2">
+			<legend class="fieldset-legend">Familienname <span class="text-error font-extrabold">*</span></legend>
 			<input
 				type="text"
 				id="family_name"
 				name="family_name"
-				class={ "input" , templ.KV("input-error",
+				class={ "input w-full" , templ.KV("input-error",
       len(errors.FamilyName)> 0) }
 				value={ profile.FamilyName }
 				required
 			/>
 			if len(errors.FamilyName) > 0 {
-				<div class="label">
-					<span class="label-text text-error">{ errors.FamilyName }</span>
-				</div>
+				<p class="fieldset-label text-error mt-0 mb-0">
+					{ errors.FamilyName }
+				</p>
 			}
-		</label>
-		<label class="form-control col-span-4 sm:col-span-2 md:col-span-1">
-			<div class="label">
-				<span class="label-text">Geburtsdatum <span class="text-error font-extrabold">*</span></span>
-			</div>
+		</fieldset>
+		<fieldset class="fieldset col-span-4 sm:col-span-2 md:col-span-1">
+			<legend class="fieldset-legend">Geburtsdatum <span class="text-error font-extrabold">*</span></legend>
 			<input
 				type="date"
 				id="birthdate"
 				name="birthdate"
-				class={ "input" , templ.KV("input-error", len(errors.Birthdate)>
+				class={ "input w-full" , templ.KV("input-error",
+      len(errors.Birthdate)>
     0) }
 				if render.RealDate(profile.Birthdate) {
 					value={ render.HumanDate(profile.Birthdate) }
@@ -124,116 +119,109 @@ templ ProfileForm(
 				required
 			/>
 			if len(errors.Birthdate) > 0 {
-				<div class="label">
-					<span class="label-text text-error">{ errors.Birthdate }</span>
-				</div>
+				<p class="fieldset-label text-error mt-0 mb-0">
+					{ errors.Birthdate }
+				</p>
 			}
-		</label>
-		<label class="form-control col-span-4 sm:col-span-2 md:col-span-1">
-			<div class="label">
-				<span class="label-text">Telefonnummer <span class="text-error font-extrabold">**</span></span>
-			</div>
+		</fieldset>
+		<fieldset class="fieldset col-span-4 sm:col-span-2 md:col-span-1">
+			<legend class="fieldset-legend">Telefonnummer <span class="text-error font-extrabold">**</span></legend>
 			<input
 				type="text"
 				id="phone"
 				name="phone"
-				class={ "input" , templ.KV("input-error", len(errors.Phone)> 0) }
+				class={ "input w-full" , templ.KV("input-error", len(errors.Phone)> 0) }
 				value={ profile.Phone }
 			/>
 			if len(errors.Phone) > 0 {
-				<div class="label">
-					<span class="label-text text-error">{ errors.Phone }</span>
-				</div>
+				<p class="fieldset-label text-error mt-0 mb-0">
+					{ errors.Phone }
+				</p>
 			}
-		</label>
-		<label class="form-control col-span-4 md:col-span-2">
-			<div class="label">
-				<span class="label-text">E-Mail <span class="text-error font-extrabold">**</span></span>
-			</div>
+		</fieldset>
+		<fieldset class="fieldset col-span-4 md:col-span-2">
+			<legend class="fieldset-legend">E-Mail <span class="text-error font-extrabold">**</span></legend>
 			<input
 				type="text"
 				id="email"
 				name="email"
-				class={ "input" , templ.KV("input-error", len(errors.Email)> 0) }
+				class={ "input w-full" , templ.KV("input-error", len(errors.Email)> 0) }
 				value={ profile.Email }
 			/>
 			if len(errors.Email) > 0 {
-				<div class="label">
-					<span class="label-text text-error">{ errors.Email }</span>
-				</div>
+				<p class="fieldset-label text-error mt-0 mb-0">
+					{ errors.Email }
+				</p>
 			}
-		</label>
-		<label class="form-control col-span-4 md:col-span-2">
-			<div class="label">
-				<span class="label-text">Strasse Nr. <span class="text-error font-extrabold">*</span></span>
-			</div>
+		</fieldset>
+		<fieldset class="fieldset col-span-4 md:col-span-2">
+			<legend class="fieldset-legend">Strasse Nr. <span class="text-error font-extrabold">*</span></legend>
 			<input
 				type="text"
 				id="address"
 				name="address"
-				class={ "input" , templ.KV("input-error", len(errors.Address)> 0) }
+				class={ "input w-full" , templ.KV("input-error", len(errors.Address)>
+    0) }
 				value={ profile.Address }
 				required
 			/>
 			if len(errors.Address) > 0 {
-				<div class="label">
-					<span class="label-text text-error">{ errors.Address }</span>
-				</div>
+				<p class="fieldset-label text-error mt-0 mb-0">
+					{ errors.Address }
+				</p>
 			}
-		</label>
-		<label class="form-control">
-			<div class="label">
-				<span class="label-text">PLZ <span class="text-error font-extrabold">*</span></span>
-			</div>
+		</fieldset>
+		<fieldset class="fieldset">
+			<legend class="fieldset-legend">PLZ <span class="text-error font-extrabold">*</span></legend>
 			<input
 				type="text"
 				id="postcode"
 				name="postcode"
-				class={ "input" , templ.KV("input-error", len(errors.Postcode)> 0) }
+				class={ "input w-full" , templ.KV("input-error",
+      len(errors.Postcode)> 0) }
 				value={ profile.Postcode }
 				required
 			/>
 			if len(errors.Postcode) > 0 {
-				<div class="label">
-					<span class="label-text text-error">{ errors.Postcode }</span>
-				</div>
+				<p class="fieldset-label text-error mt-0 mb-0">
+					{ errors.Postcode }
+				</p>
 			}
-		</label>
-		<label class="form-control col-span-3 md:col-span-1">
-			<div class="label">
-				<span class="label-text">Ort <span class="text-error font-extrabold ">*</span></span>
-			</div>
+		</fieldset>
+		<fieldset class="fieldset col-span-3 md:col-span-1">
+			<legend class="fieldset-legend">Ort <span class="text-error font-extrabold">*</span></legend>
 			<input
 				type=" text"
 				name="city"
 				id="city"
-				class={ "input" , templ.KV("input-error", len(errors.City)>
+				class={ "input w-full" , templ.KV("input-error", len(errors.City)>
     0) }
 				value={ profile.City }
 				required
 			/>
 			if len(errors.City) > 0 {
-				<div class="label">
-					<span class="label-text text-error">{ errors.City }</span>
-				</div>
+				<p class="fieldset-label text-error mt-0 mb-0">
+					{ errors.City }
+				</p>
 			}
-		</label>
-		<label class="form-control col-span-4">
-			<div class="label">
-				<span class="label-text">Informationen</span>
-			</div>
+		</fieldset>
+		<fieldset class="fieldset col-span-full">
+			<legend class="fieldset-legend">Informationen</legend>
 			<textarea
 				id="infos"
 				name="infos"
-				class="textarea textarea-bordered h-24"
+				class="textarea h-24 w-full"
 				placeholder="Allergien, Besonderes..."
 				value={ profile.Infos }
 			></textarea>
-		</label>
-		<label class="label cursor-pointer col-span-4 justify-start">
-			<input type="checkbox" id="newsletter" name="newsletter" class="checkbox mr-4" checked?={ profile.Newsletter }/>
-			<span class="label-text text-left">Prozessor Newsletter erhalten.</span>
-		</label>
+		</fieldset>
+		<fieldset class="fieldset p-4 bg-base-100 border border-base-content/20 rounded-box col-span-full">
+			<!-- <legend class="fieldset-legend">Newsletter</legend> -->
+			<label class="fieldset-label gap-4">
+				<input type="checkbox" name="newsletter" class="checkbox" checked?={ profile.Newsletter }/>
+				Prozessor Newsletter erhalten.
+			</label>
+		</fieldset>
 		<div class="col-span-4 text-sm">
 			<span class="text-error font-extrabold">*</span> diese Felder sind zwingend
 			auszufüllen
@@ -243,34 +231,34 @@ templ ProfileForm(
 			(entweder/oder)
 		</div>
 		<!-- Vereinsmitgliedschaft -->
-		<div class="pt-6 col-span-full prose {{if ne $admin true}}hidden{{end}}">
-			<h2>Vereinsmitgliedschaft</h2>
-		</div>
+		if prm.EditVisitorMembership || prm.EditVisitorRole {
+			<div class="pt-6 col-span-full prose">
+				<h2>Vereinsmitgliedschaft</h2>
+			</div>
+		}
 		if prm.EditVisitorMembership {
-			<label class="form-control col-span-4 md:col-span-2">
-				<div class="label">
-					<span class="label-text">Ressort für Mitgliedschaft auswählen</span>
-				</div>
-				<select id="ressort" name="ressort" class="select select-bordered w-full">
+			<fieldset class="fieldset col-span-4 md:col-span-2">
+				<legend class="fieldset-legend">Ressort für Mitgliedschaft auswählen</legend>
+				<select id="ressort" name="ressort" class="select w-full">
 					<option selected value="0">kein Ressort</option>
 					for _,r := range ressorts {
 						<option value={ strconv.Itoa(r.ID) } selected?={ r.ID==profile.Ressort.ID }>{ r.RessortName }</option>
 					}
 				</select>
-			</label>
+			</fieldset>
 		}
 		if prm.EditVisitorRole {
-			<label class="form-control col-span-4 md:col-span-2">
-				<div class="label">
-					<span class="label-text">Zugangs-Level auswählen</span>
-				</div>
-				<select id="role" name="role" class="select select-bordered w-full ">
+			<fieldset class="fieldset col-span-4 md:col-span-2">
+				<legend class="fieldset-legend">
+					Zugangs-Level auswählen
+				</legend>
+				<select id="role" name="role" class="select w-full ">
 					<option selected value="0">keine Rolle</option>
 					for _, r := range roles {
 						<option value={ strconv.Itoa(r.ID) } selected?={ profile.RoleID==r.ID }>{ r.RoleName }</option>
 					}
 				</select>
-			</label>
+			</fieldset>
 		}
 		if prm.EditVisitorMembership {
 			<div class="col-span-full flex items-center justify-start gap-3">
@@ -286,40 +274,37 @@ templ ProfileForm(
 			<div class="pt-6 col-span-full prose">
 				<h2>Nutzerprofil</h2>
 			</div>
-			<label class="form-control col-span-4 md:col-span-2">
-				<div class="label">
-					<span class="label-text">Passwort ändern</span>
-				</div>
+			<fieldset class="fieldset col-span-4 md:col-span-2">
+				<legend class="fieldset-legend">Passwort ändern</legend>
 				<input
 					type="password"
 					name="password"
 					id="password"
-					class={ "input" , templ.KV("input-error", len(errors.Password)>
+					class={ "input w-full" , templ.KV("input-error",
+      len(errors.Password)>
     0) }
 				/>
 				if len(errors.Password) > 0 {
-					<div class="label">
-						<span class="label-text text-error">{ errors.Password }</span>
-					</div>
+					<p class="fieldset-label text-error mt-0 mb-0">
+						{ errors.Password }
+					</p>
 				}
-			</label>
-			<label class="form-control col-span-4 md:col-span-2">
-				<div class="label">
-					<span class="label-text">neues Passwort wiederholen</span>
-				</div>
+			</fieldset>
+			<fieldset class="fieldset col-span-4 md:col-span-2">
+				<legend class="fieldset-legend">neues Passwort wiederholen</legend>
 				<input
 					type="password"
 					name="password_check"
 					id="password_check"
-					class={ "input" , templ.KV("input-error",
+					class={ "input w-full" , templ.KV("input-error",
       len(errors.PasswordCheck)>0) }
 				/>
 				if len(errors.PasswordCheck) > 0 {
-					<div class="label">
-						<span class="label-text text-error">{ errors.PasswordCheck }</span>
-					</div>
+					<p class="fieldset-label text-error mt-0 mb-0">
+						{ errors.PasswordCheck }
+					</p>
 				}
-			</label>
+			</fieldset>
 			<!-- Avatar -->
 			if len(profile.Avatar) > 0 {
 				<div class="avatar col-span-1">
@@ -328,24 +313,24 @@ templ ProfileForm(
 					</div>
 				</div>
 			}
-			<label class={ "form-control col-span-4" , templ.KV("col-span-3", len(profile.Avatar)> 0) }>
-				<div class="label">
+			<fieldset class={ "fieldset col-span-4" , templ.KV("col-span-3", len(profile.Avatar)> 0) }>
+				<legend class="fieldset-legend">
 					if len(profile.Avatar) > 0 {
-						<span id="avatartext" class="label-text">Avatar ersetzen</span>
+						Avatar ersetzen
 					} else {
-						<span class="label-text">Avatar hochladen</span>
+						Avatar hochladen
 					}
-				</div>
-				<input type="file" name="avatar" id="avatarInput" class="file-input"/>
-				if len(errors.Avatar)>0 {
-					<div class="label">
-						<span class="label-text text-error">{ errors.Avatar }</span>
-					</div>
+				</legend>
+				<input type="file" name="avatar" id="avatarInput" class="file-input w-full"/>
+				if len(errors.Avatar) > 0 {
+					<p class="fieldset-label text-error mt-0 mb-0">
+						{ errors.Avatar }
+					</p>
 				}
-			</label>
+			</fieldset>
 			if len(profile.Avatar)> 0 {
-				<div class="form-control col-span-4">
-					<label class="label cursor-pointer justify-start">
+				<fieldset class="fieldset p-4 bg-base-100 border border-base-content/20 rounded-box w-full col-span-full gap-4">
+					<label class="fieldset-label">
 						<input
 							type="checkbox"
 							name="delete_avatar"
@@ -353,9 +338,9 @@ templ ProfileForm(
 							onchange="inactive()"
 							class="toggle toggle-error"
 						/>
-						<span class="label-text text-left ml-3">Avatar löschen</span>
+						Avatar löschen
 					</label>
-				</div>
+				</fieldset>
 			}
 		}
 		if len(errors.AppError)>0 {
