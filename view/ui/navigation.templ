@@ -62,9 +62,11 @@ templ Navigation(visitor models.Visitor) {
 							<a href="/admin/logistics">Lagerverwaltung</a>
 						</li>
 					}
-					<!-- <li> -->
-					<!--   <a>Newsletter</a> -->
-					<!-- </li> -->
+					if prm.ViewNewsletters {
+						<li>
+							<a href="/admin/newsletter">Newsletter</a>
+						</li>
+					}
 					<!-- <li> -->
 					<!--   <a href="/admin/checkout">Kasse</a> -->
 					<!-- </li> -->

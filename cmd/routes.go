@@ -179,6 +179,17 @@ func routes(app *config.AppConfig) http.Handler {
 			})
 		})
 
+		// newsletters
+		mux.Group(func(mux chi.Router) {
+			mux.Use(CheckPermission("ViewNewsletters"))
+			mux.Get("/newsletter", handlers.Make(handlers.Repo.HandleNewsletterIndex))
+			mux.Get("/newsletter/list", handlers.Make(handlers.Repo.HandleNewsLetterList))
+			mux.Group(func(mux chi.Router) {
+				mux.Use(CheckPermission("AddNewsletter"))
+				// mux.Get("/newsletter/create", handlers.Make(handlers.Repo.HandleNewsletterCreateIndex))
+			})
+		})
+
 		// abonnements
 		mux.Group(func(mux chi.Router) {
 			mux.Use(CheckPermission("ViewAbonnements"))
