@@ -20,13 +20,13 @@ templ Navigation(visitor models.Visitor) {
 				</div>
 				<div class="flex items-center gap-2 justify-self-end">
 					<div class="dropdown dropdown-end z-30">
-						<div tabindex="0" role="button" class="btn btn-circle avatar placeholder">
+						<div tabindex="0" role="button" class="btn btn-circle avatar avatar-placeholder">
 							if len(visitor.Avatar) > 0 {
 								<div class="w-10 rounded-full">
 									<img src={ "/static/uploads/" + visitor.Avatar } alt="User Avatar"/>
 								</div>
 							} else {
-								<div class="avatar placeholder">
+								<div class="avatar avatar-placeholder">
 									<div class="bg-neutral text-neutral-content w-12 rounded-full">
 										<span>{ render.Initials(visitor.FirstName, visitor.FamilyName) }</span>
 									</div>

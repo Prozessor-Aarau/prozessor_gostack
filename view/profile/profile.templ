@@ -1,323 +1,377 @@
 package profile
 
 import (
-"github.com/faebut/prozessor_gostack/internal/models"
-"github.com/faebut/prozessor_gostack/internal/render"
-"github.com/faebut/prozessor_gostack/view/layout"
-"github.com/faebut/prozessor_gostack/view/ui"
-"strconv"
+	"github.com/faebut/prozessor_gostack/internal/models"
+	"github.com/faebut/prozessor_gostack/internal/render"
+	"github.com/faebut/prozessor_gostack/view/layout"
+	"github.com/faebut/prozessor_gostack/view/ui"
+	"strconv"
 )
 
 type ProfileErrors struct {
-FirstName string
-FamilyName string
-Birthdate string
-Phone string
-Email string
-Address string
-Postcode string
-City string
-Password string
-PasswordCheck string
-Avatar string
-AppError string
+	FirstName     string
+	FamilyName    string
+	Birthdate     string
+	Phone         string
+	Email         string
+	Address       string
+	Postcode      string
+	City          string
+	Password      string
+	PasswordCheck string
+	Avatar        string
+	AppError      string
 }
 
 templ Profile(
-visitor models.Visitor,
-profile models.Visitor,
-roles []models.Role,
-ressorts []models.Ressort,
-route string,
-referer string) {
-@layout.App(true, visitor) {
-<div class="prose mb-10">
-  <h1>Profil von { profile.FirstName } { profile.FamilyName }</h1>
-  <h2 class="mt-0">Stammdaten</h2>
-</div>
-@ProfileForm(visitor, profile, ProfileErrors{}, roles, ressorts, route, referer)
-}
+	visitor models.Visitor,
+	profile models.Visitor,
+	roles []models.Role,
+	ressorts []models.Ressort,
+	route string,
+	referer string) {
+	@layout.App(true, visitor) {
+		<div class="prose mb-10">
+			<h1>Profil von { profile.FirstName } { profile.FamilyName }</h1>
+			<h2 class="mt-0">Stammdaten</h2>
+		</div>
+		@ProfileForm(visitor, profile, ProfileErrors{}, roles, ressorts, route, referer)
+	}
 }
 
 // check where the route is coming from to set post route
 func checkRoute(route string, id string) string {
-base := "/admin/"
-if route == "profile" {
-return base + "profile"
-}
-return base + "visitors/" + id
+	base := "/admin/"
+	if route == "profile" {
+		return base + "profile"
+	}
+	return base + "visitors/" + id
 }
 
 templ ProfileForm(
-visitor models.Visitor,
-profile models.Visitor,
-errors ProfileErrors,
-roles []models.Role,
-ressorts []models.Ressort,
-route string,
-referer string) {
-{{ prm := ctx.Value("permission").(models.Role) }}
-<form id="profileForm" class="grid grid-cols-4 gap-1 sm:gap-3 overflow-y-auto p-1" hx-post={ checkRoute(route,
-  profile.ID) } hx-target="#profileForm" hx-swap="outerHTML" enctype="multipart/form-data" novalidate>
-  @ui.CSRF()
-  <input type="hidden" name="ref" value={ referer } />
-  <input type="hidden" name="route" value={ route } />
-  <label class="form-control col-span-4 md:col-span-2">
-    <div class="label">
-      <span class="label-text">Vorname <span class="text-error font-extrabold">*</span></span>
-    </div>
-    <input type="text" id="first_name" name="first_name" class={ "input input-bordered" , templ.KV("input-error",
+	visitor models.Visitor,
+	profile models.Visitor,
+	errors ProfileErrors,
+	roles []models.Role,
+	ressorts []models.Ressort,
+	route string,
+	referer string) {
+	{{ prm := ctx.Value("permission").(models.Role) }}
+	<form
+		id="profileForm"
+		class="grid grid-cols-4 gap-1 sm:gap-3 overflow-y-auto p-1"
+		hx-post={ checkRoute(route,
+  profile.ID) }
+		hx-target="#profileForm"
+		hx-swap="outerHTML"
+		enctype="multipart/form-data"
+		novalidate
+	>
+		@ui.CSRF()
+		<input type="hidden" name="ref" value={ referer }/>
+		<input type="hidden" name="route" value={ route }/>
+		<label class="form-control col-span-4 md:col-span-2">
+			<div class="label">
+				<span class="label-text">Vorname <span class="text-error font-extrabold">*</span></span>
+			</div>
+			<input
+				type="text"
+				id="first_name"
+				name="first_name"
+				class={ "input" , templ.KV("input-error",
       len(errors.FirstName)> 0) }
-    value={ profile.FirstName }
-    required
-    />
-    if len(errors.FirstName) > 0 {
-    <div class="label">
-      <span class="label-text text-error">{ errors.FirstName }</span>
-    </div>
-    }
-  </label>
-  <label class="form-control col-span-4 md:col-span-2">
-    <div class="label">
-      <span class="label-text">Familienname <span class="text-error font-extrabold">*</span></span>
-    </div>
-    <input type="text" id="family_name" name="family_name" class={ "input input-bordered" , templ.KV("input-error",
+				value={ profile.FirstName }
+				required
+			/>
+			if len(errors.FirstName) > 0 {
+				<div class="label">
+					<span class="label-text text-error">{ errors.FirstName }</span>
+				</div>
+			}
+		</label>
+		<label class="form-control col-span-4 md:col-span-2">
+			<div class="label">
+				<span class="label-text">Familienname <span class="text-error font-extrabold">*</span></span>
+			</div>
+			<input
+				type="text"
+				id="family_name"
+				name="family_name"
+				class={ "input" , templ.KV("input-error",
       len(errors.FamilyName)> 0) }
-    value={ profile.FamilyName }
-    required
-    />
-    if len(errors.FamilyName) > 0 {
-    <div class="label">
-      <span class="label-text text-error">{ errors.FamilyName }</span>
-    </div>
-    }
-  </label>
-  <label class="form-control col-span-4 sm:col-span-2 md:col-span-1">
-    <div class="label">
-      <span class="label-text">Geburtsdatum <span class="text-error font-extrabold">*</span></span>
-    </div>
-    <input type="date" id="birthdate" name="birthdate" class={ "input input-bordered" , templ.KV("input-error",
-      len(errors.Birthdate)> 0) }
-    if render.RealDate(profile.Birthdate) {
-    value={ render.HumanDate(profile.Birthdate) }
-    }
-    required
-    />
-    if len(errors.Birthdate) > 0 {
-    <div class="label">
-      <span class="label-text text-error">{ errors.Birthdate }</span>
-    </div>
-    }
-  </label>
-  <label class="form-control col-span-4 sm:col-span-2 md:col-span-1">
-    <div class="label">
-      <span class="label-text">Telefonnummer <span class="text-error font-extrabold">**</span></span>
-    </div>
-    <input type="text" id="phone" name="phone" class={ "input input-bordered" , templ.KV("input-error",
-      len(errors.Phone)> 0) }
-    value={ profile.Phone }
-    />
-    if len(errors.Phone) > 0 {
-    <div class="label">
-      <span class="label-text text-error">{ errors.Phone }</span>
-    </div>
-    }
-  </label>
-  <label class="form-control col-span-4 md:col-span-2">
-    <div class="label">
-      <span class="label-text">E-Mail <span class="text-error font-extrabold">**</span></span>
-    </div>
-    <input type="text" id="email" name="email" class={ "input input-bordered" , templ.KV("input-error",
-      len(errors.Email)> 0) }
-    value={ profile.Email }
-    />
-    if len(errors.Email) > 0 {
-    <div class="label">
-      <span class="label-text text-error">{ errors.Email }</span>
-    </div>
-    }
-  </label>
-  <label class="form-control col-span-4 md:col-span-2">
-    <div class="label">
-      <span class="label-text">Strasse Nr. <span class="text-error font-extrabold">*</span></span>
-    </div>
-    <input type="text" id="address" name="address" class={ "input input-bordered" , templ.KV("input-error",
-      len(errors.Address)> 0) }
-    value={ profile.Address }
-    required
-    />
-    if len(errors.Address) > 0 {
-    <div class="label">
-      <span class="label-text text-error">{ errors.Address }</span>
-    </div>
-    }
-  </label>
-  <label class="form-control">
-    <div class="label">
-      <span class="label-text">PLZ <span class="text-error font-extrabold">*</span></span>
-    </div>
-    <input type="text" id="postcode" name="postcode" class={ "input input-bordered" , templ.KV("input-error",
-      len(errors.Postcode)> 0) }
-    value={ profile.Postcode }
-    required
-    />
-    if len(errors.Postcode) > 0 {
-    <div class="label">
-      <span class="label-text text-error">{ errors.Postcode }</span>
-    </div>
-    }
-  </label>
-  <label class="form-control col-span-3 md:col-span-1">
-    <div class="label">
-      <span class="label-text">Ort <span class="text-error font-extrabold ">*</span></span>
-    </div>
-    <input type=" text" name="city" id="city" class={ "input input-bordered" , templ.KV("input-error", len(errors.City)>
+				value={ profile.FamilyName }
+				required
+			/>
+			if len(errors.FamilyName) > 0 {
+				<div class="label">
+					<span class="label-text text-error">{ errors.FamilyName }</span>
+				</div>
+			}
+		</label>
+		<label class="form-control col-span-4 sm:col-span-2 md:col-span-1">
+			<div class="label">
+				<span class="label-text">Geburtsdatum <span class="text-error font-extrabold">*</span></span>
+			</div>
+			<input
+				type="date"
+				id="birthdate"
+				name="birthdate"
+				class={ "input" , templ.KV("input-error", len(errors.Birthdate)>
     0) }
-    value={ profile.City }
-    required
-    />
-    if len(errors.City) > 0 {
-    <div class="label">
-      <span class="label-text text-error">{ errors.City }</span>
-    </div>
-    }
-  </label>
-  <label class="form-control col-span-4">
-    <div class="label">
-      <span class="label-text">Informationen</span>
-    </div>
-    <textarea id="infos" name="infos" class="textarea textarea-bordered h-24" placeholder="Allergien, Besonderes..."
-      value={ profile.Infos }></textarea>
-  </label>
-  <label class="label cursor-pointer col-span-4 justify-start">
-    <input type="checkbox" id="newsletter" name="newsletter" class="checkbox mr-4" checked?={ profile.Newsletter } />
-    <span class="label-text text-left">Prozessor Newsletter erhalten.</span>
-  </label>
-  <div class="col-span-4 text-sm">
-    <span class="text-error font-extrabold">*</span> diese Felder sind zwingend
-    auszufüllen
-  </div>
-  <div class="col-span-4 text-sm">
-    <span class="text-error font-extrabold">**</span> mindestens eine Angabe nötig
-    (entweder/oder)
-  </div>
-  <!-- Vereinsmitgliedschaft -->
-  <div class="pt-6 col-span-full prose {{if ne $admin true}}hidden{{end}}">
-    <h2>Vereinsmitgliedschaft</h2>
-  </div>
-  if prm.EditVisitorMembership {
-  <label class="form-control col-span-4 md:col-span-2">
-    <div class="label">
-      <span class="label-text">Ressort für Mitgliedschaft auswählen</span>
-    </div>
-    <select id="ressort" name="ressort" class="select select-bordered w-full">
-      <option selected value="0">kein Ressort</option>
-      for _,r := range ressorts {
-      <option value={ strconv.Itoa(r.ID) } selected?={ r.ID==profile.Ressort.ID }>{ r.RessortName }</option>
-      }
-    </select>
-  </label>
-  }
-  if prm.EditVisitorRole {
-  <label class="form-control col-span-4 md:col-span-2">
-    <div class="label">
-      <span class="label-text">Zugangs-Level auswählen</span>
-    </div>
-    <select id="role" name="role" class="select select-bordered w-full ">
-      <option selected value="0">keine Rolle</option>
-      for _, r := range roles {
-      <option value={ strconv.Itoa(r.ID) } selected?={ profile.RoleID==r.ID }>{ r.RoleName }</option>
-      }
-    </select>
-  </label>
-  }
-  if prm.EditVisitorMembership {
-  <div class="col-span-full flex items-center justify-start gap-3">
-    <a class="btn btn-secondary" hx-post="/admin/createloginmail" hx-target="#loginresponse">
-      Registrations-Mail
-      versenden
-    </a>
-    <div id="loginresponse" class="label font-extrabold text-success"></div>
-  </div>
-  }
-  <!-- Profile specific fields -->
-  if route == "profile" {
-  <div class="pt-6 col-span-full prose">
-    <h2>Nutzerprofil</h2>
-  </div>
-  <label class="form-control col-span-4 md:col-span-2">
-    <div class="label">
-      <span class="label-text">Passwort ändern</span>
-    </div>
-    <input type="password" name="password" id="password" class={ "input input-bordered" , templ.KV("input-error",
-      len(errors.Password)> 0) }
-    />
-    if len(errors.Password) > 0 {
-    <div class="label">
-      <span class="label-text text-error">{ errors.Password }</span>
-    </div>
-    }
-  </label>
-  <label class="form-control col-span-4 md:col-span-2">
-    <div class="label">
-      <span class="label-text">neues Passwort wiederholen</span>
-    </div>
-    <input type="password" name="password_check" id="password_check" class={ "input input-bordered" ,
-      templ.KV("input-error", len(errors.PasswordCheck)>0) }
-    />
-    if len(errors.PasswordCheck) > 0 {
-    <div class="label">
-      <span class="label-text text-error">{ errors.PasswordCheck }</span>
-    </div>
-    }
-  </label>
-  <!-- Avatar -->
-  if len(profile.Avatar) > 0 {
-  <div class="avatar col-span-1">
-    <div class="w-24 rounded-full">
-      <img src={ "/static/uploads/" + profile.Avatar } class="mt-0" />
-    </div>
-  </div>
-  }
-  <label class={ "form-control col-span-4" , templ.KV("col-span-3", len(profile.Avatar)> 0) }>
-    <div class="label">
-      if len(profile.Avatar) > 0 {
-      <span id="avatartext" class="label-text">Avatar ersetzen</span>
-      } else {
-      <span class="label-text">Avatar hochladen</span>
-      }
-    </div>
-    <input type="file" name="avatar" id="avatarInput" class="file-input file-input-bordered" />
-    if len(errors.Avatar)>0 {
-    <div class="label">
-      <span class="label-text text-error">{ errors.Avatar }</span>
-    </div>
-    }
-  </label>
-  if len(profile.Avatar)> 0 {
-  <div class="form-control col-span-4">
-    <label class="label cursor-pointer justify-start">
-      <input type="checkbox" name="delete_avatar" id="delete_avatar" onchange="inactive()"
-        class="toggle toggle-error" />
-      <span class="label-text text-left ml-3">Avatar löschen</span>
-    </label>
-  </div>
-  }
-  }
-  if len(errors.AppError)>0 {
-  <div class="col-span-full my-10">
-    @layout.Error(errors.AppError)
-  </div>
-  }
-  <div class="col-span-full flex items-center gap-3 justify-center">
-    <input type="submit" class="btn btn-success col-span-2 mt-3" value="Speichern" />
-    <a onclick="history.back()" class="btn btn-warning col-span-2 mt-3">
-      <span class="i-mdi-cancel-bold"></span>
-      Abbrechen
-    </a>
-  </div>
-</form>
-<script>
+				if render.RealDate(profile.Birthdate) {
+					value={ render.HumanDate(profile.Birthdate) }
+				}
+				required
+			/>
+			if len(errors.Birthdate) > 0 {
+				<div class="label">
+					<span class="label-text text-error">{ errors.Birthdate }</span>
+				</div>
+			}
+		</label>
+		<label class="form-control col-span-4 sm:col-span-2 md:col-span-1">
+			<div class="label">
+				<span class="label-text">Telefonnummer <span class="text-error font-extrabold">**</span></span>
+			</div>
+			<input
+				type="text"
+				id="phone"
+				name="phone"
+				class={ "input" , templ.KV("input-error", len(errors.Phone)> 0) }
+				value={ profile.Phone }
+			/>
+			if len(errors.Phone) > 0 {
+				<div class="label">
+					<span class="label-text text-error">{ errors.Phone }</span>
+				</div>
+			}
+		</label>
+		<label class="form-control col-span-4 md:col-span-2">
+			<div class="label">
+				<span class="label-text">E-Mail <span class="text-error font-extrabold">**</span></span>
+			</div>
+			<input
+				type="text"
+				id="email"
+				name="email"
+				class={ "input" , templ.KV("input-error", len(errors.Email)> 0) }
+				value={ profile.Email }
+			/>
+			if len(errors.Email) > 0 {
+				<div class="label">
+					<span class="label-text text-error">{ errors.Email }</span>
+				</div>
+			}
+		</label>
+		<label class="form-control col-span-4 md:col-span-2">
+			<div class="label">
+				<span class="label-text">Strasse Nr. <span class="text-error font-extrabold">*</span></span>
+			</div>
+			<input
+				type="text"
+				id="address"
+				name="address"
+				class={ "input" , templ.KV("input-error", len(errors.Address)> 0) }
+				value={ profile.Address }
+				required
+			/>
+			if len(errors.Address) > 0 {
+				<div class="label">
+					<span class="label-text text-error">{ errors.Address }</span>
+				</div>
+			}
+		</label>
+		<label class="form-control">
+			<div class="label">
+				<span class="label-text">PLZ <span class="text-error font-extrabold">*</span></span>
+			</div>
+			<input
+				type="text"
+				id="postcode"
+				name="postcode"
+				class={ "input" , templ.KV("input-error", len(errors.Postcode)> 0) }
+				value={ profile.Postcode }
+				required
+			/>
+			if len(errors.Postcode) > 0 {
+				<div class="label">
+					<span class="label-text text-error">{ errors.Postcode }</span>
+				</div>
+			}
+		</label>
+		<label class="form-control col-span-3 md:col-span-1">
+			<div class="label">
+				<span class="label-text">Ort <span class="text-error font-extrabold ">*</span></span>
+			</div>
+			<input
+				type=" text"
+				name="city"
+				id="city"
+				class={ "input" , templ.KV("input-error", len(errors.City)>
+    0) }
+				value={ profile.City }
+				required
+			/>
+			if len(errors.City) > 0 {
+				<div class="label">
+					<span class="label-text text-error">{ errors.City }</span>
+				</div>
+			}
+		</label>
+		<label class="form-control col-span-4">
+			<div class="label">
+				<span class="label-text">Informationen</span>
+			</div>
+			<textarea
+				id="infos"
+				name="infos"
+				class="textarea textarea-bordered h-24"
+				placeholder="Allergien, Besonderes..."
+				value={ profile.Infos }
+			></textarea>
+		</label>
+		<label class="label cursor-pointer col-span-4 justify-start">
+			<input type="checkbox" id="newsletter" name="newsletter" class="checkbox mr-4" checked?={ profile.Newsletter }/>
+			<span class="label-text text-left">Prozessor Newsletter erhalten.</span>
+		</label>
+		<div class="col-span-4 text-sm">
+			<span class="text-error font-extrabold">*</span> diese Felder sind zwingend
+			auszufüllen
+		</div>
+		<div class="col-span-4 text-sm">
+			<span class="text-error font-extrabold">**</span> mindestens eine Angabe nötig
+			(entweder/oder)
+		</div>
+		<!-- Vereinsmitgliedschaft -->
+		<div class="pt-6 col-span-full prose {{if ne $admin true}}hidden{{end}}">
+			<h2>Vereinsmitgliedschaft</h2>
+		</div>
+		if prm.EditVisitorMembership {
+			<label class="form-control col-span-4 md:col-span-2">
+				<div class="label">
+					<span class="label-text">Ressort für Mitgliedschaft auswählen</span>
+				</div>
+				<select id="ressort" name="ressort" class="select select-bordered w-full">
+					<option selected value="0">kein Ressort</option>
+					for _,r := range ressorts {
+						<option value={ strconv.Itoa(r.ID) } selected?={ r.ID==profile.Ressort.ID }>{ r.RessortName }</option>
+					}
+				</select>
+			</label>
+		}
+		if prm.EditVisitorRole {
+			<label class="form-control col-span-4 md:col-span-2">
+				<div class="label">
+					<span class="label-text">Zugangs-Level auswählen</span>
+				</div>
+				<select id="role" name="role" class="select select-bordered w-full ">
+					<option selected value="0">keine Rolle</option>
+					for _, r := range roles {
+						<option value={ strconv.Itoa(r.ID) } selected?={ profile.RoleID==r.ID }>{ r.RoleName }</option>
+					}
+				</select>
+			</label>
+		}
+		if prm.EditVisitorMembership {
+			<div class="col-span-full flex items-center justify-start gap-3">
+				<a class="btn btn-secondary" hx-post="/admin/createloginmail" hx-target="#loginresponse">
+					Registrations-Mail
+					versenden
+				</a>
+				<div id="loginresponse" class="label font-extrabold text-success"></div>
+			</div>
+		}
+		<!-- Profile specific fields -->
+		if route == "profile" {
+			<div class="pt-6 col-span-full prose">
+				<h2>Nutzerprofil</h2>
+			</div>
+			<label class="form-control col-span-4 md:col-span-2">
+				<div class="label">
+					<span class="label-text">Passwort ändern</span>
+				</div>
+				<input
+					type="password"
+					name="password"
+					id="password"
+					class={ "input" , templ.KV("input-error", len(errors.Password)>
+    0) }
+				/>
+				if len(errors.Password) > 0 {
+					<div class="label">
+						<span class="label-text text-error">{ errors.Password }</span>
+					</div>
+				}
+			</label>
+			<label class="form-control col-span-4 md:col-span-2">
+				<div class="label">
+					<span class="label-text">neues Passwort wiederholen</span>
+				</div>
+				<input
+					type="password"
+					name="password_check"
+					id="password_check"
+					class={ "input" , templ.KV("input-error",
+      len(errors.PasswordCheck)>0) }
+				/>
+				if len(errors.PasswordCheck) > 0 {
+					<div class="label">
+						<span class="label-text text-error">{ errors.PasswordCheck }</span>
+					</div>
+				}
+			</label>
+			<!-- Avatar -->
+			if len(profile.Avatar) > 0 {
+				<div class="avatar col-span-1">
+					<div class="w-24 rounded-full">
+						<img src={ "/static/uploads/" + profile.Avatar } class="mt-0"/>
+					</div>
+				</div>
+			}
+			<label class={ "form-control col-span-4" , templ.KV("col-span-3", len(profile.Avatar)> 0) }>
+				<div class="label">
+					if len(profile.Avatar) > 0 {
+						<span id="avatartext" class="label-text">Avatar ersetzen</span>
+					} else {
+						<span class="label-text">Avatar hochladen</span>
+					}
+				</div>
+				<input type="file" name="avatar" id="avatarInput" class="file-input"/>
+				if len(errors.Avatar)>0 {
+					<div class="label">
+						<span class="label-text text-error">{ errors.Avatar }</span>
+					</div>
+				}
+			</label>
+			if len(profile.Avatar)> 0 {
+				<div class="form-control col-span-4">
+					<label class="label cursor-pointer justify-start">
+						<input
+							type="checkbox"
+							name="delete_avatar"
+							id="delete_avatar"
+							onchange="inactive()"
+							class="toggle toggle-error"
+						/>
+						<span class="label-text text-left ml-3">Avatar löschen</span>
+					</label>
+				</div>
+			}
+		}
+		if len(errors.AppError)>0 {
+			<div class="col-span-full my-10">
+				@layout.Error(errors.AppError)
+			</div>
+		}
+		<div class="col-span-full flex items-center gap-3 justify-center">
+			<input type="submit" class="btn btn-success col-span-2 mt-3" value="Speichern"/>
+			<a onclick="history.back()" class="btn btn-warning col-span-2 mt-3">
+				<span class="i-mdi-cancel-bold"></span>
+				Abbrechen
+			</a>
+		</div>
+	</form>
+	<script>
   fileBox = document.querySelector("#avatarInput")
   toggle = document.querySelector("#delete_avatar")
   fileText = document.querySelector("#avatartext")

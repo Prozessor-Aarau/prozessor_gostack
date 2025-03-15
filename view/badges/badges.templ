@@ -33,7 +33,7 @@ templ badgesFilter() {
 		<form id="filterForm" novalidate>
 			<div class="grid grid-cols-5 gap-5 items-center">
 				@ui.CSRF()
-				<label class="input input-bordered flex items-center gap-2 col-span-4 md:col-span-2">
+				<label class="input flex items-center gap-2 col-span-4 md:col-span-2">
 					<span class="text-3xl i-mdi-magnify"></span>
 					<input
 						type="text"
@@ -150,8 +150,7 @@ templ BadgeCreate(badge models.Badge, errors BadgeCreateErrors) {
 			<input
 				type="text"
 				placeholder="Badge Nummer"
-				class={ "input input-bordered w-full" , templ.KV("input-error",
-      len(errors.Number)>0) }
+				class={ "input w-full" , templ.KV("input-error", len(errors.Number)>0) }
 				value={ strconv.Itoa(badge.Number) }
 				name="number"
 				required
@@ -172,8 +171,7 @@ templ BadgeCreate(badge models.Badge, errors BadgeCreateErrors) {
 				<input
 					type="text"
 					placeholder="Badge UUID"
-					class={ "input input-bordered w-full" , templ.KV("input-error",
-        len(errors.UID)> 0) }
+					class={ "input w-full" , templ.KV("input-error", len(errors.UID)> 0) }
 					value={ badge.UID }
 					name="uid"
 					required
@@ -237,7 +235,7 @@ templ BadgeReturnUID(uid string, err string) {
 			<div class="label">
 				<span class="label-text">UUID <span class="text-error font-extrabold">*</span></span>
 			</div>
-			<input type="text" placeholder="Badge UUID" class="input input-bordered w-full " value={ uid } name="uid"/>
+			<input type="text" placeholder="Badge UUID" class="input w-full " value={ uid } name="uid"/>
 		</label>
 	}
 }
@@ -274,8 +272,7 @@ templ BadgeEdit(badge models.Badge, errors BadgeEditErrors, visitor models.Visit
 				<input
 					type="text"
 					placeholder="Badge Nummer"
-					class={ "input input-bordered w-full" , templ.KV("input-error",
-      len(errors.Number)>0) }
+					class={ "input w-full" , templ.KV("input-error", len(errors.Number)>0) }
 					value={ strconv.Itoa(badge.Number) }
 					name="number"
 					required
@@ -295,7 +292,7 @@ templ BadgeEdit(badge models.Badge, errors BadgeEditErrors, visitor models.Visit
 				<span class="label-text">UUID</span>
 			</div>
 			if prm.EditBadge {
-				<input type="text" placeholder="Badge UUID" class="input input-bordered w-full " value={ badge.UID } name="uid"/>
+				<input type="text" placeholder="Badge UUID" class="input w-full " value={ badge.UID } name="uid"/>
 			} else {
 				<input type="hidden" value={ badge.UID } name="uid"/>
 				<span>{ badge.UID }</span>
@@ -341,7 +338,7 @@ templ BadgeEdit(badge models.Badge, errors BadgeEditErrors, visitor models.Visit
 			>
 				<form id="filterForm" class="mb-3 w-full col-span-2 md:col-span-1" novalidate>
 					@ui.CSRF()
-					<label class="input input-bordered flex items-center gap-2">
+					<label class="input flex items-center gap-2">
 						<span class="text-3xl i-mdi-magnify"></span>
 						<input
 							type="search"
@@ -381,7 +378,7 @@ templ BadgeEdit(badge models.Badge, errors BadgeEditErrors, visitor models.Visit
 						<span class="label-text">Vorname Besitzer*in <span class="text-error font-extrabold">*</span></span>
 					</div>
 					<input
-						class={ "input input-bordered w-full" , templ.KV("input-error", len(errors.ExternFirstName)>0) }
+						class={ "input w-full" , templ.KV("input-error", len(errors.ExternFirstName)>0) }
 						value={ badge.ExternFirstName }
 						name="ext_firstname"
 						type="text"
@@ -398,7 +395,7 @@ templ BadgeEdit(badge models.Badge, errors BadgeEditErrors, visitor models.Visit
 						<span class="label-text">Nachname Besitzer*in <span class="text-error font-extrabold">*</span></span>
 					</div>
 					<input
-						class={ "input input-bordered w-full" , templ.KV("input-error", len(errors.ExternFamilyName)>0) }
+						class={ "input w-full" , templ.KV("input-error", len(errors.ExternFamilyName)>0) }
 						name="ext_familyname"
 						type="text"
 						placeholder="Nachname Besitzer*in"
@@ -414,13 +411,7 @@ templ BadgeEdit(badge models.Badge, errors BadgeEditErrors, visitor models.Visit
 					<div class="label">
 						<span class="label-text">Ort</span>
 					</div>
-					<input
-						name="ext_city"
-						type="text"
-						placeholder="Ort"
-						class="input input-bordered w-full "
-						value={ badge.ExternCity }
-					/>
+					<input name="ext_city" type="text" placeholder="Ort" class="input w-full " value={ badge.ExternCity }/>
 				</label>
 				<label class="form-control w-full  col-span-full md:col-span-1">
 					<div class="label">
@@ -430,8 +421,8 @@ templ BadgeEdit(badge models.Badge, errors BadgeEditErrors, visitor models.Visit
 						name="ext_phone"
 						type="text"
 						placeholder="Telefonnummer"
-						class={ "input input-bordered w-full" ,
-          templ.KV("input-error", len(errors.ExternPhone)>0) }
+						class={ "input w-full" , templ.KV("input-error",
+          len(errors.ExternPhone)>0) }
 						value={ badge.ExternPhone }
 					/>
 					if len(errors.ExternPhone)>0 {
@@ -448,8 +439,8 @@ templ BadgeEdit(badge models.Badge, errors BadgeEditErrors, visitor models.Visit
 						name="ext_email"
 						type="text"
 						placeholder="Email Adresse"
-						class={ "input input-bordered w-full" ,
-          templ.KV("input-error", len(errors.ExternEmail)>0) }
+						class={ "input w-full" , templ.KV("input-error",
+          len(errors.ExternEmail)>0) }
 						value={ badge.ExternEmail }
 					/>
 					if len(errors.ExternEmail)>0 {

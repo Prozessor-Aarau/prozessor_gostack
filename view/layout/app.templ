@@ -15,30 +15,15 @@ templ App(nav bool, visitor models.Visitor) {
 			<title>Prozessor Database</title>
 			<link rel="icon" href="/static/assets/favicon.svg"/>
 			<link rel="stylesheet" href="/static/css/tailwind.css"/>
-			<link rel="stylesheet" href="/static/css/custom.css"/>
+			<!-- <link rel="stylesheet" href="/static/css/custom.css"/> -->
 			<script src="https://unpkg.com/htmx.org@2.0.4"></script>
 			<script src="https://unpkg.com/htmx-ext-sse@2.2.2/sse.js"></script>
-      <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.8/dist/cdn.min.js"></script>
-			<style>
-    .bg-dia-stripes {
-      background-image:
-        repeating-linear-gradient(45deg,
-          var(--fallback-b1, oklch(var(--b1))),
-          var(--fallback-b1, oklch(var(--b1))) 13px,
-          var(--fallback-b2, oklch(var(--b2))) 13px,
-          var(--fallback-b2, oklch(var(--b2))) 14px);
-      background-size: 40px 40px
-    }
-
-    h2 {
-      font-size: 1.5em;
-    }
-  </style>
+			<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.8/dist/cdn.min.js"></script>
 		</head>
 		<body>
 			<div class="container mx-auto max-w-4xl bg-dia-stripes">
 				<!-- Navigation -->
-		    if nav {
+				if nav {
 					@ui.Navigation(visitor)
 				}
 				<!-- Content -->

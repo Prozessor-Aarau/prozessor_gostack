@@ -4,8 +4,8 @@
   "description": "Prozessor Fullstack DB in Go",
   "main": "index.js",
   "scripts": {
-    "build": "tailwindcss build -o static/css/tailwind.css",
-    "watch": "tailwindcss build -o static/css/tailwind.css --watch"
+    "build": "npx @tailwindcss/cli -i static/css/app.css -o static/css/tailwind.css",
+    "watch": "npx @tailwindcss/cli -i static/css/app.css -o static/css/tailwind.css --watch"
   },
   "author": "Fabian Trost",
   "license": "ISC",

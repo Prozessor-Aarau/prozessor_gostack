@@ -116,170 +116,151 @@ type RegisterErrors struct {
 templ RegisterForm(params RegisterParams, errors RegisterErrors) {
 	<form class="grid grid-cols-4 gap-1 sm:gap-3 overflow-y-auto p-1" hx-post="/register" hx-swap="outerHTML" novalidate>
 		@ui.CSRF()
-		<label class="form-control col-span-4 md:col-span-2">
-			<div class="label">
-				<span class="label-text">Vorname <span class="text-error font-extrabold">*</span></span>
-			</div>
+		<fieldset class="fieldset col-span-4 md:col-span-2">
+			<legend class="fieldset-legend">Vorname <span class="text-error font-extrabold">*</span></legend>
 			<input
 				type="text"
 				id="first_name"
 				name="first_name"
-				class={ "input input-bordered" , templ.KV("input-error",
+				class={ "input w-full" , templ.KV("input-error",
       len(errors.FirstName)> 0) }
 				value={ params.FirstName }
 				required
 			/>
 			if len(errors.FirstName) > 0 {
-				<div class="label">
-					<span class="label-text text-error">{ errors.FirstName }</span>
-				</div>
+				<p class="fieldset-label text-error mt-0 mb-0">
+					{ errors.FirstName }
+				</p>
 			}
-		</label>
-		<label class="form-control col-span-4 md:col-span-2">
-			<div class="label">
-				<span class="label-text">Familienname <span class="text-error font-extrabold">*</span></span>
-			</div>
+		</fieldset>
+		<fieldset class="fieldset col-span-4 md:col-span-2">
+			<legend class="fieldset-legend">Familienname <span class="text-error font-extrabold">*</span></legend>
 			<input
 				type="text"
 				id="family_name"
 				name="family_name"
-				class={ "input input-bordered" , templ.KV("input-error",
+				class={ "input w-full" , templ.KV("input-error",
       len(errors.FamilyName)> 0) }
 				value={ params.FamilyName }
 				required
 			/>
 			if len(errors.FamilyName) > 0 {
-				<div class="label">
-					<span class="label-text text-error">{ errors.FamilyName }</span>
-				</div>
+				<p class="fieldset-label text-error mt-0 mb-0">
+					{ errors.FamilyName }
+				</p>
 			}
-		</label>
-		<label class="form-control col-span-4 sm:col-span-2 md:col-span-1">
-			<div class="label">
-				<span class="label-text">Geburtsdatum <span class="text-error font-extrabold">*</span></span>
-			</div>
+		</fieldset>
+		<fieldset class="fieldset col-span-4 sm:col-span-2 md:col-span-1">
+			<legend class="fieldset-legend">Geburtsdatum <span class="text-error font-extrabold">*</span></legend>
 			<input
 				type="date"
 				id="birthdate"
 				name="birthdate"
-				class={ "input input-bordered" , templ.KV("input-error",
-      len(errors.Birthdate)> 0) }
+				class={ "input w-full" , templ.KV("input-error",
+      len(errors.Birthdate)>
+    0) }
 				if render.RealDate(params.Birthdate) {
 					value={ render.HumanDate(params.Birthdate) }
 				}
 				required
 			/>
 			if len(errors.Birthdate) > 0 {
-				<div class="label">
-					<span class="label-text text-error">{ errors.Birthdate }</span>
-				</div>
+				<p class="fieldset-label text-error mt-0 mb-0">
+					{ errors.Birthdate }
+				</p>
 			}
-		</label>
-		<label class="form-control col-span-4 sm:col-span-2 md:col-span-1">
-			<div class="label">
-				<span class="label-text">Telefonnummer <span class="text-error font-extrabold">**</span></span>
-			</div>
+		</fieldset>
+		<fieldset class="fieldset col-span-4 sm:col-span-2 md:col-span-1">
+			<legend class="fieldset-legend">Telefonnummer <span class="text-error font-extrabold">**</span></legend>
 			<input
 				type="text"
 				id="phone"
 				name="phone"
-				class={ "input input-bordered" , templ.KV("input-error",
-      len(errors.Phone)> 0) }
+				class={ "input w-full" , templ.KV("input-error", len(errors.Phone)> 0) }
 				value={ params.Phone }
 			/>
 			if len(errors.Phone) > 0 {
-				<div class="label">
-					<span class="label-text text-error">{ errors.Phone }</span>
-				</div>
+				<p class="fieldset-label text-error mt-0 mb-0">
+					{ errors.Phone }
+				</p>
 			}
-		</label>
-		<label class="form-control col-span-4 md:col-span-2">
-			<div class="label">
-				<span class="label-text">E-Mail <span class="text-error font-extrabold">**</span></span>
-			</div>
+		</fieldset>
+		<fieldset class="fieldset col-span-4 md:col-span-2">
+			<legend class="fieldset-legend">E-Mail <span class="text-error font-extrabold">**</span></legend>
 			<input
 				type="text"
 				id="email"
 				name="email"
-				class={ "input input-bordered" , templ.KV("input-error",
-      len(errors.Email)> 0) }
+				class={ "input w-full" , templ.KV("input-error", len(errors.Email)> 0) }
 				value={ params.Email }
 			/>
 			if len(errors.Email) > 0 {
-				<div class="label">
-					<span class="label-text text-error">{ errors.Email }</span>
-				</div>
+				<p class="fieldset-label text-error mt-0 mb-0">
+					{ errors.Email }
+				</p>
 			}
-		</label>
-		<label class="form-control col-span-4 md:col-span-2">
-			<div class="label">
-				<span class="label-text">Strasse Nr. <span class="text-error font-extrabold">*</span></span>
-			</div>
+		</fieldset>
+		<fieldset class="fieldset col-span-4 md:col-span-2">
+			<legend class="fieldset-legend">Strasse Nr. <span class="text-error font-extrabold">*</span></legend>
 			<input
 				type="text"
 				id="address"
 				name="address"
-				class={ "input input-bordered" , templ.KV("input-error",
-      len(errors.Address)> 0) }
+				class={ "input w-full" , templ.KV("input-error", len(errors.Address)>
+    0) }
 				value={ params.Address }
 				required
 			/>
 			if len(errors.Address) > 0 {
-				<div class="label">
-					<span class="label-text text-error">{ errors.Address }</span>
-				</div>
+				<p class="fieldset-label text-error mt-0 mb-0">
+					{ errors.Address }
+				</p>
 			}
-		</label>
-		<label class="form-control">
-			<div class="label">
-				<span class="label-text">PLZ <span class="text-error font-extrabold">*</span></span>
-			</div>
+		</fieldset>
+		<fieldset class="fieldset">
+			<legend class="fieldset-legend">PLZ <span class="text-error font-extrabold">*</span></legend>
 			<input
 				type="text"
 				id="postcode"
 				name="postcode"
-				class={ "input input-bordered" , templ.KV("input-error",
+				class={ "input w-full" , templ.KV("input-error",
       len(errors.Postcode)> 0) }
 				value={ params.Postcode }
 				required
 			/>
 			if len(errors.Postcode) > 0 {
-				<div class="label">
-					<span class="label-text text-error">{ errors.Postcode }</span>
-				</div>
+				<p class="fieldset-label text-error mt-0 mb-0">
+					{ errors.Postcode }
+				</p>
 			}
-		</label>
-		<label class="form-control col-span-3 md:col-span-1">
-			<div class="label">
-				<span class="label-text">Ort <span class="text-error font-extrabold ">*</span></span>
-			</div>
+		</fieldset>
+		<fieldset class="fieldset col-span-3 md:col-span-1">
+			<legend class="fieldset-legend">Ort <span class="text-error font-extrabold">*</span></legend>
 			<input
 				type=" text"
 				name="city"
 				id="city"
-				class={ "input input-bordered" , templ.KV("input-error", len(errors.City)>
+				class={ "input w-full" , templ.KV("input-error", len(errors.City)>
     0) }
 				value={ params.City }
 				required
 			/>
 			if len(errors.City) > 0 {
-				<div class="label">
-					<span class="label-text text-error">{ errors.City }</span>
-				</div>
+				<p class="fieldset-label text-error mt-0 mb-0">
+					{ errors.City }
+				</p>
 			}
-		</label>
-		<label class="form-control col-span-4">
-			<div class="label">
-				<span class="label-text">Informationen</span>
-			</div>
+		</fieldset>
+		<fieldset class="fieldset col-span-full">
+			<legend class="fieldset-legend">Informationen</legend>
 			<textarea
 				id="infos"
 				name="infos"
-				class="textarea textarea-bordered h-24"
+				class="textarea textarea-bordered h-24 w-full"
 				placeholder="Allergien, Besonderes..."
 				value={ params.Infos }
 			></textarea>
-		</label>
+		</fieldset>
 		<div class="col-span-4 text-sm">
 			<span class="text-error font-extrabold">*</span> diese Felder sind zwingend
 			auszufüllen
