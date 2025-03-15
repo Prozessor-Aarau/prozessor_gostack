@@ -27,7 +27,7 @@ func (m *postgresDBRepo) AllLogisticCategories() ([]models.LogisticCategory, err
 	for rows.Next() {
 		var l models.LogisticCategory
 
-		err := rows.Scan(
+		err = rows.Scan(
 			&l.ID,
 			&l.CatName,
 			&l.Price,
@@ -54,12 +54,13 @@ func (m *postgresDBRepo) LogisticsByID(id int) (models.Logistic, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	query := `SELECT l.id, l.number, l.start_date, l.end_date, l.reminder, l.member, l.unit_price, l.bill_id, l.price, l.label, c.id, c.cat_name, v.id, v.first_name, v.family_name, v.phone, v.email, l.created_on, l.updated_on
+	query := `SELECT l.id, l.number, l.start_date, l.end_date, l.reminder, l.member, l.unit_price, l.bill_id, b.paid, l.price, l.label, c.id, c.cat_name, v.id, v.first_name, v.family_name, v.phone, v.email, l.created_on, l.updated_on 
     FROM logistics l
     LEFT OUTER JOIN visitors v ON v.id = l.visitor_id
     LEFT OUTER JOIN logistics_categories c ON c.id = l.category
-    WHERE l.id = $1
-    `
+    LEFT OUTER JOIN billing b ON b.id = l.bill_id
+    WHERE l.id = $1`
+
 	row := m.DB.QueryRowContext(ctx, query, id)
 
 	var l models.Logistic
@@ -71,6 +72,7 @@ func (m *postgresDBRepo) LogisticsByID(id int) (models.Logistic, error) {
 	var member sql.NullBool
 	var unitPrice sql.NullFloat64
 	var billID sql.NullInt32
+	var billPaid sql.NullBool
 	var price sql.NullFloat64
 	var label sql.NullString
 	var visID sql.NullString
@@ -88,6 +90,7 @@ func (m *postgresDBRepo) LogisticsByID(id int) (models.Logistic, error) {
 		&member,
 		&unitPrice,
 		&billID,
+		&billPaid,
 		&price,
 		&label,
 		&l.Category.ID,
@@ -119,6 +122,9 @@ func (m *postgresDBRepo) LogisticsByID(id int) (models.Logistic, error) {
 	}
 	if billID.Valid {
 		l.BillID = int(billID.Int32)
+	}
+	if billPaid.Valid {
+		l.BillPaid = billPaid.Bool
 	}
 	if price.Valid {
 		l.Price = price.Float64

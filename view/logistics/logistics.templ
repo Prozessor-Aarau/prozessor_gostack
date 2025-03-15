@@ -212,7 +212,7 @@ var freeCat []models.LogisticCategory
 
 for _, cat := range categories {
 if cat.ID < 4 { fixCat=append(fixCat, cat) } else { freeCat=append(freeCat, cat) } } }} <form
-  class="grid grid-cols-2 items-center gap-3 ">
+  class="grid grid-cols-2 items-center gap-3 " id="postForm" novalidate>
   <input type="hidden" name="id" value={ strconv.Itoa(l.ID) } />
   @ui.CSRF()
   <div class="prose col-span-full">
@@ -399,9 +399,65 @@ if cat.ID < 4 { fixCat=append(fixCat, cat) } else { freeCat=append(freeCat, cat)
   </div>
   }
   <div class="col-span-full w-full gap-3 flex mt-3 items-center justify-center flex-col md:flex-row">
+    if l.BillID == 0 {
     <a hx-post={ postUrl } class="btn btn-success" hx-target="#content">
       Speichern
     </a>
+    } else {
+    <div class="btn btn-success" onclick="my_modal_5.showModal()">Speichern</div>
+    <dialog id="my_modal_5" class="modal modal-bottom sm:modal-middle">
+      <div class="modal-box">
+        <h3 class="text-xl font-bold">Achtung!</h3>
+        <p class="py-4 font-bold">
+          Für diesen Lagerplatz ist bereits eine Rechnung für { l.Visitor.FirstName } { l.Visitor.FamilyName } erfasst.
+        </p>
+        <p class="py-4">Zeitraum: { l.StartDate.Format("02.01.2006") } bis { l.EndDate.Format("02.01.2006") }</p>
+        <p class="py-4">
+          Zahlstatus:
+          if l.BillPaid {
+          <span class="text-success">bezahlt</span>
+          } else {
+          <span class="text-warning">unbezahlt</span>
+          }
+        </p>
+        <p x-show="!$store.updateState.laterDate && !$store.updateState.newMember && $store.updateState.assigned"
+          class="py-4">
+          Um den Zeitraum zu verlängern, bitte das neue Startdatum auf das alte Enddatum ({
+          l.EndDate.Format("02.01.2006") }) oder später ändern.
+        </p>
+        if !l.BillPaid {
+        <p x-show="!$store.updateState.laterDate && !$store.updateState.newMember && $store.updateState.assigned"
+          class="py-4">
+          Für diesen Lagerplatz ist für diesen Benutzer eine offene Rechnung vorhanden. Wenn für den gesamten Zeitraum
+          eine neue Rechnung erstellt werden soll, muss die alte zuerst von der Buchhaltung aus dem System gelöscht
+          werden. Danach kann der Lagerplatz für den neuen Zeitraum zugewiesen und verrechnet werden.
+        </p>
+        }
+        <p x-show="$store.updateState.newMember && $store.updateState.assigned" class="py-4">
+          Der Lagerplatz wird einem neuen Benutzer zugewiesen. Die alte Rechnung ist davon nicht betroffen.
+        </p>
+        <p x-show="!$store.updateState.assigned" class="py-4 italic text-error text-sm">
+          Beim Speichervorgang wird die Zuweisung des Lagerplatzes gelöscht. Die bestehende Rechnung ist davon nicht
+          betroffen. Falls diese gelöscht werden soll, bitte der Buchhaltung melden.
+        </p>
+        <p x-show="$store.updateState.assigned" class="py-4 italic text-error text-sm">
+          Beim Speichervorgang wird die Zuweisung der alten Rechnung zu diesem Lagerplatz gelöscht. Die Rechnung bleibt
+          aber im
+          System aktiv. Falls diese gelöscht werden soll, bitte der Buchhaltung melden.
+        </p>
+        <div class="modal-action">
+          <form method="dialog">
+            <!-- if there is a button in form, it will close the modal -->
+            <a id="updateButton" hx-post={ postUrl } hx-include="#postForm" class="btn btn-success" hx-target="#content"
+              x-bind:disabled="!$store.updateState.laterDate && !$store.updateState.newMember && $store.updateState.assigned">
+              speichern
+            </a>
+            <button class="btn btn-warning">schliessen</button>
+          </form>
+        </div>
+      </div>
+    </dialog>
+    }
     <a href="/admin/logistics" class="btn btn-warning">
       <span class="i-mdi-cancel-bold"></span>
       Abbrechen
@@ -420,7 +476,9 @@ if cat.ID < 4 { fixCat=append(fixCat, cat) } else { freeCat=append(freeCat, cat)
     </a>
     }
   </div>
+  // pass data to javascript
   @templ.JSONScript("categories", fixCat)
+  @templ.JSONScript("logistics", l)
   </form>
   <!-- script for ui changes -->
   <script>
@@ -438,25 +496,43 @@ if cat.ID < 4 { fixCat=append(fixCat, cat) } else { freeCat=append(freeCat, cat)
     var startDate = document.getElementById("startdate")
     var endDate = document.getElementById("enddate")
     var resultPrice = document.getElementById("result_price")
+    var updateButton = document.getElementById("updateButton")
     var categories = JSON.parse(document.getElementById('categories').textContent);
-    // set first price
+    var logistics = JSON.parse(document.getElementById('logistics').textContent);
+
+    // init alpine store
+    Alpine.store('updateState', {
+      newMember: false,
+      laterDate: false,
+      assigned: false
+    })
+
+    // initialize
     selectChange()
     setNumber()
     calcPrice()
+    assignChecker()
 
-    assign.onchange = () => {
+    function assignChecker() {
       if (assign.checked) {
+        Alpine.store('updateState').assigned = true
         assignForm.classList.remove("hidden")
       } else {
+        Alpine.store('updateState').assigned = false
         assignForm.classList.add("hidden")
       }
+
+      console.log("assigned", Alpine.store('updateState').assigned)
+    }
+
+    assign.onchange = () => {
+      assignChecker();
     }
 
 
     // toggle behaviour on changing category
     function selectChange() {
       var membership = document.getElementById("membership")
-      console.log(membership.value)
       var id = fixCatSelect.value
 
       var price = 0
@@ -469,6 +545,19 @@ if cat.ID < 4 { fixCat=append(fixCat, cat) } else { freeCat=append(freeCat, cat)
       }
 
       fixPrice.innerText = price
+
+      let memberSelect = document.getElementById("member")
+
+      // check if the member has changed 
+      if (memberSelect !== null) {
+        if (logistics.Visitor.ID == memberSelect.value) {
+          Alpine.store('updateState').newMember = false
+        } else {
+          Alpine.store('updateState').newMember = true
+        }
+      }
+
+      console.log("newMember:", Alpine.store('updateState').newMember)
     }
 
     function calcPrice() {
@@ -522,10 +611,12 @@ if cat.ID < 4 { fixCat=append(fixCat, cat) } else { freeCat=append(freeCat, cat)
 
     startDate.addEventListener("change", () => {
       calcPrice();
+      checkUpdateable();
     })
 
     endDate.addEventListener("change", () => {
       calcPrice();
+      checkUpdateable();
     })
 
     freePrice.addEventListener("change", () => {
@@ -544,8 +635,10 @@ if cat.ID < 4 { fixCat=append(fixCat, cat) } else { freeCat=append(freeCat, cat)
         } else {
           assignDiv.classList.remove("hidden")
           if (assign.checked) {
+            Alpine.store('updateState').assigned = true
             assignForm.classList.remove("hidden")
           } else {
+            Alpine.store('updateState').assigned = false
             assignForm.classList.add("hidden")
           }
         }
@@ -555,6 +648,26 @@ if cat.ID < 4 { fixCat=append(fixCat, cat) } else { freeCat=append(freeCat, cat)
     freeCatSelect.addEventListener("change", () => {
       setNumber();
     })
+
+    // for updating check if everything is okay and change content of modal
+    function checkUpdateable() {
+      let newStartDate = new Date(startDate.value)
+      let newEndDate = new Date(endDate.value)
+      let oldStartDate = new Date(logistics.StartDate)
+      let oldEndDate = new Date(logistics.EndDate)
+
+      // check if new start date is after old end date
+      if (newStartDate < oldEndDate) {
+        Alpine.store('updateState').laterDate = false
+      } else {
+        Alpine.store('updateState').laterDate = true
+      }
+      console.log("laterDate:", Alpine.store('updateState').laterDate)
+    }
+
+    checkUpdateable()
+
+
 
   </script>
   <!-- this script is needed for the delete button to send the CSRF-Token -->

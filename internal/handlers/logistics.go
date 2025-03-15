@@ -163,9 +163,16 @@ func (m *Repository) HandleLogisticsCreateIndex(w http.ResponseWriter, r *http.R
 	return rendering(w, r, logistics.LogisticsForm(models.Logistic{}, categories, logistics.FormErrors{}, false))
 }
 
+// TODO check if there is allready a bill made
+// TODO check what to do?
+// do I want to delete the existing bill, do I want to create a new one?
+// should check, if the duration is changed or the type
+
 // HandleLogisticsCreateAndEdit is the handler for posting the logistic creation and edit form
 func (m *Repository) HandleLogisticsCreateAndEdit(w http.ResponseWriter, r *http.Request) error {
 	categories, err := m.DB.AllLogisticCategories()
+
+	// TODO check if enddate is after startdate
 
 	if err != nil {
 		return err
