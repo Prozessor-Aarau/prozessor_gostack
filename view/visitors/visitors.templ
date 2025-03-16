@@ -39,52 +39,54 @@ templ searchField() {
 					</button>
 				</label>
 				<div class="col-span-2 md:col-span-1">
-					<label class="label cursor-pointer justify-start gap-4">
-						<input name="hasabo" type="checkbox" class="checkbox checkbox-sm" onchange="changefunc()"/>
-						<span>Abonnement</span>
-					</label>
-					<label class="form-control hidden" id="abooptions">
-						<div class="label">
-							<span class="label-text">Gültigkeit:</span>
-						</div>
+					<fieldset class="fieldset">
+						<label class="fieldset-label gap-3">
+							<input name="hasabo" type="checkbox" class="checkbox checkbox-sm" onchange="changefunc()"/>
+							Abonnement
+						</label>
+					</fieldset>
+					<fieldset class="fieldset hidden" id="abooptions">
+						<legend class="fieldset-legend">Gültigkeit:</legend>
 						<select name="abovalidity" id="sort" class="select select-bordered">
 							<option value="all">alle</option>
 							<option value="valid">nur gültig</option>
 							<option value="invalid">nur abgelaufen</option>
 						</select>
-					</label>
+					</fieldset>
 				</div>
-				<label class="label cursor-pointer justify-start gap-4 col-span-2 md:col-span-1">
-					<input name="member" type="checkbox" class="checkbox checkbox-sm"/>
-					<span>Mitglied</span>
-				</label>
-				<label class="label cursor-pointer justify-start gap-4 col-span-2 md:col-span-1">
-					<input name="badge" type="checkbox" class="checkbox checkbox-sm"/>
-					<span>Badge</span>
-				</label>
-				<label class="label cursor-pointer justify-start gap-4 col-span-2 md:col-span-1">
-					<input name="partner" type="checkbox" class="checkbox checkbox-sm"/>
-					<span>Partner</span>
-				</label>
-				<label class="form-control w-full max-w-xs col-span-4 md:col-span-2">
-					<div class="label">
-						<span class="label-text">Sortieren nach:</span>
-					</div>
+				<fieldset class="fieldset col-span-2 md:col-span-1">
+					<label class="fieldset-label gap-3">
+						<input name="member" type="checkbox" class="checkbox checkbox-sm"/>
+						Mitglied
+					</label>
+				</fieldset>
+				<fieldset class="fieldset col-span-2 md:col-span-1">
+					<label class="fieldset-label gap-3">
+						<input name="badge" type="checkbox" class="checkbox checkbox-sm"/>
+						Badge
+					</label>
+				</fieldset>
+				<fieldset class="fieldset col-span-2 md:col-span-1">
+					<label class="fieldset-label gap-3">
+						<input name="partner" type="checkbox" class="checkbox checkbox-sm"/>
+						Partner
+					</label>
+				</fieldset>
+				<fieldset class="fieldset w-full max-w-xs col-span-4 md:col-span-2">
+					<legend class="fieldset-legend">Sortieren nach:</legend>
 					<select name="sort" id="sort" class="select select-bordered">
 						<option value="family_name">Name</option>
 						<option value="buydate">Abonnement</option>
 						<option value="city">Wohnort</option>
 					</select>
-				</label>
-				<label class="form-control w-full max-w-xs col-span-4 md:col-span-2">
-					<div class="label">
-						<span class="label-text">Richtung:</span>
-					</div>
+				</fieldset>
+				<fieldset class="fieldset w-full max-w-xs col-span-4 md:col-span-2">
+					<legend class="fieldset-legend">Richtung:</legend>
 					<select name="sort_dir" id="sort_dir" class="select select-bordered">
 						<option value="ASC">aufsteigend</option>
 						<option value="DESC">absteigend</option>
 					</select>
-				</label>
+				</fieldset>
 				<div class="col-span-4 grid grid-cols-2 justify-items-center gap-3">
 					<button
 						type="submit"
