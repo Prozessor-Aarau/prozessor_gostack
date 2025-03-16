@@ -78,7 +78,7 @@ templ logisticsFilter(categories []models.LogisticCategory) {
 			</div>
 		</form>
 		if prm.EditLogistics {
-			<div class="border-base-content/50 border-dashed border-t mt-4 pt-4 flex gap-3">
+			<div class="border-base-content/50 border-dashed border-t mt-4 pt-4 flex flex-col md:flex-row gap-3">
 				<button type="button" class="btn btn-secondary" hx-get="/admin/logistics/create" hx-target="#content">
 					Lagerplatz
 					hinzufügen
@@ -258,21 +258,19 @@ for _, cat := range categories {
 			@Label(l)
 		}
 		<!-- toggle fix place or free place, only in creation mode  -->
-		<div class="form-control col-span-full">
-			<label class="label cursor-pointer justify-start">
+		<fieldset class="fieldset col-span-full gap-5">
+			<label class="fieldset-label">
 				<input id="toggleFree" name="free" type="checkbox" class="toggle toggle-success" checked?={ l.Category.ID>= 4 }/>
-				<span class="label-text pl-3">Sperrgut/Kleingut ohne fixen Palettenplatz</span>
+				Sperrgut/Kleingut ohne fixen Palettenplatz
 			</label>
-		</div>
+		</fieldset>
 		<!-- form for fixed places -->
 		<div id="fixForm" class={ "col-span-full grid grid-cols-4 gap-3" , templ.KV("hidden",l.Category.ID>= 4 ) }>
 			<div class="prose col-span-full">
 				<h3>Fixer Palettenplatz</h3>
 			</div>
-			<label class="form-control w-full col-span-2 md:col-span-1">
-				<div class="label">
-					<span class="label-text">Nummer</span>
-				</div>
+			<fieldset class="fieldset w-full col-span-2 md:col-span-1">
+				<legend class="fieldset-legend">Nummer</legend>
 				<input
 					class={ "input w-full" , templ.KV("input-error", len(errors.Number)>0) }
 					name="number"
@@ -281,47 +279,33 @@ for _, cat := range categories {
 					value={ strconv.Itoa(l.Number) }
 				/>
 				if len(errors.Number)>0 {
-					<div class="label">
-						<span class="label-text text-error">{ errors.Number }</span>
-					</div>
+					<label class="fieldset-label text-error">{ errors.Number }</label>
 				}
-			</label>
-			<label class="form-control w-full col-span-2 md:col-span-1">
-				<div class="label">
-					<span class="label-text">Preis/Monat</span>
-				</div>
-				<div class="content-center h-full">
-					<span id="fix_price" class="pl-1 text-lg text-primary font-bold "></span>
-				</div>
-			</label>
-			<label class="form-control col-span-full md:col-span-2">
-				<div class="label">
-					<span class="label-text">Palettengrösse</span>
-				</div>
+			</fieldset>
+			<fieldset class="fieldset w-full col-span-2 md:col-span-1">
+				<legend class="fieldset-legend">Preis/Monat</legend>
+				<span id="fix_price" class="pl-1 py-1 text-lg text-primary font-bold "></span>
+			</fieldset>
+			<fieldset class="fieldset col-span-full md:col-span-2">
+				<legend class="fieldset-legend">Palettengrösse</legend>
 				<select id="fixCatSelect" name="fix_cat" class="select select-bordered w-full">
 					for _,c := range fixCat {
 						<option value={ strconv.Itoa(c.ID) } selected?={ c.ID==l.Category.ID }>{ c.CatName }</option>
 					}
 				</select>
-			</label>
+			</fieldset>
 		</div>
 		<!-- form for free places -->
 		<div id="freeForm" class={ "col-span-full grid grid-cols-4 gap-3" , templ.KV("hidden", l.Number < 200) }>
 			<div class="prose col-span-full">
 				<h3>Freier Palettenplatz</h3>
 			</div>
-			<label class="form-control w-full col-span-2 md:col-span-1">
-				<div class="label">
-					<span class="label-text">Nummer</span>
-				</div>
-				<div class="content-center h-full">
-					<span id="freeNumber" class="pl-1 text-primary text-lg font-bold"></span>
-				</div>
-			</label>
-			<label class="form-control w-full col-span-2 md:col-span-1">
-				<div class="label">
-					<span class="label-text">Preis/Monat</span>
-				</div>
+			<fieldset class="fieldset w-full col-span-2 md:col-span-1">
+				<legend class="fieldset-legend">Nummer</legend>
+				<span id="freeNumber" class="pl-1 py-1 text-primary text-lg font-bold"></span>
+			</fieldset>
+			<fieldset class="fieldset w-full col-span-2 md:col-span-1">
+				<legend class="fieldset-legend">Preis/Monat</legend>
 				<input
 					class={ "input w-full" , templ.KV("input-error", len(errors.UnitPrice)>0) }
 					placeholder="0.00"
@@ -331,25 +315,21 @@ for _, cat := range categories {
 					value={ strconv.FormatFloat(l.UnitPrice, 'f', 2, 64) }
 				/>
 				if len(errors.UnitPrice)>0 {
-					<div class="label">
-						<span class="label-text text-error">{ errors.UnitPrice }</span>
-					</div>
+					<label class="fieldset-label text-error">{ errors.UnitPrice }</label>
 				}
-			</label>
-			<label class="form-control col-span-full md:col-span-2">
-				<div class="label">
-					<span class="label-text">Grösse</span>
-				</div>
+			</fieldset>
+			<fieldset class="fieldset col-span-full md:col-span-2">
+				<legend class="fieldset-legend">Grösse</legend>
 				<select id="freeCatSelect" name="free_cat" class="select select-bordered w-full">
 					for _,c := range freeCat {
 						<option value={ strconv.Itoa(c.ID) } selected?={ c.ID==l.Category.ID }>{ c.CatName }</option>
 					}
 				</select>
-			</label>
+			</fieldset>
 		</div>
 		<!-- toggle for assigning or not -->
-		<div id="assignDiv" class={ "form-control col-span-full" , templ.KV("hidden", l.Number>= 200) }>
-			<label class="label cursor-pointer justify-start">
+		<fieldset id="assignDiv" class={ "fieldset col-span-full gap-5" , templ.KV("hidden", l.Number>= 200) }>
+			<label class="fieldset-label">
 				<input
 					checked?={ len(l.Visitor.ID)> 0 || assigned }
 					id="toggleAssign"
@@ -357,23 +337,21 @@ for _, cat := range categories {
 					type="checkbox"
 					class="toggle toggle-success"
 				/>
-				<span class="label-text pl-3">Platz zuweisen</span>
+				Platz zuweisen
 			</label>
-		</div>
+		</fieldset>
 		<!-- form for all places -->
 		<div id="assignForm" class={ "col-span-full grid grid-cols-2 gap-3" , templ.KV("hidden", !assigned) }>
 			<div class="prose col-span-full">
 				<h3>Zuweisung</h3>
 			</div>
-			<label class="form-control col-span-full md:col-span-1">
-				<div class="label">
-					<span class="label-text">Startdatum</span>
-				</div>
+			<fieldset class="fieldset col-span-full md:col-span-1">
+				<legend class="fieldset-legend">Startdatum</legend>
 				<input
 					type="date"
 					id="startdate"
 					name="startdate"
-					class={ "input" , templ.KV("input-error",
+					class={ "input w-full" , templ.KV("input-error",
         len(errors.StartDate)> 0) }
 					if !l.StartDate.IsZero() {
 						value={ l.StartDate.Format("2006-01-02") }
@@ -381,37 +359,32 @@ for _, cat := range categories {
 					required
 				/>
 				if len(errors.StartDate) > 0 {
-					<div class="label">
-						<span class="label-text text-error">{ errors.StartDate }</span>
-					</div>
+					<label class="fieldset-label text-error">{ errors.StartDate }</label>
 				}
-			</label>
-			<label class="form-control col-span-full md:col-span-1">
-				<div class="label">
-					<span class="label-text">Enddatum</span>
-				</div>
+			</fieldset>
+			<fieldset class="fieldset col-span-full md:col-span-1">
+				<legend class="fieldset-legend">Enddatum</legend>
 				<input
 					type="date"
 					id="enddate"
 					name="enddate"
-					class={ "input" , templ.KV("input-error", len(errors.EndDate)> 0) }
+					class={ "input w-full" , templ.KV("input-error",
+        len(errors.EndDate)> 0) }
 					if !l.EndDate.IsZero() {
 						value={ l.EndDate.Format("2006-01-02") }
 					}
 					required
 				/>
 				if len(errors.EndDate) > 0 {
-					<div class="label">
-						<span class="label-text text-error">{ errors.EndDate }</span>
-					</div>
+					<label class="fieldset-label text-error">{ errors.EndDate }</label>
 				}
-			</label>
+			</fieldset>
 			<div class="label mb-0 pb-0 col-span-full">
-				<span class="label-text mb-0 pb-0">Mitglied zuweisen</span>
+				<span class="fieldset-legend text-xs mb-0 pb-0">Mitglied zuweisen</span>
 			</div>
 			<form id="filterForm" class="mb-3 w-full col-span-2 md:col-span-1" novalidate>
 				@ui.CSRF()
-				<label class="input flex items-center gap-2">
+				<label class="input flex items-center gap-2 w-full">
 					<span class="text-3xl i-mdi-magnify"></span>
 					<input
 						hx-post={ "/admin/visitors/selectbox/" + l.Visitor.ID + "?member" }
@@ -421,7 +394,7 @@ for _, cat := range categories {
 						type="search"
 						id="search_term"
 						name="search_term"
-						class="grow"
+						class="grow w-full"
 					/>
 				</label>
 			</form>
@@ -755,7 +728,7 @@ templ Label(l models.Logistic) {
 	}}
 	<div id="label" class="col-span-full">
 		<input type="hidden" name="label" value={ l.Label }/>
-		<div class="card md:card-side bg-base-300 shadow-xl">
+		<div class="not-prose card md:card-side bg-base-300 shadow-xl">
 			if len(l.Label)>0 {
 				<figure class="md:w-56">
 					<img src={ "/static/labels/" + l.Label } alt="Label"/>
