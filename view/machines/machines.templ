@@ -153,34 +153,28 @@ templ MachinesForm(params models.Machine, ressorts []models.Ressort, errors Mach
 		if len(params.ID)>0 {
 			@QRcode(params)
 		}
-		<label class="form-control col-span-full md:col-span-1">
-			<div class="label">
-				<span class="label-text">Bezeichnung <span class="text-error font-extrabold ">*</span></span>
-			</div>
+		<fieldset class="fieldset col-span-full md:col-span-1">
+			<legend class="fieldset-legend">Bezeichnung <span class="text-error font-extrabold ">*</span></legend>
 			<input
 				type=" text"
 				name="machine_name"
 				id="machine_name"
-				class={ "input" , templ.KV("input-error",
+				class={ "input w-full" , templ.KV("input-error",
       len(errors.MachineName)>
     0) }
 				value={ params.MachineName }
 				required
 			/>
 			if len(errors.MachineName) > 0 {
-				<div class="label">
-					<span class="label-text text-error">{ errors.MachineName }</span>
-				</div>
+				<label class="fieldset-label text-error">{ errors.MachineName }</label>
 			}
-		</label>
-		<label class="form-control col-span-full md:col-span-1">
-			<div class="label">
-				<span class="label-text">Ressort <span class="text-error font-extrabold ">*</span></span>
-			</div>
+		</fieldset>
+		<fieldset class="fieldset col-span-full md:col-span-1">
+			<legend class="fieldset-legend">Ressort <span class="text-error font-extrabold ">*</span></legend>
 			<select
 				name="ressort"
 				id="ressort"
-				class={ "select select-bordered" , templ.KV("select-error", len(errors.Ressort)>
+				class={ "select w-full" , templ.KV("select-error", len(errors.Ressort)>
       0) }
 				value={ strconv.Itoa(params.RessortID) }
 				required
@@ -195,11 +189,9 @@ templ MachinesForm(params models.Machine, ressorts []models.Ressort, errors Mach
 				}
 			</select>
 			if len(errors.Ressort) > 0 {
-				<div class="label">
-					<span class="label-text text-error">{ errors.Ressort }</span>
-				</div>
+				<label class="fieldset-label text-error">{ errors.Ressort }</label>
 			}
-		</label>
+		</fieldset>
 		<div class="col-span-full w-full gap-3 flex mt-3 items-center justify-center flex-col md:flex-row">
 			if len(params.ID) > 0 {
 				<input type="submit" class="btn btn-success col-span-4" value="Änderungen speichern"/>
@@ -336,9 +328,9 @@ for _, r := range reports {
 										hx-confirm={ fmt.Sprintf("Meldung %s wirklich aus dem System löschen?", strconv.Itoa(r.ID)) }
 										hx-delete={ "/admin/machines/" + r.MachineID + "/reports/" + strconv.Itoa(r.ID) }
 										hx-target="#reportList"
-										class="btn btn-error btn-circle btn-outline delete-button"
+										class="btn btn-error btn-circle btn-outline"
 									>
-										<span class="i-mdi-trash text-xl"></span>
+										<span class="i-mdi-trash text-xl delete-button"></span>
 									</a>
 								</div>
 							</div>
@@ -362,7 +354,7 @@ for _, r := range reports {
 }
 
 templ QRcode(m models.Machine) {
-	<div id="qr-code" class="col-span-full">
+	<div id="qr-code" class="not-prose col-span-full">
 		if len(m.QR)>0 {
 			<div class="card md:card-side bg-base-300 shadow-xl">
 				<figure class="md:w-56">
@@ -374,7 +366,7 @@ templ QRcode(m models.Machine) {
 					</h2>
 					<p><strong>Verlinkt zu Formular:</strong></p>
 					<p><a href={ templ.URL("/report?machine=" + m.ID) }>/report?machine={ m.ID }</a></p>
-					<div class=" card-actions justify-center items-center flex-col gap-4 mt-3">
+					<div class=" card-actions justify-center items-center flex-col md:flex-row gap-4 mt-3">
 						<a
 							class="btn btn-info loaded-content"
 							hx-post={ "/admin/machines/edit/" + m.ID + "/qrcode/print" }
@@ -384,17 +376,16 @@ templ QRcode(m models.Machine) {
 							hx-swap="outerHTML"
 							hx-confirm="Überprüfe, dass der Label-drucker (neben dem self-checkin terminal) eingeschaltet ist: Grünes Licht leuchtet!"
 						>
-							QR-Code
-							ausdrucken
+							<span class="i-mdi-printer"></span> ausdrucken
 						</a>
 						<div id="printbuttonload" class="btn btn-disabled htmx-indicator">
 							<span class="loading loading-spinner"></span>Drucke QR-Code
 						</div>
 						<a
-							class="btn btn-warning"
 							hx-target="#qr-code"
 							hx-post={ "/admin/machines/edit/" + m.ID + "/qrcode/delete" }
-						>QR-Code löschen</a>
+							class="btn btn-error btn-circle btn-outline"
+						><span class="i-mdi-trash text-xl"></span></a>
 					</div>
 				</div>
 			</div>
