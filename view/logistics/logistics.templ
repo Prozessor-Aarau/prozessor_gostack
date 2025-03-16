@@ -23,7 +23,7 @@ templ Logistics(visitor models.Visitor, categories []models.LogisticCategory) {
 
 templ logisticsFilter(categories []models.LogisticCategory) {
 	{{ prm := ctx.Value("permission").(models.Role) }}
-	<div class="border-base-content border-opacity-20 border rounded-md dark:rounded-lg bg-base-100 my-4 p-4">
+	<div class="border-base-content/20 border rounded-md dark:rounded-lg bg-base-100 my-4 p-4">
 		<h2 class="font-bold text-xl mb-3">Suchfilter</h2>
 		<form id="filterForm" novalidate>
 			<div class="grid grid-cols-4 gap-5 items-center">
@@ -78,7 +78,7 @@ templ logisticsFilter(categories []models.LogisticCategory) {
 			</div>
 		</form>
 		if prm.EditLogistics {
-			<div class="border-base-content border-opacity-50 border-dashed border-t mt-4 pt-4 flex gap-3">
+			<div class="border-base-content/50 border-dashed border-t mt-4 pt-4 flex gap-3">
 				<button type="button" class="btn btn-secondary" hx-get="/admin/logistics/create" hx-target="#content">
 					Lagerplatz
 					hinzufügen
@@ -114,7 +114,7 @@ if len(l.Visitor.Phone) > 0 {
 }
 			}}
 			<div
-				class="hover:bg-base-200 cursor-pointer grid grid-cols-9 text-sm p-3 py-4 items-center gap-3 border-dashed border-b border-base-content border-opacity-50"
+				class="hover:bg-base-200 cursor-pointer grid grid-cols-9 text-sm p-3 py-4 items-center gap-3 border-dashed border-b border-base-content/50"
 			>
 				<div class="col-span-1">{ strconv.Itoa(l.Number) }</div>
 				<div class="col-span-1 text-2xl flex items-center">

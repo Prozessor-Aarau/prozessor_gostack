@@ -28,7 +28,7 @@ templ Badges(visitor models.Visitor) {
 }
 
 templ badgesFilter() {
-	<div class="border-base-content border-opacity-20 border rounded-md dark:rounded-lg bg-base-100 my-4 p-4">
+	<div class="border-base-content/20 border rounded-md dark:rounded-lg bg-base-100 my-4 p-4">
 		<h2 class="font-bold text-xl mb-3">Suchfilter</h2>
 		<form id="filterForm" novalidate>
 			<div class="grid grid-cols-5 gap-5 items-center">
@@ -90,7 +90,7 @@ templ BadgesList(badges []models.Badge) {
 	if len(badges) > 0 {
 		for _, b := range badges {
 			<div
-				class="hover:bg-base-200 cursor-pointer grid grid-cols-6 text-sm p-3 py-4 items-center gap-3 border-dashed border-b border-base-content border-opacity-50"
+				class="hover:bg-base-200 cursor-pointer grid grid-cols-6 text-sm p-3 py-4 items-center gap-3 border-dashed border-b border-base-content/50"
 			>
 				<div class="col-span-1">{ strconv.Itoa(b.Number) }</div>
 				<div class="col-span-1 text-2xl flex items-center">
@@ -314,8 +314,8 @@ templ BadgeEdit(badge models.Badge, errors BadgeEditErrors, visitor models.Visit
 		</div>
 		<!-- start of form for badge user -->
 		<div
-			class={ "col-span-full border-t border-base-content border-dashed border-opacity-50 pt-5 grid-cols-subgrid" ,
-    templ.KV("hidden", len(badge.VisitorID)<1&&len(badge.ExternFirstName)<1&&!params.InUse) }
+			class={ "col-span-full border-t border-base-content/50 border-dashed pt-5 grid-cols-subgrid" , templ.KV("hidden",
+    len(badge.VisitorID)<1&&len(badge.ExternFirstName)<1&&!params.InUse) }
 			id="selectUser"
 		>
 			<div class="form-control col-span-full">

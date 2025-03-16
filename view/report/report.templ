@@ -48,10 +48,7 @@ for _, r := range reports {
 			<div class="collapse-content grid grid-cols-1 gap-3">
 				for _, r := range reports {
 					if !r.Solved {
-						<div
-							class={ "w-full border border-base-content grid grid-cols-[60px_auto]" , templ.KV("border-error", r.Fatal),
-      templ.KV("border-opacity-50 border-dashed ", !r.Fatal) }
-						>
+						<div class={ "w-full border border-base-content/50 grid grid-cols-[60px_auto]" , templ.KV("border-error", r.Fatal) }>
 							<div class=" col-span-1 p-3 flex items-center">
 								if r.Fatal {
 									<span class="i-mdi-alert text-5xl text-error"></span>

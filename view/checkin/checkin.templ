@@ -35,15 +35,15 @@ templ Checkin(
 }
 
 templ searchField() {
-	<form id="filterForm" class="mb-3" novalidate>
+	<form id="filterForm" class="mb-3 mr-3" novalidate>
 		@ui.CSRF()
-		<label class="input flex items-center gap-2">
+		<label class="input flex items-center gap-2 w-full">
 			<span class="text-3xl i-mdi-magnify"></span>
 			<input
 				type="search"
 				id="search_term"
 				name="search_term"
-				class="grow"
+				class="grow w-full"
 				placeholder="Suche nach Name, Vorname oder Ort..."
 				hx-post="/admin/checkin/visitorlist"
 				hx-trigger="input changed delay:500ms, search"
@@ -74,7 +74,7 @@ templ VisitorList(visitors []models.Visitor, count int, pages int, onpage int, f
 		} else {
 			for _, v := range visitors {
 				<div
-					class="hover:bg-base-200 cursor-pointer grid grid-cols-5 text-sm p-3 py-4 items-center gap-3 border-dashed border-b border-base-content border-opacity-50"
+					class="hover:bg-base-200 cursor-pointer grid grid-cols-5 text-sm p-3 py-4 items-center gap-3 border-dashed border-b border-base-content/50"
 				>
 					<div class="col-span-2">{ v.FirstName } { v.FamilyName }</div>
 					<div class="col-span-2">{ v.City }</div>
@@ -121,14 +121,14 @@ templ pagination(pages int, onpage int, filter string) {
 }
 
 templ visits(visitslist []models.Visit, vCount int) {
-	<div class="prose border-t pt-6 md:pt-0 md:pl-3 md:border-t-0 md:border-l border-base-content border-opacity-30">
+	<div class="prose border-t pt-6 md:pt-0 md:pl-3 md:border-t-0 md:border-l border-base-content/30">
 		<h2>heute Eingecheckt:</h2>
 		if vCount > 0 {
 			<div class="grid gap-3" style="grid-template-columns: repeat(6,auto);">
 				for _, v := range visitslist {
 					<div
 						id={ "listing_" + strconv.Itoa(v.ID) }
-						class="hover:bg-base-200 cursor-pointer text-sm p-3 py-4 border-dashed border-b border-base-content border-opacity-50 items-center grid grid-cols-subgrid col-span-6"
+						class="hover:bg-base-200 cursor-pointer text-sm p-3 py-4 border-dashed border-b border-base-content/50 items-center grid grid-cols-subgrid col-span-6"
 					>
 						if v.Partner.ID > 0 {
 							<span class="i-mdi-person-multiple text-secondary text-xl"></span>
@@ -167,7 +167,7 @@ templ visits(visitslist []models.Visit, vCount int) {
 				}
 			</div>
 			<!-- Start Legende -->
-			<div class="border-base-content border-opacity-20 border rounded-md dark:rounded-lg bg-base-100 my-4 p-4">
+			<div class="border-base-content/20 border rounded-md dark:rounded-lg bg-base-100 my-4 p-4">
 				<h3 class="col-span-3 mt-0">Legende</h3>
 				<div class="flex flex-row gap-3">
 					<div>
@@ -261,23 +261,23 @@ templ CheckinForm(
 			}
 		</h2>
 		<!-- here infos for the visitor -->
-		<div class="collapse collapse-plus bg-base-100 border border-base-content border-opacity-20">
+		<div class="collapse collapse-plus bg-base-100 border border-base-content/20">
 			<input type="checkbox" checked?={ !edit }/>
 			<div class="collapse-title text-xl font-medium">Details</div>
 			<div class="collapse-content">
 				<div class="grid grid-cols-2 gap-5">
 					<div class="flex flex-col">
-						<span class="label-text">Adresse:</span>
+						<span class="fieldset-legend text-sm">Adresse:</span>
 						<span>{ visitor.FirstName } { visitor.FamilyName }</span>
 						<span>{ visitor.Address }</span>
 						<span>{ visitor.Postcode } { visitor.City }</span>
 					</div>
 					<div class="flex flex-col">
-						<span class="label-text">Geburtstag:</span>
+						<span class="fieldset-legend text-sm">Geburtstag:</span>
 						<span>{ visitor.Birthdate.Format("2 Jan 2006") }</span>
 					</div>
 					<div class="flex flex-col">
-						<span class="label-text">Kontakt:</span>
+						<span class="fieldset-legend text-sm">Kontakt:</span>
 						if len(visitor.Phone) > 0 {
 							<span>{ visitor.Phone }</span>
 						}
@@ -286,7 +286,7 @@ templ CheckinForm(
 						}
 					</div>
 					<div class="flex flex-col">
-						<span class="label-text">Abonnement:</span>
+						<span class="fieldset-legend text-sm">Abonnement:</span>
 						if len(visitor.AboLast.BuyDate) > 0 {
 							<span
 								class={ "mr-5" , templ.KV("text-error", render.ToToday(visitor.AboLast.BuyDate) < 0 ),
@@ -309,7 +309,7 @@ templ CheckinForm(
 						}
 					</div>
 					<div class="flex flex-col">
-						<span class="label-text">Vereinsmitglied:</span>
+						<span class="fieldset-legend text-sm">Vereinsmitglied:</span>
 						if len(visitor.Ressort.RessortName) > 0 {
 							<span>{ visitor.Ressort.RessortName }</span>
 						} else {
@@ -317,7 +317,7 @@ templ CheckinForm(
 						}
 					</div>
 					<div class="flex flex-col">
-						<span class="label-text">Partnerschaft:</span>
+						<span class="fieldset-legend text-sm">Partnerschaft:</span>
 						if len(visitor.Partner) > 0 {
 							for _, p := range visitor.Partner {
 								<span>{ p.PartnerName }</span>
@@ -338,7 +338,7 @@ templ CheckinForm(
 			</div>
 		</div>
 		<!-- here starts the checkin form -->
-		<div class="mt-6 collapse collapse-plus bg-base-100 border border-base-content border-opacity-20">
+		<div class="not-prose mt-6 collapse collapse-plus bg-base-100 border border-base-content/20">
 			<input type="checkbox" checked/>
 			<div class="collapse-title text-xl font-medium">
 				if edit {
@@ -348,42 +348,42 @@ templ CheckinForm(
 				}
 			</div>
 			<div class="collapse-content">
-				<form class="grid grid-cols-2 gap-5" novalidate>
+				<form novalidate>
 					@ui.CSRF()
 					<input type="hidden" name="ressort" value={ strconv.Itoa(visitor.Ressort.ID) }/>
-					<div class="col-span-2 flex flex-col">
-						<span class="label-text">Ateliers auswählen:</span>
-						<div class="grid grid-cols-2 gap-5">
+					<fieldset class="fieldset">
+						<legend class="fieldset-legend">Ateliers auswählen</legend>
+						<div class="not-prose grid grid-cols-2 gap-5 mb-4">
 							for _, a := range ateliers {
-								<div class="form-control">
-									<label class="label cursor-pointer justify-start gap-3">
-										<input
-											name={ strconv.Itoa(a.ID) }
-											type="checkbox"
-											class="checkbox"
-											checked?={ render.Contains(a.ID,
-                  checkedAteliers) }
-										/>
-										<span class="label-text">{ a.AtelierName }</span>
-									</label>
-								</div>
+								<label class="fieldset-label gap-3">
+									<input
+										name={ strconv.Itoa(a.ID) }
+										type="checkbox"
+										class="checkbox"
+										checked?={ render.Contains(a.ID,
+                checkedAteliers) }
+									/>
+									{ a.AtelierName }
+								</label>
 							}
 						</div>
-						if len(visitor.Partner) > 0 {
-							<span class="label-text mt-4 mb-2">als Partner einloggen</span>
-							<select name="partner" class="mb-4 select select-bordered">
+					</fieldset>
+					if len(visitor.Partner) > 0 {
+						<fieldset class="fieldset mb-4">
+							<legend class="fieldset-legend">als Partner einloggen</legend>
+							<select name="partner" class="mb-4 select select-bordered w-full">
 								<option value="0">ohne Partner</option>
 								for _, p := range visitor.Partner {
 									<option value={ strconv.Itoa(p.ID) } selected?={ p.ID==visit.Partner.ID }>{ p.PartnerName }</option>
 								}
 							</select>
-						}
-						if len(err) > 0 {
-							<div class="my-6">
-								@layout.Error(err)
-							</div>
-						}
-					</div>
+						</fieldset>
+					}
+					if len(err) > 0 {
+						<div class="mb-4">
+							@layout.Error(err)
+						</div>
+					}
 					<div
 						class={ "col-span-2 grid gap-3 grid-cols-2 justify-around place-items-center" , templ.KV("sm:grid-cols-3",
           edit) }

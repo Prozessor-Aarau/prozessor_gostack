@@ -26,7 +26,7 @@ templ Machines(visitor models.Visitor, ressorts []models.Ressort) {
 }
 
 templ MachinesFilter(ressorts []models.Ressort) {
-	<div class="border-base-content border-opacity-20 border rounded-md dark:rounded-lg bg-base-100 my-4 p-4">
+	<div class="border-base-content/20 border rounded-md dark:rounded-lg bg-base-100 my-4 p-4">
 		<h2 class="font-bold text-xl mb-3">Suchfilter</h2>
 		<form id="filterForm" novalidate>
 			<div class="grid grid-cols-5 gap-5 items-center">
@@ -90,7 +90,7 @@ if len(m.Reports) > 0 {
 }
 			}}
 			<div
-				class="hover:bg-base-200 cursor-pointer grid grid-cols-7 text-sm p-3 py-4 items-center gap-3 border-dashed border-b border-base-content border-opacity-50"
+				class="hover:bg-base-200 cursor-pointer grid grid-cols-7 text-sm p-3 py-4 items-center gap-3 border-dashed border-b border-base-content/50"
 			>
 				<div class="col-span-4 md:col-span-2">{ m.MachineName }</div>
 				<div class="col-span-3 md:col-span-2">{ m.RessortName }</div>
@@ -250,7 +250,7 @@ for _, r := range reports {
 		for _, r := range reports {
 			if !r.Solved {
 				<div
-					class="hover:bg-base-200 cursor-pointer grid grid-cols-4 text-sm py-4 items-center gap-3 border-dashed border-b border-base-content border-opacity-50"
+					class="hover:bg-base-200 cursor-pointer grid grid-cols-4 text-sm py-4 items-center gap-3 border-dashed border-b border-base-content/50"
 				>
 					<div class="col-span-1">ID: { strconv.Itoa(r.ID) }</div>
 					<div class="col-span-1">
@@ -301,7 +301,7 @@ for _, r := range reports {
 					for _, r := range reports {
 						if r.Solved {
 							<div
-								class="hover:bg-base-200 cursor-pointer grid grid-cols-4 text-sm py-4 items-center gap-3 border-dashed border-b border-base-content border-opacity-50"
+								class="hover:bg-base-200 cursor-pointer grid grid-cols-4 text-sm py-4 items-center gap-3 border-dashed border-b border-base-content/50"
 							>
 								<div class="col-span-1">ID: { strconv.Itoa(r.ID) }</div>
 								<div class="col-span-1">

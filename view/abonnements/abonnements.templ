@@ -22,7 +22,7 @@ templ Abonnements(visitor models.Visitor) {
 
 templ abonnementsFilter() {
 	{{ prm := ctx.Value("permission").(models.Role) }}
-	<div class="border-base-content border-opacity-20 border rounded-md dark:rounded-lg bg-base-100 my-4 p-4">
+	<div class="border-base-content/20 border rounded-md dark:rounded-lg bg-base-100 my-4 p-4">
 		<h2 class="font-bold text-xl mb-3">Suchfilter</h2>
 		<form id="filterForm" novalidate>
 			<div class="grid grid-cols-4 gap-5">
@@ -89,7 +89,7 @@ templ abonnementsFilter() {
 			</div>
 		</form>
 		if prm.AddAbonnement {
-			<div class="border-base-content border-opacity-50 border-dashed border-t mt-4 pt-4">
+			<div class="border-base-content/50 border-dashed border-t mt-4 pt-4">
 				<button type="button" class="btn btn-secondary" hx-get="/admin/abonnements/create" hx-target="#content">
 					Neues Abo
 					hinzufügen
@@ -115,7 +115,7 @@ templ AbonnementsList(abonnements []models.Abonnement, count int, pages int, onp
 	} else {
 		for _, a := range abonnements {
 			<div
-				class="hover:bg-base-200 cursor-pointer grid grid-cols-6 text-sm p-3 py-4 items-center gap-3 border-dashed border-b border-base-content border-opacity-50"
+				class="hover:bg-base-200 cursor-pointer grid grid-cols-6 text-sm p-3 py-4 items-center gap-3 border-dashed border-b border-base-content/50"
 			>
 				<div class="col-span-1">
 					<span
