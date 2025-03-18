@@ -27,54 +27,52 @@ templ abonnementsFilter() {
 		<form id="filterForm" novalidate>
 			<div class="grid grid-cols-4 gap-5">
 				@ui.CSRF()
-				<label class="input flex items-center gap-2 col-span-4">
+				<label class="input flex items-center gap-2 w-full col-span-4">
 					<span class="text-3xl i-mdi-magnify"></span>
-					<input type="text" id="search_term" name="search_term" class="grow" placeholder="Suche nach Name, Vorname..."/>
+					<input
+						type="text"
+						id="search_term"
+						name="search_term"
+						class="grow w-full"
+						placeholder="Suche nach Name, Vorname..."
+					/>
 					<!-- how to implement this button? should reset field -->
 					<button id="fieldreset" class="ml-3 btn btn-neutral btn-outline btn-xs btn-circle">
 						<span class="i-mdi-close"></span>
 					</button>
 				</label>
-				<div class="col-span-full md:col-span-1">
-					<label class="form-control" id="abooptions">
-						<div class="label">
-							<span class="label-text">Gültigkeit:</span>
-						</div>
-						<select name="abovalidity" id="sort" class="select select-bordered">
-							<option value="all">alle</option>
-							<option value="valid">nur gültig</option>
-							<option value="invalid">nur abgelaufen</option>
-						</select>
-					</label>
-				</div>
-				<div class="col-span-full md:col-span-3 flex flex-col justify-end">
-					<label class="label cursor-pointer gap-4 justify-start">
+				<fieldset class="fieldset col-span-full md:col-span-1" id="abooptions">
+					<legend class="fieldset-legend">Gültigkeit</legend>
+					<select name="abovalidity" id="sort" class="select select-bordered">
+						<option value="all">alle</option>
+						<option value="valid">nur gültig</option>
+						<option value="invalid">nur abgelaufen</option>
+					</select>
+				</fieldset>
+				<fieldset class="fieldset col-span-full md:col-span-3 flex flex-col justify-end">
+					<label class="fieldset-label gap-4">
 						<input name="member" type="checkbox" class="checkbox checkbox-sm"/>
-						<span>Mitglied</span>
+						Mitglied
 					</label>
-					<label class="label cursor-pointer gap-4 pb-0 justify-start">
+					<label class="fieldset-label gap-4">
 						<input name="unique" type="checkbox" class="checkbox checkbox-sm"/>
-						<span>nur aktuellstes Abo anzeigen</span>
+						nur aktuellstes Abo anzeigen
 					</label>
-				</div>
-				<label class="form-control w-full max-w-xs col-span-4 md:col-span-2 pb-0">
-					<div class="label">
-						<span class="label-text">Sortieren nach:</span>
-					</div>
+				</fieldset>
+				<fieldset class="fieldset w-full max-w-xs col-span-4 md:col-span-2 pb-0">
+					<legend class="fieldset-legend">Sortieren nach:</legend>
 					<select name="sort" id="sort" class="select select-bordered">
 						<option value="buydate">Ablaufdatum</option>
 						<option value="family_name">Name</option>
 					</select>
-				</label>
-				<label class="form-control w-full max-w-xs col-span-4 md:col-span-2">
-					<div class="label">
-						<span class="label-text">Richtung:</span>
-					</div>
+				</fieldset>
+				<fieldset class="form-control w-full max-w-xs col-span-4 md:col-span-2">
+					<legend class="fieldset-legend">Richtung:</legend>
 					<select name="sort_dir" id="sort_dir" class="select select-bordered">
 						<option value="DESC">absteigend</option>
 						<option value="ASC">aufsteigend</option>
 					</select>
-				</label>
+				</fieldset>
 				<div class="col-span-4 grid grid-cols-2 justify-items-center gap-3">
 					<button
 						type="submit"
@@ -207,7 +205,7 @@ templ AbonnementForm(a models.Abonnement, errors FormErrors, free bool) {
 		>
 			<form id="filterForm" class="mb-3 w-full col-span-2 md:col-span-1" novalidate>
 				@ui.CSRF()
-				<label class="input flex items-center gap-2">
+				<label class="input flex w-full items-center gap-2">
 					<span class="text-3xl i-mdi-magnify"></span>
 					<input
 						hx-post={ "/admin/visitors/selectbox/" + a.VisitorID + "?pricing" }
@@ -216,7 +214,7 @@ templ AbonnementForm(a models.Abonnement, errors FormErrors, free bool) {
 						type="search"
 						id="search_term"
 						name="search_term"
-						class="grow"
+						class="grow w-full"
 						placeholder="Suche nach Name, Vorname oder Ort..."
 					/>
 				</label>
@@ -233,40 +231,32 @@ templ AbonnementForm(a models.Abonnement, errors FormErrors, free bool) {
 				</div>
 			}
 		</div>
-		<label class="form-control col-span-2 md:col-span-1">
-			<div class="label">
-				<span class="label-text">Kaufdatum <span class="text-error font-extrabold">*</span></span>
-			</div>
+		<fieldset class="fieldset col-span-2 md:col-span-1">
+			<legend class="fieldset-legend">Kaufdatum <span class="text-error font-extrabold">*</span></legend>
 			<input
 				type="date"
 				id="buydate"
 				name="buydate"
-				class={ "input" , templ.KV("input-error", len(errors.BuyDate)>0) }
+				class={ "input w-full" , templ.KV("input-error",
+      len(errors.BuyDate)>0) }
 				value={ a.BuyDate }
 				required
 			/>
 			if len(errors.BuyDate)>0 {
-				<div class="label">
-					<span class="label-text text-error">{ errors.BuyDate }</span>
-				</div>
+				<label class="fieldset-label text-error">{ errors.BuyDate }</label>
 			}
-		</label>
-		<label class="form-control col-span-2 md:col-span-1 grid grid-cols-2 items-center">
-			<div class="label col-span-full">
-				<span class="label-text">Preis/Zahlungsmodalität </span>
-			</div>
-			<label class="label cursor-pointer justify-start">
+		</fieldset>
+		<fieldset class="fieldset md:col-span-1 grid grid-cols-2 items-center">
+			<legend class="fieldset-legend">Preis/Zahlungsmodalität </legend>
+			<label class="fieldset-label gap-4">
 				<input
+					checked?={ a.PartialPayment }
 					type="checkbox"
 					id="partial_payment"
 					name="partial_payment"
-					class="checkbox mr-4"
-					checked?={ 
-        a.PartialPayment }
+					class="checkbox"
 				/>
-				<span class="label-text">
-					Teilzahlung (2x halber Betrag)
-				</span>
+				Teilzahlung (2x halber Betrag)
 			</label>
 			<span id="pricing" class="font-bold text-primary text-xl">
 				if a.Price > 0 {
@@ -283,11 +273,13 @@ templ AbonnementForm(a models.Abonnement, errors FormErrors, free bool) {
 					<span>Besucher:in auswählen</span>
 				}
 			</span>
-		</label>
-		<label class="label cursor-pointer justify-start col-span-full">
-			<input type="checkbox" id="free" name="free" class="checkbox mr-4" checked?={ free }/>
-			<span class={ "label-text" , templ.KV("text-error", len(errors.Free)>0) }>Beitragsbefreites Mitglied</span>
-		</label>
+		</fieldset>
+		<fieldset class="fieldset col-span-full">
+			<label class={ "fieldset-label gap-4" , templ.KV("text-error", len(errors.Free)>0) }>
+				<input type="checkbox" id="free" name="free" class="checkbox" checked?={ free }/>
+				Beitragsbefreites Mitglied
+			</label>
+		</fieldset>
 		if len(errors.Free)>0 {
 			<div class="label col-span-full">
 				<span class="label-text text-error">{ errors.Free }</span>
