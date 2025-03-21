@@ -30,13 +30,13 @@ templ billFilter(categories []string) {
 		<form id="filterForm" novalidate>
 			<div class="grid grid-cols-4 gap-5 items-center">
 				@ui.CSRF()
-				<label class="input flex items-center gap-2 col-span-full">
+				<label class="input flex items-center gap-2 col-span-full w-full">
 					<span class="text-3xl i-mdi-magnify"></span>
 					<input
 						type="text"
 						id="filter_string"
 						name="filter_string"
-						class="grow"
+						class="grow w-full"
 						placeholder="Suche nach Rechnungsnummer, Vorname, Familienname ..."
 					/>
 					<!-- how to implement this button? should reset field -->
@@ -45,14 +45,14 @@ templ billFilter(categories []string) {
 					</button>
 				</label>
 				<label class="form-control w-full max-w-xs col-span-full md:col-span-1">
-					<select name="payment" id="inuse" class="select select-bordered">
+					<select name="payment" id="inuse" class="select select-bordered w-full">
 						<option value="all">Bezahlstatus (alle)</option>
 						<option value="unpaid">offen</option>
 						<option value="paid">bezahlt</option>
 					</select>
 				</label>
 				<label class="form-control w-full max-w-xs col-span-full md:col-span-2">
-					<select name="type" id="type" class="select select-bordered">
+					<select name="type" id="type" class="select select-bordered w-full">
 						<option value="all" selected>Rechnungstyp (alle)</option>
 						for _, c := range categories {
 							<option value={ c }>{ cases.Title(language.English, cases.NoLower).String(c) }</option>

@@ -46,23 +46,23 @@ templ CustomBillForm(bill models.BillData, errors FormErrors, categories []strin
 			}
 		</div>
 		<!-- toggle intern/extern -->
-		<div class="form-control w-full mt-4">
-			<label class="label cursor-pointer justify-start">
+		<fieldset class="fieldset w-full mt-4">
+			<label class="fieldset-label gap-4">
 				<input id="toggleExtern" name="extern" type="checkbox" class="toggle toggle-success" x-model="Extern"/>
-				<span class="label-text pl-3">Mitglied / Individuelle Adresse</span>
+				Mitglied / Individuelle Adresse
 			</label>
-		</div>
+		</fieldset>
 		<!-- intern member select -->
 		<div x-show="! Extern" class="w-full mt-3 gap-3 grid grid-cols-2">
 			<form id="filterForm" class="mb-3 w-full col-span-2 md:col-span-1" novalidate>
 				@ui.CSRF()
-				<label class="input flex items-center gap-2">
+				<label class="input w-full flex items-center gap-2">
 					<span class="text-3xl i-mdi-magnify"></span>
 					<input
 						type="search"
 						id="search_term"
 						name="search_term"
-						class="grow"
+						class="grow w-full"
 						placeholder="Suche nach Name, Vorname oder Ort..."
 						hx-post={ "/admin/visitors/selectbox/" + bill.Visitor.ID }
 						hx-trigger="input changed delay:500ms, search"
@@ -83,10 +83,8 @@ templ CustomBillForm(bill models.BillData, errors FormErrors, categories []strin
 		</div>
 		<!-- extern address -->
 		<div x-show="Extern" class="w-full mt-3 gap-3 grid grid-cols-8">
-			<label class="form-control w-full col-span-full md:col-span-4">
-				<div class="label">
-					<span class="label-text">Firma <span class="text-error font-extrabold">**</span></span>
-				</div>
+			<fieldset class="fieldset w-full col-span-full md:col-span-4">
+				<legend class="fieldset-legend">Firma <span class="text-error font-extrabold">**</span></legend>
 				<input
 					class={ "input w-full" , templ.KV("input-error", len(errors.Firma)> 0) }
 					name="firma"
@@ -94,15 +92,11 @@ templ CustomBillForm(bill models.BillData, errors FormErrors, categories []strin
 					value={ bill.Firma }
 				/>
 				if len(errors.Firma) > 0 {
-					<div class="label">
-						<span class="label-text text-error">{ errors.Firma }</span>
-					</div>
+					<label class="fieldset-label text-error">{ errors.Firma }</label>
 				}
-			</label>
-			<label class="form-control w-full col-span-full md:col-span-2">
-				<div class="label">
-					<span class="label-text">Vorname <span class="text-error font-extrabold">**</span></span>
-				</div>
+			</fieldset>
+			<fieldset class="fieldset w-full col-span-full md:col-span-2">
+				<legend class="fieldset-legend">Vorname <span class="text-error font-extrabold">**</span></legend>
 				<input
 					class={ "input w-full" , templ.KV("input-error", len(errors.FirstName)> 0) }
 					name="firstname"
@@ -110,15 +104,11 @@ templ CustomBillForm(bill models.BillData, errors FormErrors, categories []strin
 					value={ bill.FirstName }
 				/>
 				if len(errors.FirstName) > 0 {
-					<div class="label">
-						<span class="label-text text-error">{ errors.FirstName }</span>
-					</div>
+					<label class="fieldset-label text-error">{ errors.FirstName }</label>
 				}
-			</label>
-			<label class="form-control w-full col-span-full md:col-span-2">
-				<div class="label">
-					<span class="label-text">Familienname <span class="text-error font-extrabold">**</span></span>
-				</div>
+			</fieldset>
+			<fieldset class="fieldset w-full col-span-full md:col-span-2">
+				<legend class="fieldset-legend">Familienname <span class="text-error font-extrabold">**</span></legend>
 				<input
 					class={ "input w-full" , templ.KV("input-error", len(errors.FamilyName)> 0) }
 					name="familyname"
@@ -126,15 +116,11 @@ templ CustomBillForm(bill models.BillData, errors FormErrors, categories []strin
 					value={ bill.FamilyName }
 				/>
 				if len(errors.FamilyName) > 0 {
-					<div class="label">
-						<span class="label-text text-error">{ errors.FamilyName }</span>
-					</div>
+					<label class="fieldset-label text-error">{ errors.FamilyName }</label>
 				}
-			</label>
-			<label class="form-control w-full col-span-full md:col-span-3">
-				<div class="label">
-					<span class="label-text">Strasse <span class="text-error font-extrabold">*</span></span>
-				</div>
+			</fieldset>
+			<fieldset class="fieldset w-full col-span-full md:col-span-3">
+				<legend class="fieldset-legend">Strasse <span class="text-error font-extrabold">*</span></legend>
 				<input
 					class={ "input w-full" , templ.KV("input-error", len(errors.Street)> 0) }
 					name="street"
@@ -142,15 +128,11 @@ templ CustomBillForm(bill models.BillData, errors FormErrors, categories []strin
 					value={ bill.Street }
 				/>
 				if len(errors.Street) > 0 {
-					<div class="label">
-						<span class="label-text text-error">{ errors.Street }</span>
-					</div>
+					<label class="fieldset-label text-error">{ errors.Street }</label>
 				}
-			</label>
-			<label class="form-control w-full col-span-full md:col-span-1">
-				<div class="label">
-					<span class="label-text">Nummer <span class="text-error font-extrabold">*</span></span>
-				</div>
+			</fieldset>
+			<fieldset class="fieldset w-full col-span-full md:col-span-1">
+				<legend class="fieldset-legend">Nummer <span class="text-error font-extrabold">*</span></legend>
 				<input
 					class={ "input w-full" , templ.KV("input-error", len(errors.Number)> 0) }
 					name="number"
@@ -158,15 +140,11 @@ templ CustomBillForm(bill models.BillData, errors FormErrors, categories []strin
 					value={ bill.Number }
 				/>
 				if len(errors.Number) > 0 {
-					<div class="label">
-						<span class="label-text text-error">{ errors.Number }</span>
-					</div>
+					<label class="fieldset-label text-error">{ errors.Number }</label>
 				}
-			</label>
-			<label class="form-control w-full col-span-full md:col-span-1">
-				<div class="label">
-					<span class="label-text">PLZ <span class="text-error font-extrabold">*</span></span>
-				</div>
+			</fieldset>
+			<fieldset class="fieldset w-full col-span-full md:col-span-1">
+				<legend class="fieldset-legend">PLZ <span class="text-error font-extrabold">*</span></legend>
 				<input
 					class={ "input w-full" , templ.KV("input-error", len(errors.Postcode)> 0) }
 					name="postcode"
@@ -174,15 +152,11 @@ templ CustomBillForm(bill models.BillData, errors FormErrors, categories []strin
 					value={ bill.Postcode }
 				/>
 				if len(errors.Postcode) > 0 {
-					<div class="label">
-						<span class="label-text text-error">{ errors.Postcode }</span>
-					</div>
+					<label class="fieldset-label text-error">{ errors.Postcode }</label>
 				}
-			</label>
-			<label class="form-control w-full col-span-full md:col-span-3">
-				<div class="label">
-					<span class="label-text">Ort <span class="text-error font-extrabold">*</span></span>
-				</div>
+			</fieldset>
+			<fieldset class="fieldset w-full col-span-full md:col-span-3">
+				<legend class="fieldset-legend">Ort <span class="text-error font-extrabold">*</span></legend>
 				<input
 					class={ "input w-full" , templ.KV("input-error", len(errors.City)> 0) }
 					name="city"
@@ -190,11 +164,9 @@ templ CustomBillForm(bill models.BillData, errors FormErrors, categories []strin
 					value={ bill.City }
 				/>
 				if len(errors.City) > 0 {
-					<div class="label">
-						<span class="label-text text-error">{ errors.City }</span>
-					</div>
+					<label class="fieldset-label text-error">{ errors.City }</label>
 				}
-			</label>
+			</fieldset>
 		</div>
 		<!-- positions for bill -->
 		<div
@@ -253,18 +225,16 @@ templ CustomBillForm(bill models.BillData, errors FormErrors, categories []strin
 		}
 		<!-- payment info -->
 		<div class="w-full mt-3 gap-3 grid grid-cols-1">
-			<label class="form-control w-full col-span-full md:col-span-4 dropdown dropdown-bottom">
-				<div class="label">
-					<span class="label-text">
-						Kategorie (wenn möglich aus vorhandenen) <span class="text-error font-extrabold">*</span>
-					</span>
-				</div>
+			<fieldset class="fieldset w-full col-span-full md:col-span-4 dropdown dropdown-bottom">
+				<legend class="fieldset-legend">
+					Kategorie (wenn möglich aus vorhandenen) <span class="text-error font-extrabold">*</span>
+				</legend>
 				<input
 					type="text"
 					id="purpose"
 					name="purpose"
 					list="purposelist"
-					class={ "input" , templ.KV("input-error",
+					class={ "input w-full" , templ.KV("input-error",
         len(errors.Purpose)> 0) }
 					value={ bill.Purpose }
 				/>
@@ -274,35 +244,29 @@ templ CustomBillForm(bill models.BillData, errors FormErrors, categories []strin
 					}
 				</datalist>
 				if len(errors.Purpose) > 0 {
-					<div class="label">
-						<span class="label-text text-error">{ errors.Purpose }</span>
-					</div>
+					<label class="fieldset-label text-error">{ errors.Purpose }</label>
 				}
-			</label>
-			<label class="form-control w-full col-span-full md:col-span-4">
-				<div class="label">
-					<span class="label-text">Rechnungsdatum <span class="text-error font-extrabold">*</span></span>
-				</div>
+			</fieldset>
+			<fieldset class="fieldset w-full col-span-full md:col-span-4">
+				<legend class="fieldset-legend">Rechnungsdatum <span class="text-error font-extrabold">*</span></legend>
 				<input
 					type="date"
 					id="date"
 					name="date"
-					class={ "input" , templ.KV("input-error", len(errors.Date)> 0) }
+					class={ "input w-full" , templ.KV("input-error", len(errors.Date)> 0) }
 					if render.RealDate(bill.Date) {
 						value={ render.HumanDate(bill.Date) }
 					}
 					required
 				/>
 				if len(errors.Date) > 0 {
-					<div class="label">
-						<span class="label-text text-error">{ errors.Date }</span>
-					</div>
+					<label class="fieldset-label text-error">{ errors.Date }</label>
 				}
-			</label>
-			<label class="form-control w-full col-span-full md:col-span-4">
-				<div class="label">
-					<span class="label-text">Mitteilung / Zahlungszweck <span class="text-error font-extrabold">*</span></span>
-				</div>
+			</fieldset>
+			<fieldset class="fieldset w-full col-span-full md:col-span-4">
+				<legend class="fieldset-legend">
+					Mitteilung / Zahlungszweck <span class="text-error font-extrabold">*</span>
+				</legend>
 				<input
 					class={ "input w-full" , templ.KV("input-error", len(errors.Message)> 0) }
 					name="message"
@@ -310,25 +274,19 @@ templ CustomBillForm(bill models.BillData, errors FormErrors, categories []strin
 					value={ bill.Message }
 				/>
 				if len(errors.Message) > 0 {
-					<div class="label">
-						<span class="label-text text-error">{ errors.Message }</span>
-					</div>
+					<label class="fieldset-label text-error">{ errors.Message }</label>
 				}
-			</label>
-			<label class="form-control w-full col-span-full md:col-span-4">
-				<div class="label">
-					<span class="label-text">Interne Informationen <span class="text-error font-extrabold">*</span></span>
-				</div>
+			</fieldset>
+			<fieldset class="fieldset w-full col-span-full md:col-span-4">
+				<legend class="fieldset-legend">Interne Informationen <span class="text-error font-extrabold">*</span></legend>
 				<textarea
 					class={ "textarea textarea-bordered w-full h-24" , templ.KV("textarea-error", len(errors.Infos)> 0) }
 					name="infos"
 				>{ bill.Infos }</textarea>
 				if len(errors.Infos) > 0 {
-					<div class="label">
-						<span class="label-text text-error">{ errors.Infos }</span>
-					</div>
+					<label class="fieldset-label text-error">{ errors.Infos }</label>
 				}
-			</label>
+			</fieldset>
 			<div class="col-span-full text-sm">
 				<span class="text-error font-extrabold">*</span> diese Felder sind zwingend
 				auszufüllen
