@@ -99,7 +99,7 @@ templ ReportForm(params models.Report, errors ReportErrors) {
 			<textarea
 				id="report_infos"
 				name="report_infos"
-				class={ "textarea textarea-bordered h-24" ,
+				class={ "textarea h-24" ,
       templ.KV("textarea-error", len(errors.ReportInfo)> 0) }
 				placeholder="Beschreibe deine Beobachtung: Was funktioniert nicht, was ist dir aufgefallen..."
 				value={ params.ReportInfo }

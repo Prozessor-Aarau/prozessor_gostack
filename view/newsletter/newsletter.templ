@@ -63,56 +63,109 @@ templ NewsletterList(newsletters []models.Newsletter) {
 type NewsletterErrors struct {
 	Title       string
 	Description string
+	Template    string
+	Item        string
+	Items       string
 }
 
-templ NewsletterCreate(n models.Newsletter, errors NewsletterErrors) {
-	<form class="flex flex-wrap gap-3" novalidate>
+templ NewsletterCreate(n models.Newsletter, templates []models.NewsletterTemplate, errors NewsletterErrors) {
+	<form class="grid grid-cols-1 md:grid-cols-2 gap-3" novalidate>
 		@ui.CSRF()
 		<div class="prose col-span-full">
 			<h2>Neuen Newsletter erstellen</h2>
 		</div>
-		<label class="form-control w-full">
-			<div class="label">
-				<span class="label-text">Titel <span class="text-error font-extrabold">*</span></span>
-			</div>
+		<div class="prose col-span-full">
+			<h3>Allgemein</h3>
+		</div>
+		<fieldset class="fieldset w-full">
+			<legend class="fieldset-legend">Titel <span class="text-error font-extrabold">*</span></legend>
 			<input
 				type="text"
-				placeholder="Badge Nummer"
-				class={ "input input-bordered w-full" , templ.KV("input-error",
-      len(errors.Title)>0) }
+				placeholder="Titel des Newsletters"
+				class={ "input input-bordered w-full" ,
+      templ.KV("input-error", len(errors.Title)>0) }
 				value={ n.Title }
 				name="title"
 				required
 			/>
 			if len(errors.Title) > 0 {
-				<div class="label">
-					<span class="label-text text-error">{ errors.Title }</span>
-				</div>
+				<label class="fieldset-label text-error">{ errors.Title }</label>
 			}
-		</label>
-		<div class="flex w-full gap-3 items-end">
-			<label id="badge" class="form-control w-full">
-				<div class="label">
-					<span class="label-text">
-						Beschrieb <span class="text-error font-extrabold">*</span>
-					</span>
-				</div>
-				<input
-					type="text"
-					placeholder="Kurzbeschrieb"
-					class={ "input input-bordered w-full" , templ.KV("input-error",
-        len(errors.Description)> 0) }
-					value={ n.Description }
-					name="description"
-					required
-				/>
-				if len(errors.Description) > 0 {
-					<div class="label">
-						<span class="label-text text-error">{ errors.Description }</span>
-					</div>
+		</fieldset>
+		<fieldset id="badge" class="fieldset w-full">
+			<legend class="fieldset-legend">
+				Beschrieb <span class="text-error font-extrabold">*</span>
+			</legend>
+			<textarea
+				placeholder="Beschrieb des Newsletters, erscheint nur in der Auflistung"
+				class={ "textarea w-full h-24" ,
+      templ.KV("input-error", len(errors.Description)> 0) }
+				value={ n.Description }
+				name="description"
+				required
+			></textarea>
+			if len(errors.Description) > 0 {
+				<label class="fieldset-label text-error">{ errors.Description }</label>
+			}
+		</fieldset>
+		<div class="prose col-span-full">
+			<h3>Layout</h3>
+		</div>
+		<fieldset class="fieldset">
+			<legend class="fieldset-legend">Template <span class="text-error font-extrabold ">*</span></legend>
+			<select
+				name="template"
+				id="template"
+				class={ "select w-full" , templ.KV("select-error", len(errors.Template)>
+      0) }
+				value={ strconv.Itoa(n.Template.ID) }
+				required
+			>
+				<option disabled selected>Template auswählen...</option>
+				for _, t := range templates {
+					if t.ID == n.Template.ID {
+						<option value={ strconv.Itoa(t.ID) } selected>{ t.Name }</option>
+					} else {
+						<option value={ strconv.Itoa(t.ID) }>{ t.Name }</option>
+					}
+				}
+			</select>
+			if len(errors.Template) > 0 {
+				<label class="fieldset-label text-error">{ errors.Template }</label>
+			}
+		</fieldset>
+		<!-- elements for newsletter -->
+		<div class={ "my-6 card bg-base-300 w-full col-span-full" }>
+			<div class="card-body">
+				<h2 class="card-title">Elemente</h2>
+				<div id="elements"></div>
+				<form id="elementForm" class="grid grid-cols-1 md:grid-cols-2 gap-3 items-baseline">
+					<fieldset class="fieldset">
+						<legend class="fieldset-legend">Elementtyp <span class="text-error font-extrabold ">*</span></legend>
+						<select name="type" id="type" class={ "select w-full" } required>
+							<option disabled selected>Typ auswählen...</option>
+							<option value="text">Textabschnitt</option>
+							<option value="button">Action-Button</option>
+							<option value="events">Event-Kalender</option>
+							<option value="picture">Bild</option>
+						</select>
+						if len(errors.Template) > 0 {
+							<label class="fieldset-label text-error">{ errors.Template }</label>
+						}
+					</fieldset>
+					<button type="submit" class="btn btn-primary">Element hinzufügen</button>
+				</form>
+			</div>
+		</div>
+		if len(errors.Item) > 0 || len(errors.Items) > 0 {
+			<label class="fieldset-label text-error">
+				{ errors.Item }
+				if len(errors.Items) > 0 {
+					Ein oder mehrere Felder sind fehlerhaft
 				}
 			</label>
-		</div>
+		}
+		<!--  ende layout -->
 		<div class=" col-span-full text-sm mt-3">
 			<span class="text-error font-extrabold">*</span> diese Felder sind zwingend auszufüllen.
 		</div>

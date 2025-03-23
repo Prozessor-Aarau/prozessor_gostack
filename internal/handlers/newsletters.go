@@ -33,10 +33,15 @@ func (m *Repository) HandleNewsletterList(w http.ResponseWriter, r *http.Request
 }
 
 func (m *Repository) HandleNewsletterCreateIndex(w http.ResponseWriter, r *http.Request) error {
-  // create new empty structs
+	// create new empty structs
 	var nl models.Newsletter
 	var e newsletter.NewsletterErrors
 
+	templates, err := m.DB.GetNewsletterTemplates()
+	if err != nil {
+		log.Println("could not get templates from DB: ", err)
+	}
+
 	// render template
-	return rendering(w, r, newsletter.NewsletterCreate(nl, e))
+	return rendering(w, r, newsletter.NewsletterCreate(nl, templates, e))
 }

@@ -86,6 +86,7 @@ type DatabaseRepo interface {
 	UpdateBill(b models.BillData) (string, error)
 	// newsletter
 	GetAllNewsletters() ([]models.Newsletter, int, error)
+	GetNewsletterTemplates() ([]models.NewsletterTemplate, error)
 }
 
 type postgresDBRepo struct {

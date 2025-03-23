@@ -76,3 +76,55 @@ func (m *postgresDBRepo) GetAllNewsletters() ([]models.Newsletter, int, error) {
 
 	return newsletters, len(newsletters), nil
 }
+
+// GetNewsletterTemplates gets all templates for newsletters
+func (m *postgresDBRepo) GetNewsletterTemplates() ([]models.NewsletterTemplate, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	var templates []models.NewsletterTemplate
+
+	query := `SELECT
+    id,
+    name,
+    description,
+    template,
+    updated_on,
+    created_on
+  FROM
+    newsletter_templates
+  ORDER BY
+    name ASC`
+
+	rows, err := m.DB.QueryContext(ctx, query)
+	if err != nil {
+		return templates, err
+	}
+
+	defer rows.Close()
+
+	for rows.Next() {
+		var t models.NewsletterTemplate
+
+		err := rows.Scan(
+			&t.ID,
+			&t.Name,
+			&t.Description,
+			&t.Template,
+			&t.UpdatedOn,
+			&t.CreatedOn,
+		)
+
+		if err != nil {
+			return templates, err
+		}
+
+		templates = append(templates, t)
+	}
+
+	if err = rows.Err(); err != nil {
+		return templates, err
+	}
+
+	return templates, nil
+}
