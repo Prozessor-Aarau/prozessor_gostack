@@ -86,7 +86,7 @@ templ NewsletterCreate(
 			<legend class="fieldset-legend">Titel <span class="text-error font-extrabold">*</span></legend>
 			<input
 				type="text"
-				placeholder="Titel des Newsletters"
+				placeholder="Titel des Newsletters/Mailbetreff"
 				class={ "input input-bordered w-full" ,
       templ.KV("input-error", len(errors.Title)>0) }
 				value={ n.Title }
@@ -235,10 +235,46 @@ templ elementText(element models.NewsletterElement) {
 }
 
 templ elementButton(element models.NewsletterElement) {
+	<div class="prose col-span-full">
+		<h4>Button</h4>
+	</div>
+	<fieldset class="fieldset">
+		<legend class="fieldset-legend">Button Text</legend>
+		<input class="input w-full" placeholder="Beschriftung" value={ element.Content }/>
+	</fieldset>
+	<fieldset class="fieldset">
+		<legend class="fieldset-legend">URL</legend>
+		<input class="input w-full" placeholder="https://www.x..." value={ element.Url }/>
+	</fieldset>
 }
 
 templ elementEvents(element models.NewsletterElement) {
+	<div class="prose col-span-full">
+		<h4>Events</h4>
+	</div>
+	<div id="events" class="col-span-full">
+		<button type="button" class="btn btn-accent mx-auto">Events laden</button>
+	</div>
 }
 
 templ elementPicture(element models.NewsletterElement) {
+	<div class="prose col-span-full">
+		<h4>Bild</h4>
+	</div>
+	if len(element.Upload) > 0 {
+		<p>Bild vorhanden</p>
+	} else {
+		<fieldset class="fieldset">
+			<legend class="fieldset-legend">Bild hochladen</legend>
+			<input type="file" class="file-input w-full"/>
+		</fieldset>
+	}
+	<fieldset class="fieldset">
+		<legend class="fieldset-legend">Alt-Text</legend>
+		<input class="input w-full" placeholder="alt-text wenn kein Bild geladen ist" value={ element.AltText }/>
+	</fieldset>
+	<fieldset class="fieldset col-span-full">
+		<legend class="fieldset-legend">Bildbeschrieb</legend>
+		<input class="input w-full" placeholder="Beschriftung unter dem Bild" value={ element.Content }/>
+	</fieldset>
 }
