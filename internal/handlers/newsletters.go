@@ -1,9 +1,12 @@
 package handlers
 
 import (
+	"encoding/json"
 	"errors"
 	"log"
 	"net/http"
+	"sort"
+	"time"
 
 	"github.com/faebut/prozessor_gostack/internal/models"
 	"github.com/faebut/prozessor_gostack/view/newsletter"
@@ -71,4 +74,63 @@ func (m *Repository) HandleNewsletterElementCreate(w http.ResponseWriter, r *htt
 	element.Type = elType
 
 	return rendering(w, r, newsletter.Element(element))
+}
+
+// TODO: get real data from frontmatter parser
+func (m *Repository) HandleNewsletterEventsLoad(w http.ResponseWriter, r *http.Request) error {
+	events := []models.Event{
+		{
+			Title: "Ein Event",
+			Date:  time.Date(2025, 5, 22, 13, 0, 0, 0, time.Local),
+			Url:   "https://www.eventurl.ch/urlibus",
+		},
+		{
+			Title: "Zwei Event",
+			Date:  time.Date(2025, 5, 12, 8, 0, 0, 0, time.Local),
+			Url:   "https://www.eventurl.ch/urlibus",
+		},
+		{
+			Title: "Noch ein Event",
+			Date:  time.Date(2025, 6, 2, 17, 0, 0, 0, time.Local),
+			Url:   "https://www.eventurl.ch/urlibus",
+		},
+		{
+			Title: "Letzter Event",
+			Date:  time.Date(2025, 4, 30, 13, 0, 0, 0, time.Local),
+			Url:   "https://www.eventurl.ch/urlibus",
+		},
+	}
+
+	// Sort Events
+	sort.Slice(events, func(i, j int) bool {
+		return events[i].Date.Before(events[j].Date)
+	})
+
+	// put events into string
+	eventString, err := json.Marshal(events)
+	if err != nil {
+		return err
+	}
+
+	return rendering(w, r, newsletter.EventList(events, string(eventString)))
+}
+
+// TODO: get real data from newsletter element
+func (m *Repository) HandleNewsletterEventsShow(w http.ResponseWriter, r *http.Request) error {
+
+	var events []models.Event
+
+	jsonString := `[{"title":"Ein Event","date":"2025-05-12T13:00:00+02:00","url":"https://www.eventurl.ch/urlibus"},{"title":"Zwei Event","date":"2025-05-22T08:00:00+02:00","url":"https://www.eventurl.ch/urlibus"},{"title":"Noch ein Event","date":"2025-06-02T17:00:00+02:00","url":"https://www.eventurl.ch/urlibus"},{"title":"Letzter Event","date":"2025-04-30T13:00:00+02:00","url":"https://www.eventurl.ch/urlibus"}]`
+
+	err := json.Unmarshal([]byte(jsonString), &events)
+	if err != nil {
+		panic(err)
+	}
+
+	// Sort Events
+	sort.Slice(events, func(i, j int) bool {
+		return events[i].Date.Before(events[j].Date)
+	})
+
+	return rendering(w, r, newsletter.EventList(events, jsonString))
 }

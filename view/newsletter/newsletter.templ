@@ -211,6 +211,7 @@ type ElementError struct {
 
 templ Element(element models.NewsletterElement) {
 	<div id={ element.ID } class="grid grid-cols-1 md:grid-cols-2 gap-3 p-3 bg-base-200 rounded-lg">
+		<input type="hidden" name="element_type" value={ element.Type }/>
 		switch element.Type {
 			case "text":
 				@elementText(element)
@@ -230,7 +231,7 @@ templ elementText(element models.NewsletterElement) {
 	</div>
 	<fieldset class="fieldset w-full col-span-full">
 		<legend class="fieldset-legend">Inhalt</legend>
-		<textarea name="content" class="textarea w-full h-64">{ element.Content }</textarea>
+		<textarea name="element_content" class="textarea w-full h-64">{ element.Content }</textarea>
 	</fieldset>
 }
 
@@ -240,20 +241,70 @@ templ elementButton(element models.NewsletterElement) {
 	</div>
 	<fieldset class="fieldset">
 		<legend class="fieldset-legend">Button Text</legend>
-		<input class="input w-full" placeholder="Beschriftung" value={ element.Content }/>
+		<input name="element_content" class="input w-full" placeholder="Beschriftung" value={ element.Content }/>
 	</fieldset>
 	<fieldset class="fieldset">
 		<legend class="fieldset-legend">URL</legend>
-		<input class="input w-full" placeholder="https://www.x..." value={ element.Url }/>
+		<input name="element_url" class="input w-full" placeholder="https://www.x..." value={ element.Url }/>
 	</fieldset>
 }
 
+// TODO: add real connection to todos
 templ elementEvents(element models.NewsletterElement) {
 	<div class="prose col-span-full">
 		<h4>Events</h4>
 	</div>
-	<div id="events" class="col-span-full">
-		<button type="button" class="btn btn-accent mx-auto">Events laden</button>
+	if len(element.Content) > 0 {
+		<div id="eventsList" hx-trigger="load" hx-get={ "/admin/newsletter/create/events" }></div>
+	} else {
+		<div id="eventsList" class="col-span-full text-center">
+			<button
+				type="button"
+				class="btn btn-accent mx-auto"
+				hx-get="/admin/newsletter/create/loadevents"
+				hx-target="#eventsList"
+			>
+				Events
+				laden
+			</button>
+		</div>
+	}
+}
+
+templ EventList(events []models.Event, eventString string) {
+	<input type="hidden" name="element_content" value={ eventString }/>
+	<div class="overflow-x-auto">
+		<table class="table">
+			<!-- head -->
+			<thead>
+				<tr>
+					<th>Datum</th>
+					<th>Veranstaltung</th>
+					<th>Link</th>
+				</tr>
+			</thead>
+			<tbody>
+				<!-- rows -->
+				for _, e := range events {
+					<tr>
+						<td>{ e.Date.Format("02.01.2006 15:04") }</td>
+						<td>{ e.Title }</td>
+						<td><a href={ templ.URL(e.Url) } target="_blank">{ e.Url }</a></td>
+					</tr>
+				}
+			</tbody>
+		</table>
+		<div class="col-span-full text-center mt-5">
+			<button
+				type="button"
+				class="btn btn-accent mx-auto"
+				hx-get="/admin/newsletter/create/loadevents"
+				hx-target="#eventsList"
+			>
+				Events
+				updaten
+			</button>
+		</div>
 	</div>
 }
 
@@ -266,15 +317,25 @@ templ elementPicture(element models.NewsletterElement) {
 	} else {
 		<fieldset class="fieldset">
 			<legend class="fieldset-legend">Bild hochladen</legend>
-			<input type="file" class="file-input w-full"/>
+			<input name="fileupload" type="file" class="file-input w-full"/>
 		</fieldset>
 	}
 	<fieldset class="fieldset">
 		<legend class="fieldset-legend">Alt-Text</legend>
-		<input class="input w-full" placeholder="alt-text wenn kein Bild geladen ist" value={ element.AltText }/>
+		<input
+			name="element_alttext"
+			class="input w-full"
+			placeholder="alt-text wenn kein Bild geladen ist"
+			value={ element.AltText }
+		/>
 	</fieldset>
 	<fieldset class="fieldset col-span-full">
 		<legend class="fieldset-legend">Bildbeschrieb</legend>
-		<input class="input w-full" placeholder="Beschriftung unter dem Bild" value={ element.Content }/>
+		<input
+			name="element_content"
+			class="input w-full"
+			placeholder="Beschriftung unter dem Bild"
+			value={ element.Content }
+		/>
 	</fieldset>
 }
