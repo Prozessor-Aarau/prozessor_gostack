@@ -22,12 +22,15 @@ CREATE TABLE newsletters (
 );
 
 CREATE TABLE newsletter_elements (
-  id serial PRIMARY KEY,
+  id UUID PRIMARY KEY,
   newsletter_id INT REFERENCES newsletters(id) ON DELETE CASCADE NOT NULL,
   position INT NOT NULL,
   type VARCHAR(100) NOT NULL,
   content TEXT NOT NULL,
-  upload_url TEXT DEFAULT NULL,
+  url TEXT DEFAULT NULL,
+  upload TEXT DEFAULT NULL,
+  alt_text TEXT DEFAULT NULL,
+  upload_description TEXT DEFAULT NULL,
   created_on TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
   updated_on TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );

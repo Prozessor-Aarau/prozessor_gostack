@@ -1,11 +1,13 @@
 package handlers
 
 import (
+	"errors"
 	"log"
 	"net/http"
 
 	"github.com/faebut/prozessor_gostack/internal/models"
 	"github.com/faebut/prozessor_gostack/view/newsletter"
+	"github.com/google/uuid"
 )
 
 // HandleNewsletterIndex is the newsletter page handler
@@ -32,6 +34,7 @@ func (m *Repository) HandleNewsletterList(w http.ResponseWriter, r *http.Request
 	return rendering(w, r, newsletter.NewsletterList(newsletterList))
 }
 
+// HandleNewsletterCreateIndex returns the form for a new newsletter
 func (m *Repository) HandleNewsletterCreateIndex(w http.ResponseWriter, r *http.Request) error {
 	// create new empty structs
 	var nl models.Newsletter
@@ -42,6 +45,30 @@ func (m *Repository) HandleNewsletterCreateIndex(w http.ResponseWriter, r *http.
 		log.Println("could not get templates from DB: ", err)
 	}
 
+	var elements []models.NewsletterElement
+
 	// render template
-	return rendering(w, r, newsletter.NewsletterCreate(nl, templates, e))
+	return rendering(w, r, newsletter.NewsletterCreate(nl, templates, elements, e))
+}
+
+// HandleNewsletterElementCreate handles the creation of a new newsletter element
+func (m *Repository) HandleNewsletterElementCreate(w http.ResponseWriter, r *http.Request) error {
+	var element models.NewsletterElement
+
+	elType := r.Form.Get("eltype")
+	log.Println("eltype:", elType)
+
+	if len(elType) == 0 {
+		return errors.New("No type selected")
+	}
+
+	// create a new uuid for the element
+	uuid, err := uuid.NewUUID()
+	if err != nil {
+		return err
+	}
+	element.ID = uuid.String()
+	element.Type = elType
+
+	return rendering(w, r, newsletter.Element(element))
 }

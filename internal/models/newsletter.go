@@ -5,13 +5,16 @@ import (
 )
 
 type NewsletterElement struct {
-	ID        int
-	Position  int
-	Type      string
-	Content   string
-	UploadUrl string
-	CreatedOn time.Time
-	UpdatedOn time.Time
+	ID                string
+	Position          int
+	Type              string
+	Content           string
+	Url               string
+	Upload            string
+	AltText           string
+	UploadDescription string
+	CreatedOn         time.Time
+	UpdatedOn         time.Time
 }
 
 type NewsletterTemplate struct {

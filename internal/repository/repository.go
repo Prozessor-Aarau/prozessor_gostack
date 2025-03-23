@@ -87,6 +87,7 @@ type DatabaseRepo interface {
 	// newsletter
 	GetAllNewsletters() ([]models.Newsletter, int, error)
 	GetNewsletterTemplates() ([]models.NewsletterTemplate, error)
+	GetAllNewsletterElementsByID(id int) ([]models.NewsletterElement, error)
 }
 
 type postgresDBRepo struct {

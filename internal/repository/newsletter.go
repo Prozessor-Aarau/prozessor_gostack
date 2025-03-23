@@ -128,3 +128,79 @@ func (m *postgresDBRepo) GetNewsletterTemplates() ([]models.NewsletterTemplate, 
 
 	return templates, nil
 }
+
+// GetAllNewsletterElementsByID gets all elements by newsletter id
+func (m *postgresDBRepo) GetAllNewsletterElementsByID(id int) ([]models.NewsletterElement, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	var elements []models.NewsletterElement
+
+	query := `SELECT
+    id,
+    position,
+    type,
+    content,
+    url,
+    upload,
+    alt_text,
+    updated_on,
+    created_on
+  FROM
+    newsletter_elements
+  WHERE
+    newsletter_id = $1
+  ORDER BY
+    position ASC`
+
+	rows, err := m.DB.QueryContext(ctx, query, id)
+	if err != nil {
+		return elements, err
+	}
+
+	defer rows.Close()
+
+	for rows.Next() {
+		var e models.NewsletterElement
+
+		// handle null types
+		var url sql.NullString
+		var upload sql.NullString
+		var alttext sql.NullString
+
+		err := rows.Scan(
+			&e.ID,
+			&e.Position,
+			&e.Type,
+			&e.Content,
+			&url,
+			&upload,
+			&alttext,
+			&e.UpdatedOn,
+			&e.CreatedOn,
+		)
+
+		// handle null types
+		if url.Valid {
+			e.Url = url.String
+		}
+		if upload.Valid {
+			e.Upload = upload.String
+		}
+		if alttext.Valid {
+			e.AltText = alttext.String
+		}
+
+		if err != nil {
+			return elements, err
+		}
+
+		elements = append(elements, e)
+	}
+
+	if err = rows.Err(); err != nil {
+		return elements, err
+	}
+
+	return elements, nil
+}

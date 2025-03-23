@@ -68,7 +68,12 @@ type NewsletterErrors struct {
 	Items       string
 }
 
-templ NewsletterCreate(n models.Newsletter, templates []models.NewsletterTemplate, errors NewsletterErrors) {
+templ NewsletterCreate(
+	n models.Newsletter,
+	templates []models.NewsletterTemplate,
+	elements []models.NewsletterElement,
+	errors NewsletterErrors,
+) {
 	<form class="grid grid-cols-1 md:grid-cols-2 gap-3" novalidate>
 		@ui.CSRF()
 		<div class="prose col-span-full">
@@ -138,12 +143,17 @@ templ NewsletterCreate(n models.Newsletter, templates []models.NewsletterTemplat
 		<div class={ "my-6 card bg-base-300 w-full col-span-full" }>
 			<div class="card-body">
 				<h2 class="card-title">Elemente</h2>
-				<div id="elements"></div>
-				<form id="elementForm" class="grid grid-cols-1 md:grid-cols-2 gap-3 items-baseline">
+				<div id="elements" class="flex flex-col gap-3">
+					for _, e := range elements {
+						@Element(e)
+					}
+				</div>
+				<form x-data="{ type: '' }" id="elementForm" class="grid grid-cols-1 md:grid-cols-2 gap-3 items-baseline">
+					@ui.CSRF()
 					<fieldset class="fieldset">
 						<legend class="fieldset-legend">Elementtyp <span class="text-error font-extrabold ">*</span></legend>
-						<select name="type" id="type" class={ "select w-full" } required>
-							<option disabled selected>Typ auswählen...</option>
+						<select name="eltype" id="type" class={ "select w-full" } x-model="type" required>
+							<option value="" disabled>Typ auswählen...</option>
 							<option value="text">Textabschnitt</option>
 							<option value="button">Action-Button</option>
 							<option value="events">Event-Kalender</option>
@@ -153,7 +163,17 @@ templ NewsletterCreate(n models.Newsletter, templates []models.NewsletterTemplat
 							<label class="fieldset-label text-error">{ errors.Template }</label>
 						}
 					</fieldset>
-					<button type="submit" class="btn btn-primary">Element hinzufügen</button>
+					<button
+						type="button"
+						class="btn btn-primary"
+						x-bind:disabled="!(type.length > 0)"
+						hx-post="/admin/newsletter/create/element"
+						hx-target="#elements"
+						hx-swap="beforeend"
+					>
+						Element
+						hinzufügen
+					</button>
 				</form>
 			</div>
 		</div>
@@ -179,4 +199,46 @@ templ NewsletterCreate(n models.Newsletter, templates []models.NewsletterTemplat
 			</a>
 		</div>
 	</form>
+}
+
+type ElementError struct {
+	Content           string
+	URL               string
+	Upload            string
+	AltText           string
+	UploadDescription string
+}
+
+templ Element(element models.NewsletterElement) {
+	<div id={ element.ID } class="grid grid-cols-1 md:grid-cols-2 gap-3 p-3 bg-base-200 rounded-lg">
+		switch element.Type {
+			case "text":
+				@elementText(element)
+			case "button":
+				@elementButton(element)
+			case "events":
+				@elementEvents(element)
+			case "picture":
+				@elementPicture(element)
+		}
+	</div>
+}
+
+templ elementText(element models.NewsletterElement) {
+	<div class="prose col-span-full">
+		<h4>Textabschnitt</h4>
+	</div>
+	<fieldset class="fieldset w-full col-span-full">
+		<legend class="fieldset-legend">Inhalt</legend>
+		<textarea name="content" class="textarea w-full h-64">{ element.Content }</textarea>
+	</fieldset>
+}
+
+templ elementButton(element models.NewsletterElement) {
+}
+
+templ elementEvents(element models.NewsletterElement) {
+}
+
+templ elementPicture(element models.NewsletterElement) {
 }
