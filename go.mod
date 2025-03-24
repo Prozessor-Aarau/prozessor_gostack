@@ -5,7 +5,7 @@ go 1.23.0
 require (
 	github.com/72nd/gopdf-wrapper v0.3.1
 	github.com/72nd/swiss-qr-invoice v1.0.2
-	github.com/a-h/templ v0.2.793
+	github.com/a-h/templ v0.3.856
 	github.com/alexedwards/scs/v2 v2.8.0
 	github.com/creasty/defaults v1.8.0
 	github.com/ebfe/scard v0.0.0-20230420082256-7db3f9b7c8a7
@@ -24,9 +24,9 @@ require (
 	github.com/xhit/go-simple-mail/v2 v2.16.0
 	github.com/yeqown/go-qrcode/v2 v2.2.4
 	github.com/yeqown/go-qrcode/writer/standard v1.2.4
-	golang.org/x/crypto v0.27.0
-	golang.org/x/net v0.28.0
-	golang.org/x/text v0.19.0
+	golang.org/x/crypto v0.36.0
+	golang.org/x/net v0.37.0
+	golang.org/x/text v0.23.0
 	gopkg.in/yaml.v2 v2.4.0
 )
 
@@ -50,5 +50,5 @@ require (
 	github.com/toorop/go-dkim v0.0.0-20201103131630-e1cd1a0a5208 // indirect
 	github.com/yeqown/reedsolomon v1.0.0 // indirect
 	golang.org/x/image v0.21.0 // indirect
-	golang.org/x/sync v0.8.0 // indirect
+	golang.org/x/sync v0.12.0 // indirect
 )
