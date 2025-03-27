@@ -260,13 +260,22 @@ templ elementEvents(element models.NewsletterElement) {
 		<div id="eventsList" class="col-span-full text-center">
 			<button
 				type="button"
-				class="btn btn-accent mx-auto"
+				id="eventbutton"
+				class="btn btn-accent mx-auto loaded-content"
 				hx-get="/admin/newsletter/create/loadevents"
 				hx-target="#eventsList"
+				hx-indicator="#eventloadindicator,#eventbutton"
 			>
 				Events
 				laden
 			</button>
+		</div>
+		<div
+			id="eventloadindicator"
+			class="w-full items-center justify-center col-span-full flex flex-row gap-5 htmx-indicator"
+		>
+			<span class="self-center loading loading-infinity loading-xl"></span>
+			<span class="self-center text-xl">Events werden geladen...</span>
 		</div>
 	}
 }
@@ -287,9 +296,9 @@ templ EventList(events []models.Event, eventString string) {
 				<!-- rows -->
 				for _, e := range events {
 					<tr>
-						<td>{ e.Date.Format("02.01.2006 15:04") }</td>
+						<td>{ e.EventTime.Time.Format("02.01.2006 15:04") }</td>
 						<td>{ e.Title }</td>
-						<td><a href={ templ.URL(e.Url) } target="_blank">{ e.Url }</a></td>
+						<td><a href={ templ.URL(e.URL) } target="_blank">{ e.URL }</a></td>
 					</tr>
 				}
 			</tbody>

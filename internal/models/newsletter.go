@@ -37,9 +37,3 @@ type Newsletter struct {
 	CreatedOn   time.Time
 	UpdatedOn   time.Time
 }
-
-type Event struct {
-	Title string    `json:"title"`
-	Date  time.Time `json:"date"`
-	Url   string    `json:"url"`
-}

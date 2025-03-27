@@ -5,9 +5,8 @@ import (
 	"errors"
 	"log"
 	"net/http"
-	"sort"
-	"time"
 
+	"github.com/faebut/prozessor_gostack/internal/events"
 	"github.com/faebut/prozessor_gostack/internal/models"
 	"github.com/faebut/prozessor_gostack/view/newsletter"
 	"github.com/google/uuid"
@@ -59,7 +58,6 @@ func (m *Repository) HandleNewsletterElementCreate(w http.ResponseWriter, r *htt
 	var element models.NewsletterElement
 
 	elType := r.Form.Get("eltype")
-	log.Println("eltype:", elType)
 
 	if len(elType) == 0 {
 		return errors.New("No type selected")
@@ -78,33 +76,13 @@ func (m *Repository) HandleNewsletterElementCreate(w http.ResponseWriter, r *htt
 
 // TODO: get real data from frontmatter parser
 func (m *Repository) HandleNewsletterEventsLoad(w http.ResponseWriter, r *http.Request) error {
-	events := []models.Event{
-		{
-			Title: "Ein Event",
-			Date:  time.Date(2025, 5, 22, 13, 0, 0, 0, time.Local),
-			Url:   "https://www.eventurl.ch/urlibus",
-		},
-		{
-			Title: "Zwei Event",
-			Date:  time.Date(2025, 5, 12, 8, 0, 0, 0, time.Local),
-			Url:   "https://www.eventurl.ch/urlibus",
-		},
-		{
-			Title: "Noch ein Event",
-			Date:  time.Date(2025, 6, 2, 17, 0, 0, 0, time.Local),
-			Url:   "https://www.eventurl.ch/urlibus",
-		},
-		{
-			Title: "Letzter Event",
-			Date:  time.Date(2025, 4, 30, 13, 0, 0, 0, time.Local),
-			Url:   "https://www.eventurl.ch/urlibus",
-		},
+	// get events
+	log.Println("get events")
+	events, err := events.GetEvents()
+	if err != nil {
+		return err
 	}
-
-	// Sort Events
-	sort.Slice(events, func(i, j int) bool {
-		return events[i].Date.Before(events[j].Date)
-	})
+	log.Printf("Events: %v", events)
 
 	// put events into string
 	eventString, err := json.Marshal(events)
@@ -126,11 +104,6 @@ func (m *Repository) HandleNewsletterEventsShow(w http.ResponseWriter, r *http.R
 	if err != nil {
 		panic(err)
 	}
-
-	// Sort Events
-	sort.Slice(events, func(i, j int) bool {
-		return events[i].Date.Before(events[j].Date)
-	})
 
 	return rendering(w, r, newsletter.EventList(events, jsonString))
 }
