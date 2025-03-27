@@ -15,7 +15,6 @@ import (
 func GetEvents() ([]models.Event, error) {
 	var events []models.Event
 
-	log.Println("connecting to ftp server")
 	c, err := ftp.Dial("ftp.prozessor-aarau.ch:21", ftp.DialWithTimeout(5*time.Second))
 	if err != nil {
 		return nil, err
@@ -25,7 +24,6 @@ func GetEvents() ([]models.Event, error) {
 	if err != nil {
 		return nil, err
 	}
-	log.Println("connection established")
 
 	// walk through folder
 	walker := c.Walk("/")
@@ -33,11 +31,9 @@ func GetEvents() ([]models.Event, error) {
 	// current Date for comparison
 	currentDate := time.Now()
 
-	log.Println("start walking through elements")
 	for walker.Next() {
 		var e models.Event
 
-		log.Println(walker.Path())
 		// check if it's a MarkDown file
 		if strings.HasSuffix(walker.Path(), ".md") {
 			// fill Event
