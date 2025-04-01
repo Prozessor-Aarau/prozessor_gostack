@@ -61,20 +61,33 @@ templ NewsletterList(newsletters []models.Newsletter) {
 }
 
 type NewsletterErrors struct {
-	Title       string
-	Description string
-	Template    string
-	Item        string
-	Items       string
+	Title          string
+	Description    string
+	Template       string
+	Item           string
+	Items          string
+	PrimaryColor   string
+	SecondaryColor string
 }
 
+// TODO:
+// - field for selecting target group
+// - actually saving the form
+// - implement preview
+// - implement sending
+
+// INFO:
+// WORKFLOW FOR SENDING
+// 1. Create/edit newsletter with form
+// 2. Preview newsletter and list recipients
+// 3. Send newsletter and show status
 templ NewsletterCreate(
 	n models.Newsletter,
 	templates []models.NewsletterTemplate,
 	elements []models.NewsletterElement,
 	errors NewsletterErrors,
 ) {
-	<form class="grid grid-cols-1 md:grid-cols-2 gap-3" novalidate>
+	<form class="grid grid-cols-2 md:grid-cols-4 gap-3" novalidate>
 		@ui.CSRF()
 		<div class="prose col-span-full">
 			<h2>Neuen Newsletter erstellen</h2>
@@ -82,7 +95,7 @@ templ NewsletterCreate(
 		<div class="prose col-span-full">
 			<h3>Allgemein</h3>
 		</div>
-		<fieldset class="fieldset w-full">
+		<fieldset class="fieldset w-full col-span-2">
 			<legend class="fieldset-legend">Titel <span class="text-error font-extrabold">*</span></legend>
 			<input
 				type="text"
@@ -97,7 +110,7 @@ templ NewsletterCreate(
 				<label class="fieldset-label text-error">{ errors.Title }</label>
 			}
 		</fieldset>
-		<fieldset id="badge" class="fieldset w-full">
+		<fieldset class="fieldset w-full col-span-2">
 			<legend class="fieldset-legend">
 				Beschrieb <span class="text-error font-extrabold">*</span>
 			</legend>
@@ -116,7 +129,7 @@ templ NewsletterCreate(
 		<div class="prose col-span-full">
 			<h3>Layout</h3>
 		</div>
-		<fieldset class="fieldset">
+		<fieldset class="fieldset col-span-2 w-full">
 			<legend class="fieldset-legend">Template <span class="text-error font-extrabold ">*</span></legend>
 			<select
 				name="template"
@@ -137,6 +150,32 @@ templ NewsletterCreate(
 			</select>
 			if len(errors.Template) > 0 {
 				<label class="fieldset-label text-error">{ errors.Template }</label>
+			}
+		</fieldset>
+		<fieldset class="fieldset">
+			<legend class="fieldset-legend">Primärfarbe <span class="text-error font-extrabold ">*</span></legend>
+			<input
+				type="color"
+				class={ "input w-full" , templ.KV("input-error", len(errors.PrimaryColor)>0) }
+				name="primary_color"
+				value="#00FFD6"
+				required
+			/>
+			if len(errors.PrimaryColor) > 0 {
+				<label class="fieldset-label text-error">{ errors.PrimaryColor }</label>
+			}
+		</fieldset>
+		<fieldset class="fieldset">
+			<legend class="fieldset-legend">Akzentfarbe <span class="text-error font-extrabold ">*</span></legend>
+			<input
+				type="color"
+				class={ "input w-full" , templ.KV("input-error", len(errors.SecondaryColor)>0) }
+				name="secondary_color"
+				value="#EB00FF"
+				required
+			/>
+			if len(errors.SecondaryColor) > 0 {
+				<label class="fieldset-label text-error">{ errors.SecondaryColor }</label>
 			}
 		</fieldset>
 		<!-- elements for newsletter -->
@@ -269,13 +308,13 @@ templ elementEvents(element models.NewsletterElement) {
 				Events
 				laden
 			</button>
-		</div>
-		<div
-			id="eventloadindicator"
-			class="w-full items-center justify-center col-span-full flex flex-row gap-5 htmx-indicator"
-		>
-			<span class="self-center loading loading-infinity loading-xl"></span>
-			<span class="self-center text-xl">Events werden geladen...</span>
+			<div
+				id="eventloadindicator"
+				class="w-full items-center justify-center col-span-full flex flex-row gap-5 htmx-indicator"
+			>
+				<span class="self-center loading loading-infinity loading-xl"></span>
+				<span class="self-center text-xl">Events werden geladen...</span>
+			</div>
 		</div>
 	}
 }
@@ -306,13 +345,22 @@ templ EventList(events []models.Event, eventString string) {
 		<div class="col-span-full text-center mt-5">
 			<button
 				type="button"
-				class="btn btn-accent mx-auto"
+				id="eventbutton"
+				class="btn btn-accent mx-auto loaded-content"
 				hx-get="/admin/newsletter/create/loadevents"
 				hx-target="#eventsList"
+				hx-indicator="#eventloadindicator,#eventbutton"
 			>
 				Events
 				updaten
 			</button>
+			<div
+				id="eventloadindicator"
+				class="w-full items-center justify-center col-span-full flex flex-row gap-5 htmx-indicator"
+			>
+				<span class="self-center loading loading-infinity loading-xl"></span>
+				<span class="self-center text-xl">Events werden geladen...</span>
+			</div>
 		</div>
 	</div>
 }
