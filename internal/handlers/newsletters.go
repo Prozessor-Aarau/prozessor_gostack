@@ -8,6 +8,7 @@ import (
 	"strconv"
 
 	"github.com/faebut/prozessor_gostack/internal/events"
+	"github.com/faebut/prozessor_gostack/internal/forms"
 	"github.com/faebut/prozessor_gostack/internal/models"
 	"github.com/faebut/prozessor_gostack/view/newsletter"
 	"github.com/google/uuid"
@@ -114,13 +115,10 @@ func (m *Repository) HandleNewsletterCreate(w http.ResponseWriter, r *http.Reque
 	// create new empty structs
 	var nl models.Newsletter
 
-	// var e newsletter.NewsletterErrors
-	//
-	// templates, err := m.DB.GetNewsletterTemplates()
-	// if err != nil {
-	// 	log.Println("could not get templates from DB: ", err)
-	// }
-	//
+	templates, err := m.DB.GetNewsletterTemplates()
+	if err != nil {
+		log.Println("could not get templates from DB: ", err)
+	}
 
 	// parse form
 	r.ParseForm()
@@ -177,6 +175,7 @@ func (m *Repository) HandleNewsletterCreate(w http.ResponseWriter, r *http.Reque
 	}
 
 	// build elements and push to slice
+	form := forms.New(r.Form)
 	var elements []models.NewsletterElement
 
 	for i := range element_id {
@@ -192,16 +191,40 @@ func (m *Repository) HandleNewsletterCreate(w http.ResponseWriter, r *http.Reque
 		elements = append(elements, element)
 	}
 
+	// TODO: Error handling for items
+	var elementErrors []newsletter.ElementError
+
 	nl.Elements = elements
 
 	// handle other fields
+	formErrors := newsletter.NewsletterErrors{}
+	formErrors.Elements = elementErrors
+
+	// check if there are items and set error if not
+	if len(nl.Elements) == 0 {
+		form.Errors.Add("items", "Mindestens eine Position hinzufügen")
+		formErrors.Item = "Mindestens eine Position hinzufügen"
+	}
+
+	// check validity of fields
+	form.Required("title", "description", "template")
+	formErrors.Title = form.Errors.Get("title")
+	formErrors.Description = form.Errors.Get("description")
+	formErrors.Template = form.Errors.Get("template")
+
 	nl.Title = r.Form.Get("title")
 	nl.Description = r.Form.Get("description")
 	nl.Template.ID, _ = strconv.Atoi(r.Form.Get("template"))
 	nl.ColorBase = r.Form.Get("color_base")
 	nl.ColorAccent = r.Form.Get("color_accent")
 
-	log.Println("Newsletter:", nl)
+	// log.Println("Newsletter:", nl)
+
+	// what to do if form not valid
+	if !form.Valid() {
+		// send the data to the template
+		return rendering(w, r, newsletter.NewsletterCreate(nl, templates, elements, formErrors))
+	}
 
 	// render template
 	// return rendering(w, r, newsletter.NewsletterCreate(nl, templates, elements, e))
