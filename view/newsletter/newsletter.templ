@@ -188,7 +188,9 @@ templ NewsletterCreate(
 		</fieldset>
 		<!-- elements for newsletter -->
 		<div
-			class={ "my-6 card bg-base-300 w-full col-span-full" , templ.KV("border border-error mb-0", len(errors.Item)>0 ||
+			id="elementcard"
+			class={ "my-6 card bg-base-300 w-full col-span-full" , templ.KV("border border-error mb-0",
+    len(errors.Item)>0 ||
     len(errors.Elements)>0) }
 		>
 			<div class="card-body">
@@ -237,7 +239,7 @@ templ NewsletterCreate(
 			<span class="text-error font-extrabold">*</span> diese Felder sind zwingend auszufüllen.
 		</div>
 		<div class="col-span-full w-full gap-3 flex mt-3 items-center justify-center flex-col md:flex-row">
-			<a class="btn btn-success" hx-post="/admin/newsletter/create" hx-target="#content">
+			<a id="sendbutton" class="btn btn-success" hx-post="/admin/newsletter/create" hx-target="#content">
 				Speichern
 			</a>
 			<a href="/admin/newsletter" class="btn btn-warning">
@@ -268,8 +270,6 @@ templ NewsletterCreate(
   function hideArrows() {
     let children = document.getElementById("elements").children
 
-    console.log("length", children.length)
-
     for (let i = 0; i < children.length; i++) {
       let uArrow = children[i].getElementsByClassName("uarrow")[0]
       let dArrow = children[i].getElementsByClassName("darrow")[0]
@@ -295,6 +295,28 @@ templ NewsletterCreate(
   document.body.addEventListener('htmx:afterSettle', function (evt) {
     evt.preventDefault();
     hideArrows();
+  });
+
+  // check if events are loaded
+  sendbutton = document.getElementById('sendbutton')
+  sendbutton.addEventListener('htmx:beforeRequest', function (evt) {
+    var noevents = document.getElementById("noevents");
+    // if there is an 'noevents' element
+    if (noevents) {
+      var card = document.getElementById("elementcard")
+      var warning = document.createElement("div")
+      warning.classList.add("text-error", "mb-4")
+      warning.innerText = "Events laden oder Element entfernen"
+
+      // prevent sending the form
+      evt.preventDefault()
+
+      // decorate card
+      card.classList.add("border", "border-error")
+
+      // add warning element after 
+      noevents.insertAdjacentElement("afterend", warning);
+    }
   });
 </script>
 }
@@ -411,6 +433,7 @@ templ elementEvents(element models.NewsletterElement, errors ElementError) {
 		<div id="eventsList" hx-trigger="load" hx-get={ "/admin/newsletter/create/events" }></div>
 	} else {
 		<div id="eventsList" class="col-span-full text-center">
+			<div id="noevents" class="hidden"></div>
 			<button
 				type="button"
 				id="eventbutton"
