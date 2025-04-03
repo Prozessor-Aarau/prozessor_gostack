@@ -68,6 +68,7 @@ type NewsletterErrors struct {
 	Items       string
 	ColorBase   string
 	ColorAccent string
+	Elements    []ElementError
 }
 
 // TODO:
@@ -184,7 +185,7 @@ templ NewsletterCreate(
 				<h2 class="card-title">Elemente</h2>
 				<div id="elements" class="flex flex-col gap-3">
 					for _, e := range elements {
-						@Element(e)
+						@Element(e, errors.Elements)
 					}
 				</div>
 				<form x-data="{ type: '' }" id="elementForm" class="grid grid-cols-1 md:grid-cols-2 gap-3 items-baseline">
@@ -292,15 +293,25 @@ templ NewsletterCreate(
 }
 
 type ElementError struct {
-	Content           string
-	URL               string
-	Upload            string
-	AltText           string
-	UploadDescription string
+	ID      string
+	Content string
+	URL     string
+	Upload  string
+	AltText string
 }
 
 // TODO: handle position
-templ Element(element models.NewsletterElement) {
+templ Element(element models.NewsletterElement, errors []ElementError) {
+	{{
+var eError ElementError
+
+for _, e := range errors {
+	if e.ID == element.ID {
+		eError = e
+		break
+	}
+}
+	}}
 	<div
 		id={ element.ID }
 		x-data={ templ.JSONString(element) }
@@ -323,18 +334,18 @@ templ Element(element models.NewsletterElement) {
 		<input type="hidden" class="pfield" name="element_position" value={ strconv.Itoa(element.Position) }/>
 		switch element.Type {
 			case "text":
-				@elementText(element)
+				@elementText(element, eError)
 			case "button":
-				@elementButton(element)
+				@elementButton(element, eError)
 			case "events":
-				@elementEvents(element)
+				@elementEvents(element, eError)
 			case "picture":
-				@elementPicture(element)
+				@elementPicture(element, eError)
 		}
 	</div>
 }
 
-templ elementText(element models.NewsletterElement) {
+templ elementText(element models.NewsletterElement, errors ElementError) {
 	<div class="prose col-span-full">
 		<h4>Textabschnitt</h4>
 	</div>
@@ -346,7 +357,7 @@ templ elementText(element models.NewsletterElement) {
 	<input type="hidden" name="element_url" value=""/>
 }
 
-templ elementButton(element models.NewsletterElement) {
+templ elementButton(element models.NewsletterElement, errors ElementError) {
 	<div class="prose col-span-full">
 		<h4>Button</h4>
 	</div>
@@ -362,7 +373,7 @@ templ elementButton(element models.NewsletterElement) {
 }
 
 // TODO: add real connection to todos
-templ elementEvents(element models.NewsletterElement) {
+templ elementEvents(element models.NewsletterElement, errors ElementError) {
 	<div class="prose col-span-full">
 		<h4>Events</h4>
 	</div>
@@ -440,7 +451,7 @@ templ EventList(events []models.Event, eventString string) {
 	</div>
 }
 
-templ elementPicture(element models.NewsletterElement) {
+templ elementPicture(element models.NewsletterElement, errors ElementError) {
 	<input type="hidden" name="element_url" value=""/>
 	<div class="prose col-span-full">
 		<h4>Bild</h4>

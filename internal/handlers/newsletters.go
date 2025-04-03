@@ -72,7 +72,7 @@ func (m *Repository) HandleNewsletterElementCreate(w http.ResponseWriter, r *htt
 	element.ID = uuid.String()
 	element.Type = elType
 
-	return rendering(w, r, newsletter.Element(element))
+	return rendering(w, r, newsletter.Element(element, []newsletter.ElementError{}))
 }
 
 // TODO: get real data from frontmatter parser
