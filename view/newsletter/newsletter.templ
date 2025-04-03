@@ -238,6 +238,57 @@ templ NewsletterCreate(
 			</a>
 		</div>
 	</form>
+	<!-- script starts herea -->
+	<script>
+  // handle elements movement and deletion
+  function removeItem(eid) {
+    document.getElementById(eid).remove();
+    hideArrows();
+  }
+
+  function moveItemUp(eid) {
+    document.getElementById(eid).previousSibling.before(document.getElementById(eid))
+    hideArrows()
+  }
+
+  function moveItemDown(eid) {
+    document.getElementById(eid).nextSibling.after(document.getElementById(eid))
+    hideArrows()
+  }
+
+  // handle elements position
+  function hideArrows() {
+    let children = document.getElementById("elements").children
+
+    console.log("length", children.length)
+
+    for (let i = 0; i < children.length; i++) {
+      let uArrow = children[i].getElementsByClassName("uarrow")[0]
+      let dArrow = children[i].getElementsByClassName("darrow")[0]
+      let position = children[i].getElementsByClassName("pfield")[0]
+
+      uArrow.classList.remove("invisible")
+      dArrow.classList.remove("invisible")
+      position.value = i + 1
+
+      if (i === 0) {
+        uArrow.classList.add("invisible")
+        if (children.length === 1) {
+          dArrow.classList.add("invisible")
+        }
+      } else if (i === children.length - 1) {
+        dArrow.classList.add("invisible")
+      }
+    }
+  }
+
+
+  // fire once page is loaded
+  document.body.addEventListener('htmx:afterSettle', function (evt) {
+    evt.preventDefault();
+    hideArrows();
+  });
+</script>
 }
 
 type ElementError struct {
@@ -250,9 +301,26 @@ type ElementError struct {
 
 // TODO: handle position
 templ Element(element models.NewsletterElement) {
-	<div id={ element.ID } class="grid grid-cols-1 md:grid-cols-2 gap-3 p-3 bg-base-200 rounded-lg">
+	<div
+		id={ element.ID }
+		x-data={ templ.JSONString(element) }
+		class="grid grid-cols-1 md:grid-cols-2 gap-3 p-3 bg-base-200 rounded-lg"
+	>
+		<div class="flex flex-row items-center">
+			<button type="button" class="btn btn-outline btn-xs btn-circle btn-error mr-4" @click="removeItem(ID)">
+				<span class="i-mdi-close"></span>
+			</button>
+			<span
+				class="darrow i-mdi-arrow-down-drop-circle-outline hover:i-mdi-arrow-down-drop-circle text-xl cursor-pointer hover:text-primary"
+				@click="moveItemDown(ID)"
+			></span><span
+	class="uarrow i-mdi-arrow-up-drop-circle-outline hover:i-mdi-arrow-up-drop-circle text-xl cursor-pointer hover:text-primary"
+	@click="moveItemUp(ID)"
+></span>
+		</div>
 		<input type="hidden" name="element_type" value={ element.Type }/>
 		<input type="hidden" name="element_id" value={ element.ID }/>
+		<input type="hidden" class="pfield" name="element_position" value={ strconv.Itoa(element.Position) }/>
 		switch element.Type {
 			case "text":
 				@elementText(element)

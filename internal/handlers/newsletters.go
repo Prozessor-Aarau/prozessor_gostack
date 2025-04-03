@@ -128,7 +128,7 @@ func (m *Repository) HandleNewsletterCreate(w http.ResponseWriter, r *http.Reque
 	// handle elements
 	// TODO: handle file upload
 	var element_id []string
-	// var element_position []int
+	var element_position []int
 	var element_type []string
 	var element_content []string
 	var element_alttext []string
@@ -141,15 +141,15 @@ func (m *Repository) HandleNewsletterCreate(w http.ResponseWriter, r *http.Reque
 			}
 		}
 
-		// if key == "element_position" {
-		// 	for _, val := range values {
-		// 		position, err := strconv.Atoi(val)
-		// 		if err != nil {
-		// 			return err
-		// 		}
-		// 		element_position = append(element_position, position)
-		// 	}
-		// }
+		if key == "element_position" {
+			for _, val := range values {
+				position, err := strconv.Atoi(val)
+				if err != nil {
+					return err
+				}
+				element_position = append(element_position, position)
+			}
+		}
 
 		if key == "element_type" {
 			for _, val := range values {
@@ -181,12 +181,12 @@ func (m *Repository) HandleNewsletterCreate(w http.ResponseWriter, r *http.Reque
 
 	for i := range element_id {
 		element := models.NewsletterElement{
-			ID: element_id[i],
-			// Position: element_position[i],
-			Type:    element_type[i],
-			Content: element_content[i],
-			AltText: element_alttext[i],
-			Url:     element_url[i],
+			ID:       element_id[i],
+			Position: element_position[i],
+			Type:     element_type[i],
+			Content:  element_content[i],
+			AltText:  element_alttext[i],
+			Url:      element_url[i],
 		}
 
 		elements = append(elements, element)
