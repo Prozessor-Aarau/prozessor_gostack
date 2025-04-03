@@ -3,10 +3,12 @@ package handlers
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"regexp"
 	"strconv"
+	"strings"
 
 	"github.com/faebut/prozessor_gostack/internal/events"
 	"github.com/faebut/prozessor_gostack/internal/forms"
@@ -106,7 +108,11 @@ func (m *Repository) HandleNewsletterCreate(w http.ResponseWriter, r *http.Reque
 	}
 
 	// parse form
-	r.ParseForm()
+	err = r.ParseMultipartForm(5 << 20)
+	if err != nil {
+		log.Println("Error parsing multipart form: ", err)
+		return nil
+	}
 
 	// handle elements
 	// TODO: handle file upload
@@ -118,6 +124,8 @@ func (m *Repository) HandleNewsletterCreate(w http.ResponseWriter, r *http.Reque
 	var element_url []string
 
 	for key, values := range r.Form {
+		log.Println(key, values)
+
 		if key == "element_id" {
 			for _, val := range values {
 				element_id = append(element_id, val)
@@ -213,6 +221,27 @@ func (m *Repository) HandleNewsletterCreate(w http.ResponseWriter, r *http.Reque
 			if len(e.AltText) == 0 {
 				eError.AltText = "Feld ist obligatorisch"
 				isError = true
+			}
+
+			file, _, err := r.FormFile(e.ID + "_fileupload")
+			if err != nil {
+				eError.Upload = "gültiges File angeben"
+				isError = true
+			} else {
+				defer file.Close()
+				buff := make([]byte, 512) // docs tell that it take only first 512 bytes into consideration
+				if _, err = file.Read(buff); err != nil {
+					fmt.Println(err) // do something with that error
+				}
+
+				// get filetype
+				filetype := http.DetectContentType(buff)
+
+				// what to do if it's not an image
+				if !strings.Contains(filetype, "image") {
+					eError.Upload = "nur Bilder erlaubt"
+					isError = true
+				}
 			}
 		}
 

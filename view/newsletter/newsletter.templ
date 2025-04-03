@@ -88,7 +88,14 @@ templ NewsletterCreate(
 	elements []models.NewsletterElement,
 	errors NewsletterErrors,
 ) {
-	<form class="grid grid-cols-2 md:grid-cols-4 gap-3" novalidate>
+	<form
+		id="newsletterForm"
+		class="grid grid-cols-2 md:grid-cols-4 gap-3"
+		hx-target="#content"
+		hx-post="/admin/newsletter/create"
+		enctype="multipart/form-data"
+		novalidate
+	>
 		@ui.CSRF()
 		<div class="prose col-span-full">
 			<h2>Neuen Newsletter erstellen</h2>
@@ -240,9 +247,7 @@ templ NewsletterCreate(
 			<span class="text-error font-extrabold">*</span> diese Felder sind zwingend auszufüllen.
 		</div>
 		<div class="col-span-full w-full gap-3 flex mt-3 items-center justify-center flex-col md:flex-row">
-			<a id="sendbutton" class="btn btn-success" hx-post="/admin/newsletter/create" hx-target="#content">
-				Speichern
-			</a>
+			<input type="submit" class="btn btn-success col-span-2 mt-3" value="Speichern"/>
 			<a href="/admin/newsletter" class="btn btn-warning">
 				<span class="i-mdi-cancel-bold"></span>
 				Abbrechen
@@ -521,7 +526,15 @@ templ elementPicture(element models.NewsletterElement, errors ElementError) {
 	} else {
 		<fieldset class="fieldset">
 			<legend class="fieldset-legend">Bild hochladen</legend>
-			<input name="fileupload" type="file" class="file-input w-full"/>
+			<input
+				name={ element.ID + "_fileupload" }
+				type="file"
+				class={ "file-input w-full" , templ.KV("file-input-error",
+    len(errors.Upload)>0) }
+			/>
+			if len(errors.Upload) > 0 {
+				<label class="fieldset-label text-error">{ errors.Upload }</label>
+			}
 		</fieldset>
 	}
 	<fieldset class="fieldset">
