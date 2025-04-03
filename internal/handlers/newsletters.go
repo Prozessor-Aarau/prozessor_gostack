@@ -5,6 +5,7 @@ import (
 	"errors"
 	"log"
 	"net/http"
+	"strconv"
 
 	"github.com/faebut/prozessor_gostack/internal/events"
 	"github.com/faebut/prozessor_gostack/internal/models"
@@ -106,4 +107,102 @@ func (m *Repository) HandleNewsletterEventsShow(w http.ResponseWriter, r *http.R
 	}
 
 	return rendering(w, r, newsletter.EventList(events, jsonString))
+}
+
+// HandleNewsletterCreateIndex returns the form for a new newsletter
+func (m *Repository) HandleNewsletterCreate(w http.ResponseWriter, r *http.Request) error {
+	// create new empty structs
+	var nl models.Newsletter
+
+	// var e newsletter.NewsletterErrors
+	//
+	// templates, err := m.DB.GetNewsletterTemplates()
+	// if err != nil {
+	// 	log.Println("could not get templates from DB: ", err)
+	// }
+	//
+
+	// parse form
+	r.ParseForm()
+
+	// handle elements
+	// TODO: handle file upload
+	var element_id []string
+	// var element_position []int
+	var element_type []string
+	var element_content []string
+	var element_alttext []string
+	var element_url []string
+
+	for key, values := range r.Form {
+		if key == "element_id" {
+			for _, val := range values {
+				element_id = append(element_id, val)
+			}
+		}
+
+		// if key == "element_position" {
+		// 	for _, val := range values {
+		// 		position, err := strconv.Atoi(val)
+		// 		if err != nil {
+		// 			return err
+		// 		}
+		// 		element_position = append(element_position, position)
+		// 	}
+		// }
+
+		if key == "element_type" {
+			for _, val := range values {
+				element_type = append(element_type, val)
+			}
+		}
+
+		if key == "element_content" {
+			for _, val := range values {
+				element_content = append(element_content, val)
+			}
+		}
+
+		if key == "element_alttext" {
+			for _, val := range values {
+				element_alttext = append(element_alttext, val)
+			}
+		}
+
+		if key == "element_url" {
+			for _, val := range values {
+				element_url = append(element_url, val)
+			}
+		}
+	}
+
+	// build elements and push to slice
+	var elements []models.NewsletterElement
+
+	for i := range element_id {
+		element := models.NewsletterElement{
+			ID: element_id[i],
+			// Position: element_position[i],
+			Type:    element_type[i],
+			Content: element_content[i],
+			AltText: element_alttext[i],
+			Url:     element_url[i],
+		}
+
+		elements = append(elements, element)
+	}
+
+	nl.Elements = elements
+
+	// handle other fields
+	nl.Title = r.Form.Get("title")
+	nl.Description = r.Form.Get("description")
+	nl.Template.ID, _ = strconv.Atoi(r.Form.Get("template"))
+	// TODO: Handle colors
+
+	log.Println("Newsletter:", nl)
+
+	// render template
+	// return rendering(w, r, newsletter.NewsletterCreate(nl, templates, elements, e))
+	return nil
 }
