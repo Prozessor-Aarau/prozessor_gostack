@@ -198,7 +198,8 @@ func (m *Repository) HandleNewsletterCreate(w http.ResponseWriter, r *http.Reque
 	nl.Title = r.Form.Get("title")
 	nl.Description = r.Form.Get("description")
 	nl.Template.ID, _ = strconv.Atoi(r.Form.Get("template"))
-	// TODO: Handle colors
+	nl.ColorBase = r.Form.Get("color_base")
+	nl.ColorAccent = r.Form.Get("color_accent")
 
 	log.Println("Newsletter:", nl)
 

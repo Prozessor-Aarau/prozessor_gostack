@@ -31,6 +31,8 @@ type Newsletter struct {
 	Description string
 	Members     bool
 	Template    NewsletterTemplate
+	ColorBase   string
+	ColorAccent string
 	Elements    []NewsletterElement
 	SentCount   int
 	SentOn      time.Time

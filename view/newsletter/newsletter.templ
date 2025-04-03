@@ -61,13 +61,13 @@ templ NewsletterList(newsletters []models.Newsletter) {
 }
 
 type NewsletterErrors struct {
-	Title          string
-	Description    string
-	Template       string
-	Item           string
-	Items          string
-	PrimaryColor   string
-	SecondaryColor string
+	Title       string
+	Description string
+	Template    string
+	Item        string
+	Items       string
+	ColorBase   string
+	ColorAccent string
 }
 
 // TODO:
@@ -156,26 +156,26 @@ templ NewsletterCreate(
 			<legend class="fieldset-legend">Primärfarbe <span class="text-error font-extrabold ">*</span></legend>
 			<input
 				type="color"
-				class={ "input w-full" , templ.KV("input-error", len(errors.PrimaryColor)>0) }
-				name="primary_color"
+				class={ "input w-full" , templ.KV("input-error", len(errors.ColorBase)>0) }
+				name="color_base"
 				value="#00FFD6"
 				required
 			/>
-			if len(errors.PrimaryColor) > 0 {
-				<label class="fieldset-label text-error">{ errors.PrimaryColor }</label>
+			if len(errors.ColorBase) > 0 {
+				<label class="fieldset-label text-error">{ errors.ColorBase }</label>
 			}
 		</fieldset>
 		<fieldset class="fieldset">
 			<legend class="fieldset-legend">Akzentfarbe <span class="text-error font-extrabold ">*</span></legend>
 			<input
 				type="color"
-				class={ "input w-full" , templ.KV("input-error", len(errors.SecondaryColor)>0) }
-				name="secondary_color"
+				class={ "input w-full" , templ.KV("input-error", len(errors.ColorAccent)>0) }
+				name="color_accent"
 				value="#EB00FF"
 				required
 			/>
-			if len(errors.SecondaryColor) > 0 {
-				<label class="fieldset-label text-error">{ errors.SecondaryColor }</label>
+			if len(errors.ColorAccent) > 0 {
+				<label class="fieldset-label text-error">{ errors.ColorAccent }</label>
 			}
 		</fieldset>
 		<!-- elements for newsletter -->
@@ -288,7 +288,7 @@ templ elementButton(element models.NewsletterElement) {
 	</fieldset>
 	<fieldset class="fieldset">
 		<legend class="fieldset-legend">URL</legend>
-		<input name="element_url" class="input w-full" placeholder="https://www.x..." value={ element.Url }/>
+		<input name="element_url" class="input w-full" placeholder="www.xyz.ch" value={ element.Url }/>
 	</fieldset>
 	<input type="hidden" name="element_alttext" value=""/>
 }
