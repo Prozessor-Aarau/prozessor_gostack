@@ -77,7 +77,6 @@ func (m *Repository) HandleNewsletterElementCreate(w http.ResponseWriter, r *htt
 	return rendering(w, r, newsletter.Element(element, []newsletter.ElementError{}))
 }
 
-// TODO: get real data from frontmatter parser
 func (m *Repository) HandleNewsletterEventsLoad(w http.ResponseWriter, r *http.Request) error {
 	// get events
 	log.Println("get events")
@@ -94,21 +93,6 @@ func (m *Repository) HandleNewsletterEventsLoad(w http.ResponseWriter, r *http.R
 	}
 
 	return rendering(w, r, newsletter.EventList(events, string(eventString)))
-}
-
-// TODO: get real data from newsletter element
-func (m *Repository) HandleNewsletterEventsShow(w http.ResponseWriter, r *http.Request) error {
-
-	var events []models.Event
-
-	jsonString := `[{"title":"Ein Event","date":"2025-05-12T13:00:00+02:00","url":"https://www.eventurl.ch/urlibus"},{"title":"Zwei Event","date":"2025-05-22T08:00:00+02:00","url":"https://www.eventurl.ch/urlibus"},{"title":"Noch ein Event","date":"2025-06-02T17:00:00+02:00","url":"https://www.eventurl.ch/urlibus"},{"title":"Letzter Event","date":"2025-04-30T13:00:00+02:00","url":"https://www.eventurl.ch/urlibus"}]`
-
-	err := json.Unmarshal([]byte(jsonString), &events)
-	if err != nil {
-		panic(err)
-	}
-
-	return rendering(w, r, newsletter.EventList(events, jsonString))
 }
 
 // HandleNewsletterCreateIndex returns the form for a new newsletter

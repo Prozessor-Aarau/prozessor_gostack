@@ -1,6 +1,7 @@
 package newsletter
 
 import (
+	"encoding/json"
 	"github.com/faebut/prozessor_gostack/internal/models"
 	"github.com/faebut/prozessor_gostack/view/layout"
 	"github.com/faebut/prozessor_gostack/view/ui"
@@ -422,17 +423,22 @@ templ elementButton(element models.NewsletterElement, errors ElementError) {
 	<input type="hidden" name="element_alttext" value=""/>
 }
 
-// TODO: handle errors, not possible
-// will throw error if no events are loaded. need to prevent form from getting sent
-// before fetching events -> script
 templ elementEvents(element models.NewsletterElement, errors ElementError) {
 	<div class="prose col-span-full">
 		<h4>Events</h4>
 	</div>
-	if len(element.Content) > 0 {
-		<div id="eventsList" hx-trigger="load" hx-get={ "/admin/newsletter/create/events" }></div>
-	} else {
-		<div id="eventsList" class="col-span-full text-center">
+	<div id="eventsList" class="col-span-full text-center">
+		if len(element.Content) > 0 {
+			{{
+	var events []models.Event
+
+	err := json.Unmarshal([]byte(element.Content), &events)
+	if err != nil {
+		panic(err)
+	}
+			}}
+			@EventList(events, element.Content)
+		} else {
 			<div id="noevents" class="hidden"></div>
 			<button
 				type="button"
@@ -452,8 +458,8 @@ templ elementEvents(element models.NewsletterElement, errors ElementError) {
 				<span class="self-center loading loading-infinity loading-xl"></span>
 				<span class="self-center text-xl">Events werden geladen...</span>
 			</div>
-		</div>
-	}
+		}
+	</div>
 }
 
 templ EventList(events []models.Event, eventString string) {
