@@ -247,7 +247,7 @@ templ NewsletterCreate(
 			<span class="text-error font-extrabold">*</span> diese Felder sind zwingend auszufüllen.
 		</div>
 		<div class="col-span-full w-full gap-3 flex mt-3 items-center justify-center flex-col md:flex-row">
-			<input type="submit" class="btn btn-success col-span-2 mt-3" value="Speichern"/>
+			<input id="sendbutton" type="submit" class="btn btn-success" value="Speichern"/>
 			<a href="/admin/newsletter" class="btn btn-warning">
 				<span class="i-mdi-cancel-bold"></span>
 				Abbrechen
@@ -304,11 +304,12 @@ templ NewsletterCreate(
   });
 
   // check if events are loaded
-  sendbutton = document.getElementById('sendbutton')
-  sendbutton.addEventListener('htmx:beforeRequest', function (evt) {
+  nlForm = document.getElementById('newsletterForm')
+  nlForm.addEventListener('htmx:beforeRequest', function (evt) {
     var noevents = document.getElementById("noevents");
-    // if there is an 'noevents' element
-    if (noevents) {
+    var sendbutton = evt.explicitOriginalTarget.id
+    // if there is an 'noevents' element and the sendbutton is used
+    if (noevents && sendbutton === "sendbutton") {
       var card = document.getElementById("elementcard")
       var warning = document.createElement("div")
       warning.classList.add("text-error", "mb-4")

@@ -212,7 +212,6 @@ func (m *Repository) HandleNewsletterCreate(w http.ResponseWriter, r *http.Reque
 					isError = true
 				}
 			}
-		// TODO: add checking for file upload
 		case "picture":
 			if len(e.Content) == 0 {
 				eError.Content = "Feld ist obligatorisch"
@@ -284,6 +283,9 @@ func (m *Repository) HandleNewsletterCreate(w http.ResponseWriter, r *http.Reque
 		// send the data to the template
 		return rendering(w, r, newsletter.NewsletterCreate(nl, templates, elements, formErrors))
 	}
+
+	// TODO: file upload
+	// TODO: posting to database
 
 	// render template
 	// return rendering(w, r, newsletter.NewsletterCreate(nl, templates, elements, e))
