@@ -5,6 +5,7 @@ import (
 	"errors"
 	"log"
 	"net/http"
+	"regexp"
 	"strconv"
 
 	"github.com/faebut/prozessor_gostack/internal/events"
@@ -212,6 +213,12 @@ func (m *Repository) HandleNewsletterCreate(w http.ResponseWriter, r *http.Reque
 			if len(e.Url) == 0 {
 				eError.URL = "Feld ist obligatorisch"
 				isError = true
+			}
+			if len(e.Url) > 0 {
+				if !regexp.MustCompile(`[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)`).MatchString(e.Url) {
+					eError.URL = "keine gültige Url"
+					isError = true
+				}
 			}
 		// TODO: add checking for file upload
 		case "picture":
