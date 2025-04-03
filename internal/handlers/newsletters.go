@@ -192,8 +192,6 @@ func (m *Repository) HandleNewsletterCreate(w http.ResponseWriter, r *http.Reque
 	}
 
 	// TODO: Error handling for items
-	// INFO: use switch for element type to handle this
-	// handle errors for elements
 	var elementErrors []newsletter.ElementError
 
 	for _, e := range elements {
@@ -242,8 +240,8 @@ func (m *Repository) HandleNewsletterCreate(w http.ResponseWriter, r *http.Reque
 
 	// check if there are items and set error if not
 	if len(nl.Elements) == 0 {
-		form.Errors.Add("items", "Mindestens eine Position hinzufügen")
-		formErrors.Item = "Mindestens eine Position hinzufügen"
+		form.Errors.Add("items", "Mindestens ein Element hinzufügen")
+		formErrors.Item = "Mindestens ein Element hinzufügen"
 	}
 
 	// check validity of fields
@@ -255,6 +253,7 @@ func (m *Repository) HandleNewsletterCreate(w http.ResponseWriter, r *http.Reque
 	nl.Title = r.Form.Get("title")
 	nl.Description = r.Form.Get("description")
 	nl.Template.ID, _ = strconv.Atoi(r.Form.Get("template"))
+	nl.Members = form.BoxValue("members")
 	nl.ColorBase = r.Form.Get("color_base")
 	nl.ColorAccent = r.Form.Get("color_accent")
 

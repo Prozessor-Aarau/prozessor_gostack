@@ -95,21 +95,30 @@ templ NewsletterCreate(
 		<div class="prose col-span-full">
 			<h3>Allgemein</h3>
 		</div>
-		<fieldset class="fieldset w-full col-span-2">
-			<legend class="fieldset-legend">Titel <span class="text-error font-extrabold">*</span></legend>
-			<input
-				type="text"
-				placeholder="Titel des Newsletters/Mailbetreff"
-				class={ "input input-bordered w-full" ,
-      templ.KV("input-error", len(errors.Title)>0) }
-				value={ n.Title }
-				name="title"
-				required
-			/>
-			if len(errors.Title) > 0 {
-				<label class="fieldset-label text-error">{ errors.Title }</label>
-			}
-		</fieldset>
+		<div class="w-full col-span-2 flex flex-col gap-3">
+			<fieldset class="fieldset w-full">
+				<legend class="fieldset-legend">Titel <span class="text-error font-extrabold">*</span></legend>
+				<input
+					type="text"
+					placeholder="Titel des Newsletters/Mailbetreff"
+					class={ "input input-bordered w-full" ,
+        templ.KV("input-error", len(errors.Title)>0) }
+					value={ n.Title }
+					name="title"
+					required
+				/>
+				if len(errors.Title) > 0 {
+					<label class="fieldset-label text-error">{ errors.Title }</label>
+				}
+			</fieldset>
+			<fieldset class="fieldset">
+				<!-- <legend class="fieldset-legend"></legend> -->
+				<label class="fieldset-label gap-4">
+					<input type="checkbox" name="members" checked?={ n.Members } class="toggle toggle-success"/>
+					interner Newsletter
+				</label>
+			</fieldset>
+		</div>
 		<fieldset class="fieldset w-full col-span-2">
 			<legend class="fieldset-legend">
 				Beschrieb <span class="text-error font-extrabold">*</span>
