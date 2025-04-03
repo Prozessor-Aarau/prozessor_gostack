@@ -192,7 +192,47 @@ func (m *Repository) HandleNewsletterCreate(w http.ResponseWriter, r *http.Reque
 	}
 
 	// TODO: Error handling for items
+	// INFO: use switch for element type to handle this
+	// handle errors for elements
 	var elementErrors []newsletter.ElementError
+
+	for _, e := range elements {
+		isError := false
+		var eError newsletter.ElementError
+
+		switch e.Type {
+		case "text":
+			if len(e.Content) == 0 {
+				eError.Content = "Feld ist obligatorisch"
+				isError = true
+			}
+		case "button":
+			if len(e.Content) == 0 {
+				eError.Content = "Feld ist obligatorisch"
+				isError = true
+			}
+			if len(e.Url) == 0 {
+				eError.URL = "Feld ist obligatorisch"
+				isError = true
+			}
+		// TODO: add checking for file upload
+		case "picture":
+			if len(e.Content) == 0 {
+				eError.Content = "Feld ist obligatorisch"
+				isError = true
+			}
+			if len(e.AltText) == 0 {
+				eError.AltText = "Feld ist obligatorisch"
+				isError = true
+			}
+		}
+
+		if isError {
+			eError.ID = e.ID
+			elementErrors = append(elementErrors, eError)
+			form.Errors.Add("item", "Feld ist obligatorisch")
+		}
+	}
 
 	nl.Elements = elements
 
