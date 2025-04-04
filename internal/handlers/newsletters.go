@@ -206,7 +206,7 @@ func (m *Repository) HandleNewsletterCreateEdit(w http.ResponseWriter, r *http.R
 	// save filetype
 	var filetype string
 
-	for _, e := range elements {
+	for i, e := range elements {
 		isError := false
 		var eError newsletter.ElementError
 
@@ -241,35 +241,45 @@ func (m *Repository) HandleNewsletterCreateEdit(w http.ResponseWriter, r *http.R
 				isError = true
 			}
 
-			// BUG: handle in update, if there was already a file
-			file, _, err := r.FormFile(e.ID + "_fileupload")
-			if err != nil {
-				eError.Upload = "gültiges File angeben"
-				isError = true
+			// check if there is already a file
+			oldFile := r.Form.Get(e.ID + "_upload")
+
+			// if there is, set the upload in this element to old filename
+			if len(oldFile) > 0 {
+				elements[i].Upload = oldFile
 			} else {
-				defer file.Close()
-				buff := make([]byte, 512) // docs tell that it take only first 512 bytes into consideration
-				if _, err = file.Read(buff); err != nil {
-					fmt.Println(err) // do something with that error
-				}
 
-				// get ft
-				ft := http.DetectContentType(buff)
-
-				// what to do if it's not an image
-				if !strings.Contains(ft, "image") {
-					eError.Upload = "nur Bilder erlaubt (png/jpeg)"
+				// else check the fileupload element
+				file, _, err := r.FormFile(e.ID + "_fileupload")
+				if err != nil {
+					eError.Upload = "gültiges File angeben"
 					isError = true
 				} else {
-					// save img type to filetype
-					filetype = strings.Split(ft, "/")[1]
-					// check if its png or jpeg
-					if filetype != "png" && filetype != "jpeg" {
+					defer file.Close()
+					buff := make([]byte, 512) // docs tell that it take only first 512 bytes into consideration
+					if _, err = file.Read(buff); err != nil {
+						fmt.Println(err) // do something with that error
+					}
+
+					// get ft
+					ft := http.DetectContentType(buff)
+
+					// what to do if it's not an image
+					if !strings.Contains(ft, "image") {
 						eError.Upload = "nur Bilder erlaubt (png/jpeg)"
 						isError = true
+					} else {
+						// save img type to filetype
+						filetype = strings.Split(ft, "/")[1]
+						// check if its png or jpeg
+						if filetype != "png" && filetype != "jpeg" {
+							eError.Upload = "nur Bilder erlaubt (png/jpeg)"
+							isError = true
+						}
 					}
 				}
 			}
+
 		}
 
 		if isError {
@@ -313,9 +323,9 @@ func (m *Repository) HandleNewsletterCreateEdit(w http.ResponseWriter, r *http.R
 	}
 
 	// handling file
-	// Retrieve the file from form data
+	// Retrieve the file from form data if there is not an old one
 	for i, e := range elements {
-		if len(e.AltText) > 0 {
+		if len(e.AltText) > 0 && len(e.Upload) == 0 {
 			file, fileHeader, err := r.FormFile(e.ID + "_fileupload")
 			if err != nil {
 				log.Println("error handling file")
@@ -375,11 +385,6 @@ func (m *Repository) HandleNewsletterCreateEdit(w http.ResponseWriter, r *http.R
 				} else if filetype == "png" {
 					png.Encode(dst, resFile)
 				}
-
-				// TODO: handle old files, if there has been a change
-				// for this we need to check, if there was a saved image
-				// before and delete them
-				// INFO: handle this, when edit is to be implemented
 
 				// Update the element with the update. Need to use index
 				// here to modify the struct directly

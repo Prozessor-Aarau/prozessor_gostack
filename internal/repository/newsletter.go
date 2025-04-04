@@ -31,7 +31,7 @@ func (m *postgresDBRepo) GetAllNewsletters() ([]models.Newsletter, int, error) {
     newsletters nl
     LEFT OUTER JOIN newsletter_templates nt ON nl.template_id = nt.id
   ORDER BY
-    nl.updated_on ASC`
+    nl.updated_on DESC`
 
 	rows, err := m.DB.QueryContext(ctx, query)
 	if err != nil {
