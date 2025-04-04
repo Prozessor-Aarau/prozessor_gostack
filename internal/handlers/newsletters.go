@@ -390,9 +390,16 @@ func (m *Repository) HandleNewsletterCreateEdit(w http.ResponseWriter, r *http.R
 	}
 
 	// what to do if form valid
-	err = m.DB.CreateNewsletter(nl)
-	if err != nil {
-		log.Println("ERROR:", err)
+	if formErrors.Edit {
+		err = m.DB.UpdateNewsletter(nl)
+		if err != nil {
+			log.Println("ERROR:", err)
+		}
+	} else {
+		err = m.DB.CreateNewsletter(nl)
+		if err != nil {
+			log.Println("ERROR:", err)
+		}
 	}
 
 	// TODO: go on

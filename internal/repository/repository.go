@@ -89,6 +89,7 @@ type DatabaseRepo interface {
 	GetNewsletterTemplates() ([]models.NewsletterTemplate, error)
 	GetAllNewsletterElementsByID(id int) ([]models.NewsletterElement, error)
 	CreateNewsletter(n models.Newsletter) error
+	UpdateNewsletter(n models.Newsletter) error
 	GetNewsletterByID(id int) (models.Newsletter, error)
 }
 

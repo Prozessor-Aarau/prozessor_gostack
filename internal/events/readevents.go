@@ -64,7 +64,6 @@ func GetEvents() ([]models.Event, error) {
 
 			// if it is in the future and published, add to slice
 			if e.Published && e.EventTime.After(currentDate) {
-				log.Println("Adding element to slice:", e)
 				events = append(events, e)
 			}
 		}

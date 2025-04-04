@@ -312,34 +312,32 @@ func (m *postgresDBRepo) CreateNewsletter(n models.Newsletter) error {
 	}
 
 	// handle elements and push them to the database
-	if len(n.Elements) > 0 {
+	// create slices
+	var ids []uuid.UUID
+	var newsletterIDs []int
+	var positions []int
+	var types []string
+	var contents []string
+	var urls []string
+	var uploads []string
+	var alttexts []string
 
-		// create slices
-		var ids []uuid.UUID
-		var newsletterIDs []int
-		var positions []int
-		var types []string
-		var contents []string
-		var urls []string
-		var uploads []string
-		var alttexts []string
-
-		for _, e := range n.Elements {
-			uid, err := uuid.Parse(e.ID)
-			if err != nil {
-				return err
-			}
-			ids = append(ids, uid)
-			newsletterIDs = append(newsletterIDs, id)
-			positions = append(positions, e.Position)
-			types = append(types, e.Type)
-			contents = append(contents, e.Content)
-			urls = append(urls, e.Url)
-			uploads = append(uploads, e.Upload)
-			alttexts = append(alttexts, e.AltText)
+	for _, e := range n.Elements {
+		uid, err := uuid.Parse(e.ID)
+		if err != nil {
+			return err
 		}
+		ids = append(ids, uid)
+		newsletterIDs = append(newsletterIDs, id)
+		positions = append(positions, e.Position)
+		types = append(types, e.Type)
+		contents = append(contents, e.Content)
+		urls = append(urls, e.Url)
+		uploads = append(uploads, e.Upload)
+		alttexts = append(alttexts, e.AltText)
+	}
 
-		eStmt := `
+	eStmt := `
 		INSERT INTO newsletter_elements (
 		id,
 		newsletter_id,
@@ -360,22 +358,137 @@ func (m *postgresDBRepo) CreateNewsletter(n models.Newsletter) error {
 			UNNEST($8::TEXT[])
 		)`
 
-		_, err := m.DB.ExecContext(
-			ctx,
-			eStmt,
-			ids,
-			newsletterIDs,
-			positions,
-			types,
-			contents,
-			urls,
-			uploads,
-			alttexts,
-		)
+	_, err = m.DB.ExecContext(
+		ctx,
+		eStmt,
+		ids,
+		newsletterIDs,
+		positions,
+		types,
+		contents,
+		urls,
+		uploads,
+		alttexts,
+	)
 
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// UpdateNewsletter puts a new newsletter into the database
+func (m *postgresDBRepo) UpdateNewsletter(n models.Newsletter) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	stmt := `UPDATE newsletters SET
+		title = $1,
+		description = $2,
+		template_id = $3,
+		members = $4,
+		color_base = $5,
+		color_accent = $6,
+		updated_on = NOW()
+	WHERE id = $7`
+
+	_, err := m.DB.ExecContext(ctx, stmt,
+		n.Title,
+		n.Description,
+		n.Template.ID,
+		n.Members,
+		n.ColorBase,
+		n.ColorAccent,
+		n.ID,
+	)
+
+	if err != nil {
+		return err
+	}
+
+	// handle elements
+	// first delete elements that have been deleted
+
+	// create slices
+	var ids []uuid.UUID
+	var newsletterIDs []int
+	var positions []int
+	var types []string
+	var contents []string
+	var urls []string
+	var uploads []string
+	var alttexts []string
+
+	for _, e := range n.Elements {
+		uid, err := uuid.Parse(e.ID)
 		if err != nil {
 			return err
 		}
+		ids = append(ids, uid)
+		newsletterIDs = append(newsletterIDs, n.ID)
+		positions = append(positions, e.Position)
+		types = append(types, e.Type)
+		contents = append(contents, e.Content)
+		urls = append(urls, e.Url)
+		uploads = append(uploads, e.Upload)
+		alttexts = append(alttexts, e.AltText)
+	}
+
+	// delete what was deleted
+	deleteStmt := `DELETE FROM bill_items WHERE bill_id = $1 AND NOT (id = ANY($2))`
+
+	_, err = m.DB.ExecContext(ctx, deleteStmt, n.ID, ids)
+
+	if err != nil {
+		return err
+	}
+
+	// add whats new and update old
+	eStmt := `
+		INSERT INTO newsletter_elements (
+		id,
+		newsletter_id,
+		position,
+		type,
+		content,
+		url,
+		upload,
+		alt_text)
+		VALUES(
+			UNNEST($1::UUID[]),
+			UNNEST($2::INT[]),
+			UNNEST($3::INT[]),
+			UNNEST($4::TEXT[]),
+			UNNEST($5::TEXT[]),
+			UNNEST($6::TEXT[]),
+			UNNEST($7::TEXT[]),
+			UNNEST($8::TEXT[])
+		)
+    ON CONFLICT (id) DO UPDATE
+    SET
+        position = EXCLUDED.position, 
+				content = EXCLUDED.content,
+				url = EXCLUDED.url,
+				upload = EXCLUDED.upload,
+				alt_text = EXCLUDED.alt_text,
+        updated_on = NOW()
+		`
+	_, err = m.DB.ExecContext(
+		ctx,
+		eStmt,
+		ids,
+		newsletterIDs,
+		positions,
+		types,
+		contents,
+		urls,
+		uploads,
+		alttexts,
+	)
+
+	if err != nil {
+		return err
 	}
 
 	return nil

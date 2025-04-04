@@ -51,7 +51,7 @@ templ NewsletterList(newsletters []models.Newsletter) {
 					<a
 						class={ "btn btn-sm btn-circle btn-primary" , templ.KV("btn-disabled", !prm.AddNewsletter) }
 						hx-get={ "/admin/newsletter/edit/" + strconv.Itoa(n.ID) }
-						hx-target="#main"
+						hx-target="#content"
 					>
 						<span class="i-mdi-lead-pencil"></span>
 					</a>
@@ -77,10 +77,9 @@ type NewsletterErrors struct {
 }
 
 // TODO:
-// - field for selecting target group
-// - actually saving the form
 // - implement preview
 // - implement sending
+// - implement copying newsletter
 
 // INFO:
 // WORKFLOW FOR SENDING
@@ -103,12 +102,20 @@ if len(n.ColorBase) > 0 {
 if len(n.ColorAccent) > 0 {
 	accentColor = n.ColorAccent
 }
+
+// where to post the form to
+var postUrl string
+if errors.Edit {
+	postUrl = "/admin/newsletter/edit/" + strconv.Itoa(n.ID)
+} else {
+	postUrl = "/admin/newsletter/create"
+}
 	}}
 	<form
 		id="newsletterForm"
 		class="grid grid-cols-2 md:grid-cols-4 gap-3"
 		hx-target="#content"
-		hx-post="/admin/newsletter/create"
+		hx-post={ postUrl }
 		enctype="multipart/form-data"
 		novalidate
 	>
@@ -267,6 +274,7 @@ if len(n.ColorAccent) > 0 {
 			<span class="text-error font-extrabold">*</span> diese Felder sind zwingend auszufüllen.
 		</div>
 		<!-- action buttons -->
+		// BUG: send button also initiates new event request
 		<div class="col-span-full w-full gap-3 flex mt-3 items-center justify-center flex-col md:flex-row">
 			if errors.Edit {
 				<input id="sendbutton" type="submit" class="btn btn-success" value="Aktualisieren"/>
@@ -289,12 +297,12 @@ if len(n.ColorAccent) > 0 {
 
   function moveItemUp(eid) {
     document.getElementById(eid).previousSibling.before(document.getElementById(eid))
-    hideArrows()
+    hideArrows();
   }
 
   function moveItemDown(eid) {
     document.getElementById(eid).nextSibling.after(document.getElementById(eid))
-    hideArrows()
+    hideArrows();
   }
 
   // handle elements position
