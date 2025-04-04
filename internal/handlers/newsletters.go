@@ -129,7 +129,6 @@ func (m *Repository) HandleNewsletterCreate(w http.ResponseWriter, r *http.Reque
 	var element_url []string
 
 	for key, values := range r.Form {
-		log.Println(key, values)
 
 		if key == "element_id" {
 			for _, val := range values {
@@ -290,15 +289,11 @@ func (m *Repository) HandleNewsletterCreate(w http.ResponseWriter, r *http.Reque
 	nl.ColorBase = r.Form.Get("color_base")
 	nl.ColorAccent = r.Form.Get("color_accent")
 
-	// log.Println("Newsletter:", nl)
-
 	// what to do if form not valid
 	if !form.Valid() {
 		// send the data to the template
 		return rendering(w, r, newsletter.NewsletterCreate(nl, templates, elements, formErrors))
 	}
-
-	// TODO: file upload
 
 	// handling file
 	// Retrieve the file from form data
@@ -369,17 +364,24 @@ func (m *Repository) HandleNewsletterCreate(w http.ResponseWriter, r *http.Reque
 				// before and delete them
 				// INFO: handle this, when edit is to be implemented
 
-				// Update the user's avatar in the visitor struct, it will be passed with the rest
+				// Update the element with the update. Need to use index
+				// here to modify the struct directly
 				elements[i].Upload = filename
 			}
 		}
 	}
 
-	// TODO: posting to database
-
-	log.Println(nl)
+	// what to do if form valid
+	err = m.DB.CreateNewsletter(nl)
+	if err != nil {
+		log.Println("ERROR:", err)
+	}
 
 	// render template
-	// return rendering(w, r, newsletter.NewsletterCreate(nl, templates, elements, e))
 	return nil
+
+	// TODO: go on
+
+	// if all is well, send to the preview page next
+	// return hxRedirect(w, r, redirectPath)
 }
