@@ -557,7 +557,11 @@ templ elementPicture(element models.NewsletterElement, errors ElementError) {
 	// BUG: handle update function, if there is an image to noevents
 	// throw an error
 	if len(element.Upload) > 0 {
-		<p>Bild vorhanden</p>
+		<div class="avatar">
+			<div class="w-48 rounded">
+				<img src={ "/static/newsletter/" + element.Upload }/>
+			</div>
+		</div>
 	} else {
 		<fieldset class="fieldset">
 			<legend class="fieldset-legend">Bild hochladen</legend>
