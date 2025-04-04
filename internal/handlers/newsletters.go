@@ -377,11 +377,8 @@ func (m *Repository) HandleNewsletterCreate(w http.ResponseWriter, r *http.Reque
 		log.Println("ERROR:", err)
 	}
 
-	// render template
-	return nil
-
 	// TODO: go on
-
 	// if all is well, send to the preview page next
-	// return hxRedirect(w, r, redirectPath)
+
+	return hxRedirect(w, r, "/admin/newsletter")
 }
