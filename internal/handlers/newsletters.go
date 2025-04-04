@@ -450,6 +450,16 @@ func (m *Repository) HandleNewsletterEditIndex(w http.ResponseWriter, r *http.Re
 func (m *Repository) HandleNewsletterImageDelete(w http.ResponseWriter, r *http.Request) error {
 	eID := chi.URLParam(r, "id")
 
+	// prepare form data and get picture name
+	r.ParseForm()
+	picture := r.Form.Get(eID + "_upload")
+
+	// delete picture from disk
+	picPath := filepath.Join("static/newsletter/", picture)
+	if err := os.Remove(picPath); err != nil {
+		return err
+	}
+
 	// delete image in database and get element
 	el, err := m.DB.DeleteNewsletterImage(eID)
 	if err != nil {

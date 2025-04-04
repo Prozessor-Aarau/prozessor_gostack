@@ -597,8 +597,8 @@ templ elementPicture(element models.NewsletterElement, errors ElementError) {
 					name="deleteButton"
 					type="button"
 					hx-delete={ "/admin/newsletter/image/" + element.ID }
-					hx-params="none"
-					hx-target={ "#el_" + element.ID }
+					hx-params={ element.ID + "_upload" }
+					hx-target={ " #el_" + element.ID }
 					hx-swap="outerHTML"
 					hx-confirm="Bild wirklich löschen? Dies kann nicht mehr rückgängig gemacht werden."
 					class="mt-3 btn btn-sm btn-circle btn-outline btn-error"
