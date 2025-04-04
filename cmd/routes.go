@@ -187,9 +187,11 @@ func routes(app *config.AppConfig) http.Handler {
 			mux.Group(func(mux chi.Router) {
 				mux.Use(CheckPermission("AddNewsletter"))
 				mux.Get("/newsletter/create", handlers.Make(handlers.Repo.HandleNewsletterCreateIndex))
-				mux.Post("/newsletter/create", handlers.Make(handlers.Repo.HandleNewsletterCreate))
+				mux.Post("/newsletter/create", handlers.Make(handlers.Repo.HandleNewsletterCreateEdit))
 				mux.Post("/newsletter/create/element", handlers.Make(handlers.Repo.HandleNewsletterElementCreate))
 				mux.Get("/newsletter/create/loadevents", handlers.Make(handlers.Repo.HandleNewsletterEventsLoad))
+				mux.Get("/newsletter/edit/{id}", handlers.Make(handlers.Repo.HandleNewsletterEditIndex))
+				mux.Post("/newsletter/edit/{id}", handlers.Make(handlers.Repo.HandleNewsletterCreateEdit))
 			})
 		})
 

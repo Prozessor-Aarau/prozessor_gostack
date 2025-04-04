@@ -50,7 +50,7 @@ templ NewsletterList(newsletters []models.Newsletter) {
 				<div class="col-span-1 flex justify-end items-center">
 					<a
 						class={ "btn btn-sm btn-circle btn-primary" , templ.KV("btn-disabled", !prm.AddNewsletter) }
-						hx-get={ "/admin/newsletter/" + strconv.Itoa(n.ID) }
+						hx-get={ "/admin/newsletter/edit/" + strconv.Itoa(n.ID) }
 						hx-target="#main"
 					>
 						<span class="i-mdi-lead-pencil"></span>
@@ -66,6 +66,7 @@ templ NewsletterList(newsletters []models.Newsletter) {
 }
 
 type NewsletterErrors struct {
+	Edit        bool
 	Title       string
 	Description string
 	Template    string
@@ -92,6 +93,17 @@ templ NewsletterCreate(
 	elements []models.NewsletterElement,
 	errors NewsletterErrors,
 ) {
+	{{
+// set default colors
+var baseColor = "#00FFD6"
+var accentColor = "#EB00FF"
+if len(n.ColorBase) > 0 {
+	baseColor = n.ColorBase
+}
+if len(n.ColorAccent) > 0 {
+	accentColor = n.ColorAccent
+}
+	}}
 	<form
 		id="newsletterForm"
 		class="grid grid-cols-2 md:grid-cols-4 gap-3"
@@ -102,7 +114,11 @@ templ NewsletterCreate(
 	>
 		@ui.CSRF()
 		<div class="prose col-span-full">
-			<h2>Neuen Newsletter erstellen</h2>
+			if errors.Edit {
+				<h2>Newsletter (ID { strconv.Itoa(n.ID) }) bearbeiten</h2>
+			} else {
+				<h2>Neuen Newsletter erstellen</h2>
+			}
 		</div>
 		<div class="prose col-span-full">
 			<h3>Allgemein</h3>
@@ -178,7 +194,7 @@ templ NewsletterCreate(
 				type="color"
 				class={ "input w-full" , templ.KV("input-error", len(errors.ColorBase)>0) }
 				name="color_base"
-				value="#00FFD6"
+				value={ baseColor }
 				required
 			/>
 			if len(errors.ColorBase) > 0 {
@@ -191,7 +207,7 @@ templ NewsletterCreate(
 				type="color"
 				class={ "input w-full" , templ.KV("input-error", len(errors.ColorAccent)>0) }
 				name="color_accent"
-				value="#EB00FF"
+				value={ accentColor }
 				required
 			/>
 			if len(errors.ColorAccent) > 0 {
@@ -250,8 +266,13 @@ templ NewsletterCreate(
 		<div class=" col-span-full text-sm mt-3">
 			<span class="text-error font-extrabold">*</span> diese Felder sind zwingend auszufüllen.
 		</div>
+		<!-- action buttons -->
 		<div class="col-span-full w-full gap-3 flex mt-3 items-center justify-center flex-col md:flex-row">
-			<input id="sendbutton" type="submit" class="btn btn-success" value="Speichern"/>
+			if errors.Edit {
+				<input id="sendbutton" type="submit" class="btn btn-success" value="Aktualisieren"/>
+			} else {
+				<input id="sendbutton" type="submit" class="btn btn-success" value="Speichern"/>
+			}
 			<a href="/admin/newsletter" class="btn btn-warning">
 				<span class="i-mdi-cancel-bold"></span>
 				Abbrechen

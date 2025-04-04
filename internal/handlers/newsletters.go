@@ -19,6 +19,7 @@ import (
 	"github.com/faebut/prozessor_gostack/internal/forms"
 	"github.com/faebut/prozessor_gostack/internal/models"
 	"github.com/faebut/prozessor_gostack/view/newsletter"
+	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 	"github.com/nfnt/resize"
 )
@@ -104,9 +105,24 @@ func (m *Repository) HandleNewsletterEventsLoad(w http.ResponseWriter, r *http.R
 }
 
 // HandleNewsletterCreateIndex returns the form for a new newsletter
-func (m *Repository) HandleNewsletterCreate(w http.ResponseWriter, r *http.Request) error {
-	// create new empty structs
+func (m *Repository) HandleNewsletterCreateEdit(w http.ResponseWriter, r *http.Request) error {
+	// set initial value
+	edit := false
+
+	// create newsletter struct
 	var nl models.Newsletter
+
+	// get route from request url
+	exploded := strings.Split(r.RequestURI, "/")
+	if exploded[3] == "edit" {
+		id, err := strconv.Atoi(chi.URLParam(r, "id"))
+		if err != nil {
+			log.Println("Error converting string to int:", err)
+			return err
+		}
+		nl.ID = id
+		edit = true
+	}
 
 	templates, err := m.DB.GetNewsletterTemplates()
 	if err != nil {
@@ -269,6 +285,8 @@ func (m *Repository) HandleNewsletterCreate(w http.ResponseWriter, r *http.Reque
 	// handle other fields
 	formErrors := newsletter.NewsletterErrors{}
 	formErrors.Elements = elementErrors
+	// set edit if it's edit
+	formErrors.Edit = edit
 
 	// check if there are items and set error if not
 	if len(nl.Elements) == 0 {
@@ -381,4 +399,39 @@ func (m *Repository) HandleNewsletterCreate(w http.ResponseWriter, r *http.Reque
 	// if all is well, send to the preview page next
 
 	return hxRedirect(w, r, "/admin/newsletter")
+}
+
+// HandleNewsletterEditIndex returns the form for an existing newsletter
+func (m *Repository) HandleNewsletterEditIndex(w http.ResponseWriter, r *http.Request) error {
+	nlID, err := strconv.Atoi(chi.URLParam(r, "id"))
+	if err != nil {
+		log.Println("Error converting newsletter id to int", err)
+		return err
+	}
+
+	// get newsletter from database
+	nl, err := m.DB.GetNewsletterByID(nlID)
+	if err != nil {
+		log.Println("could not get newsletter from DB: ", err)
+	}
+
+	// get elements for newsletter
+	elements, err := m.DB.GetAllNewsletterElementsByID(nl.ID)
+	if err != nil {
+		log.Println("could not get newsletter elements from DB: ", err)
+	}
+
+	nl.Elements = elements
+
+	templates, err := m.DB.GetNewsletterTemplates()
+	if err != nil {
+		log.Println("could not get templates from DB: ", err)
+	}
+
+	// render template
+	return rendering(w, r, newsletter.NewsletterCreate(
+		nl,
+		templates,
+		elements, newsletter.NewsletterErrors{Edit: true},
+	))
 }

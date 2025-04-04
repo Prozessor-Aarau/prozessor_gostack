@@ -9,7 +9,7 @@ import (
 	"github.com/google/uuid"
 )
 
-// AllBadges gets all badges
+// GetAllNewsletters gets all newsletters
 func (m *postgresDBRepo) GetAllNewsletters() ([]models.Newsletter, int, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
@@ -80,6 +80,72 @@ func (m *postgresDBRepo) GetAllNewsletters() ([]models.Newsletter, int, error) {
 	}
 
 	return newsletters, len(newsletters), nil
+}
+
+// GetNewsletterByID get a newsletter by id
+func (m *postgresDBRepo) GetNewsletterByID(id int) (models.Newsletter, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	var n models.Newsletter
+
+	query := `SELECT
+    nl.id,
+    nl.title,
+    nl.description,
+    nl.members,
+    nl.template_id,
+		nl.color_base,
+		nl.color_accent,
+    nt.name,
+    nl.sent_count,
+    nl.sent_on,
+    nl.updated_on,
+    nl.created_on
+  FROM
+    newsletters nl
+    LEFT OUTER JOIN newsletter_templates nt ON nl.template_id = nt.id
+	WHERE
+		nl.id = $1`
+
+	rows := m.DB.QueryRowContext(ctx, query, id)
+
+	// handling null types
+	var sentCount sql.NullInt32
+	var sentOn sql.NullTime
+
+	err := rows.Scan(
+		&n.ID,
+		&n.Title,
+		&n.Description,
+		&n.Members,
+		&n.Template.ID,
+		&n.ColorBase,
+		&n.ColorAccent,
+		&n.Template.Name,
+		&sentCount,
+		&sentOn,
+		&n.UpdatedOn,
+		&n.CreatedOn,
+	)
+
+	if err != nil {
+		return n, err
+	}
+
+	// handling null types
+	if sentCount.Valid {
+		n.SentCount = int(sentCount.Int32)
+	}
+	if sentOn.Valid {
+		n.SentOn = sentOn.Time
+	}
+
+	if err = rows.Err(); err != nil {
+		return n, err
+	}
+
+	return n, nil
 }
 
 // GetNewsletterTemplates gets all templates for newsletters
