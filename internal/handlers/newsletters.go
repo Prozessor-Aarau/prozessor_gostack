@@ -4,8 +4,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"image"
+	"image/jpeg"
+	"image/png"
 	"log"
 	"net/http"
+	"os"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
@@ -15,6 +20,7 @@ import (
 	"github.com/faebut/prozessor_gostack/internal/models"
 	"github.com/faebut/prozessor_gostack/view/newsletter"
 	"github.com/google/uuid"
+	"github.com/nfnt/resize"
 )
 
 // HandleNewsletterIndex is the newsletter page handler
@@ -115,7 +121,6 @@ func (m *Repository) HandleNewsletterCreate(w http.ResponseWriter, r *http.Reque
 	}
 
 	// handle elements
-	// TODO: handle file upload
 	var element_id []string
 	var element_position []int
 	var element_type []string
@@ -184,8 +189,9 @@ func (m *Repository) HandleNewsletterCreate(w http.ResponseWriter, r *http.Reque
 		elements = append(elements, element)
 	}
 
-	// TODO: Error handling for items
 	var elementErrors []newsletter.ElementError
+	// save filetype
+	var filetype string
 
 	for _, e := range elements {
 		isError := false
@@ -233,13 +239,21 @@ func (m *Repository) HandleNewsletterCreate(w http.ResponseWriter, r *http.Reque
 					fmt.Println(err) // do something with that error
 				}
 
-				// get filetype
-				filetype := http.DetectContentType(buff)
+				// get ft
+				ft := http.DetectContentType(buff)
 
 				// what to do if it's not an image
-				if !strings.Contains(filetype, "image") {
-					eError.Upload = "nur Bilder erlaubt"
+				if !strings.Contains(ft, "image") {
+					eError.Upload = "nur Bilder erlaubt (png/jpeg)"
 					isError = true
+				} else {
+					// save img type to filetype
+					filetype = strings.Split(ft, "/")[1]
+					// check if its png or jpeg
+					if filetype != "png" && filetype != "jpeg" {
+						eError.Upload = "nur Bilder erlaubt (png/jpeg)"
+						isError = true
+					}
 				}
 			}
 		}
@@ -285,7 +299,85 @@ func (m *Repository) HandleNewsletterCreate(w http.ResponseWriter, r *http.Reque
 	}
 
 	// TODO: file upload
+
+	// handling file
+	// Retrieve the file from form data
+	for i, e := range elements {
+		if len(e.AltText) > 0 {
+			file, fileHeader, err := r.FormFile(e.ID + "_fileupload")
+			if err != nil {
+				log.Println("error handling file")
+				// TODO: how to else handle error
+			} else {
+				defer file.Close()
+
+				// Generate a unique filename to prevent overwriting and conflicts
+				uuid, err := uuid.NewRandom()
+				if err != nil {
+					log.Println("Error generating uuid")
+					// TODO: how to else handle error
+				}
+				// Append the filetype extension to uuid to create filename
+				filename := uuid.String() + filepath.Ext(fileHeader.Filename)
+
+				// TODO: maybe don't save on db server but on webserver
+
+				// check if uploads directory exists, if not create it
+				if _, err := os.Stat("static/newsletter"); err != nil {
+					os.Mkdir("static/newsletter/", os.ModePerm)
+				}
+
+				// Create the full path for saving the file
+				filePath := filepath.Join("static/newsletter", filename)
+
+				// Save the file to the server
+				dst, err := os.Create(filePath)
+				if err != nil {
+					log.Println("error saving file", err)
+
+					// TODO: how to else handle error
+
+				}
+				defer dst.Close()
+
+				// convert to image
+				var imgFile image.Image
+				if filetype == "jpeg" {
+					imgFile, err = jpeg.Decode(file)
+					if err != nil {
+						log.Println(err)
+					}
+				} else if filetype == "png" {
+					imgFile, err = png.Decode(file)
+					if err != nil {
+						log.Println(err)
+					}
+				}
+
+				// resize image
+				resFile := resize.Resize(600, 0, imgFile, resize.Lanczos3)
+
+				// write image
+				if filetype == "jpeg" {
+					jpeg.Encode(dst, resFile, nil)
+				} else if filetype == "png" {
+					png.Encode(dst, resFile)
+				}
+
+				// TODO: handle old files, if there has been a change
+				// for this we need to check, if there was a saved image
+				// before and delete them
+				// INFO: handle this, when edit is to be implemented
+
+				// Update the user's avatar in the visitor struct, it will be passed with the rest
+				elements[i].Upload = filename
+			}
+		}
+	}
+
 	// TODO: posting to database
+
+	log.Println(nl)
 
 	// render template
 	// return rendering(w, r, newsletter.NewsletterCreate(nl, templates, elements, e))

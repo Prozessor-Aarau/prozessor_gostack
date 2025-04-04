@@ -14,6 +14,7 @@ tmp/
 static/qr_codes/**
 static/labels/**
 static/uploads/**
+static/newsletter/**
 static/bills/**
 static/css/tailwind.css
 

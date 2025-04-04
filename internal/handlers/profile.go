@@ -221,7 +221,7 @@ func (m *Repository) HandleProfileEdit(w http.ResponseWriter, r *http.Request) e
 
 		// check if uploads directory exists, if not create it
 		if _, err := os.Stat("static/uploads"); err != nil {
-			log.Println(err)
+			os.Mkdir("static/uploads/", os.ModePerm)
 		}
 
 		// Create the full path for saving the file
