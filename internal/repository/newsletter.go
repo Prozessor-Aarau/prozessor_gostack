@@ -44,6 +44,7 @@ func (m *postgresDBRepo) GetAllNewsletters() ([]models.Newsletter, int, error) {
 		var n models.Newsletter
 
 		// handling null types
+		var sentCount sql.NullInt32
 		var sentOn sql.NullTime
 
 		err := rows.Scan(
@@ -53,7 +54,7 @@ func (m *postgresDBRepo) GetAllNewsletters() ([]models.Newsletter, int, error) {
 			&n.Members,
 			&n.Template.ID,
 			&n.Template.Name,
-			&n.SentCount,
+			&sentCount,
 			&sentOn,
 			&n.UpdatedOn,
 			&n.CreatedOn,
@@ -64,6 +65,9 @@ func (m *postgresDBRepo) GetAllNewsletters() ([]models.Newsletter, int, error) {
 		}
 
 		// handling null types
+		if sentCount.Valid {
+			n.SentCount = int(sentCount.Int32)
+		}
 		if sentOn.Valid {
 			n.SentOn = sentOn.Time
 		}
