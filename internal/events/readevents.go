@@ -2,7 +2,7 @@ package events
 
 import (
 	"io"
-	"log"
+	"sort"
 	"strings"
 	"time"
 
@@ -79,9 +79,9 @@ func GetEvents() ([]models.Event, error) {
 	}
 
 	// Sort Events
-	// sort.Slice(events, func(i, j int) bool {
-	// 	return events[i].EventTime.Time.Before(events[j].EventTime.Time)
-	// })
+	sort.Slice(events, func(i, j int) bool {
+		return events[i].EventTime.Time.Before(events[j].EventTime.Time)
+	})
 
 	return events, nil
 }

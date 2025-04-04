@@ -88,12 +88,10 @@ func (m *Repository) HandleNewsletterElementCreate(w http.ResponseWriter, r *htt
 
 func (m *Repository) HandleNewsletterEventsLoad(w http.ResponseWriter, r *http.Request) error {
 	// get events
-	log.Println("get events")
 	events, err := events.GetEvents()
 	if err != nil {
 		return err
 	}
-	log.Printf("Events: %v", events)
 
 	// put events into string
 	eventString, err := json.Marshal(events)
@@ -243,6 +241,7 @@ func (m *Repository) HandleNewsletterCreateEdit(w http.ResponseWriter, r *http.R
 				isError = true
 			}
 
+			// BUG: handle in update, if there was already a file
 			file, _, err := r.FormFile(e.ID + "_fileupload")
 			if err != nil {
 				eError.Upload = "gültiges File angeben"

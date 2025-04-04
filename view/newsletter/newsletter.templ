@@ -549,12 +549,13 @@ templ EventList(events []models.Event, eventString string) {
 	</div>
 }
 
-// TODO: handle upload and errors for upload
 templ elementPicture(element models.NewsletterElement, errors ElementError) {
 	<input type="hidden" name="element_url" value=""/>
 	<div class="prose col-span-full">
 		<h4>Bild</h4>
 	</div>
+	// BUG: handle update function, if there is an image to noevents
+	// throw an error
 	if len(element.Upload) > 0 {
 		<p>Bild vorhanden</p>
 	} else {
