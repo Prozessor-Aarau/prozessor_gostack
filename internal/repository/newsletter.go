@@ -436,7 +436,7 @@ func (m *postgresDBRepo) UpdateNewsletter(n models.Newsletter) error {
 	}
 
 	// delete what was deleted
-	deleteStmt := `DELETE FROM bill_items WHERE bill_id = $1 AND NOT (id = ANY($2))`
+	deleteStmt := `DELETE FROM newsletter_elements WHERE newsletter_id = $1 AND NOT (id = ANY($2))`
 
 	_, err = m.DB.ExecContext(ctx, deleteStmt, n.ID, ids)
 
@@ -492,4 +492,42 @@ func (m *postgresDBRepo) UpdateNewsletter(n models.Newsletter) error {
 	}
 
 	return nil
+}
+
+// DeleteNewsletterImage deletes the image from the database and returns the element
+func (m *postgresDBRepo) DeleteNewsletterImage(id string) (models.NewsletterElement, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	var element models.NewsletterElement
+
+	// delete content of upload field and return the other contents
+	stmt := `UPDATE
+		newsletter_elements
+	SET
+		upload = ''
+	WHERE
+		id = $1
+	RETURNING
+		content,
+		alt_text
+	`
+
+	err := m.DB.QueryRowContext(
+		ctx,
+		stmt,
+		id,
+	).Scan(
+		&element.Content,
+		&element.AltText,
+	)
+
+	if err != nil {
+		return element, err
+	}
+
+	// set element id to given id
+	element.ID = id
+
+	return element, nil
 }

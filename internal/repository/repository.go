@@ -91,6 +91,7 @@ type DatabaseRepo interface {
 	CreateNewsletter(n models.Newsletter) error
 	UpdateNewsletter(n models.Newsletter) error
 	GetNewsletterByID(id int) (models.Newsletter, error)
+	DeleteNewsletterImage(id string) (models.NewsletterElement, error)
 }
 
 type postgresDBRepo struct {

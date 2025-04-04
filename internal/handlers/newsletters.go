@@ -446,3 +446,17 @@ func (m *Repository) HandleNewsletterEditIndex(w http.ResponseWriter, r *http.Re
 		elements, newsletter.NewsletterErrors{Edit: true},
 	))
 }
+
+func (m *Repository) HandleNewsletterImageDelete(w http.ResponseWriter, r *http.Request) error {
+	eID := chi.URLParam(r, "id")
+
+	// delete image in database and get element
+	el, err := m.DB.DeleteNewsletterImage(eID)
+	if err != nil {
+		return err
+	}
+
+	el.Type = "picture"
+
+	return rendering(w, r, newsletter.Element(el, []newsletter.ElementError{}))
+}

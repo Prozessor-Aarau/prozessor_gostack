@@ -110,6 +110,18 @@ if errors.Edit {
 } else {
 	postUrl = "/admin/newsletter/create"
 }
+
+// check if three are images in the elements
+var hasImages bool
+
+if len(elements) > 0 {
+	for _, e := range elements {
+		if e.Type == "picture" {
+			hasImages = true
+			break
+		}
+	}
+}
 	}}
 	<form
 		id="newsletterForm"
@@ -359,6 +371,15 @@ if errors.Edit {
     }
   });
 </script>
+	if hasImages {
+		<script type="text/javascript">
+  document.getElementsByName("deleteButton").forEach((button) => {
+    button.addEventListener('htmx:configRequest', (event) => {
+      event.detail.headers['X-CSRF-Token'] = document.getElementById('csrf_token').value
+    })
+  })
+</script>
+	}
 }
 
 type ElementError struct {
@@ -381,26 +402,25 @@ for _, e := range errors {
 }
 	}}
 	<div
-		id={ element.ID }
+		id={ "el_" + element.ID }
 		x-data={ templ.JSONString(element) }
 		class="grid grid-cols-1 md:grid-cols-2 gap-3 p-3 bg-base-200 rounded-lg"
 	>
 		<div class="flex flex-row items-center">
 			<button
 				type="button"
-				@click="removeItem(ID)"
+				@click="removeItem('el_' + ID)"
 				class="btn btn-outline btn-xs btn-circle btn-error mr-4"
-				disabled?={ 
-      (len(element.Upload)>0) }
+				disabled?={ (len(element.Upload)>0) }
 			>
 				<span class="i-mdi-close"></span>
 			</button>
 			<span
 				class="darrow i-mdi-arrow-down-drop-circle-outline hover:i-mdi-arrow-down-drop-circle text-xl cursor-pointer hover:text-primary"
-				@click="moveItemDown(ID)"
+				@click="moveItemDown('el_' + ID)"
 			></span><span
 	class="uarrow i-mdi-arrow-up-drop-circle-outline hover:i-mdi-arrow-up-drop-circle text-xl cursor-pointer hover:text-primary"
-	@click="moveItemUp(ID)"
+	@click="moveItemUp('el_' + ID)"
 ></span>
 		</div>
 		<input type="hidden" name="element_type" value={ element.Type }/>
@@ -573,7 +593,16 @@ templ elementPicture(element models.NewsletterElement, errors ElementError) {
 					Um dieses Bildelement aus dem Newsletter zu entfernen oder ersetzen, muss das Bild zuerst
 					gelöscht werden.
 				</span>
-				<button type="button" class="mt-3 btn btn-sm btn-circle btn-outline btn-error">
+				<button
+					name="deleteButton"
+					type="button"
+					hx-delete={ "/admin/newsletter/image/" + element.ID }
+					hx-params="none"
+					hx-target={ "#el_" + element.ID }
+					hx-swap="outerHTML"
+					hx-confirm="Bild wirklich löschen? Dies kann nicht mehr rückgängig gemacht werden."
+					class="mt-3 btn btn-sm btn-circle btn-outline btn-error"
+				>
 					<span class="i-mdi-trash"></span>
 				</button>
 			</div>
