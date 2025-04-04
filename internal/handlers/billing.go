@@ -219,7 +219,6 @@ func (m *Repository) HandleBillCreateEditPost(w http.ResponseWriter, r *http.Req
 		}
 		bill.ID = id
 		edit = true
-
 	}
 
 	// push all item fields to slices
@@ -231,12 +230,12 @@ func (m *Repository) HandleBillCreateEditPost(w http.ResponseWriter, r *http.Req
 
 	for key, value := range r.Form {
 		if key == "item_id" {
-			for i := 0; i < len(value); i++ {
+			for i := range value {
 				item_id = append(item_id, value[i])
 			}
 		}
 		if key == "item_position" {
-			for i := 0; i < len(value); i++ {
+			for i := range value {
 				position, err := strconv.Atoi(value[i])
 				if err != nil {
 					return err
@@ -245,18 +244,18 @@ func (m *Repository) HandleBillCreateEditPost(w http.ResponseWriter, r *http.Req
 			}
 		}
 		if key == "item_description" {
-			for i := 0; i < len(value); i++ {
+			for i := range value {
 				item_description = append(item_description, value[i])
 			}
 		}
 		if key == "item_count" {
-			for i := 0; i < len(value); i++ {
+			for i := range value {
 				count, _ := strconv.ParseFloat(value[i], 64)
 				item_count = append(item_count, count)
 			}
 		}
 		if key == "item_unit_price" {
-			for i := 0; i < len(value); i++ {
+			for i := range value {
 				price, _ := strconv.ParseFloat(value[i], 64)
 				item_unit_price = append(item_unit_price, price)
 			}
@@ -266,7 +265,7 @@ func (m *Repository) HandleBillCreateEditPost(w http.ResponseWriter, r *http.Req
 	form := forms.New(r.Form)
 	var items []models.BillItem
 
-	for i := 0; i < len(item_id); i++ {
+	for i := range item_id {
 		item := models.BillItem{
 			ID:          item_id[i],
 			Position:    item_position[i],
