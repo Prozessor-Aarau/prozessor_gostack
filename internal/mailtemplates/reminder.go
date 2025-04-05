@@ -99,3 +99,24 @@ func Reminder(visitor models.ReminderVisitor) (string, error) {
 
 	return msgToSend, nil
 }
+
+// Newsletter creates the template for a newsletter
+func Newsletter(newsletter models.Newsletter) (string, error) {
+
+	byteTemplate, err := os.ReadFile("./email-templates/newsletters/" + newsletter.Template.Template)
+	if err != nil {
+		return "", err
+	}
+
+	emailTemplate := string(byteTemplate)
+
+	// here replace the template-strings with the values from the database
+
+	// replace placeholders with generated strings
+	// msgToSend := strings.Replace(emailTemplate, "[%firstname%]", visitor.Visitor.FirstName, 1)
+	// msgToSend = strings.Replace(msgToSend, "[%reminder%]", msgAbo, 1)
+	// msgToSend = strings.Replace(msgToSend, "[%calltoaction%]", callToAction, 1)
+	// msgToSend = strings.Replace(msgToSend, "[%bringback%]", bringBack, 1)
+
+	return emailTemplate, nil
+}

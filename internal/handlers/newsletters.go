@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -17,11 +18,13 @@ import (
 
 	"github.com/faebut/prozessor_gostack/internal/events"
 	"github.com/faebut/prozessor_gostack/internal/forms"
+	"github.com/faebut/prozessor_gostack/internal/mailtemplates"
 	"github.com/faebut/prozessor_gostack/internal/models"
 	"github.com/faebut/prozessor_gostack/view/newsletter"
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 	"github.com/nfnt/resize"
+	"golang.org/x/net/html"
 )
 
 // HandleNewsletterIndex is the newsletter page handler
@@ -400,16 +403,18 @@ func (m *Repository) HandleNewsletterCreateEdit(w http.ResponseWriter, r *http.R
 			log.Println("ERROR:", err)
 		}
 	} else {
+		// TODO: need to get id back
+		// FIX: in createNew
 		err = m.DB.CreateNewsletter(nl)
 		if err != nil {
 			log.Println("ERROR:", err)
 		}
 	}
 
-	// TODO: go on
 	// if all is well, send to the preview page next
+	redirectURL := "/admin/newsletter/" + strconv.Itoa(nl.ID) + "/preview"
 
-	return hxRedirect(w, r, "/admin/newsletter")
+	return hxRedirect(w, r, redirectURL)
 }
 
 // HandleNewsletterEditIndex returns the form for an existing newsletter
@@ -469,4 +474,56 @@ func (m *Repository) HandleNewsletterImageDelete(w http.ResponseWriter, r *http.
 	el.Type = "picture"
 
 	return rendering(w, r, newsletter.Element(el, []newsletter.ElementError{}))
+}
+
+func (m *Repository) HandleNewsletterPreview(w http.ResponseWriter, r *http.Request) error {
+	// get visitor
+	visitor, ok := m.App.Session.Get(r.Context(), "visitor").(models.Visitor)
+	if !ok {
+		log.Println("could not get visitor from Session")
+		return hxRedirect(w, r, "/admin/logout")
+	}
+
+	// get newsletter id from request url
+	id, err := strconv.Atoi(chi.URLParam(r, "id"))
+	if err != nil {
+		return err
+	}
+
+	// get newsletter
+	nl, err := m.DB.GetNewsletterByID(id)
+	if err != nil {
+		return err
+	}
+
+	// get visitors ald filter
+	filter := models.NewVisitorSearch("")
+	filter.Member = nl.Members
+	// FIX: filter set to 0 instead of 10 for all
+	visitors, _, err := m.DB.AllVisitors(1, 10, filter)
+	if err != nil {
+		return err
+	}
+
+	var b bytes.Buffer
+	var node *html.Node
+
+	node, err = html.Parse(bytes.NewBufferString("<html>"))
+	if err != nil {
+		log.Println("making bytes of template:", err)
+		return err
+	}
+
+	// create template
+	template, err := mailtemplates.Newsletter(nl)
+
+	b = *bytes.NewBuffer([]byte(template))
+	if err != nil {
+		log.Println("error creating buffer from template:", err)
+		return err
+	}
+
+	html.Render(&b, node)
+
+	return rendering(w, r, newsletter.NewsletterPreview(visitor, visitors, b.String()))
 }
