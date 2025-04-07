@@ -12,6 +12,7 @@ require (
 	github.com/ebfe/scard v0.0.0-20230420082256-7db3f9b7c8a7
 	github.com/fogleman/gg v1.3.0
 	github.com/go-chi/chi/v5 v5.1.0
+	github.com/gomarkdown/markdown v0.0.0-20250311123330-531bef5e742b
 	github.com/goodsign/monday v1.0.2
 	github.com/google/uuid v1.6.0
 	github.com/jackc/pgx/v5 v5.7.1

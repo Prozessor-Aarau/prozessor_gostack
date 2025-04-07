@@ -1,12 +1,16 @@
 package mailtemplates
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"strings"
 	"time"
 
 	"github.com/faebut/prozessor_gostack/internal/models"
+	"github.com/gomarkdown/markdown"
+	"github.com/gomarkdown/markdown/html"
+	"github.com/gomarkdown/markdown/parser"
 )
 
 // Reminder creates the template for the reminder mail
@@ -110,19 +114,109 @@ func Newsletter(newsletter models.Newsletter, preview bool) (string, error) {
 
 	emailTemplate := string(byteTemplate)
 
-	// here replace the template-strings with the values from the database
-	var msgToSend string
-	// replace placeholders with generated strings
-	// msgToSend := strings.Replace(emailTemplate, "[%firstname%]", visitor.Visitor.FirstName, 1)
-	// msgToSend = strings.Replace(msgToSend, "[%reminder%]", msgAbo, 1)
-	// msgToSend = strings.Replace(msgToSend, "[%calltoaction%]", callToAction, 1)
-	// msgToSend = strings.Replace(msgToSend, "[%bringback%]", bringBack, 1)
+	// model html from the elements
+	var content string
+	for _, e := range newsletter.Elements {
 
-	// do this, when it's preview
+		switch e.Type {
+
+		case "text":
+			content += string(mdToHTML([]byte(e.Content)))
+
+		case "button":
+			content += fmt.Sprintf(`<div style="display: flex; justify-content: center;">
+				<a href="https://%s" target="_blank" style="text-decoration: none; color: #FFFFFF;">
+				<div class="mailbutton" align="center" style="background-color: [%%basecolor%%]; padding: 10px 20px; border-radius: 5px; color: #ffffff; font-weight: bold;">
+				%s
+                  </div>
+</a>
+				</div>
+            `, e.Url, e.Content)
+
+		case "picture":
+			content += fmt.Sprintf(`<img src="/static/newsletter/%s" alt="%s" width="100%%"><p style="margin-top: 4px; font-size: 0.8rem;">%s</p>`, e.Upload, e.AltText, e.Content)
+
+		case "events":
+			// unmarshal json to event slice
+			var events []models.Event
+			var month string
+			err = json.Unmarshal([]byte(e.Content), &events)
+			if err != nil {
+				panic(err)
+			}
+
+			var eventHTML string
+			// open grid tag
+			eventHTML = `<h2>Kalender</h2>
+			<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));">`
+
+			for _, e := range events {
+
+				// TODO: wrong locale for mont and weekday
+				if e.EventTime.Format("Jan") != month {
+					month = e.EventTime.Format("Jan")
+					eventHTML += fmt.Sprintf(`<div style="font-weight: 700; font-size: 1.25rem; padding: 6px; padding-left: 25px; background-color: [%%accentcolor%%]; text-transform: uppercase; margin-bottom: 0.75rem; margin-top: 1.25rem; grid-column: 1 / -1;">%s</div>`, month)
+				}
+
+				eventHTML += fmt.Sprintf(`
+					<a style="display: flex; text-decoration: none; margin-left: 25px, margin-right: 25px; color: black; align-items: center;" href="%s">
+					<div style="min-width: 0; max-width: 36px; font-weight: 300; background-color: [%%basecolor%%]; font-size: 1rem; margin-right: 10px; padding: 5px 10px;">
+									%s
+									%s
+								</div>
+					<div style="font-size: 16pt; font-weight: 700; padding-top: 10px; padding-bottom: 15px; line-height: 1.1;">
+									%s
+								</div>
+							</a>
+					`, e.URL,
+					strings.ToUpper(e.EventTime.Weekday().String()[:2]),
+					e.EventTime.Format("02"),
+					e.Title,
+				)
+			}
+
+			// close div tag
+			eventHTML += "</div>"
+
+			content += eventHTML
+		}
+
+	}
+
+	// TODO: change color for logo
+
+	// replace placeholders with generated strings
+	msgToSend := strings.Replace(emailTemplate, "[%content%]", content, 1)
+
+	// replace colors
+	msgToSend = strings.Replace(msgToSend, "[%basecolor%]", newsletter.ColorBase, -1)
+	msgToSend = strings.Replace(msgToSend, "[%accentcolor%]", newsletter.ColorAccent, -1)
+
+	// apply styles
+	msgToSend = strings.Replace(msgToSend, `<h1`, fmt.Sprintf(`<h1 style="color: %s"`, newsletter.ColorBase), -1)
+	msgToSend = strings.Replace(msgToSend, `<h2`, fmt.Sprintf(`<h2 style="color: %s"`, newsletter.ColorBase), -1)
+	msgToSend = strings.Replace(msgToSend, `<h3`, fmt.Sprintf(`<h3 style="color: %s"`, newsletter.ColorBase), -1)
+
+	// do this only when it's in preview mode as we need no body element
 	if preview {
-		msgToSend = strings.Replace(emailTemplate, "<body", `<div class="prose"`, 1)
+		msgToSend = strings.Replace(msgToSend, "<body", `<div`, 1)
 		msgToSend = strings.Replace(msgToSend, "</body>", "</div>", 1)
+		msgToSend = strings.Replace(msgToSend, `class="content"`, `class="content prose"`, 1)
 	}
 
 	return msgToSend, nil
+}
+
+func mdToHTML(md []byte) []byte {
+	// create markdown parser with extensions
+	extensions := parser.CommonExtensions | parser.AutoHeadingIDs | parser.NoEmptyLineBeforeBlock
+	p := parser.NewWithExtensions(extensions)
+	doc := p.Parse(md)
+
+	// create HTML renderer with extensions
+	htmlFlags := html.CommonFlags | html.HrefTargetBlank
+	opts := html.RendererOptions{Flags: htmlFlags}
+	renderer := html.NewRenderer(opts)
+
+	return markdown.Render(doc, renderer)
 }

@@ -496,7 +496,15 @@ func (m *Repository) HandleNewsletterPreview(w http.ResponseWriter, r *http.Requ
 		return err
 	}
 
-	// get visitors ald filter
+	// get elements for newsletter
+	elements, err := m.DB.GetAllNewsletterElementsByID(id)
+	if err != nil {
+		return err
+	}
+
+	nl.Elements = elements
+
+	// get visitors and filter
 	filter := models.NewVisitorSearch("")
 	filter.Member = nl.Members
 	// FIX: filter set to 0 instead of 10 for all
@@ -515,7 +523,7 @@ func (m *Repository) HandleNewsletterPreview(w http.ResponseWriter, r *http.Requ
 	}
 
 	// create template
-	template, err := mailtemplates.Newsletter(nl)
+	template, err := mailtemplates.Newsletter(nl, true)
 
 	b = *bytes.NewBuffer([]byte(template))
 	if err != nil {
