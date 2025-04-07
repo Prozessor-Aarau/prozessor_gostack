@@ -101,7 +101,7 @@ func Reminder(visitor models.ReminderVisitor) (string, error) {
 }
 
 // Newsletter creates the template for a newsletter
-func Newsletter(newsletter models.Newsletter) (string, error) {
+func Newsletter(newsletter models.Newsletter, preview bool) (string, error) {
 
 	byteTemplate, err := os.ReadFile("./email-templates/newsletters/" + newsletter.Template.Template)
 	if err != nil {
@@ -111,12 +111,18 @@ func Newsletter(newsletter models.Newsletter) (string, error) {
 	emailTemplate := string(byteTemplate)
 
 	// here replace the template-strings with the values from the database
-
+	var msgToSend string
 	// replace placeholders with generated strings
 	// msgToSend := strings.Replace(emailTemplate, "[%firstname%]", visitor.Visitor.FirstName, 1)
 	// msgToSend = strings.Replace(msgToSend, "[%reminder%]", msgAbo, 1)
 	// msgToSend = strings.Replace(msgToSend, "[%calltoaction%]", callToAction, 1)
 	// msgToSend = strings.Replace(msgToSend, "[%bringback%]", bringBack, 1)
 
-	return emailTemplate, nil
+	// do this, when it's preview
+	if preview {
+		msgToSend = strings.Replace(emailTemplate, "<body", `<div class="prose"`, 1)
+		msgToSend = strings.Replace(msgToSend, "</body>", "</div>", 1)
+	}
+
+	return msgToSend, nil
 }
