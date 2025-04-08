@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -15,7 +16,9 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
+	"github.com/a-h/templ"
 	"github.com/faebut/prozessor_gostack/internal/events"
 	"github.com/faebut/prozessor_gostack/internal/forms"
 	"github.com/faebut/prozessor_gostack/internal/mailtemplates"
@@ -535,11 +538,120 @@ func (m *Repository) HandleNewsletterSendList(w http.ResponseWriter, r *http.Req
 	// get visitors and filter
 	filter := models.NewVisitorSearch("")
 	filter.Member = nl.Members
-	// FIX: filter set to 0 instead of 10 for all
-	_, count, err := m.DB.AllVisitors(1, 10, filter)
+	_, count, err := m.DB.AllVisitors(1, 0, filter)
 	if err != nil {
 		return err
 	}
 
 	return rendering(w, r, newsletter.NewsletterPreSend(count, nl))
+}
+
+// HandleNewsletterSend handles the start of sending the newsletters and renders the progress page
+func (m *Repository) HandleNewsletterSend(w http.ResponseWriter, r *http.Request) error {
+	// get newsletter id from request url
+	id, err := strconv.Atoi(chi.URLParam(r, "id"))
+	if err != nil {
+		return err
+	}
+
+	// send newsletters in seperate goroutine
+	go m.sendNewsletters(id)
+
+	return rendering(w, r, newsletter.NewsletterProgressPage())
+}
+
+// sendNewsletters sends the newsletter to the mail channel and the channel for the frontend visualization
+func (m *Repository) sendNewsletters(id int) {
+	// get newsletter so we know if its internal or not
+	nl, err := m.DB.GetNewsletterByID(id)
+	if err != nil {
+		// TODO: error handling
+		log.Println(err)
+	}
+
+	// get visitors and filter
+	filter := models.NewVisitorSearch("")
+	filter.Member = nl.Members
+	visitors, count, err := m.DB.AllVisitors(1, 0, filter)
+	if err != nil {
+		// TODO: error handling
+		log.Println(err)
+	}
+
+	// Open new Channel to send data to the template.
+	log.Println("open new channel")
+	m.App.Newsletter.WaitList = make(chan models.MailData, count)
+	m.App.Newsletter.Active = true
+
+	// create template
+	template, err := mailtemplates.Newsletter(nl)
+	if err != nil {
+		log.Println("error creating template:", err)
+		return
+	}
+
+	for i, v := range visitors {
+
+		// replace per user strings
+		unsubscribeString := "member/" + v.ID
+		vTemplate := strings.Replace(template, "[%unsubscribe%]", unsubscribeString, 1)
+
+		// create model for mail
+		msg := models.MailData{
+			To:      v.Email,
+			Subject: nl.Title,
+			Content: vTemplate,
+		}
+
+		// send to channel
+		m.App.MailChan <- msg
+
+		// put info in the channel to be read in frontend
+		m.App.Newsletter.WaitList <- models.MailData{
+			Reason:     "Newsletter",
+			Count:      count,
+			Progress:   i + 1,
+			FirstName:  v.FirstName,
+			FamilyName: v.FamilyName,
+			To:         v.Email,
+		}
+		time.Sleep(time.Millisecond * 500)
+	}
+
+	log.Println("closing channel")
+	m.App.Newsletter.Active = false
+	close(m.App.Newsletter.WaitList)
+}
+
+// HandleNewsletterProgressBar handles the SSE channel to send an updated progress bar for the sending of newsletters
+func (m *Repository) HandleNewsletterProgressBar(w http.ResponseWriter, r *http.Request) {
+	// Set headers for SSE
+	w.Header().Set("Content-Type", "text/event-stream")
+	w.Header().Set("Cache-Control", "no-cache")
+	w.Header().Set("Connection", "keep-alive")
+
+	// Create a context for handling client disconnection
+	ctx, cancel := context.WithCancel(r.Context())
+	defer cancel()
+
+	// Send data to the client
+	for data := range m.App.Newsletter.WaitList {
+		select {
+		case <-r.Context().Done():
+			// Quit early if the client is no longer connected.
+			return
+		default:
+			template, err := templ.ToGoHTML(ctx, newsletter.NewsletterProgressBar(data))
+			if err != nil {
+				log.Println(err)
+			}
+
+			fmt.Fprintf(w, "data: %s\n\n", template)
+			w.(http.Flusher).Flush()
+		}
+	}
+
+	// send event to stop listening
+	fmt.Fprint(w, "event: stop\ndata: stop\n\n")
+	w.(http.Flusher).Flush()
 }

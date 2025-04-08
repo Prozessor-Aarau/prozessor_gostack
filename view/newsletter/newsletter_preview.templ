@@ -15,7 +15,7 @@ templ NewsletterPreSend(count int, nl models.Newsletter) {
   </div>
   <div>Anzahl Empänger:innen: { strconv.Itoa(count) }</div>
   if count>0 {
-  <button class="btn btn-success" hx-post={ "/admin/newsletter/confirm" + strconv.Itoa(nl.ID) }
+  <button class="btn btn-success" hx-get={ "/admin/newsletter/send/" + strconv.Itoa(nl.ID) }
     hx-target="#content">Newsletter versenden</button>
   }
   <a href="/admin/newsletter" class="btn btn-warning">Abbrechen</a>
