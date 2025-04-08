@@ -153,10 +153,11 @@ func Newsletter(newsletter models.Newsletter) (string, error) {
 
 			for _, e := range events {
 
-				// TODO: wrong locale for mont and weekday
+				// TODO: get black or white if basecolor is dark or light
+
 				if monday.Format(e.EventTime.Time, "Jan", monday.LocaleDeDE) != month {
-					month = monday.Format(e.EventTime.Time, "Jan", monday.LocaleDeDE)
-					eventHTML += fmt.Sprintf(`<div style="font-weight: 700; font-size: 1.25rem; padding: 6px; padding-left: 25px; background-color: [%%accentcolor%%]; text-transform: uppercase; grid-column: 1 / -1;">%s</div>`, month)
+					month = monday.Format(e.EventTime.Time, "January", monday.LocaleDeDE)
+					eventHTML += fmt.Sprintf(`<div style="font-weight: 700; font-size: 1.25rem; padding: 6px; padding-left: 25px; background-color: [%%accentcolor%%]; color: [%%basecolor%%]; grid-column: 1 / -1;">%s</div>`, strings.ToUpper(month))
 				}
 
 				eventHTML += fmt.Sprintf(`
