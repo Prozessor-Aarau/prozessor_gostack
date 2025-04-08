@@ -40,7 +40,7 @@ func Reminder(visitor models.ReminderVisitor) (string, error) {
     `
 
 		if visitor.RessortID > 0 {
-			callToAction = `Wir möchten uns an dieser Stelle ganz herzilch für deinen Einsatz im Prozessor bedanken! Es würde uns riesig freuen, dich weiterhin als aktives Mitglied in einem der Ressorts beim Prozessor zu haben. 
+			callToAction = `Wir möchten uns an dieser Stelle ganz herzlich für deinen Einsatz im Prozessor bedanken! Es würde uns riesig freuen, dich weiterhin als aktives Mitglied in einem der Ressorts beim Prozessor zu haben. 
       <br><br>
       Wenn du weiterhin aktiv im Verein aktiv sein möchtest, hast du die Möglichkeit vergünstigtes Abonnement zum Betrag von 320.- pro Jahr zu erstehen. Einen entsprechenden Einzahlungsschein ist der Email angehängt. 
       <br><br>
@@ -61,7 +61,7 @@ func Reminder(visitor models.ReminderVisitor) (string, error) {
 			msgAbo = `Du hast vor einiger Zeit ein Abonnement im Prozessor gelöst, dich aktiv in einem Ressort eingesetzt und einen Badge erhalten, der dir uneingeschränkten Zugang zu den Werkstätten gewährt.
     <br><br>`
 
-			callToAction = `Wir möchten uns an dieser Stelle ganz herzilch für deinen Einsatz im Prozessor bedanken! Es würde uns riesig freuen, dich weiterhin als aktives Mitglied in einem der Ressorts beim Prozessor zu haben. 
+			callToAction = `Wir möchten uns an dieser Stelle ganz herzlich für deinen Einsatz im Prozessor bedanken! Es würde uns riesig freuen, dich weiterhin als aktives Mitglied in einem der Ressorts beim Prozessor zu haben. 
       <br><br>
       Du kannst dein Abonnement zum vergünstigten Preis von CHF 320.- um ein weiteres Jahr verlängern und behältst deinen Zugangsbadge. Wir bitten dich, den angehängten Einzahlungsschein innert 30 Tagen zu bezahlen.`
 		} else {
