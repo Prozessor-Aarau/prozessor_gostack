@@ -157,7 +157,7 @@ func Newsletter(newsletter models.Newsletter) (string, error) {
 
 				if monday.Format(e.EventTime.Time, "Jan", monday.LocaleDeDE) != month {
 					month = monday.Format(e.EventTime.Time, "January", monday.LocaleDeDE)
-					eventHTML += fmt.Sprintf(`<div style="font-weight: 700; font-size: 1.25rem; padding: 6px; padding-left: 25px; background-color: [%%accentcolor%%]; color: [%%basecolor%%]; grid-column: 1 / -1;">%s</div>`, strings.ToUpper(month))
+					eventHTML += fmt.Sprintf(`<div style="margin-bottom: 20px; font-weight: 700; font-size: 1.25rem; padding: 6px; padding-left: 25px; background-color: [%%accentcolor%%]; color: [%%basecolor%%]; grid-column: 1 / -1;">%s</div>`, strings.ToUpper(month))
 				}
 
 				eventHTML += fmt.Sprintf(`
