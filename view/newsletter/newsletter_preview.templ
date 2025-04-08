@@ -1,5 +1,53 @@
 package newsletter
 
+import (
+"github.com/faebut/prozessor_gostack/internal/models"
+"strconv"
+)
+
+templ NewsletterPreSend(count int, nl models.Newsletter) {
+<div class="grid grid-cols-2 items-center gap-3">
+  <div class="prose col-span-full">
+    <h2>Newsletter versenden</h2>
+  </div>
+  <div class="prose col-span-full">
+    <h3>Infos</h3>
+  </div>
+  <div>Anzahl Empänger:innen: { strconv.Itoa(count) }</div>
+  if count>0 {
+  <button class="btn btn-success" hx-post={ "/admin/newsletter/confirm" + strconv.Itoa(nl.ID) }
+    hx-target="#content">Newsletter versenden</button>
+  }
+  <a href="/admin/newsletter" class="btn btn-warning">Abbrechen</a>
+</div>
+}
+
 templ NewsletterPreview(template string) {
 @templ.Raw(template)
+}
+
+templ NewsletterProgressPage() {
+<div id="progressbar" class="w-full" hx-ext="sse" sse-connect="/admin/newsletter/progress" sse-swap="message"
+  sse-close="stop"></div>
+}
+
+templ NewsletterProgressBar(r models.MailData) {
+<div class="flex flex-col items-center gap-5 w-full">
+  if r.Count > r.Progress {
+  <div class="flex flex-col items-center prose">
+    <h2 class="text-primary">Newsletter werden versendet</h2>
+    <h3 class="text-primary">{ strconv.Itoa(r.Progress) } / { strconv.Itoa(r.Count) }</h3>
+  </div>
+  <progress class="progress progress-primary w-56" value={ strconv.Itoa(r.Progress) } max={ strconv.Itoa(r.Count)
+    }></progress>
+  <div class="prose">
+    <h4 class="text-primary">Sende an: { r.FirstName } { r.FamilyName }</h4>
+  </div>
+  } else {
+  <div class="prose">
+    <h2 class="text-success">Alle { strconv.Itoa(r.Count) } Newsletter wurden versendet!</h2>
+  </div>
+  <a class="btn btn-primary" href="/admin/newsletter">Zurück zur Liste</a>
+  }
+</div>
 }

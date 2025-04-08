@@ -518,3 +518,28 @@ func (m *Repository) HandleNewsletterPreview(w http.ResponseWriter, r *http.Requ
 
 	return rendering(w, r, newsletter.NewsletterPreview(b.String()))
 }
+
+func (m *Repository) HandleNewsletterSendList(w http.ResponseWriter, r *http.Request) error {
+	// get newsletter id from request url
+	id, err := strconv.Atoi(chi.URLParam(r, "id"))
+	if err != nil {
+		return err
+	}
+
+	// get newsletter so we know if its internal or not
+	nl, err := m.DB.GetNewsletterByID(id)
+	if err != nil {
+		return err
+	}
+
+	// get visitors and filter
+	filter := models.NewVisitorSearch("")
+	filter.Member = nl.Members
+	// FIX: filter set to 0 instead of 10 for all
+	_, count, err := m.DB.AllVisitors(1, 10, filter)
+	if err != nil {
+		return err
+	}
+
+	return rendering(w, r, newsletter.NewsletterPreSend(count, nl))
+}

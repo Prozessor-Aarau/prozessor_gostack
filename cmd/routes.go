@@ -194,6 +194,7 @@ func routes(app *config.AppConfig) http.Handler {
 				mux.Post("/newsletter/edit/{id}", handlers.Make(handlers.Repo.HandleNewsletterCreateEdit))
 				mux.Delete("/newsletter/image/{id}", handlers.Make(handlers.Repo.HandleNewsletterImageDelete))
 				mux.Get("/newsletter/preview/{id}", handlers.Make(handlers.Repo.HandleNewsletterPreview))
+				mux.Get("/newsletter/sendlist/{id}", handlers.Make(handlers.Repo.HandleNewsletterSendList))
 			})
 		})
 
