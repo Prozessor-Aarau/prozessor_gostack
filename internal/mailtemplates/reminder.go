@@ -11,6 +11,7 @@ import (
 	"github.com/gomarkdown/markdown"
 	"github.com/gomarkdown/markdown/html"
 	"github.com/gomarkdown/markdown/parser"
+	"github.com/goodsign/monday"
 )
 
 // Reminder creates the template for the reminder mail
@@ -105,7 +106,7 @@ func Reminder(visitor models.ReminderVisitor) (string, error) {
 }
 
 // Newsletter creates the template for a newsletter
-func Newsletter(newsletter models.Newsletter, preview bool) (string, error) {
+func Newsletter(newsletter models.Newsletter) (string, error) {
 
 	byteTemplate, err := os.ReadFile("./email-templates/newsletters/" + newsletter.Template.Template)
 	if err != nil {
@@ -148,28 +149,28 @@ func Newsletter(newsletter models.Newsletter, preview bool) (string, error) {
 			var eventHTML string
 			// open grid tag
 			eventHTML = `<h2>Kalender</h2>
-			<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));">`
+			<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 15px;">`
 
 			for _, e := range events {
 
 				// TODO: wrong locale for mont and weekday
-				if e.EventTime.Format("Jan") != month {
-					month = e.EventTime.Format("Jan")
-					eventHTML += fmt.Sprintf(`<div style="font-weight: 700; font-size: 1.25rem; padding: 6px; padding-left: 25px; background-color: [%%accentcolor%%]; text-transform: uppercase; margin-bottom: 0.75rem; margin-top: 1.25rem; grid-column: 1 / -1;">%s</div>`, month)
+				if monday.Format(e.EventTime.Time, "Jan", monday.LocaleDeDE) != month {
+					month = monday.Format(e.EventTime.Time, "Jan", monday.LocaleDeDE)
+					eventHTML += fmt.Sprintf(`<div style="font-weight: 700; font-size: 1.25rem; padding: 6px; padding-left: 25px; background-color: [%%accentcolor%%]; text-transform: uppercase; grid-column: 1 / -1;">%s</div>`, month)
 				}
 
 				eventHTML += fmt.Sprintf(`
-					<a style="display: flex; text-decoration: none; margin-left: 25px, margin-right: 25px; color: black; align-items: center;" href="%s">
-					<div style="min-width: 0; max-width: 36px; font-weight: 300; background-color: [%%basecolor%%]; font-size: 1rem; margin-right: 10px; padding: 5px 10px;">
-									%s
-									%s
+					<a class="calenderlink" style="display: flex; gap: 10px; text-decoration: none; margin-left: 25px; margin-right: 25px; align-items: center;" href="%s" target="_blank">
+					<div style="width: 30px; font-weight: 600; background-color: [%%basecolor%%]; color: white; font-size: 1rem; padding: 5px 10px; display: flex; flex-direction: column; align-items: center;">
+									<span>%s</span>
+									<span>%s</span>
 								</div>
 					<div style="font-size: 16pt; font-weight: 700; padding-top: 10px; padding-bottom: 15px; line-height: 1.1;">
 									%s
 								</div>
 							</a>
 					`, e.URL,
-					strings.ToUpper(e.EventTime.Weekday().String()[:2]),
+					strings.ToUpper(monday.Format(e.EventTime.Time, "Monday", monday.LocaleDeDE)[:2]),
 					e.EventTime.Format("02"),
 					e.Title,
 				)
@@ -196,13 +197,6 @@ func Newsletter(newsletter models.Newsletter, preview bool) (string, error) {
 	msgToSend = strings.Replace(msgToSend, `<h1`, fmt.Sprintf(`<h1 style="color: %s"`, newsletter.ColorBase), -1)
 	msgToSend = strings.Replace(msgToSend, `<h2`, fmt.Sprintf(`<h2 style="color: %s"`, newsletter.ColorBase), -1)
 	msgToSend = strings.Replace(msgToSend, `<h3`, fmt.Sprintf(`<h3 style="color: %s"`, newsletter.ColorBase), -1)
-
-	// do this only when it's in preview mode as we need no body element
-	if preview {
-		msgToSend = strings.Replace(msgToSend, "<body", `<div`, 1)
-		msgToSend = strings.Replace(msgToSend, "</body>", "</div>", 1)
-		msgToSend = strings.Replace(msgToSend, `class="content"`, `class="content prose"`, 1)
-	}
 
 	return msgToSend, nil
 }

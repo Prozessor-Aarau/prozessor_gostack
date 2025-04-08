@@ -477,13 +477,6 @@ func (m *Repository) HandleNewsletterImageDelete(w http.ResponseWriter, r *http.
 }
 
 func (m *Repository) HandleNewsletterPreview(w http.ResponseWriter, r *http.Request) error {
-	// get visitor
-	visitor, ok := m.App.Session.Get(r.Context(), "visitor").(models.Visitor)
-	if !ok {
-		log.Println("could not get visitor from Session")
-		return hxRedirect(w, r, "/admin/logout")
-	}
-
 	// get newsletter id from request url
 	id, err := strconv.Atoi(chi.URLParam(r, "id"))
 	if err != nil {
@@ -504,15 +497,6 @@ func (m *Repository) HandleNewsletterPreview(w http.ResponseWriter, r *http.Requ
 
 	nl.Elements = elements
 
-	// get visitors and filter
-	filter := models.NewVisitorSearch("")
-	filter.Member = nl.Members
-	// FIX: filter set to 0 instead of 10 for all
-	visitors, _, err := m.DB.AllVisitors(1, 10, filter)
-	if err != nil {
-		return err
-	}
-
 	var b bytes.Buffer
 	var node *html.Node
 
@@ -523,7 +507,7 @@ func (m *Repository) HandleNewsletterPreview(w http.ResponseWriter, r *http.Requ
 	}
 
 	// create template
-	template, err := mailtemplates.Newsletter(nl, true)
+	template, err := mailtemplates.Newsletter(nl)
 
 	b = *bytes.NewBuffer([]byte(template))
 	if err != nil {
@@ -533,5 +517,5 @@ func (m *Repository) HandleNewsletterPreview(w http.ResponseWriter, r *http.Requ
 
 	html.Render(&b, node)
 
-	return rendering(w, r, newsletter.NewsletterPreview(visitor, visitors, b.String()))
+	return rendering(w, r, newsletter.NewsletterPreview(b.String()))
 }
