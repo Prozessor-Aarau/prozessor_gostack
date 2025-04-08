@@ -149,7 +149,7 @@ func Newsletter(newsletter models.Newsletter) (string, error) {
 			var eventHTML string
 			// open grid tag
 			eventHTML = `<h2>Kalender</h2>
-			<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 15px;">`
+			<div style="margin-bottom: 20px; display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 15px;">`
 
 			for _, e := range events {
 
