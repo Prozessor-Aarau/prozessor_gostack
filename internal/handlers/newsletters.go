@@ -569,6 +569,15 @@ func (m *Repository) sendNewsletters(id int) {
 		log.Println(err)
 	}
 
+	// get elements for newsletter
+	elements, err := m.DB.GetAllNewsletterElementsByID(id)
+	if err != nil {
+		// TODO: error handling
+		log.Println(err)
+	}
+
+	nl.Elements = elements
+
 	// get visitors and filter
 	filter := models.NewVisitorSearch("")
 	filter.Member = nl.Members
