@@ -403,16 +403,15 @@ func (m *Repository) HandleNewsletterCreateEdit(w http.ResponseWriter, r *http.R
 			log.Println("ERROR:", err)
 		}
 	} else {
-		// TODO: need to get id back
-		// FIX: in createNew
 		err = m.DB.CreateNewsletter(nl)
 		if err != nil {
 			log.Println("ERROR:", err)
 		}
 	}
 
-	// if all is well, send to the preview page next
-	redirectURL := "/admin/newsletter/" + strconv.Itoa(nl.ID) + "/preview"
+	// TODO: do a better workflow
+	// if all is well, send to the newsletter overview page
+	redirectURL := "/admin/newsletter"
 
 	return hxRedirect(w, r, redirectURL)
 }
