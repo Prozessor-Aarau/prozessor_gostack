@@ -538,12 +538,12 @@ func (m *Repository) HandleNewsletterSendList(w http.ResponseWriter, r *http.Req
 	// get visitors and filter
 	filter := models.NewVisitorSearch("")
 	filter.Member = nl.Members
-	_, count, err := m.DB.AllVisitors(1, 0, filter)
+	visitors, _, err := m.DB.AllVisitors(1, 0, filter)
 	if err != nil {
 		return err
 	}
 
-	return rendering(w, r, newsletter.NewsletterPreSend(count, nl))
+	return rendering(w, r, newsletter.NewsletterPreSend(len(visitors), nl))
 }
 
 // HandleNewsletterSend handles the start of sending the newsletters and renders the progress page
@@ -581,7 +581,7 @@ func (m *Repository) sendNewsletters(id int) {
 	// get visitors and filter
 	filter := models.NewVisitorSearch("")
 	filter.Member = nl.Members
-	visitors, count, err := m.DB.AllVisitors(1, 0, filter)
+	visitors, _, err := m.DB.AllVisitors(1, 0, filter)
 	if err != nil {
 		// TODO: error handling
 		log.Println(err)
@@ -589,7 +589,7 @@ func (m *Repository) sendNewsletters(id int) {
 
 	// Open new Channel to send data to the template.
 	log.Println("open new channel")
-	m.App.Newsletter.WaitList = make(chan models.MailData, count)
+	m.App.Newsletter.WaitList = make(chan models.MailData, len(visitors))
 	m.App.Newsletter.Active = true
 
 	// create template
@@ -618,7 +618,7 @@ func (m *Repository) sendNewsletters(id int) {
 		// put info in the channel to be read in frontend
 		m.App.Newsletter.WaitList <- models.MailData{
 			Reason:     "Newsletter",
-			Count:      count,
+			Count:      len(visitors),
 			Progress:   i + 1,
 			FirstName:  v.FirstName,
 			FamilyName: v.FamilyName,
