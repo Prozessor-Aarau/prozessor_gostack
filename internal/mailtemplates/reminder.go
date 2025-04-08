@@ -135,7 +135,7 @@ func Newsletter(newsletter models.Newsletter) (string, error) {
             `, e.Url, e.Content)
 
 		case "picture":
-			content += fmt.Sprintf(`<img src="/static/newsletter/%s" alt="%s" width="100%%"><p style="margin-top: 4px; font-size: 0.8rem;">%s</p>`, e.Upload, e.AltText, e.Content)
+			content += fmt.Sprintf(`<img src="/static/newsletter/%s" alt="%s" width="100%%"><p style="margin-top: 0px; font-size: 0.8rem;">%s</p>`, e.Upload, e.AltText, e.Content)
 
 		case "events":
 			// unmarshal json to event slice

@@ -55,6 +55,10 @@ for _, n := range newsletters {
       templ.URL("/admin/newsletter/preview/" + strconv.Itoa(n.ID)) } target="_blank">
       <span class="text-xl i-mdi-eye"></span>
     </a>
+    <a class={ "btn btn-sm btn-circle btn-info" , templ.KV("btn-disabled", !prm.ViewNewsletters) } href={
+      templ.URL("/admin/newsletter/sendlist/" + strconv.Itoa(n.ID)) } target="_blank">
+      <span class="text-xl i-mdi-send"></span>
+    </a>
   </div>
 </div>
 }
