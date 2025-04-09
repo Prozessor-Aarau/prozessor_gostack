@@ -1,100 +1,102 @@
 package abonnements
 
 import (
-"github.com/faebut/prozessor_gostack/internal/models"
-"github.com/faebut/prozessor_gostack/internal/render"
-"github.com/faebut/prozessor_gostack/view/layout"
-"github.com/faebut/prozessor_gostack/view/ui"
-"strconv"
+	"github.com/faebut/prozessor_gostack/internal/models"
+	"github.com/faebut/prozessor_gostack/internal/render"
+	"github.com/faebut/prozessor_gostack/view/layout"
+	"github.com/faebut/prozessor_gostack/view/ui"
+	"strconv"
 )
 
 templ Abonnements(visitor models.Visitor) {
-@layout.App(true, visitor) {
-<div class="prose mb-10">
-  <h1>Abonnements</h1>
-</div>
-<div id="content">
-  @abonnementsFilter()
-  <div id="aboList" hx-get="/admin/abonnements/abonnementlist" hx-trigger="load"></div>
-</div>
-}
+	@layout.App(true, visitor) {
+		<div class="prose mb-10">
+			<h1>Abonnements</h1>
+		</div>
+		<div id="content">
+			@abonnementsFilter()
+			<div id="aboList" hx-get="/admin/abonnements/abonnementlist" hx-trigger="load"></div>
+		</div>
+	}
 }
 
 templ abonnementsFilter() {
-{{ prm := ctx.Value("permission").(models.Role) }}
-<div class="border-base-content border-opacity-20 border rounded-md dark:rounded-lg bg-base-100 my-4 p-4">
-  <h2 class="font-bold text-xl mb-3">Suchfilter</h2>
-  <form id="filterForm" novalidate>
-    <div class="grid grid-cols-4 gap-5">
-      @ui.CSRF()
-      <label class="input input-bordered flex items-center gap-2 col-span-4">
-        <span class="text-3xl i-mdi-magnify"></span>
-        <input type="text" id="search_term" name="search_term" class="grow" placeholder="Suche nach Name, Vorname..." />
-        <!-- how to implement this button? should reset field -->
-        <button id="fieldreset" class="ml-3 btn btn-neutral btn-outline btn-xs btn-circle">
-          <span class="i-mdi-close"></span>
-        </button>
-      </label>
-      <div class="col-span-full md:col-span-1">
-        <label class="form-control" id="abooptions">
-          <div class="label">
-            <span class="label-text">Gültigkeit:</span>
-          </div>
-          <select name="abovalidity" id="sort" class="select select-bordered">
-            <option value="all">alle</option>
-            <option value="valid">nur gültig</option>
-            <option value="invalid">nur abgelaufen</option>
-          </select>
-        </label>
-      </div>
-      <div class="col-span-full md:col-span-3 flex flex-col justify-end">
-        <label class="label cursor-pointer gap-4 justify-start">
-          <input name="member" type="checkbox" class="checkbox checkbox-sm" />
-          <span>Mitglied</span>
-        </label>
-        <label class="label cursor-pointer gap-4 pb-0 justify-start">
-          <input name="unique" type="checkbox" class="checkbox checkbox-sm" />
-          <span>nur aktuellstes Abo anzeigen</span>
-        </label>
-      </div>
-      <label class="form-control w-full max-w-xs col-span-4 md:col-span-2 pb-0">
-        <div class="label">
-          <span class="label-text">Sortieren nach:</span>
-        </div>
-        <select name="sort" id="sort" class="select select-bordered">
-          <option value="buydate">Ablaufdatum</option>
-          <option value="family_name">Name</option>
-        </select>
-      </label>
-      <label class="form-control w-full max-w-xs col-span-4 md:col-span-2">
-        <div class="label">
-          <span class="label-text">Richtung:</span>
-        </div>
-        <select name="sort_dir" id="sort_dir" class="select select-bordered">
-          <option value="DESC">absteigend</option>
-          <option value="ASC">aufsteigend</option>
-        </select>
-      </label>
-      <div class="col-span-4 grid grid-cols-2 justify-items-center gap-3">
-        <button type="submit" hx-post="/admin/abonnements/abonnementlist" hx-target="#aboList"
-          class="btn btn-success btn-outline"><span class="i-mdi-magnify"></span> suchen</button>
-        <a href="/admin/abonnements" class="btn btn-error btn-outline">
-          <span class="i-mdi-close"></span> zurücksetzen
-        </a>
-      </div>
-    </div>
-  </form>
-  if prm.AddAbonnement {
-  <div class="border-base-content border-opacity-50 border-dashed border-t mt-4 pt-4">
-    <button type="button" class="btn btn-secondary" hx-get="/admin/abonnements/create" hx-target="#content">
-      Neues Abo
-      hinzufügen
-    </button>
-  </div>
-  }
-</div>
-<!-- For the switches -->
-<script>
+	{{ prm := ctx.Value("permission").(models.Role) }}
+	<div class="border-base-content/20 border rounded-md dark:rounded-lg bg-base-100 my-4 p-4">
+		<h2 class="font-bold text-xl mb-3">Suchfilter</h2>
+		<form id="filterForm" novalidate>
+			<div class="grid grid-cols-4 gap-5">
+				@ui.CSRF()
+				<label class="input flex items-center gap-2 w-full col-span-4">
+					<span class="text-3xl i-mdi-magnify"></span>
+					<input
+						type="text"
+						id="search_term"
+						name="search_term"
+						class="grow w-full"
+						placeholder="Suche nach Name, Vorname..."
+					/>
+					<!-- how to implement this button? should reset field -->
+					<button id="fieldreset" class="ml-3 btn btn-neutral btn-outline btn-xs btn-circle">
+						<span class="i-mdi-close"></span>
+					</button>
+				</label>
+				<fieldset class="fieldset col-span-full md:col-span-1" id="abooptions">
+					<legend class="fieldset-legend">Gültigkeit</legend>
+					<select name="abovalidity" id="sort" class="select select-bordered">
+						<option value="all">alle</option>
+						<option value="valid">nur gültig</option>
+						<option value="invalid">nur abgelaufen</option>
+					</select>
+				</fieldset>
+				<fieldset class="fieldset col-span-full md:col-span-3 flex flex-col justify-end">
+					<label class="fieldset-label gap-4">
+						<input name="member" type="checkbox" class="checkbox checkbox-sm"/>
+						Mitglied
+					</label>
+					<label class="fieldset-label gap-4">
+						<input name="unique" type="checkbox" class="checkbox checkbox-sm"/>
+						nur aktuellstes Abo anzeigen
+					</label>
+				</fieldset>
+				<fieldset class="fieldset w-full max-w-xs col-span-4 md:col-span-2 pb-0">
+					<legend class="fieldset-legend">Sortieren nach:</legend>
+					<select name="sort" id="sort" class="select select-bordered">
+						<option value="buydate">Ablaufdatum</option>
+						<option value="family_name">Name</option>
+					</select>
+				</fieldset>
+				<fieldset class="form-control w-full max-w-xs col-span-4 md:col-span-2">
+					<legend class="fieldset-legend">Richtung:</legend>
+					<select name="sort_dir" id="sort_dir" class="select select-bordered">
+						<option value="DESC">absteigend</option>
+						<option value="ASC">aufsteigend</option>
+					</select>
+				</fieldset>
+				<div class="col-span-4 grid grid-cols-2 justify-items-center gap-3">
+					<button
+						type="submit"
+						hx-post="/admin/abonnements/abonnementlist"
+						hx-target="#aboList"
+						class="btn btn-success btn-outline"
+					><span class="i-mdi-magnify"></span> suchen</button>
+					<a href="/admin/abonnements" class="btn btn-error btn-outline">
+						<span class="i-mdi-close"></span> zurücksetzen
+					</a>
+				</div>
+			</div>
+		</form>
+		if prm.AddAbonnement {
+			<div class="border-base-content/50 border-dashed border-t mt-4 pt-4">
+				<button type="button" class="btn btn-secondary" hx-get="/admin/abonnements/create" hx-target="#content">
+					Neues Abo
+					hinzufügen
+				</button>
+			</div>
+		}
+	</div>
+	<!-- For the switches -->
+	<script>
   searchField = document.querySelector("#search_term")
 
   document.getElementById("fieldreset").addEventListener("click", function (event) {
@@ -105,171 +107,200 @@ templ abonnementsFilter() {
 }
 
 templ AbonnementsList(abonnements []models.Abonnement, count int, pages int, onpage int, filter string) {
-{{ prm := ctx.Value("permission").(models.Role) }}
-if count == 0 {
-@layout.Warning("Keine Suchergebnisse")
-} else {
-for _, a := range abonnements {
-<div
-  class="hover:bg-base-200 cursor-pointer grid grid-cols-6 text-sm p-3 py-4 items-center gap-3 border-dashed border-b border-base-content border-opacity-50">
-  <div class="col-span-1">
-    <span class={ "mr-5" , templ.KV("text-error", render.ToToday(a.BuyDate) < 0 ), templ.KV("text-warning",
+	{{ prm := ctx.Value("permission").(models.Role) }}
+	if count == 0 {
+		@layout.Warning("Keine Suchergebnisse")
+	} else {
+		for _, a := range abonnements {
+			<div
+				class="hover:bg-base-200 cursor-pointer grid grid-cols-6 text-sm p-3 py-4 items-center gap-3 border-dashed border-b border-base-content/50"
+			>
+				<div class="col-span-1">
+					<span
+						class={ "mr-5" , templ.KV("text-error", render.ToToday(a.BuyDate) < 0 ), templ.KV("text-warning",
       render.ToToday(a.BuyDate)>=0 &&
       render.ToToday(a.BuyDate) <= 45), templ.KV("text-success", render.ToToday(a.BuyDate)> 45) }
-        >
-        { strconv.Itoa(render.ToToday(a.BuyDate)) }
-        Tage
-    </span>
-  </div>
-  <div class="col-span-1 text-2xl flex items-center">
-    if a.Member {
-    <span class="i-mdi-account-group"></span>
-    }
-  </div>
-  <div class="col-span-4 md:col-span-1">
-    CHF { strconv.Itoa(a.Price) }.-
-    if a.PartialPayment {
-    <span class="text-xl i-mdi-payment-clock"></span>
-    }
-  </div>
-  <div class="col-span-5 md:col-span-2 text-right md:text-left">{ a.VisitorFirstName } { a.VisitorFamilyName }</div>
-  <div class="col-span-1 flex justify-end items-center">
-    <a class={ "btn btn-sm btn-circle btn-primary" , templ.KV("btn-disabled", !prm.EditAbonnement) }
-      hx-get={ "/admin/abonnements/" + strconv.Itoa(a.ID) } hx-target="#main">
-      <span class="i-mdi-lead-pencil"></span>
-    </a>
-  </div>
-</div>
-}
-@pagination(pages, onpage, filter)
-}
+					>
+						{ strconv.Itoa(render.ToToday(a.BuyDate)) }
+						Tage
+					</span>
+				</div>
+				<div class="col-span-1 text-2xl flex items-center">
+					if a.Member {
+						<span class="i-mdi-account-group"></span>
+					}
+				</div>
+				<div class="col-span-4 md:col-span-1">
+					CHF { strconv.Itoa(a.Price) }.-
+					if a.PartialPayment {
+						<span class="text-xl i-mdi-payment-clock"></span>
+					}
+				</div>
+				<div class="col-span-5 md:col-span-2 text-right md:text-left">{ a.VisitorFirstName } { a.VisitorFamilyName }</div>
+				<div class="col-span-1 flex justify-end items-center">
+					<a
+						class={ "btn btn-sm btn-circle btn-primary" , templ.KV("btn-disabled", !prm.EditAbonnement) }
+						hx-get={ "/admin/abonnements/" + strconv.Itoa(a.ID) }
+						hx-target="#main"
+					>
+						<span class="i-mdi-lead-pencil"></span>
+					</a>
+				</div>
+			</div>
+		}
+		@pagination(pages, onpage, filter)
+	}
 }
 
 templ pagination(pages int, onpage int, filter string) {
-{{ pagesslice := render.Iterate(pages) }}
-<div class="grid justify-items-center">
-  <div class="join pt-6">
-    <button class={ "join-item btn" , templ.KV("btn-disabled", onpage==1) } hx-target="#aboList"
-      hx-get={ "/admin/abonnements/abonnementlist?page=" + strconv.Itoa(onpage-1) + filter }>«</button>
-    for _, p := range pagesslice {
-    switch p {
-    case 1, pages, onpage, onpage+1, onpage-1:
-    <button class={ "join-item btn" , templ.KV("btn-primary", onpage==p) } hx-target="#aboList"
-      hx-get={ "/admin/abonnements/abonnementlist?page=" + strconv.Itoa(p) + filter }>{ strconv.Itoa(p) }</button>
-    case onpage+2, onpage-2:
-    <button class="join-item btn btn-disabled">.</button>
-    }
-    }
-    <button class={ "join-item btn" , templ.KV("btn-disabled", onpage==pages) } hx-target="#aboList"
-      hx-get={ "/admin/abonnements/abonnementlist?page=" + strconv.Itoa(onpage+1) + filter }>»</button>
-  </div>
-</div>
+	{{ pagesslice := render.Iterate(pages) }}
+	<div class="grid justify-items-center">
+		<div class="join pt-6">
+			<button
+				class={ "join-item btn" , templ.KV("btn-disabled", onpage==1) }
+				hx-target="#aboList"
+				hx-get={ "/admin/abonnements/abonnementlist?page=" + strconv.Itoa(onpage-1) + filter }
+			>«</button>
+			for _, p := range pagesslice {
+				switch p {
+					case 1, pages, onpage, onpage+1, onpage-1:
+						<button
+							class={ "join-item btn" , templ.KV("btn-primary", onpage==p) }
+							hx-target="#aboList"
+							hx-get={ "/admin/abonnements/abonnementlist?page=" + strconv.Itoa(p) + filter }
+						>{ strconv.Itoa(p) }</button>
+					case onpage+2, onpage-2:
+						<button class="join-item btn btn-disabled">.</button>
+				}
+			}
+			<button
+				class={ "join-item btn" , templ.KV("btn-disabled", onpage==pages) }
+				hx-target="#aboList"
+				hx-get={ "/admin/abonnements/abonnementlist?page=" + strconv.Itoa(onpage+1) + filter }
+			>»</button>
+		</div>
+	</div>
 }
 
 type FormErrors struct {
-Member string
-BuyDate string
-Price string
-Free string
+	Member  string
+	BuyDate string
+	Price   string
+	Free    string
 }
 
 templ AbonnementForm(a models.Abonnement, errors FormErrors, free bool) {
-<form class="grid grid-cols-2 items-center gap-3 ">
-  @ui.CSRF()
-  <div class="prose col-span-full">
-    <h2>Abonnement erstellen</h2>
-  </div>
-  <div class="prose col-span-full">
-    <h3>Besucher:in auswählen <span class="text-error">*</span></h3>
-  </div>
-  <div class={ "col-span-full mt-3 gap-3 grid grid-cols-2" , templ.KV("border rounded-md border-error dark:rounded-lg",
+	<form class="grid grid-cols-2 items-center gap-3 ">
+		@ui.CSRF()
+		<div class="prose col-span-full">
+			<h2>Abonnement erstellen</h2>
+		</div>
+		<div class="prose col-span-full">
+			<h3>Besucher:in auswählen <span class="text-error">*</span></h3>
+		</div>
+		<div
+			class={ "col-span-full mt-3 gap-3 grid grid-cols-2" , templ.KV("border rounded-md border-error dark:rounded-lg",
     len(errors.Member)>0) }
-    id="selectInternal"
-    >
-    <form id="filterForm" class="mb-3 w-full col-span-2 md:col-span-1" novalidate>
-      @ui.CSRF()
-      <label class="input input-bordered flex items-center gap-2">
-        <span class="text-3xl i-mdi-magnify"></span>
-        <input hx-post={ "/admin/visitors/selectbox/" + a.VisitorID + "?pricing" }
-          hx-trigger="input changed delay:500ms, search" hx-target="#memberSelect" type="search" id="search_term"
-          name="search_term" class="grow" placeholder="Suche nach Name, Vorname oder Ort..." />
-      </label>
-    </form>
-    <div hx-get={ "/admin/visitors/selectbox/" + a.VisitorID + "?pricing" } hx-trigger="load" id="memberSelect"
-      class="mb-3 col-span-2 md:col-span-1"></div>
-    if len(errors.Member)>0 {
-    <div class="label col-span-2">
-      <span class="label-text text-error">{ errors.Member }</span>
-    </div>
-    }
-  </div>
-  <label class="form-control col-span-2 md:col-span-1">
-    <div class="label">
-      <span class="label-text">Kaufdatum <span class="text-error font-extrabold">*</span></span>
-    </div>
-    <input type="date" id="buydate" name="buydate" class={ "input input-bordered" , templ.KV("input-error",
+			id="selectInternal"
+		>
+			<form id="filterForm" class="mb-3 w-full col-span-2 md:col-span-1" novalidate>
+				@ui.CSRF()
+				<label class="input flex w-full items-center gap-2">
+					<span class="text-3xl i-mdi-magnify"></span>
+					<input
+						hx-post={ "/admin/visitors/selectbox/" + a.VisitorID + "?pricing" }
+						hx-trigger="input changed delay:500ms, search"
+						hx-target="#memberSelect"
+						type="search"
+						id="search_term"
+						name="search_term"
+						class="grow w-full"
+						placeholder="Suche nach Name, Vorname oder Ort..."
+					/>
+				</label>
+			</form>
+			<div
+				hx-get={ "/admin/visitors/selectbox/" + a.VisitorID + "?pricing" }
+				hx-trigger="load"
+				id="memberSelect"
+				class="mb-3 col-span-2 md:col-span-1"
+			></div>
+			if len(errors.Member)>0 {
+				<div class="label col-span-2">
+					<span class="label-text text-error">{ errors.Member }</span>
+				</div>
+			}
+		</div>
+		<fieldset class="fieldset col-span-2 md:col-span-1">
+			<legend class="fieldset-legend">Kaufdatum <span class="text-error font-extrabold">*</span></legend>
+			<input
+				type="date"
+				id="buydate"
+				name="buydate"
+				class={ "input w-full" , templ.KV("input-error",
       len(errors.BuyDate)>0) }
-    value={ a.BuyDate }
-    required
-    />
-    if len(errors.BuyDate)>0 {
-    <div class="label">
-      <span class="label-text text-error">{ errors.BuyDate }</span>
-    </div>
-    }
-  </label>
-  <label class="form-control col-span-2 md:col-span-1 grid grid-cols-2 items-center">
-    <div class="label col-span-full">
-      <span class="label-text">Preis/Zahlungsmodalität </span>
-    </div>
-    <label class="label cursor-pointer justify-start">
-      <input type="checkbox" id="partial_payment" name="partial_payment" class="checkbox mr-4" checked?={
-        a.PartialPayment } />
-      <span class="label-text">
-        Teilzahlung (2x halber Betrag)
-      </span>
-    </label>
-    <span id="pricing" class="font-bold text-primary text-xl">
-      if a.Price > 0 {
-      <input type="hidden" name="price" value={ strconv.Itoa(a.Price) } />
-      <span>
-        { strconv.Itoa(a.Price) }.-
-        if a.Price == 320 {
-        mitglied
-        } else {
-        abonnement
-        }
-      </span>
-      } else {
-      <span>Besucher:in auswählen</span>
-      }
-    </span>
-  </label>
-  <label class="label cursor-pointer justify-start col-span-full">
-    <input type="checkbox" id="free" name="free" class="checkbox mr-4" checked?={ free } />
-    <span class={ "label-text" , templ.KV("text-error", len(errors.Free)>0) }>Beitragsbefreites Mitglied</span>
-  </label>
-  if len(errors.Free)>0 {
-  <div class="label col-span-full">
-    <span class="label-text text-error">{ errors.Free }</span>
-  </div>
-  }
-  <div class=" col-span-full text-sm font-bold text-primary">
-    Bitte Preis überprüfen. Mitglieder müssen zuerst einem
-    Ressort hinzugefügt werden!
-  </div>
-  <div class=" col-span-full text-sm">
-    <span class="text-error font-extrabold">*</span> diese Felder sind zwingend
-    auszufüllen
-  </div>
-  <div class="col-span-full w-full gap-3 flex mt-3 items-center justify-center flex-col md:flex-row">
-    <a class="btn btn-success" hx-post="/admin/abonnements/create" hx-target="#content">
-      Speichern
-    </a>
-    <a href="/admin/abonnements" class="btn btn-warning">
-      <span class="i-mdi-cancel-bold"></span>
-      Abbrechen
-    </a>
-  </div>
-</form>
+				value={ a.BuyDate }
+				required
+			/>
+			if len(errors.BuyDate)>0 {
+				<label class="fieldset-label text-error">{ errors.BuyDate }</label>
+			}
+		</fieldset>
+		<fieldset class="fieldset md:col-span-1 grid grid-cols-2 items-center">
+			<legend class="fieldset-legend">Preis/Zahlungsmodalität </legend>
+			<label class="fieldset-label gap-4">
+				<input
+					checked?={ a.PartialPayment }
+					type="checkbox"
+					id="partial_payment"
+					name="partial_payment"
+					class="checkbox"
+				/>
+				Teilzahlung (2x halber Betrag)
+			</label>
+			<span id="pricing" class="font-bold text-primary text-xl">
+				if a.Price > 0 {
+					<input type="hidden" name="price" value={ strconv.Itoa(a.Price) }/>
+					<span>
+						{ strconv.Itoa(a.Price) }.-
+						if a.Price == 320 {
+							mitglied
+						} else {
+							abonnement
+						}
+					</span>
+				} else {
+					<span>Besucher:in auswählen</span>
+				}
+			</span>
+		</fieldset>
+		<fieldset class="fieldset col-span-full">
+			<label class={ "fieldset-label gap-4" , templ.KV("text-error", len(errors.Free)>0) }>
+				<input type="checkbox" id="free" name="free" class="checkbox" checked?={ free }/>
+				Beitragsbefreites Mitglied
+			</label>
+		</fieldset>
+		if len(errors.Free)>0 {
+			<div class="label col-span-full">
+				<span class="label-text text-error">{ errors.Free }</span>
+			</div>
+		}
+		<div class=" col-span-full text-sm font-bold text-primary">
+			Bitte Preis überprüfen. Mitglieder müssen zuerst einem
+			Ressort hinzugefügt werden!
+		</div>
+		<div class=" col-span-full text-sm">
+			<span class="text-error font-extrabold">*</span> diese Felder sind zwingend
+			auszufüllen
+		</div>
+		<div class="col-span-full w-full gap-3 flex mt-3 items-center justify-center flex-col md:flex-row">
+			<a class="btn btn-success" hx-post="/admin/abonnements/create" hx-target="#content">
+				Speichern
+			</a>
+			<a href="/admin/abonnements" class="btn btn-warning">
+				<span class="i-mdi-cancel-bold"></span>
+				Abbrechen
+			</a>
+		</div>
+	</form>
 }

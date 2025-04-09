@@ -1,0 +1,607 @@
+package newsletter
+
+import (
+"encoding/json"
+"github.com/faebut/prozessor_gostack/internal/models"
+"github.com/faebut/prozessor_gostack/view/layout"
+"github.com/faebut/prozessor_gostack/view/ui"
+"strconv"
+)
+
+templ Newsletters(visitor models.Visitor) {
+@layout.App(true, visitor) {
+{{ prm := ctx.Value("permission").(models.Role) }}
+<div class="prose mb-10">
+  <h1>Newsletter</h1>
+</div>
+<div id="content">
+  <div id="newsletterList" hx-get="/admin/newsletter/list" hx-trigger="load"></div>
+  if prm.AddNewsletter {
+  <div>
+    <button type="button" class="mt-3 btn btn-primary" hx-target="#content" hx-get="/admin/newsletter/create">
+      <span class="i-mdi-newspaper-plus"></span> Newsletter hinzufügen
+    </button>
+  </div>
+  }
+</div>
+}
+}
+
+templ NewsletterList(newsletters []models.Newsletter) {
+{{ prm := ctx.Value("permission").(models.Role) }}
+if len(newsletters) > 0 {
+for _, n := range newsletters {
+<div
+  class="hover:bg-base-200 cursor-pointer grid grid-cols-4 md:grid-cols-8 text-sm p-3 py-4 items-center gap-3 border-dashed border-b border-base-content border-opacity-50">
+  <div class="col-span-1">ID: { strconv.Itoa(n.ID) }</div>
+  <div class="col-span-3 flex flex-col">
+    <span class="font-bold">{ n.Title }</span>
+    <span>{ n.Description }</span>
+  </div>
+  <div class="col-span-2">{ n.Template.Name }</div>
+  <div class="col-span-1">
+    if n.Members {
+    intern
+    } else {
+    extern
+    }
+  </div>
+  <div class="col-span-1 flex gap-2 justify-end items-center">
+    <a class={ "btn btn-sm btn-circle btn-primary" , templ.KV("btn-disabled", !prm.AddNewsletter) }
+      hx-get={ "/admin/newsletter/edit/" + strconv.Itoa(n.ID) } hx-target="#content">
+      <span class="text-xl i-mdi-lead-pencil"></span>
+    </a>
+    <a class={ "btn btn-sm btn-circle btn-secondary" , templ.KV("btn-disabled", !prm.ViewNewsletters) } href={
+      templ.URL("/admin/newsletter/preview/" + strconv.Itoa(n.ID)) } target="_blank">
+      <span class="text-xl i-mdi-eye"></span>
+    </a>
+    <a class={ "btn btn-sm btn-circle btn-info" , templ.KV("btn-disabled", !prm.AddNewsletter) }
+      hx-get={ "/admin/newsletter/sendlist/" + strconv.Itoa(n.ID) } hx-target="#content">
+      <span class="text-xl i-mdi-send"></span>
+    </a>
+  </div>
+</div>
+}
+} else {
+<div class="my-10">
+  @layout.Warning("keine Suchergebnisse")
+</div>
+}
+}
+
+type NewsletterErrors struct {
+Edit bool
+Title string
+Description string
+Template string
+Item string
+ColorBase string
+ColorAccent string
+Elements []ElementError
+}
+
+// TODO:
+// - implement preview
+// - implement sending
+// - implement copying newsletter
+
+// INFO:
+// WORKFLOW FOR SENDING
+// 1. Create/edit newsletter with form
+// 2. Preview newsletter and list recipients
+// 3. Send newsletter and show status
+templ NewsletterCreate(
+n models.Newsletter,
+templates []models.NewsletterTemplate,
+elements []models.NewsletterElement,
+errors NewsletterErrors,
+) {
+{{
+// set default colors
+var baseColor = "#BD00FF"
+var accentColor = "#D7FF00"
+if len(n.ColorBase) > 0 {
+baseColor = n.ColorBase
+}
+if len(n.ColorAccent) > 0 {
+accentColor = n.ColorAccent
+}
+
+// where to post the form to
+var postUrl string
+if errors.Edit {
+postUrl = "/admin/newsletter/edit/" + strconv.Itoa(n.ID)
+} else {
+postUrl = "/admin/newsletter/create"
+}
+
+// check if three are images in the elements
+var hasImages bool
+
+if len(elements) > 0 {
+for _, e := range elements {
+if e.Type == "picture" {
+hasImages = true
+break
+}
+}
+}
+}}
+<form id="newsletterForm" class="grid grid-cols-2 md:grid-cols-4 gap-3" hx-target="#content" hx-post={ postUrl }
+  enctype="multipart/form-data" novalidate>
+  @ui.CSRF()
+  <div class="prose col-span-full">
+    if errors.Edit {
+    <h2>Newsletter (ID { strconv.Itoa(n.ID) }) bearbeiten</h2>
+    } else {
+    <h2>Neuen Newsletter erstellen</h2>
+    }
+  </div>
+  <div class="prose col-span-full">
+    <h3>Allgemein</h3>
+  </div>
+  <div class="w-full col-span-2 flex flex-col gap-3">
+    <fieldset class="fieldset w-full">
+      <legend class="fieldset-legend">Titel <span class="text-error font-extrabold">*</span></legend>
+      <input type="text" placeholder="Titel des Newsletters/Mailbetreff" class={ "input input-bordered w-full" ,
+        templ.KV("input-error", len(errors.Title)>0) }
+      value={ n.Title }
+      name="title"
+      required
+      />
+      if len(errors.Title) > 0 {
+      <label class="fieldset-label text-error">{ errors.Title }</label>
+      }
+    </fieldset>
+    <fieldset class="fieldset">
+      <!-- <legend class="fieldset-legend"></legend> -->
+      <label class="fieldset-label gap-4">
+        <input type="checkbox" name="members" checked?={ n.Members } class="toggle toggle-success" />
+        interner Newsletter
+      </label>
+    </fieldset>
+  </div>
+  <fieldset class="fieldset w-full col-span-2">
+    <legend class="fieldset-legend">
+      Beschrieb <span class="text-error font-extrabold">*</span>
+    </legend>
+    <textarea placeholder="Beschrieb des Newsletters, erscheint nur in der Auflistung" class={ "textarea w-full h-24" ,
+      templ.KV("input-error", len(errors.Description)> 0) }
+      name="description"
+      required
+      >{ n.Description }</textarea>
+    if len(errors.Description) > 0 {
+    <label class="fieldset-label text-error">{ errors.Description }</label>
+    }
+  </fieldset>
+  <div class="prose col-span-full">
+    <h3>Layout</h3>
+  </div>
+  <fieldset class="fieldset col-span-2 w-full">
+    <legend class="fieldset-legend">Template <span class="text-error font-extrabold ">*</span></legend>
+    <select name="template" id="template" class={ "select w-full" , templ.KV("select-error", len(errors.Template)>
+      0) }
+      value={ strconv.Itoa(n.Template.ID) }
+      required
+      >
+      <option disabled selected>Template auswählen...</option>
+      for _, t := range templates {
+      if t.ID == n.Template.ID {
+      <option value={ strconv.Itoa(t.ID) } selected>{ t.Name }</option>
+      } else {
+      <option value={ strconv.Itoa(t.ID) }>{ t.Name }</option>
+      }
+      }
+    </select>
+    if len(errors.Template) > 0 {
+    <label class="fieldset-label text-error">{ errors.Template }</label>
+    }
+  </fieldset>
+  <fieldset class="fieldset">
+    <legend class="fieldset-legend">Primärfarbe <span class="text-error font-extrabold ">*</span></legend>
+    <input type="color" class={ "input w-full" , templ.KV("input-error", len(errors.ColorBase)>0) }
+    name="color_base"
+    value={ baseColor }
+    required
+    />
+    if len(errors.ColorBase) > 0 {
+    <label class="fieldset-label text-error">{ errors.ColorBase }</label>
+    }
+  </fieldset>
+  <fieldset class="fieldset">
+    <legend class="fieldset-legend">Akzentfarbe <span class="text-error font-extrabold ">*</span></legend>
+    <input type="color" class={ "input w-full" , templ.KV("input-error", len(errors.ColorAccent)>0) }
+    name="color_accent"
+    value={ accentColor }
+    required
+    />
+    if len(errors.ColorAccent) > 0 {
+    <label class="fieldset-label text-error">{ errors.ColorAccent }</label>
+    }
+  </fieldset>
+  <!-- elements for newsletter -->
+  <div id="elementcard" class={ "my-6 card bg-base-300 w-full col-span-full" , templ.KV("border border-error mb-0",
+    len(errors.Item)>0 ||
+    len(errors.Elements)>0) }
+    >
+    <div class="card-body">
+      <h2 class="card-title">Elemente</h2>
+      <div id="elements" class="flex flex-col gap-3">
+        for _, e := range elements {
+        @Element(e, errors.Elements)
+        }
+      </div>
+      <form x-data="{ type: '' }" id="elementForm" class="grid grid-cols-1 md:grid-cols-2 gap-3 items-baseline">
+        @ui.CSRF()
+        <fieldset class="fieldset">
+          <legend class="fieldset-legend">Elementtyp <span class="text-error font-extrabold ">*</span></legend>
+          <select name="eltype" id="type" class={ "select w-full" } x-model="type" required>
+            <option value="" disabled>Typ auswählen...</option>
+            <option value="text">Textabschnitt</option>
+            <option value="button">Action-Button</option>
+            <option value="events">Event-Kalender</option>
+            <option value="picture">Bild</option>
+          </select>
+        </fieldset>
+        <button type="button" class="btn btn-primary" x-bind:disabled="!(type.length > 0)"
+          hx-post="/admin/newsletter/create/element" hx-target="#elements" hx-swap="beforeend">
+          Element
+          hinzufügen
+        </button>
+      </form>
+    </div>
+  </div>
+  if len(errors.Item) > 0 || len(errors.Elements) > 0 {
+  <label class="fieldset-label text-error col-span-full">
+    { errors.Item }
+    if len(errors.Elements) > 0 {
+    Ein oder mehrere Felder sind fehlerhaft
+    }
+  </label>
+  }
+  <!--  ende layout -->
+  <div class=" col-span-full text-sm mt-3">
+    <span class="text-error font-extrabold">*</span> diese Felder sind zwingend auszufüllen.
+  </div>
+  <!-- action buttons -->
+  // BUG: send button also initiates new event request
+  <div class="col-span-full w-full gap-3 flex mt-3 items-center justify-center flex-col md:flex-row">
+    if errors.Edit {
+    <input id="sendbutton" type="submit" class="btn btn-success" value="Aktualisieren" />
+    } else {
+    <input id="sendbutton" type="submit" class="btn btn-success" value="Speichern" />
+    }
+    <a href="/admin/newsletter" class="btn btn-warning">
+      <span class="i-mdi-cancel-bold"></span>
+      Abbrechen
+    </a>
+  </div>
+</form>
+<!-- script starts herea -->
+<script>
+  // handle elements movement and deletion
+  function removeItem(eid) {
+    document.getElementById(eid).remove();
+    hideArrows();
+  }
+
+  function moveItemUp(eid) {
+    document.getElementById(eid).previousSibling.before(document.getElementById(eid))
+    hideArrows();
+  }
+
+  function moveItemDown(eid) {
+    document.getElementById(eid).nextSibling.after(document.getElementById(eid))
+    hideArrows();
+  }
+
+  // handle elements position
+  function hideArrows() {
+    let children = document.getElementById("elements").children
+
+    for (let i = 0; i < children.length; i++) {
+      let uArrow = children[i].getElementsByClassName("uarrow")[0]
+      let dArrow = children[i].getElementsByClassName("darrow")[0]
+      let position = children[i].getElementsByClassName("pfield")[0]
+
+      uArrow.classList.remove("invisible")
+      dArrow.classList.remove("invisible")
+      position.value = i + 1
+
+      if (i === 0) {
+        uArrow.classList.add("invisible")
+        if (children.length === 1) {
+          dArrow.classList.add("invisible")
+        }
+      } else if (i === children.length - 1) {
+        dArrow.classList.add("invisible")
+      }
+    }
+  }
+
+
+  // fire once page is loaded
+  document.body.addEventListener('htmx:afterSettle', function (evt) {
+    evt.preventDefault();
+    hideArrows();
+  });
+
+  // check if events are loaded
+  nlForm = document.getElementById('newsletterForm')
+  nlForm.addEventListener('htmx:beforeRequest', function (evt) {
+    var noevents = document.getElementById("noevents");
+    var sendbutton = evt.explicitOriginalTarget.id
+    // if there is an 'noevents' element and the sendbutton is used
+    if (noevents && sendbutton === "sendbutton") {
+      var card = document.getElementById("elementcard")
+      var warning = document.createElement("div")
+      warning.classList.add("text-error", "mb-4")
+      warning.innerText = "Events laden oder Element entfernen"
+
+      // prevent sending the form
+      evt.preventDefault()
+
+      // decorate card
+      card.classList.add("border", "border-error")
+
+      // add warning element after 
+      noevents.insertAdjacentElement("afterend", warning);
+    }
+  });
+</script>
+if hasImages {
+<script type="text/javascript">
+  document.getElementsByName("deleteButton").forEach((button) => {
+    button.addEventListener('htmx:configRequest', (event) => {
+      event.detail.headers['X-CSRF-Token'] = document.getElementById('csrf_token').value
+    })
+  })
+</script>
+}
+}
+
+type ElementError struct {
+ID string
+Content string
+URL string
+Upload string
+AltText string
+}
+
+templ Element(element models.NewsletterElement, errors []ElementError) {
+{{
+var eError ElementError
+
+for _, e := range errors {
+if e.ID == element.ID {
+eError = e
+break
+}
+}
+}}
+<div id={ "el_" + element.ID } x-data={ templ.JSONString(element) }
+  class="grid grid-cols-1 md:grid-cols-2 gap-3 p-3 bg-base-200 rounded-lg">
+  <div class="flex flex-row items-center">
+    <button type="button" @click="removeItem('el_' + ID)" class="btn btn-outline btn-xs btn-circle btn-error mr-4"
+      disabled?={ (len(element.Upload)>0) }
+      >
+      <span class="i-mdi-close"></span>
+    </button>
+    <span
+      class="darrow i-mdi-arrow-down-drop-circle-outline hover:i-mdi-arrow-down-drop-circle text-xl cursor-pointer hover:text-primary"
+      @click="moveItemDown('el_' + ID)"></span><span
+      class="uarrow i-mdi-arrow-up-drop-circle-outline hover:i-mdi-arrow-up-drop-circle text-xl cursor-pointer hover:text-primary"
+      @click="moveItemUp('el_' + ID)"></span>
+  </div>
+  <input type="hidden" name="element_type" value={ element.Type } />
+  <input type="hidden" name="element_id" value={ element.ID } />
+  <input type="hidden" class="pfield" name="element_position" value={ strconv.Itoa(element.Position) } />
+  switch element.Type {
+  case "text":
+  @elementText(element, eError)
+  case "button":
+  @elementButton(element, eError)
+  case "events":
+  @elementEvents(element, eError)
+  case "picture":
+  @elementPicture(element, eError)
+  }
+</div>
+}
+
+templ elementText(element models.NewsletterElement, errors ElementError) {
+<div class="prose col-span-full">
+  <h4>Textabschnitt</h4>
+</div>
+<fieldset class="fieldset w-full col-span-full">
+  <legend class="fieldset-legend">Inhalt</legend>
+  <textarea name="element_content" class={ "textarea w-full h-64" , templ.KV("textarea-error", len(errors.Content)>0) }>
+    {
+    element.Content }
+  </textarea>
+</fieldset>
+if len(errors.Content) > 0 {
+<label class="fieldset-label text-error">{ errors.Content }</label>
+}
+<input type="hidden" name="element_alttext" value="" />
+<input type="hidden" name="element_url" value="" />
+}
+
+templ elementButton(element models.NewsletterElement, errors ElementError) {
+<div class="prose col-span-full">
+  <h4>Button</h4>
+</div>
+<fieldset class="fieldset">
+  <legend class="fieldset-legend">Button Text</legend>
+  <input name="element_content" class={ "input w-full" , templ.KV("input-error", len(errors.Content)>0) }
+  placeholder="Beschriftung"
+  value={ element.Content }
+  />
+  if len(errors.Content) > 0 {
+  <label class="fieldset-label text-error">{ errors.Content }</label>
+  }
+</fieldset>
+<fieldset class="fieldset">
+  <legend class="fieldset-legend">URL</legend>
+  <input name="element_url" class={ "input w-full" , templ.KV("input-error", len(errors.URL)>0) }
+  placeholder="www.xyz.ch"
+  value={ element.Url }
+  />
+  if len(errors.URL) > 0 {
+  <label class="fieldset-label text-error">{ errors.URL }</label>
+  }
+</fieldset>
+<input type="hidden" name="element_alttext" value="" />
+}
+
+templ elementEvents(element models.NewsletterElement, errors ElementError) {
+<div class="prose col-span-full">
+  <h4>Events</h4>
+</div>
+<div id="eventsList" class="col-span-full text-center">
+  if len(element.Content) > 0 {
+  {{
+  var events []models.Event
+
+  err := json.Unmarshal([]byte(element.Content), &events)
+  if err != nil {
+  panic(err)
+  }
+  }}
+  @EventList(events, element.Content)
+  } else {
+  <div id="noevents" class="hidden"></div>
+  <button type="button" id="eventbutton" class="btn btn-accent mx-auto loaded-content"
+    hx-get="/admin/newsletter/create/loadevents" hx-target="#eventsList"
+    hx-indicator="#eventloadindicator,#eventbutton">
+    Events
+    laden
+  </button>
+  <div id="eventloadindicator"
+    class="w-full items-center justify-center col-span-full flex flex-row gap-5 htmx-indicator">
+    <span class="self-center loading loading-infinity loading-xl"></span>
+    <span class="self-center text-xl">Events werden geladen...</span>
+  </div>
+  }
+</div>
+}
+
+templ EventList(events []models.Event, eventString string) {
+<input type="hidden" name="element_content" value={ eventString } />
+<input type="hidden" name="element_alttext" value="" />
+<input type="hidden" name="element_url" value="" />
+<div class="overflow-x-auto">
+  <table class="table">
+    <!-- head -->
+    <thead>
+      <tr>
+        <th>Datum</th>
+        <th>Veranstaltung</th>
+        <th>Link</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- rows -->
+      for _, e := range events {
+      <tr>
+        <td>{ e.EventTime.Time.Format("02.01.2006 15:04") }</td>
+        <td>{ e.Title }</td>
+        <td><a href={ templ.URL(e.URL) } target="_blank">{ e.URL }</a></td>
+      </tr>
+      }
+    </tbody>
+  </table>
+  <div class="col-span-full text-center mt-5">
+    <button type="button" id="eventbutton" class="btn btn-accent mx-auto loaded-content"
+      hx-get="/admin/newsletter/create/loadevents" hx-target="#eventsList"
+      hx-indicator="#eventloadindicator,#eventbutton">
+      Events
+      updaten
+    </button>
+    <div id="eventloadindicator"
+      class="w-full items-center justify-center col-span-full flex flex-row gap-5 htmx-indicator">
+      <span class="self-center loading loading-infinity loading-xl"></span>
+      <span class="self-center text-xl">Events werden geladen...</span>
+    </div>
+  </div>
+</div>
+}
+
+templ elementPicture(element models.NewsletterElement, errors ElementError) {
+<input type="hidden" name="element_url" value="" />
+<div class="prose col-span-full">
+  <h4>Bild</h4>
+</div>
+if len(element.Upload) > 0 {
+<input type="hidden" name={ element.ID + "_upload" } value={ element.Upload } />
+<div class="flex flex-col md:flex-row items-start gap-3">
+  <div class="avatar">
+    <div class="w-48 rounded">
+      <img src={ "/static/newsletter/" + element.Upload } />
+    </div>
+  </div>
+  <div class="flex flex-col items-center">
+    <span class="text-error">
+      Um dieses Bildelement aus dem Newsletter zu entfernen oder ersetzen, muss das Bild zuerst
+      gelöscht werden.
+    </span>
+    <button name="deleteButton" type="button" hx-delete={ "/admin/newsletter/image/" + element.ID } hx-params={
+      element.ID + "_upload" } hx-target={ " #el_" + element.ID } hx-swap="outerHTML"
+      hx-confirm="Bild wirklich löschen? Dies kann nicht mehr rückgängig gemacht werden."
+      class="mt-3 btn btn-sm btn-circle btn-outline btn-error">
+      <span class="i-mdi-trash"></span>
+    </button>
+  </div>
+</div>
+} else {
+<fieldset class="fieldset">
+  <legend class="fieldset-legend">Bild hochladen</legend>
+  <input name={ element.ID + "_fileupload" } type="file" class={ "file-input w-full" , templ.KV("file-input-error",
+    len(errors.Upload)>0) }
+  />
+  if len(errors.Upload) > 0 {
+  <label class="fieldset-label text-error">{ errors.Upload }</label>
+  }
+</fieldset>
+}
+<fieldset class="fieldset">
+  <legend class="fieldset-legend">Alt-Text</legend>
+  <input name="element_alttext" class={ "input w-full" , templ.KV("input-error", len(errors.AltText)>0) }
+  placeholder="alt-text wenn kein Bild geladen ist"
+  value={ element.AltText }
+  />
+  if len(errors.AltText) > 0 {
+  <label class="fieldset-label text-error">{ errors.AltText }</label>
+  }
+</fieldset>
+<fieldset class="fieldset col-span-full">
+  <legend class="fieldset-legend">Bildbeschrieb</legend>
+  <input name="element_content" class={ "input w-full" , templ.KV("input-error", len(errors.Content)>0) }
+  placeholder="Beschriftung unter dem Bild"
+  value={ element.Content }
+  />
+  if len(errors.Content) > 0 {
+  <label class="fieldset-label text-error">{ errors.Content }</label>
+  }
+</fieldset>
+}
+
+templ Unsubscribe(recipient models.Visitor) {
+@layout.App(false, models.Visitor{}) {
+<div class="prose p-4 container mx-auto flex flex-col gap-2 w-11/12 max-w-4xl">
+  <h2 class="mx-auto pt-6">Hallo { recipient.FirstName }! Wir haben dich vom Newsletter abgemeldet</h2>
+  <p>
+    Deine E-Mailadresse: { recipient.Email } wird bei künftigen Newslettern nicht mehr berücksichtigt.
+  </p>
+  <p>
+    Möchtest du zu einem späteren Zeitpunkt den Newsletter wieder erhalten, so darfst du dich gerne bei uns melden oder
+    dich direkt auf der Webseite wieder für den Newsletter registrieren.
+  </p>
+  <p>Besuch unsere Webseite für mehr Infos zum Prozessor</p>
+  <a href="https://prozessor-aarau.ch" target="_top" class="py-6 not-prose mx-auto btn btn-success">
+    zur
+    Prozessor-Webseite
+  </a>
+</div>
+}
+}

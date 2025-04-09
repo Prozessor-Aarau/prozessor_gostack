@@ -28,18 +28,18 @@ templ Badges(visitor models.Visitor) {
 }
 
 templ badgesFilter() {
-	<div class="border-base-content border-opacity-20 border rounded-md dark:rounded-lg bg-base-100 my-4 p-4">
+	<div class="border-base-content/20 border rounded-md dark:rounded-lg bg-base-100 my-4 p-4">
 		<h2 class="font-bold text-xl mb-3">Suchfilter</h2>
 		<form id="filterForm" novalidate>
 			<div class="grid grid-cols-5 gap-5 items-center">
 				@ui.CSRF()
-				<label class="input input-bordered flex items-center gap-2 col-span-4 md:col-span-2">
+				<label class="input flex items-center gap-2 col-span-4 md:col-span-2">
 					<span class="text-3xl i-mdi-magnify"></span>
 					<input
 						type="text"
 						id="filter_string"
 						name="filter_string"
-						class="grow"
+						class="grow w-full"
 						placeholder="Suche nach Badge Nummer..."
 					/>
 					<!-- how to implement this button? should reset field -->
@@ -90,7 +90,7 @@ templ BadgesList(badges []models.Badge) {
 	if len(badges) > 0 {
 		for _, b := range badges {
 			<div
-				class="hover:bg-base-200 cursor-pointer grid grid-cols-6 text-sm p-3 py-4 items-center gap-3 border-dashed border-b border-base-content border-opacity-50"
+				class="hover:bg-base-200 cursor-pointer grid grid-cols-6 text-sm p-3 py-4 items-center gap-3 border-dashed border-b border-base-content/50"
 			>
 				<div class="col-span-1">{ strconv.Itoa(b.Number) }</div>
 				<div class="col-span-1 text-2xl flex items-center">
@@ -143,47 +143,37 @@ templ BadgeCreate(badge models.Badge, errors BadgeCreateErrors) {
 		<div class="prose col-span-full">
 			<h2>Neuen Badge erstellen</h2>
 		</div>
-		<label class="form-control w-full">
-			<div class="label">
-				<span class="label-text">Nummer <span class="text-error font-extrabold">*</span></span>
-			</div>
+		<fieldset class="fieldset w-full">
+			<legend class="fieldset-legend">Nummer <span class="text-error font-extrabold">*</span></legend>
 			<input
 				type="text"
 				placeholder="Badge Nummer"
-				class={ "input input-bordered w-full" , templ.KV("input-error",
-      len(errors.Number)>0) }
+				class={ "input w-full" , templ.KV("input-error", len(errors.Number)>0) }
 				value={ strconv.Itoa(badge.Number) }
 				name="number"
 				required
 			/>
 			if len(errors.Number) > 0 {
-				<div class="label">
-					<span class="label-text text-error">{ errors.Number }</span>
-				</div>
+				<label class="fieldset-legend text-error">{ errors.Number }</label>
 			}
-		</label>
+		</fieldset>
 		<div class="flex w-full gap-3 items-end">
-			<label id="badge" class="form-control w-full">
-				<div class="label">
-					<span class="label-text">
-						UUID <span class="text-error font-extrabold">*</span>
-					</span>
-				</div>
+			<fieldset id="badge" class="fieldset w-full">
+				<legend class="fieldset-legend">
+					UUID <span class="text-error font-extrabold">*</span>
+				</legend>
 				<input
 					type="text"
 					placeholder="Badge UUID"
-					class={ "input input-bordered w-full" , templ.KV("input-error",
-        len(errors.UID)> 0) }
+					class={ "input w-full" , templ.KV("input-error", len(errors.UID)> 0) }
 					value={ badge.UID }
 					name="uid"
 					required
 				/>
 				if len(errors.UID) > 0 {
-					<div class="label">
-						<span class="label-text text-error">{ errors.UID }</span>
-					</div>
+					<legend class="fieldset-legend text-error">{ errors.UID }</legend>
 				}
-			</label>
+			</fieldset>
 			<div
 				class="btn btn-outline btn-circle btn-secondary"
 				hx-disabled-elt="this"
@@ -237,7 +227,7 @@ templ BadgeReturnUID(uid string, err string) {
 			<div class="label">
 				<span class="label-text">UUID <span class="text-error font-extrabold">*</span></span>
 			</div>
-			<input type="text" placeholder="Badge UUID" class="input input-bordered w-full " value={ uid } name="uid"/>
+			<input type="text" placeholder="Badge UUID" class="input w-full " value={ uid } name="uid"/>
 		</label>
 	}
 }
@@ -266,43 +256,36 @@ templ BadgeEdit(badge models.Badge, errors BadgeEditErrors, visitor models.Visit
 		<div class="prose col-span-full">
 			<h2>Badge Nr. { strconv.Itoa(badge.Number) } bearbeiten</h2>
 		</div>
-		<label class="form-control w-full  col-span-full md:col-span-1">
-			<div class="label">
-				<span class="label-text">Nummer</span>
-			</div>
+		<fieldset class="fieldset w-full col-span-full md:col-span-1">
+			<legend class="fieldset-legend">Nummer</legend>
 			if prm.EditBadge {
 				<input
 					type="text"
 					placeholder="Badge Nummer"
-					class={ "input input-bordered w-full" , templ.KV("input-error",
-      len(errors.Number)>0) }
+					class={ "input w-full" , templ.KV("input-error", len(errors.Number)>0) }
 					value={ strconv.Itoa(badge.Number) }
 					name="number"
 					required
 				/>
 				if len(errors.Number) > 0 {
-					<div class="label">
-						<span class="label-text text-error">{ errors.Number }</span>
-					</div>
+					<legend class="fieldset-legend text-error">{ errors.Number }</legend>
 				}
 			} else {
 				<input type="hidden" value={ strconv.Itoa(badge.Number) } name="number"/>
 				<span>{ strconv.Itoa(badge.Number) }</span>
 			}
-		</label>
-		<label class="form-control w-full  col-span-full md:col-span-1">
-			<div class="label">
-				<span class="label-text">UUID</span>
-			</div>
+		</fieldset>
+		<fieldset class="fieldset w-full col-span-full md:col-span-1">
+			<legend class="fieldset-legend">UUID</legend>
 			if prm.EditBadge {
-				<input type="text" placeholder="Badge UUID" class="input input-bordered w-full " value={ badge.UID } name="uid"/>
+				<input type="text" placeholder="Badge UUID" class="input w-full " value={ badge.UID } name="uid"/>
 			} else {
 				<input type="hidden" value={ badge.UID } name="uid"/>
 				<span>{ badge.UID }</span>
 			}
-		</label>
-		<div class="form-control">
-			<label class="label cursor-pointer justify-start">
+		</fieldset>
+		<fieldset class="fieldset">
+			<label class="fieldset-label gap-4">
 				<input
 					id="toggleUsed"
 					name="inuse"
@@ -312,17 +295,17 @@ templ BadgeEdit(badge models.Badge, errors BadgeEditErrors, visitor models.Visit
       0 ||
       len(badge.ExternFirstName) > 0 || params.InUse }
 				/>
-				<span class="label-text pl-3">Badge in Benutzung</span>
+				Badge in Benutzung
 			</label>
-		</div>
+		</fieldset>
 		<!-- start of form for badge user -->
 		<div
-			class={ "col-span-full border-t border-base-content border-dashed border-opacity-50 pt-5 grid-cols-subgrid" ,
-    templ.KV("hidden", len(badge.VisitorID)<1&&len(badge.ExternFirstName)<1&&!params.InUse) }
+			class={ "col-span-full border-t border-base-content/50 border-dashed pt-5 grid-cols-subgrid" , templ.KV("hidden",
+    len(badge.VisitorID)<1&&len(badge.ExternFirstName)<1&&!params.InUse) }
 			id="selectUser"
 		>
-			<div class="form-control col-span-full">
-				<label class="label cursor-pointer justify-start">
+			<fieldset class="fieldset col-span-full">
+				<label class="fieldset-label gap-4">
 					<input
 						id="toggleExtern"
 						name="extern"
@@ -331,9 +314,9 @@ templ BadgeEdit(badge models.Badge, errors BadgeEditErrors, visitor models.Visit
 						checked?={ 
           len(badge.ExternFirstName)>0 || params.Extern }
 					/>
-					<span class="label-text pl-3">Externe Nutzung</span>
+					Externe Nutzung
 				</label>
-			</div>
+			</fieldset>
 			<div
 				class={ "col-span-full mt-3 gap-3 grid grid-cols-2" , templ.KV("hidden", len(badge.ExternFirstName)>0 ||
       params.Extern) }
@@ -341,13 +324,13 @@ templ BadgeEdit(badge models.Badge, errors BadgeEditErrors, visitor models.Visit
 			>
 				<form id="filterForm" class="mb-3 w-full col-span-2 md:col-span-1" novalidate>
 					@ui.CSRF()
-					<label class="input input-bordered flex items-center gap-2">
+					<label class="input flex items-center w-full gap-2">
 						<span class="text-3xl i-mdi-magnify"></span>
 						<input
 							type="search"
 							id="search_term"
 							name="search_term"
-							class="grow"
+							class="grow w-full"
 							placeholder="Suche nach Name, Vorname oder Ort..."
 							hx-post={ "/admin/visitors/selectbox/" + badge.VisitorID }
 							hx-trigger="input changed delay:500ms, search"
@@ -376,92 +359,66 @@ templ BadgeEdit(badge models.Badge, errors BadgeEditErrors, visitor models.Visit
       len(badge.ExternFirstName)<1&&!params.Extern) }
 				id="selectExternal"
 			>
-				<label class="form-control w-full  col-span-full md:col-span-1">
-					<div class="label">
-						<span class="label-text">Vorname Besitzer*in <span class="text-error font-extrabold">*</span></span>
-					</div>
+				<fieldset class="fieldset w-full col-span-full md:col-span-1">
+					<legend class="fieldset-legend">Vorname Besitzer*in <span class="text-error font-extrabold">*</span></legend>
 					<input
-						class={ "input input-bordered w-full" , templ.KV("input-error", len(errors.ExternFirstName)>0) }
+						class={ "input w-full" , templ.KV("input-error", len(errors.ExternFirstName)>0) }
 						value={ badge.ExternFirstName }
 						name="ext_firstname"
 						type="text"
 						placeholder="Vorname Besitzer*in"
 					/>
 					if len(errors.ExternFirstName)>0 {
-						<div class="label">
-							<span class="label-text text-error">{ errors.ExternFirstName }</span>
-						</div>
+						<label class="fieldset-legend text-error">{ errors.ExternFirstName }</label>
 					}
-				</label>
-				<label class="form-control w-full  col-span-full md:col-span-1">
-					<div class="label">
-						<span class="label-text">Nachname Besitzer*in <span class="text-error font-extrabold">*</span></span>
-					</div>
+				</fieldset>
+				<fieldset class="fieldset w-full col-span-full md:col-span-1">
+					<legend class="fieldset-legend">Nachname Besitzer*in <span class="text-error font-extrabold">*</span></legend>
 					<input
-						class={ "input input-bordered w-full" , templ.KV("input-error", len(errors.ExternFamilyName)>0) }
+						class={ "input w-full" , templ.KV("input-error", len(errors.ExternFamilyName)>0) }
 						name="ext_familyname"
 						type="text"
 						placeholder="Nachname Besitzer*in"
 						value={ badge.ExternFamilyName }
 					/>
 					if len(errors.ExternFamilyName)>0 {
-						<div class="label">
-							<span class="label-text text-error">{ errors.ExternFamilyName }</span>
-						</div>
+						<label class="fieldset-label text-error">{ errors.ExternFamilyName }</label>
 					}
-				</label>
-				<label class="form-control w-full  col-span-full md:col-span-1">
-					<div class="label">
-						<span class="label-text">Ort</span>
-					</div>
-					<input
-						name="ext_city"
-						type="text"
-						placeholder="Ort"
-						class="input input-bordered w-full "
-						value={ badge.ExternCity }
-					/>
-				</label>
-				<label class="form-control w-full  col-span-full md:col-span-1">
-					<div class="label">
-						<span class="label-text">Telefonnummer <span class="text-error font-extrabold">**</span></span>
-					</div>
+				</fieldset>
+				<fieldset class="fieldset w-full col-span-full md:col-span-1">
+					<legend class="fieldset-legend">Ort</legend>
+					<input name="ext_city" type="text" placeholder="Ort" class="input w-full " value={ badge.ExternCity }/>
+				</fieldset>
+				<fieldset class="fieldset w-full col-span-full md:col-span-1">
+					<legend class="fieldset-legend">Telefonnummer <span class="text-error font-extrabold">**</span></legend>
 					<input
 						name="ext_phone"
 						type="text"
 						placeholder="Telefonnummer"
-						class={ "input input-bordered w-full" ,
-          templ.KV("input-error", len(errors.ExternPhone)>0) }
+						class={ "input w-full" , templ.KV("input-error",
+          len(errors.ExternPhone)>0) }
 						value={ badge.ExternPhone }
 					/>
 					if len(errors.ExternPhone)>0 {
-						<div class="label">
-							<span class="label-text text-error">{ errors.ExternPhone }</span>
-						</div>
+						<label class="fieldset-label text-error">{ errors.ExternPhone }</label>
 					}
-				</label>
-				<label class="form-control w-full  col-span-full md:col-span-1">
-					<div class="label">
-						<span class="label-text">E-Mail <span class="text-error font-extrabold">**</span></span>
-					</div>
+				</fieldset>
+				<fieldset class="fieldset w-full col-span-full md:col-span-1">
+					<legend class="fieldset-legend">E-Mail <span class="text-error font-extrabold">**</span></legend>
 					<input
 						name="ext_email"
 						type="text"
 						placeholder="Email Adresse"
-						class={ "input input-bordered w-full" ,
-          templ.KV("input-error", len(errors.ExternEmail)>0) }
+						class={ "input w-full" , templ.KV("input-error",
+          len(errors.ExternEmail)>0) }
 						value={ badge.ExternEmail }
 					/>
 					if len(errors.ExternEmail)>0 {
-						<div class="label">
-							<span class="label-text text-error">{ errors.ExternEmail }</span>
-						</div>
+						<label class="fieldset-label text-error">{ errors.ExternEmail }</label>
 					}
-				</label>
-				<label class="form-control w-full  col-span-full">
-					<div class="label">
-						<span class="label-text">Nutzungszweck <span class="text-error font-extrabold">*</span></span>
-					</div>
+				</fieldset>
+				<fieldset class="fieldset w-full col-span-full">
+					<legend class="fieldset-legend">Nutzungszweck <span class="text-error font-extrabold">*</span></legend>
 					<textarea
 						name="ext_purpose"
 						type="text"
@@ -469,11 +426,9 @@ templ BadgeEdit(badge models.Badge, errors BadgeEditErrors, visitor models.Visit
 						class={ "textarea textarea-bordered h-24 w-full" , templ.KV("textarea-error", len(errors.ExternPurpose)>0) }
 					>{ badge.ExternPurpose }</textarea>
 					if len(errors.ExternPurpose)>0 {
-						<div class="label">
-							<span class="label-text text-error">{ errors.ExternPurpose }</span>
-						</div>
+						<label class="fieldset-label text-error">{ errors.ExternPurpose }</label>
 					}
-				</label>
+				</fieldset>
 				<div class="col-span-full text-sm">
 					<span class="text-error font-extrabold">*</span> diese Felder sind zwingend
 					auszufüllen

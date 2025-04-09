@@ -84,6 +84,16 @@ type DatabaseRepo interface {
 	LogisticsByVisitorID(vID string) ([]models.Logistic, error)
 	UpdateLogisticsBillID(billID int, logistics []int) error
 	UpdateBill(b models.BillData) (string, error)
+	// newsletter
+	GetAllNewsletters() ([]models.Newsletter, int, error)
+	GetNewsletterTemplates() ([]models.NewsletterTemplate, error)
+	GetAllNewsletterElementsByID(id int) ([]models.NewsletterElement, error)
+	CreateNewsletter(n models.Newsletter) error
+	UpdateNewsletter(n models.Newsletter) error
+	GetNewsletterByID(id int) (models.Newsletter, error)
+	DeleteNewsletterImage(id string) (models.NewsletterElement, error)
+	NewsletterRecipients(members bool) ([]models.Visitor, error)
+	NewsletterUnsubscribe(id string, member bool) (models.Visitor, error)
 }
 
 type postgresDBRepo struct {

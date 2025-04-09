@@ -22,5 +22,9 @@ type AppConfig struct {
 		WaitList chan models.MailData
 		Active   bool
 	}
+	Newsletter struct {
+		WaitList chan models.MailData
+		Active   bool
+	}
 	Slack *slack.Slack
 }

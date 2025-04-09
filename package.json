@@ -4,19 +4,19 @@
   "description": "Prozessor Fullstack DB in Go",
   "main": "index.js",
   "scripts": {
-    "build": "tailwindcss build -o static/css/tailwind.css",
-    "watch": "tailwindcss build -o static/css/tailwind.css --watch"
+    "build": "npx @tailwindcss/cli -i static/css/app.css -o static/css/tailwind.css",
+    "watch": "npx @tailwindcss/cli -i static/css/app.css -o static/css/tailwind.css --watch"
   },
-  "author": "",
+  "author": "Fabian Trost",
   "license": "ISC",
   "dependencies": {
-    "tailwindcss": "^3.4.11"
+    "tailwindcss": "^4.0.14"
   },
   "devDependencies": {
     "@egoist/tailwindcss-icons": "^1.8.1",
     "@iconify-json/mdi": "^1.2.0",
     "@iconify-json/svg-spinners": "^1.2.0",
     "@tailwindcss/typography": "^0.5.15",
-    "daisyui": "^4.12.10"
+    "daisyui": "^5.0.4"
   }
 }

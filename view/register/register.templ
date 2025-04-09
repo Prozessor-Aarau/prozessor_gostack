@@ -10,7 +10,7 @@ import (
 
 templ Register() {
 	@layout.App(false, models.Visitor{}) {
-		<div class="prose p-4 container mx-auto flex flex-col gap-2 w-11/12 max-w-4xl">
+		<div class="prose sm:p-4 container mx-auto flex flex-col gap-2 sm:w-11/12 max-w-4xl">
 			<h2 class="mx-auto pt-6">Ich registriere mich im Prozessor</h2>
 			<!-- start of Form -->
 			@RegisterForm(RegisterParams{Newsletter: true}, RegisterErrors{})
@@ -22,8 +22,8 @@ templ Register() {
 templ RegisterModal() {
 	<!-- Modal Box -->
 	<input type="checkbox" id="my_modal_6" class="modal-toggle"/>
-	<div class="modal prose" role="dialog">
-		<div class="modal-box">
+	<div class="modal" role="dialog">
+		<div class="modal-box prose">
 			<h2 class="font-bold mt-0 text-lg">Nutzungsreglement</h2>
 			<h4>Verhalten allgemein</h4>
 			<p>
@@ -80,7 +80,7 @@ templ RegisterModal() {
 				Die Versicherung ist grundsätzlich Sache der Besucher*innen. Die Haftung durch den Verein Prozessor wird
 				entsprechend dem Abschnitt «Haftungsausschluss» ausgeschlossen.
 			</p>
-			<div class="modal-action">
+			<div class="modal-action not-prose">
 				<label for="my_modal_6" class="btn btn-primary">Schliessen!</label>
 			</div>
 		</div>
@@ -116,170 +116,151 @@ type RegisterErrors struct {
 templ RegisterForm(params RegisterParams, errors RegisterErrors) {
 	<form class="grid grid-cols-4 gap-1 sm:gap-3 overflow-y-auto p-1" hx-post="/register" hx-swap="outerHTML" novalidate>
 		@ui.CSRF()
-		<label class="form-control col-span-4 md:col-span-2">
-			<div class="label">
-				<span class="label-text">Vorname <span class="text-error font-extrabold">*</span></span>
-			</div>
+		<fieldset class="fieldset col-span-4 md:col-span-2">
+			<legend class="fieldset-legend">Vorname <span class="text-error font-extrabold">*</span></legend>
 			<input
 				type="text"
 				id="first_name"
 				name="first_name"
-				class={ "input input-bordered" , templ.KV("input-error",
+				class={ "input w-full" , templ.KV("input-error",
       len(errors.FirstName)> 0) }
 				value={ params.FirstName }
 				required
 			/>
 			if len(errors.FirstName) > 0 {
-				<div class="label">
-					<span class="label-text text-error">{ errors.FirstName }</span>
-				</div>
+				<p class="fieldset-label text-error mt-0 mb-0">
+					{ errors.FirstName }
+				</p>
 			}
-		</label>
-		<label class="form-control col-span-4 md:col-span-2">
-			<div class="label">
-				<span class="label-text">Familienname <span class="text-error font-extrabold">*</span></span>
-			</div>
+		</fieldset>
+		<fieldset class="fieldset col-span-4 md:col-span-2">
+			<legend class="fieldset-legend">Familienname <span class="text-error font-extrabold">*</span></legend>
 			<input
 				type="text"
 				id="family_name"
 				name="family_name"
-				class={ "input input-bordered" , templ.KV("input-error",
+				class={ "input w-full" , templ.KV("input-error",
       len(errors.FamilyName)> 0) }
 				value={ params.FamilyName }
 				required
 			/>
 			if len(errors.FamilyName) > 0 {
-				<div class="label">
-					<span class="label-text text-error">{ errors.FamilyName }</span>
-				</div>
+				<p class="fieldset-label text-error mt-0 mb-0">
+					{ errors.FamilyName }
+				</p>
 			}
-		</label>
-		<label class="form-control col-span-4 sm:col-span-2 md:col-span-1">
-			<div class="label">
-				<span class="label-text">Geburtsdatum <span class="text-error font-extrabold">*</span></span>
-			</div>
+		</fieldset>
+		<fieldset class="fieldset col-span-4 sm:col-span-2 md:col-span-1">
+			<legend class="fieldset-legend">Geburtsdatum <span class="text-error font-extrabold">*</span></legend>
 			<input
 				type="date"
 				id="birthdate"
 				name="birthdate"
-				class={ "input input-bordered" , templ.KV("input-error",
-      len(errors.Birthdate)> 0) }
+				class={ "input w-full" , templ.KV("input-error",
+      len(errors.Birthdate)>
+    0) }
 				if render.RealDate(params.Birthdate) {
 					value={ render.HumanDate(params.Birthdate) }
 				}
 				required
 			/>
 			if len(errors.Birthdate) > 0 {
-				<div class="label">
-					<span class="label-text text-error">{ errors.Birthdate }</span>
-				</div>
+				<p class="fieldset-label text-error mt-0 mb-0">
+					{ errors.Birthdate }
+				</p>
 			}
-		</label>
-		<label class="form-control col-span-4 sm:col-span-2 md:col-span-1">
-			<div class="label">
-				<span class="label-text">Telefonnummer <span class="text-error font-extrabold">**</span></span>
-			</div>
+		</fieldset>
+		<fieldset class="fieldset col-span-4 sm:col-span-2 md:col-span-1">
+			<legend class="fieldset-legend">Telefonnummer <span class="text-error font-extrabold">**</span></legend>
 			<input
 				type="text"
 				id="phone"
 				name="phone"
-				class={ "input input-bordered" , templ.KV("input-error",
-      len(errors.Phone)> 0) }
+				class={ "input w-full" , templ.KV("input-error", len(errors.Phone)> 0) }
 				value={ params.Phone }
 			/>
 			if len(errors.Phone) > 0 {
-				<div class="label">
-					<span class="label-text text-error">{ errors.Phone }</span>
-				</div>
+				<p class="fieldset-label text-error mt-0 mb-0">
+					{ errors.Phone }
+				</p>
 			}
-		</label>
-		<label class="form-control col-span-4 md:col-span-2">
-			<div class="label">
-				<span class="label-text">E-Mail <span class="text-error font-extrabold">**</span></span>
-			</div>
+		</fieldset>
+		<fieldset class="fieldset col-span-4 md:col-span-2">
+			<legend class="fieldset-legend">E-Mail <span class="text-error font-extrabold">**</span></legend>
 			<input
 				type="text"
 				id="email"
 				name="email"
-				class={ "input input-bordered" , templ.KV("input-error",
-      len(errors.Email)> 0) }
+				class={ "input w-full" , templ.KV("input-error", len(errors.Email)> 0) }
 				value={ params.Email }
 			/>
 			if len(errors.Email) > 0 {
-				<div class="label">
-					<span class="label-text text-error">{ errors.Email }</span>
-				</div>
+				<p class="fieldset-label text-error mt-0 mb-0">
+					{ errors.Email }
+				</p>
 			}
-		</label>
-		<label class="form-control col-span-4 md:col-span-2">
-			<div class="label">
-				<span class="label-text">Strasse Nr. <span class="text-error font-extrabold">*</span></span>
-			</div>
+		</fieldset>
+		<fieldset class="fieldset col-span-4 md:col-span-2">
+			<legend class="fieldset-legend">Strasse Nr. <span class="text-error font-extrabold">*</span></legend>
 			<input
 				type="text"
 				id="address"
 				name="address"
-				class={ "input input-bordered" , templ.KV("input-error",
-      len(errors.Address)> 0) }
+				class={ "input w-full" , templ.KV("input-error", len(errors.Address)>
+    0) }
 				value={ params.Address }
 				required
 			/>
 			if len(errors.Address) > 0 {
-				<div class="label">
-					<span class="label-text text-error">{ errors.Address }</span>
-				</div>
+				<p class="fieldset-label text-error mt-0 mb-0">
+					{ errors.Address }
+				</p>
 			}
-		</label>
-		<label class="form-control">
-			<div class="label">
-				<span class="label-text">PLZ <span class="text-error font-extrabold">*</span></span>
-			</div>
+		</fieldset>
+		<fieldset class="fieldset">
+			<legend class="fieldset-legend">PLZ <span class="text-error font-extrabold">*</span></legend>
 			<input
 				type="text"
 				id="postcode"
 				name="postcode"
-				class={ "input input-bordered" , templ.KV("input-error",
+				class={ "input w-full" , templ.KV("input-error",
       len(errors.Postcode)> 0) }
 				value={ params.Postcode }
 				required
 			/>
 			if len(errors.Postcode) > 0 {
-				<div class="label">
-					<span class="label-text text-error">{ errors.Postcode }</span>
-				</div>
+				<p class="fieldset-label text-error mt-0 mb-0">
+					{ errors.Postcode }
+				</p>
 			}
-		</label>
-		<label class="form-control col-span-3 md:col-span-1">
-			<div class="label">
-				<span class="label-text">Ort <span class="text-error font-extrabold ">*</span></span>
-			</div>
+		</fieldset>
+		<fieldset class="fieldset col-span-3 md:col-span-1">
+			<legend class="fieldset-legend">Ort <span class="text-error font-extrabold">*</span></legend>
 			<input
 				type=" text"
 				name="city"
 				id="city"
-				class={ "input input-bordered" , templ.KV("input-error", len(errors.City)>
+				class={ "input w-full" , templ.KV("input-error", len(errors.City)>
     0) }
 				value={ params.City }
 				required
 			/>
 			if len(errors.City) > 0 {
-				<div class="label">
-					<span class="label-text text-error">{ errors.City }</span>
-				</div>
+				<p class="fieldset-label text-error mt-0 mb-0">
+					{ errors.City }
+				</p>
 			}
-		</label>
-		<label class="form-control col-span-4">
-			<div class="label">
-				<span class="label-text">Informationen</span>
-			</div>
+		</fieldset>
+		<fieldset class="fieldset col-span-full">
+			<legend class="fieldset-legend">Informationen</legend>
 			<textarea
 				id="infos"
 				name="infos"
-				class="textarea textarea-bordered h-24"
+				class="textarea h-24 w-full"
 				placeholder="Allergien, Besonderes..."
 				value={ params.Infos }
 			></textarea>
-		</label>
+		</fieldset>
 		<div class="col-span-4 text-sm">
 			<span class="text-error font-extrabold">*</span> diese Felder sind zwingend
 			auszufüllen
@@ -289,11 +270,11 @@ templ RegisterForm(params RegisterParams, errors RegisterErrors) {
 			(entweder/oder)
 		</div>
 		<!-- start of information -->
-		<div class="join join-vertical w-full my-4 col-span-4">
-			<div class="collapse collapse-arrow join-item border border-base-content border-opacity-20 ">
+		<div class="join join-vertical w-full col-span-4 my-4">
+			<div class="collapse collapse-arrow join-item border border-base-content/20">
 				<input type="checkbox" name="my-accordion-4"/>
-				<h4 class="collapse-title  m-0 p-4">Erklärung der Besucher*innen</h4>
-				<div class="collapse-content">
+				<h4 class="collapse-title mt-0 mb-0">Erklärung der Besucher*innen</h4>
+				<div class="collapse-content text-sm">
 					<p>Ich erkläre hiermit dass ...</p>
 					<ol class="list-decimal">
 						<li>
@@ -322,10 +303,12 @@ templ RegisterForm(params RegisterParams, errors RegisterErrors) {
 					</ol>
 				</div>
 			</div>
-			<div class="collapse collapse-arrow join-item border border-base-content border-opacity-20 ">
+			<div class="collapse collapse-arrow join-item border border-base-content/20">
 				<input type="checkbox" name="my-accordion-4"/>
-				<h4 class="collapse-title m-0 p-4">Haftungsausschluss</h4>
-				<div class="collapse-content">
+				<h4 class="collapse-title mt-0 mb-0">
+					Haftungsausschluss
+				</h4>
+				<div class="collapse-content text-sm">
 					<ol>
 						<li>
 							Mir ist bekannt, dass ich mit der Ausübung meiner Tätigkeiten im Prozessor die einhergehenden
@@ -347,36 +330,32 @@ templ RegisterForm(params RegisterParams, errors RegisterErrors) {
 		</div>
 		<div class="col-span-4">
 			<!-- The button to open modal -->
-			<label for="my_modal_6" class="btn btn-secondary btn-block my-4">
+			<label for="my_modal_6" class="btn btn-secondary btn-block my-4 py-6">
 				<span class="i-mdi-file-document"></span>Nutzungsreglement anzeigen
 			</label>
-			<label class="label cursor-pointer">
-				<input type="checkbox" id="newsletter" name="newsletter" class="checkbox mr-4" if params.Newsletter {
-	checked
-}/>
-				<span class="label-text">
+			<fieldset class="fieldset p-4 bg-base-100 border border-base-content/20 rounded-box">
+				<!-- <legend class="fieldset-legend">Newsletter</legend> -->
+				<label class="fieldset-label gap-4">
+					<input type="checkbox" name="newsletter" class="checkbox" checked?={ params.Newsletter }/>
 					Ja, ich möchte regelmässig den Prozessor Newsletter erhalten. Ich kann diesen
 					jederzeit wieder abbestellen.
-				</span>
-			</label>
-			<label class="label cursor-pointer">
-				<input type="checkbox" id="consent" name="consent" class="checkbox mr-4" if params.Consent {
-	checked
-}/>
-				<span class={ "label-text" , templ.KV("text-error", len(errors.Consent)> 0) }>
+				</label>
+			</fieldset>
+			<fieldset
+				class={ "fieldset p-4 bg-base-100 border border-base-content/20 rounded-box mt-3" ,
+      templ.KV("border-error", len(errors.Consent)>0) }
+			>
+				<!-- <legend class="fieldset-legend">Nutzungsreglement</legend> -->
+				<label class={ "fieldset-label gap-4" , templ.KV("text-error", len(errors.Consent)> 0) }>
+					<input type="checkbox" name="consent" class="checkbox" checked?={ params.Consent }/>
 					Hiermit bestätige ich, dass ich mit dem
 					Nutzungsreglement des Vereins
 					Prozessor
 					einverstanden bin und der obigen Erklärungen sowie dem Haftungsausschluss zustimme.
-				</span>
-			</label>
-			if len(errors.Consent) > 0 {
-				<div class="label">
-					<span class="label-text text-error">{ errors.Consent }</span>
-				</div>
-			}
+				</label>
+			</fieldset>
 		</div>
-		<input type="submit" class="btn btn-success col-span-4" value="Registrieren"/>
+		<button type="submit" class="btn btn-success col-span-4 py-6"><span class="i-mdi-send"></span> senden</button>
 	</form>
 }
 
@@ -389,7 +368,10 @@ templ RegisterSuccess(name string) {
 				Prozessor gültig.
 			</p>
 			<p>Besuch unsere Webseite für mehr Infos zum Prozessor</p>
-			<a href="https://prozessor-aarau.ch" target="_top" class=" mx-auto btn btn-success">zur Prozessor-Webseite</a>
+			<a href="https://prozessor-aarau.ch" target="_top" class="py-6 not-prose mx-auto btn btn-success">
+				zur
+				Prozessor-Webseite
+			</a>
 		</div>
 	}
 }

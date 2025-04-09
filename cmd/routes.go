@@ -28,6 +28,9 @@ func routes(app *config.AppConfig) http.Handler {
 	mux.Get("/registersuccess", handlers.Make(handlers.Repo.HandleRegisterSuccess))
 	mux.Get("/login", handlers.Make(handlers.Repo.HandleLoginIndex))
 	mux.Post("/login", handlers.Make(handlers.Repo.HandleLoginCreate))
+	mux.Get("/unsubscribe/{id}", handlers.Make(handlers.Repo.HandleNewsletterUnsubscribe))
+	mux.Get("/subscribe", handlers.Make(handlers.Repo.HandleNewsletterSubscribeIndex))
+	mux.Post("/subscribe", handlers.Make(handlers.Repo.HandleNewsletterSubscribe))
 
 	// for creating logins
 	mux.Get("/createlogin", handlers.Make(handlers.Repo.HandleCreateLoginIndex))
@@ -176,6 +179,27 @@ func routes(app *config.AppConfig) http.Handler {
 					mux.Get("/badges/scan", handlers.Make(handlers.Repo.HandleBadgeRead))
 					mux.Delete("/badges/{id}", handlers.Make(handlers.Repo.HandleBadgeDelete))
 				})
+			})
+		})
+
+		// newsletters
+		mux.Group(func(mux chi.Router) {
+			mux.Use(CheckPermission("ViewNewsletters"))
+			mux.Get("/newsletter", handlers.Make(handlers.Repo.HandleNewsletterIndex))
+			mux.Get("/newsletter/list", handlers.Make(handlers.Repo.HandleNewsletterList))
+			mux.Group(func(mux chi.Router) {
+				mux.Use(CheckPermission("AddNewsletter"))
+				mux.Get("/newsletter/create", handlers.Make(handlers.Repo.HandleNewsletterCreateIndex))
+				mux.Post("/newsletter/create", handlers.Make(handlers.Repo.HandleNewsletterCreateEdit))
+				mux.Post("/newsletter/create/element", handlers.Make(handlers.Repo.HandleNewsletterElementCreate))
+				mux.Get("/newsletter/create/loadevents", handlers.Make(handlers.Repo.HandleNewsletterEventsLoad))
+				mux.Get("/newsletter/edit/{id}", handlers.Make(handlers.Repo.HandleNewsletterEditIndex))
+				mux.Post("/newsletter/edit/{id}", handlers.Make(handlers.Repo.HandleNewsletterCreateEdit))
+				mux.Delete("/newsletter/image/{id}", handlers.Make(handlers.Repo.HandleNewsletterImageDelete))
+				mux.Get("/newsletter/preview/{id}", handlers.Make(handlers.Repo.HandleNewsletterPreview))
+				mux.Get("/newsletter/sendlist/{id}", handlers.Make(handlers.Repo.HandleNewsletterSendList))
+				mux.Get("/newsletter/send/{id}", handlers.Make(handlers.Repo.HandleNewsletterSend))
+				mux.Get("/newsletter/progress", handlers.Repo.HandleNewsletterProgressBar)
 			})
 		})
 

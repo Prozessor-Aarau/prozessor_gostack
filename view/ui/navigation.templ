@@ -20,20 +20,20 @@ templ Navigation(visitor models.Visitor) {
 				</div>
 				<div class="flex items-center gap-2 justify-self-end">
 					<div class="dropdown dropdown-end z-30">
-						<div tabindex="0" role="button" class="btn btn-circle avatar placeholder">
+						<div tabindex="0" role="button" class="btn btn-circle avatar avatar-placeholder">
 							if len(visitor.Avatar) > 0 {
 								<div class="w-10 rounded-full">
 									<img src={ "/static/uploads/" + visitor.Avatar } alt="User Avatar"/>
 								</div>
 							} else {
-								<div class="avatar placeholder">
+								<div class="avatar avatar-placeholder">
 									<div class="bg-neutral text-neutral-content w-12 rounded-full">
 										<span>{ render.Initials(visitor.FirstName, visitor.FamilyName) }</span>
 									</div>
 								</div>
 							}
 						</div>
-						<ul tabindex="1" class="menu menu-sm dropdown-content mt-3 p-2 shadow bg-base-100 rounded-box w-52">
+						<ul tabindex="1" class="menu dropdown-content mt-3 p-2 shadow bg-base-300 rounded-box w-52">
 							<li>
 								<a class="justify-between" href="/admin/profile">
 									Profil
@@ -44,8 +44,8 @@ templ Navigation(visitor models.Visitor) {
 					</div>
 				</div>
 			</div>
-			<div class="transition p-0 m-0 border border-base-100 bg-base-100 border-b-base-content border-opacity-20 hidden">
-				<ul class="menu menu-lg">
+			<div class="transition p-0 m-0 border border-base-100 bg-base-100 border-b-base-content/20 hidden">
+				<ul class="menu menu-lg w-full gap-2">
 					<li>
 						<a href="/admin">Homepage</a>
 					</li>
@@ -62,9 +62,11 @@ templ Navigation(visitor models.Visitor) {
 							<a href="/admin/logistics">Lagerverwaltung</a>
 						</li>
 					}
-					<!-- <li> -->
-					<!--   <a>Newsletter</a> -->
-					<!-- </li> -->
+					if prm.ViewNewsletters {
+						<li>
+							<a href="/admin/newsletter">Newsletter</a>
+						</li>
+					}
 					<!-- <li> -->
 					<!--   <a href="/admin/checkout">Kasse</a> -->
 					<!-- </li> -->
