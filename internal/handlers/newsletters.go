@@ -247,8 +247,6 @@ func (m *Repository) HandleNewsletterCreateEdit(w http.ResponseWriter, r *http.R
 				isError = true
 			}
 
-			log.Println("there is a picture element")
-
 			// check if there is already a file
 			oldFile := r.Form.Get(e.ID + "_upload")
 
@@ -262,7 +260,6 @@ func (m *Repository) HandleNewsletterCreateEdit(w http.ResponseWriter, r *http.R
 				if err != nil {
 					eError.Upload = "gültiges File angeben"
 					isError = true
-					log.Println(err)
 				} else {
 					defer file.Close()
 					buff := make([]byte, 512) // docs tell that it take only first 512 bytes into consideration
@@ -285,7 +282,6 @@ func (m *Repository) HandleNewsletterCreateEdit(w http.ResponseWriter, r *http.R
 							eError.Upload = "nur Bilder erlaubt (png/jpeg)"
 							isError = true
 						}
-						log.Println("filetype", filetype)
 					}
 				}
 			}
@@ -336,102 +332,65 @@ func (m *Repository) HandleNewsletterCreateEdit(w http.ResponseWriter, r *http.R
 	// Retrieve the file from form data if there is not an old one
 	for i, e := range elements {
 		if len(e.AltText) > 0 && len(e.Upload) == 0 {
-			log.Println("got a picture")
 			file, fileHeader, err := r.FormFile(e.ID + "_fileupload")
 			if err != nil {
 				log.Println("error handling file")
-				return err
 				// TODO: how to else handle error
 			} else {
 				defer file.Close()
-
-				log.Println("handling picture")
 
 				// Generate a unique filename to prevent overwriting and conflicts
 				uuid, err := uuid.NewRandom()
 				if err != nil {
 					log.Println("Error generating uuid")
-					return err
 					// TODO: how to else handle error
 				}
 				// Append the filetype extension to uuid to create filename
 				filename := uuid.String() + filepath.Ext(fileHeader.Filename)
 
-				log.Println("made filename:", filename)
-
 				// TODO: maybe don't save on db server but on webserver
 
 				// check if uploads directory exists, if not create it
 				if _, err := os.Stat("static/newsletter"); err != nil {
-					err = os.Mkdir("static/newsletter/", os.ModePerm)
-					if err != nil {
-						log.Println("Error generating folder")
-						return err
-						// TODO: how to else handle error
-					}
+					os.Mkdir("static/newsletter/", os.ModePerm)
 				}
-
-				log.Println("filepath made")
 
 				// Create the full path for saving the file
 				filePath := filepath.Join("static/newsletter", filename)
-
-				log.Println("filepath joined")
 
 				// Save the file to the server
 				dst, err := os.Create(filePath)
 				if err != nil {
 					log.Println("error saving file", err)
-					return err
 
 					// TODO: how to else handle error
 
 				}
-
-				log.Println("created file")
-
 				defer dst.Close()
 
-				log.Println("handling types")
 				// convert to image
 				var imgFile image.Image
 				if filetype == "jpeg" {
 					imgFile, err = jpeg.Decode(file)
 					if err != nil {
 						log.Println(err)
-						return err
 					}
 				} else if filetype == "png" {
 					imgFile, err = png.Decode(file)
 					if err != nil {
 						log.Println(err)
-						return err
 					}
 				}
-
-				log.Println("prepare to resize")
 
 				// resize image
 				resFile := resize.Resize(600, 0, imgFile, resize.Lanczos3)
 
-				log.Println("resized, encoding back")
-
 				// write image
 				if filetype == "jpeg" {
-					err = jpeg.Encode(dst, resFile, nil)
-					if err != nil {
-						log.Println(err)
-						return err
-					}
+					jpeg.Encode(dst, resFile, nil)
 				} else if filetype == "png" {
-					err = png.Encode(dst, resFile)
-					if err != nil {
-						log.Println(err)
-						return err
-					}
+					png.Encode(dst, resFile)
 				}
-
-				log.Println("encoded")
 
 				// Update the element with the update. Need to use index
 				// here to modify the struct directly
@@ -445,13 +404,11 @@ func (m *Repository) HandleNewsletterCreateEdit(w http.ResponseWriter, r *http.R
 		err = m.DB.UpdateNewsletter(nl)
 		if err != nil {
 			log.Println("ERROR:", err)
-			return err
 		}
 	} else {
 		err = m.DB.CreateNewsletter(nl)
 		if err != nil {
 			log.Println("ERROR:", err)
-			return err
 		}
 	}
 
