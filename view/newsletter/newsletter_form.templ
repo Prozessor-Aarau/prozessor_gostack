@@ -1,0 +1,26 @@
+package newsletter
+
+import "github.com/faebut/prozessor_gostack/view/ui"
+
+type RecipientForm struct {
+FirstName string
+FamilyName string
+Email string
+}
+
+templ NewsletterForm(r RecipientForm) {
+<!-- Begin Newsletter Form -->
+<form class="newsletterform" hx-post="https://db.prozessor-aarau.ch/subscribe" hx-target="#newsletterform"
+  hx-swap="innerHTML">
+  @ui.CSRF()
+  <p class="newsletterinfo">
+    Melde dich für den Newsletter an und erhalten ca. alle 1-2 Monate ein kleines Update
+    sowie den aktuellen Kalender.
+  </p>
+  <input class="newsletterinput" type="text" name="first_name" value={ r.FirstName } required />
+  <input class="newsletterinput" type="text" name="family_name" value={ r.FirstName } required />
+  <input class="newsletterinput" type="email" name="email" value={ r.Email } required />
+  <button type="submit" class="newsletterbutton"></button>
+</form>
+<!--End Form-->
+}
