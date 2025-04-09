@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/faebut/prozessor_gostack/internal/models"
+	"github.com/faebut/prozessor_gostack/view/newsletter"
 	"github.com/google/uuid"
 )
 
@@ -664,4 +665,30 @@ func (m *postgresDBRepo) NewsletterUnsubscribe(id string, member bool) (models.V
 	}
 
 	return recipient, nil
+}
+
+func (m *postgresDBRepo) NewsletterSubscribe(recipient newsletter.RecipientForm) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	uid, err := uuid.NewUUID()
+	if err != nil {
+		return err
+	}
+
+	query := `INSERT INTO 
+		newsletter_recipients(
+			id,
+			email,
+			first_name,
+			family_name
+		) VALUES ($1, $2, $3, $4)`
+
+	_, err = m.DB.ExecContext(ctx, query, uid.String(), recipient.Email, recipient.FirstName, recipient.FamilyName)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

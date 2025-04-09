@@ -681,3 +681,27 @@ func (m *Repository) HandleNewsletterUnsubscribe(w http.ResponseWriter, r *http.
 
 	return rendering(w, r, newsletter.Unsubscribe(recipient))
 }
+
+// HandleNewsletterSubscribeIndex sends a form for newsletter subscriptions
+func (m *Repository) HandleNewsletterSubscribeIndex(w http.ResponseWriter, r *http.Request) error {
+
+	// send back an empty form
+	return rendering(w, r, newsletter.SubscriptionForm(newsletter.RecipientForm{}))
+}
+
+// HandleNewsletterSubscribe handles the newsletter subscription
+func (m *Repository) HandleNewsletterSubscribe(w http.ResponseWriter, r *http.Request) error {
+
+	// parse form
+	r.ParseForm()
+
+	var recipient newsletter.RecipientForm
+	recipient.FirstName = r.Form.Get("first_name")
+	recipient.FamilyName = r.Form.Get("family_name")
+	recipient.Email = r.Form.Get("email")
+
+	log.Println("subscribing", recipient.FirstName)
+
+	// send back success message
+	return rendering(w, r, newsletter.SubscriptionSuccess(recipient))
+}
