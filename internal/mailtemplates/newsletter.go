@@ -33,7 +33,7 @@ func Newsletter(newsletter models.Newsletter) (string, error) {
 			textFields := string(mdToHTML([]byte(e.Content)))
 			content += fmt.Sprintf(`
           <tr>
-            <td class="body" style="padding: 0 40px 15px 40px; text-align: left; font-size: 16px; line-height: 1.6;">
+            <td align="left" class="body" style="padding: 0 40px 15px 40px; font-size: 16px; line-height: 1.6;">
               %s
             </td>
           </tr>
@@ -42,12 +42,12 @@ func Newsletter(newsletter models.Newsletter) (string, error) {
 		case "button":
 			content += fmt.Sprintf(`
           <tr>
-            <td style="padding: 0px 40px 20px 40px; text-align: center;">
+            <td style="padding: 0px 40px 20px 40px;" align="center">
               <table cellspacing="0" cellpadding="0" style="margin: auto;">
                 <tr>
                   <td align="center" style="background-color: [%%basecolor%%]; padding: 10px 20px; border-radius: 5px;">
                     <a href="%s" target="_blank"
-                      style="color: #ffffff; text-decoration: none; font-weight: bold;">%s</a>
+                      style="color: #ffffff; text-decoration: none;"><b>%s</b></a>
                   </td>
                 </tr>
               </table>
@@ -58,7 +58,7 @@ func Newsletter(newsletter models.Newsletter) (string, error) {
 		case "picture":
 			content += fmt.Sprintf(`
           <tr>
-            <td class="body" style="padding: 0 40px 15px 40px; text-align: left; font-size: 16px; line-height: 1.6;">
+            <td align="left" class="body" style="padding: 0 40px 15px 40px; font-size: 16px; line-height: 1.6;">
 							<img src="/static/newsletter/%s" alt="%s" width="100%%"><p style="margin-top: 0px; font-size: 13px;">%s</p>
             </td>
           </tr>
@@ -77,9 +77,9 @@ func Newsletter(newsletter models.Newsletter) (string, error) {
 			// open grid tag
 			eventHTML = `
 					<tr>
-						<td class="body" style="padding: 0px 40px 20px 40px; text-align: left;">
+						<td class="body" style="padding: 0px 40px 20px 40px;;" align="left">
 							<h2>Kalender</h2>
-							<table width="100%" cellspacing="0" cellpadding="0" style="text-align: left; border-spacing: 0 7px;">
+							<table width="100%" cellspacing="0" cellpadding="0" align="left" style="border-spacing: 0 7px;">
 						`
 			for _, e := range events {
 
@@ -89,8 +89,8 @@ func Newsletter(newsletter models.Newsletter) (string, error) {
 					month = monday.Format(e.EventTime.Time, "January", monday.LocaleDeDE)
 					eventHTML += fmt.Sprintf(`
                 <tr>
-                  <td colspan="2" style="font-weight: 700; font-size: 20px; padding: 6px 6px 6px 25px; background-color: [%%accentcolor%%]; color: [%%basecolor%%];">
-										%s
+                  <td colspan="2" style="font-size: 20px; padding: 6px 6px 6px 25px; background-color: [%%accentcolor%%]; color: [%%basecolor%%];">
+										<b>%s</b>
                   </td>
                 </tr>
 					`, strings.ToUpper(month))
@@ -98,22 +98,22 @@ func Newsletter(newsletter models.Newsletter) (string, error) {
 
 				eventHTML += fmt.Sprintf(`
 					<tr>
-						<td style="border-left: 25px solid white; width: 50px; background-color: [%%basecolor%%];">
-							<table width="100%%" cellspacing="0" cellpadding="0" style="font-weight: 700; text-align: left; color: #FFFFFF">
+						<td class="datefield" style="border-left: 25px solid white; width: 50px; background-color: [%%basecolor%%];">
+							<table width="100%%" cellspacing="0" cellpadding="0" style="color: #FFFFFF" align="left">
 								<tr>
-									<td style="text-align: center;">
-										%s
+									<td align="center">
+										<b>%s</b>
 									</td>
 								</tr>
 								<tr>
-									<td style="text-align: center;">
-										%s
+									<td align="center">
+										<b>%s</b>
 									</td>
 								</tr>
 							</table>
 						</td>
-						<td class="calenderlink" style="padding-left: 10px; font-size: 16pt; font-weight: 700; padding-top: 10px; padding-bottom: 15px; line-height: 1.1;">
-							<a class="calenderlink" href="%s" target="_blank" style="text-decoration: none;">%s</a>
+						<td class="calenderlink linkfield" style="border-right: 25px solid white; padding-left: 10px; font-size: 16pt; padding-top: 10px; padding-bottom: 15px; line-height: 1.1;">
+							<a class="calenderlink" href="%s" target="_blank" style="text-decoration: none;"><b>%s</b></a>
 						</td>
 					</tr>
 					`,
