@@ -598,7 +598,7 @@ func (m *Repository) sendNewsletters(id int) {
 	for i, r := range recipients {
 
 		// replace per user strings
-		unsubscribeString := "member/" + r.ID
+		unsubscribeString := r.ID + "?registered=" + strconv.FormatBool(len(r.City) > 0)
 		vTemplate := strings.Replace(template, "[%unsubscribe%]", unsubscribeString, 1)
 
 		// create model for mail
@@ -659,4 +659,25 @@ func (m *Repository) HandleNewsletterProgressBar(w http.ResponseWriter, r *http.
 	// send event to stop listening
 	fmt.Fprint(w, "event: stop\ndata: stop\n\n")
 	w.(http.Flusher).Flush()
+}
+
+// HandleNewsletterUnsubscribe the unsubscribe from newsletters
+func (m *Repository) HandleNewsletterUnsubscribe(w http.ResponseWriter, r *http.Request) error {
+	// get id
+	id := chi.URLParam(r, "id")
+
+	// get if registered or not
+	memberParam := r.URL.Query().Get("registered")
+	mem, err := strconv.ParseBool(memberParam)
+	if err != nil {
+		return err
+	}
+
+	// remove recipient from db or set false for newsletter
+	recipient, err := m.DB.NewsletterUnsubscribe(id, mem)
+	if err != nil {
+		return err
+	}
+
+	return rendering(w, r, newsletter.Unsubscribe(recipient))
 }

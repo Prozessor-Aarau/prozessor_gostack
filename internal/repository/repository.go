@@ -93,6 +93,7 @@ type DatabaseRepo interface {
 	GetNewsletterByID(id int) (models.Newsletter, error)
 	DeleteNewsletterImage(id string) (models.NewsletterElement, error)
 	NewsletterRecipients(members bool) ([]models.Visitor, error)
+	NewsletterUnsubscribe(id string, member bool) (models.Visitor, error)
 }
 
 type postgresDBRepo struct {

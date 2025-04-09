@@ -548,16 +548,17 @@ func (m *postgresDBRepo) NewsletterRecipients(members bool) ([]models.Visitor, e
 	}
 
 	query := fmt.Sprintf(`SELECT
-  v.id,
-  v.first_name,
-  v.family_name,
-  v.email
-FROM
-  visitors v
-WHERE
-  v.newsletter = true
-  AND v.email IS NOT NULL
-  %s`,
+  		v.id,
+  		v.first_name,
+  		v.family_name,
+  		v.email,
+			v.city
+		FROM
+  		visitors v
+		WHERE
+  		v.newsletter = true
+  		AND v.email IS NOT NULL
+  		%s`,
 		memberQuery,
 	)
 
@@ -576,6 +577,7 @@ WHERE
 			&r.FirstName,
 			&r.FamilyName,
 			&r.Email,
+			&r.City,
 		)
 
 		if err != nil {
@@ -620,4 +622,46 @@ WHERE
 	}
 
 	return recipients, nil
+}
+
+func (m *postgresDBRepo) NewsletterUnsubscribe(id string, member bool) (models.Visitor, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	var recipient models.Visitor
+
+	var stmt string
+
+	if member {
+		stmt = `UPDATE
+		  visitors
+		SET
+  		newsletter = false
+		WHERE
+  		id = $1
+		RETURNING
+  		first_name, email;`
+	} else {
+		stmt = `DELETE FROM
+			visitors 
+		WHERE 
+			id = $1 
+		RETURNING 
+			first_name, email`
+	}
+
+	err := m.DB.QueryRowContext(
+		ctx,
+		stmt,
+		id,
+	).Scan(
+		&recipient.FirstName,
+		&recipient.Email,
+	)
+
+	if err != nil {
+		return recipient, err
+	}
+
+	return recipient, nil
 }

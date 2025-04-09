@@ -585,3 +585,23 @@ if len(element.Upload) > 0 {
   }
 </fieldset>
 }
+
+templ Unsubscribe(recipient models.Visitor) {
+@layout.App(false, models.Visitor{}) {
+<div class="prose p-4 container mx-auto flex flex-col gap-2 w-11/12 max-w-4xl">
+  <h2 class="mx-auto pt-6">Hallo { recipient.FirstName }! Wir haben dich vom Newsletter abgemeldet</h2>
+  <p>
+    Deine E-Mailadresse: { recipient.Email } wird bei künftigen Newslettern nicht mehr berücksichtigt.
+  </p>
+  <p>
+    Möchtest du zu einem späteren Zeitpunkt den Newsletter wieder erhalten, so darfst du dich gerne bei uns melden oder
+    dich direkt auf der Webseite wieder für den Newsletter registrieren.
+  </p>
+  <p>Besuch unsere Webseite für mehr Infos zum Prozessor</p>
+  <a href="https://prozessor-aarau.ch" target="_top" class="py-6 not-prose mx-auto btn btn-success">
+    zur
+    Prozessor-Webseite
+  </a>
+</div>
+}
+}
