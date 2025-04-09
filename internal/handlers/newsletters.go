@@ -535,15 +535,13 @@ func (m *Repository) HandleNewsletterSendList(w http.ResponseWriter, r *http.Req
 		return err
 	}
 
-	// get visitors and filter
-	filter := models.NewVisitorSearch("")
-	filter.Member = nl.Members
-	visitors, _, err := m.DB.AllVisitors(1, 0, filter)
+	// get recipients
+	recipients, err := m.DB.NewsletterRecipients(nl.Members)
 	if err != nil {
 		return err
 	}
 
-	return rendering(w, r, newsletter.NewsletterPreSend(len(visitors), nl))
+	return rendering(w, r, newsletter.NewsletterPreSend(len(recipients), nl))
 }
 
 // HandleNewsletterSend handles the start of sending the newsletters and renders the progress page
@@ -578,10 +576,8 @@ func (m *Repository) sendNewsletters(id int) {
 
 	nl.Elements = elements
 
-	// get visitors and filter
-	filter := models.NewVisitorSearch("")
-	filter.Member = nl.Members
-	visitors, _, err := m.DB.AllVisitors(1, 0, filter)
+	// get recipients
+	recipients, err := m.DB.NewsletterRecipients(nl.Members)
 	if err != nil {
 		// TODO: error handling
 		log.Println(err)
@@ -589,7 +585,7 @@ func (m *Repository) sendNewsletters(id int) {
 
 	// Open new Channel to send data to the template.
 	log.Println("open new channel")
-	m.App.Newsletter.WaitList = make(chan models.MailData, len(visitors))
+	m.App.Newsletter.WaitList = make(chan models.MailData, len(recipients))
 	m.App.Newsletter.Active = true
 
 	// create template
@@ -599,15 +595,15 @@ func (m *Repository) sendNewsletters(id int) {
 		return
 	}
 
-	for i, v := range visitors {
+	for i, r := range recipients {
 
 		// replace per user strings
-		unsubscribeString := "member/" + v.ID
+		unsubscribeString := "member/" + r.ID
 		vTemplate := strings.Replace(template, "[%unsubscribe%]", unsubscribeString, 1)
 
 		// create model for mail
 		msg := models.MailData{
-			To:      v.Email,
+			To:      r.Email,
 			Subject: nl.Title,
 			Content: vTemplate,
 		}
@@ -618,11 +614,11 @@ func (m *Repository) sendNewsletters(id int) {
 		// put info in the channel to be read in frontend
 		m.App.Newsletter.WaitList <- models.MailData{
 			Reason:     "Newsletter",
-			Count:      len(visitors),
+			Count:      len(recipients),
 			Progress:   i + 1,
-			FirstName:  v.FirstName,
-			FamilyName: v.FamilyName,
-			To:         v.Email,
+			FirstName:  r.FirstName,
+			FamilyName: r.FamilyName,
+			To:         r.Email,
 		}
 		time.Sleep(time.Millisecond * 500)
 	}

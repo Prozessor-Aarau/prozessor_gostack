@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"time"
 
 	"github.com/faebut/prozessor_gostack/internal/models"
@@ -532,4 +533,91 @@ func (m *postgresDBRepo) DeleteNewsletterImage(id string) (models.NewsletterElem
 	element.ID = id
 
 	return element, nil
+}
+
+func (m *postgresDBRepo) NewsletterRecipients(members bool) ([]models.Visitor, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	var recipients []models.Visitor
+
+	memberQuery := ""
+
+	if members {
+		memberQuery = "AND v.ressort_id > 0"
+	}
+
+	query := fmt.Sprintf(`SELECT
+  v.id,
+  v.first_name,
+  v.family_name,
+  v.email
+FROM
+  visitors v
+WHERE
+  v.newsletter = true
+  AND v.email IS NOT NULL
+  %s`,
+		memberQuery,
+	)
+
+	rows, err := m.DB.QueryContext(ctx, query)
+	if err != nil {
+		return recipients, err
+	}
+
+	defer rows.Close()
+
+	for rows.Next() {
+		var r models.Visitor
+
+		err := rows.Scan(
+			&r.ID,
+			&r.FirstName,
+			&r.FamilyName,
+			&r.Email,
+		)
+
+		if err != nil {
+			return recipients, err
+		}
+		recipients = append(recipients, r)
+	}
+
+	// also get normal newsletter recipients that aren't registered
+	if !members {
+		queryNewsletter := `SELECT
+  		id,
+  		first_name,
+  		family_name,
+  		email
+		FROM
+  		newsletter_recipients
+		`
+
+		rows, err := m.DB.QueryContext(ctx, queryNewsletter)
+		if err != nil {
+			return recipients, err
+		}
+
+		defer rows.Close()
+
+		for rows.Next() {
+			var r models.Visitor
+
+			err := rows.Scan(
+				&r.ID,
+				&r.FirstName,
+				&r.FamilyName,
+				&r.Email,
+			)
+
+			if err != nil {
+				return recipients, err
+			}
+			recipients = append(recipients, r)
+		}
+	}
+
+	return recipients, nil
 }
