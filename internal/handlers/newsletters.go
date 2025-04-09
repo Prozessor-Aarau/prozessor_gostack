@@ -335,6 +335,7 @@ func (m *Repository) HandleNewsletterCreateEdit(w http.ResponseWriter, r *http.R
 			file, fileHeader, err := r.FormFile(e.ID + "_fileupload")
 			if err != nil {
 				log.Println("error handling file")
+				return err
 				// TODO: how to else handle error
 			} else {
 				defer file.Close()
@@ -343,6 +344,7 @@ func (m *Repository) HandleNewsletterCreateEdit(w http.ResponseWriter, r *http.R
 				uuid, err := uuid.NewRandom()
 				if err != nil {
 					log.Println("Error generating uuid")
+					return err
 					// TODO: how to else handle error
 				}
 				// Append the filetype extension to uuid to create filename
@@ -352,7 +354,12 @@ func (m *Repository) HandleNewsletterCreateEdit(w http.ResponseWriter, r *http.R
 
 				// check if uploads directory exists, if not create it
 				if _, err := os.Stat("static/newsletter"); err != nil {
-					os.Mkdir("static/newsletter/", os.ModePerm)
+					err = os.Mkdir("static/newsletter/", os.ModePerm)
+					if err != nil {
+						log.Println("Error generating folder")
+						return err
+						// TODO: how to else handle error
+					}
 				}
 
 				// Create the full path for saving the file
@@ -362,6 +369,7 @@ func (m *Repository) HandleNewsletterCreateEdit(w http.ResponseWriter, r *http.R
 				dst, err := os.Create(filePath)
 				if err != nil {
 					log.Println("error saving file", err)
+					return err
 
 					// TODO: how to else handle error
 
@@ -374,11 +382,13 @@ func (m *Repository) HandleNewsletterCreateEdit(w http.ResponseWriter, r *http.R
 					imgFile, err = jpeg.Decode(file)
 					if err != nil {
 						log.Println(err)
+						return err
 					}
 				} else if filetype == "png" {
 					imgFile, err = png.Decode(file)
 					if err != nil {
 						log.Println(err)
+						return err
 					}
 				}
 
@@ -390,11 +400,13 @@ func (m *Repository) HandleNewsletterCreateEdit(w http.ResponseWriter, r *http.R
 					err = jpeg.Encode(dst, resFile, nil)
 					if err != nil {
 						log.Println(err)
+						return err
 					}
 				} else if filetype == "png" {
 					err = png.Encode(dst, resFile)
 					if err != nil {
 						log.Println(err)
+						return err
 					}
 				}
 
@@ -410,11 +422,13 @@ func (m *Repository) HandleNewsletterCreateEdit(w http.ResponseWriter, r *http.R
 		err = m.DB.UpdateNewsletter(nl)
 		if err != nil {
 			log.Println("ERROR:", err)
+			return err
 		}
 	} else {
 		err = m.DB.CreateNewsletter(nl)
 		if err != nil {
 			log.Println("ERROR:", err)
+			return err
 		}
 	}
 
