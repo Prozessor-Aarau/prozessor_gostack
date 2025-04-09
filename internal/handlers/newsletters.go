@@ -247,6 +247,8 @@ func (m *Repository) HandleNewsletterCreateEdit(w http.ResponseWriter, r *http.R
 				isError = true
 			}
 
+			log.Println("there is a picture element")
+
 			// check if there is already a file
 			oldFile := r.Form.Get(e.ID + "_upload")
 
@@ -260,6 +262,7 @@ func (m *Repository) HandleNewsletterCreateEdit(w http.ResponseWriter, r *http.R
 				if err != nil {
 					eError.Upload = "gültiges File angeben"
 					isError = true
+					log.Println(err)
 				} else {
 					defer file.Close()
 					buff := make([]byte, 512) // docs tell that it take only first 512 bytes into consideration
@@ -282,6 +285,7 @@ func (m *Repository) HandleNewsletterCreateEdit(w http.ResponseWriter, r *http.R
 							eError.Upload = "nur Bilder erlaubt (png/jpeg)"
 							isError = true
 						}
+						log.Println("filetype", filetype)
 					}
 				}
 			}
