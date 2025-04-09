@@ -33,7 +33,7 @@ func Newsletter(newsletter models.Newsletter) (string, error) {
 			textFields := string(mdToHTML([]byte(e.Content)))
 			content += fmt.Sprintf(`
           <tr>
-            <td align="left" class="body" style="padding: 0 40px 15px 40px; font-size: 16px; line-height: 1.6;">
+            <td align="left" class="body" style="padding: 0 40px; font-size: 16px; line-height: 1.6;">
               %s
             </td>
           </tr>
@@ -42,11 +42,11 @@ func Newsletter(newsletter models.Newsletter) (string, error) {
 		case "button":
 			content += fmt.Sprintf(`
           <tr>
-            <td style="padding: 0px 40px 20px 40px;" align="center">
+            <td style="padding: 0px 40px;" align="center">
               <table cellspacing="0" cellpadding="0" style="margin: auto;">
                 <tr>
                   <td align="center" style="background-color: [%%basecolor%%]; padding: 10px 20px; border-radius: 5px;">
-                    <a href="%s" target="_blank"
+											<a href="https://%s" target="_blank"
                       style="color: #ffffff; text-decoration: none;"><b>%s</b></a>
                   </td>
                 </tr>
@@ -58,8 +58,8 @@ func Newsletter(newsletter models.Newsletter) (string, error) {
 		case "picture":
 			content += fmt.Sprintf(`
           <tr>
-            <td align="left" class="body" style="padding: 0 40px 15px 40px; font-size: 16px; line-height: 1.6;">
-							<img src="/static/newsletter/%s" alt="%s" width="100%%"><p style="margin-top: 0px; font-size: 13px;">%s</p>
+            <td align="left" class="body" style="padding: 0 40px; font-size: 16px; line-height: 1.6;">
+				<img style="margin-top: 20px;" src="/static/newsletter/%s" alt="%s" width="100%%"><p style="margin-top: 0px; font-size: 13px;">%s</p>
             </td>
           </tr>
 				`, e.Upload, e.AltText, e.Content)
@@ -77,9 +77,9 @@ func Newsletter(newsletter models.Newsletter) (string, error) {
 			// open grid tag
 			eventHTML = `
 					<tr>
-						<td class="body" style="padding: 0px 40px 20px 40px;;" align="left">
-							<h2>Kalender</h2>
-							<table width="100%" cellspacing="0" cellpadding="0" align="left" style="border-spacing: 0 7px;">
+						<td class="body" style="padding: 0px 40px;" align="left">
+						<h2 style="margin-top: auto;">Kalender</h2>
+							<table width="100%" cellspacing="0" cellpadding="0" align="left" style="border-spacing: 0 10px;">
 						`
 			for _, e := range events {
 
