@@ -387,9 +387,15 @@ func (m *Repository) HandleNewsletterCreateEdit(w http.ResponseWriter, r *http.R
 
 				// write image
 				if filetype == "jpeg" {
-					jpeg.Encode(dst, resFile, nil)
+					err = jpeg.Encode(dst, resFile, nil)
+					if err != nil {
+						log.Println(err)
+					}
 				} else if filetype == "png" {
-					png.Encode(dst, resFile)
+					err = png.Encode(dst, resFile)
+					if err != nil {
+						log.Println(err)
+					}
 				}
 
 				// Update the element with the update. Need to use index
