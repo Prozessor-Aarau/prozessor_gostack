@@ -332,6 +332,7 @@ func (m *Repository) HandleNewsletterCreateEdit(w http.ResponseWriter, r *http.R
 	// Retrieve the file from form data if there is not an old one
 	for i, e := range elements {
 		if len(e.AltText) > 0 && len(e.Upload) == 0 {
+			log.Println("got a picture")
 			file, fileHeader, err := r.FormFile(e.ID + "_fileupload")
 			if err != nil {
 				log.Println("error handling file")
@@ -339,6 +340,8 @@ func (m *Repository) HandleNewsletterCreateEdit(w http.ResponseWriter, r *http.R
 				// TODO: how to else handle error
 			} else {
 				defer file.Close()
+
+				log.Println("handling picture")
 
 				// Generate a unique filename to prevent overwriting and conflicts
 				uuid, err := uuid.NewRandom()
@@ -349,6 +352,8 @@ func (m *Repository) HandleNewsletterCreateEdit(w http.ResponseWriter, r *http.R
 				}
 				// Append the filetype extension to uuid to create filename
 				filename := uuid.String() + filepath.Ext(fileHeader.Filename)
+
+				log.Println("made filename:", filename)
 
 				// TODO: maybe don't save on db server but on webserver
 
@@ -362,8 +367,12 @@ func (m *Repository) HandleNewsletterCreateEdit(w http.ResponseWriter, r *http.R
 					}
 				}
 
+				log.Println("filepath made")
+
 				// Create the full path for saving the file
 				filePath := filepath.Join("static/newsletter", filename)
+
+				log.Println("filepath joined")
 
 				// Save the file to the server
 				dst, err := os.Create(filePath)
@@ -374,8 +383,12 @@ func (m *Repository) HandleNewsletterCreateEdit(w http.ResponseWriter, r *http.R
 					// TODO: how to else handle error
 
 				}
+
+				log.Println("created file")
+
 				defer dst.Close()
 
+				log.Println("handling types")
 				// convert to image
 				var imgFile image.Image
 				if filetype == "jpeg" {
@@ -392,8 +405,12 @@ func (m *Repository) HandleNewsletterCreateEdit(w http.ResponseWriter, r *http.R
 					}
 				}
 
+				log.Println("prepare to resize")
+
 				// resize image
 				resFile := resize.Resize(600, 0, imgFile, resize.Lanczos3)
+
+				log.Println("resized, encoding back")
 
 				// write image
 				if filetype == "jpeg" {
@@ -409,6 +426,8 @@ func (m *Repository) HandleNewsletterCreateEdit(w http.ResponseWriter, r *http.R
 						return err
 					}
 				}
+
+				log.Println("encoded")
 
 				// Update the element with the update. Need to use index
 				// here to modify the struct directly
