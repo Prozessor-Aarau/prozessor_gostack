@@ -59,7 +59,7 @@ func Newsletter(newsletter models.Newsletter) (string, error) {
 			content += fmt.Sprintf(`
           <tr>
             <td align="left" class="body" style="padding: 0 40px; font-size: 16px; line-height: 1.6;">
-				<img style="margin-top: 20px;" src="/static/newsletter/%s" alt="%s" width="100%%"><p style="margin-top: 0px; font-size: 13px;">%s</p>
+				<img style="margin-top: 20px;" src="https://db.prozessor-aarau.ch/static/newsletter/%s" alt="%s" width="100%%"><p style="margin-top: 0px; font-size: 13px;">%s</p>
             </td>
           </tr>
 				`, e.Upload, e.AltText, e.Content)
