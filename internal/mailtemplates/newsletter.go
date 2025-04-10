@@ -99,7 +99,7 @@ func Newsletter(newsletter models.Newsletter) (string, error) {
 				eventHTML += fmt.Sprintf(`
 					<tr>
 						<td class="datefield" style="width: 40px; background-color: [%%basecolor%%];">
-							<table width="100%%" cellspacing="0" cellpadding="0" style="color: #FFFFFF" align="left">
+							<table width="100%%" cellspacing="0" cellpadding="0" style="color: #FFFFFF" align="center">
 								<tr>
 									<td align="center">
 										<b>%s</b>

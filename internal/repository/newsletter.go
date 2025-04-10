@@ -559,7 +559,9 @@ func (m *postgresDBRepo) NewsletterRecipients(members bool) ([]models.Visitor, e
 		WHERE
   		v.newsletter = true
   		AND v.email IS NOT NULL
-			AND v.email = 'fabian@prozessor-aarau.ch'
+			AND (v.email = 'fabian@prozessor-aarau.ch' 
+				OR v.email = 'faebutrost@gmail.com'
+				OR v.email = 'ftrost@proton.me')
   		%s`,
 		memberQuery,
 	)
