@@ -700,6 +700,11 @@ func (m *Repository) HandleNewsletterSubscribe(w http.ResponseWriter, r *http.Re
 	recipient.FamilyName = r.Form.Get("family_name")
 	recipient.Email = r.Form.Get("email")
 
+	err := m.DB.NewsletterSubscribe(recipient)
+	if err != nil {
+		return err
+	}
+
 	log.Println("subscribing", recipient.FirstName)
 
 	// send back success message
