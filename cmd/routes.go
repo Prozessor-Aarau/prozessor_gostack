@@ -14,9 +14,6 @@ func routes(app *config.AppConfig) http.Handler {
 	mux := chi.NewRouter()
 
 	mux.Use(middleware.Recoverer)
-	mux.Use(NoSurf)
-	mux.Use(SessionLoad)
-	mux.Use(middleware.Logger)
 	mux.Use(cors.Handler(cors.Options{
 		AllowedOrigins:   []string{"https://db.prozessor-aarau.ch", "http://localhost", "https://prozessor-aarau.ch", "https://www.prozessor-aarau.ch"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
@@ -25,6 +22,9 @@ func routes(app *config.AppConfig) http.Handler {
 		AllowCredentials: true,
 		MaxAge:           300, // Maximum value not ignored by any of major browsers
 	}))
+	mux.Use(NoSurf)
+	mux.Use(SessionLoad)
+	mux.Use(middleware.Logger)
 
 	// fileserver
 	fileServer := http.FileServer(http.Dir("./static/"))

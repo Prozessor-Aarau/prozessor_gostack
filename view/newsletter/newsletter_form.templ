@@ -25,9 +25,11 @@ templ SubscriptionForm(r RecipientForm) {
 	<!--End Form-->
 	<script type="text/javascript">
   button = document.getElementById("sendButton")
-  button.addEventListener('htmx:configRequest', (event) => {
-    event.detail.headers['X-CSRF-Token'] = document.getElementById('csrf_token').value
-  })
+  if (button != null) {
+    button.addEventListener('htmx:configRequest', (event) => {
+      event.detail.headers['X-CSRF-Token'] = document.getElementById('csrf_token').value
+    })
+  }
 </script>
 }
 
