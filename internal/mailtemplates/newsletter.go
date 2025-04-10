@@ -2,7 +2,9 @@ package mailtemplates
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
+	"image/color"
 	"os"
 	"strings"
 
@@ -45,9 +47,9 @@ func Newsletter(newsletter models.Newsletter) (string, error) {
             <td style="padding: 0px 40px;" align="center">
               <table cellspacing="0" cellpadding="0" style="margin: auto;">
                 <tr>
-                  <td align="center" style="background-color: [%%basecolor%%]; padding: 10px 20px; border-radius: 5px;">
+                  <td class="button" align="center" style="background-color: [%%basecolor%%]; padding: 10px 20px; border-radius: 5px;">
 											<a href="https://%s" target="_blank"
-                      style="color: #ffffff; text-decoration: none;"><b>%s</b></a>
+                      style="color: [%%colorfont%%]; text-decoration: none;"><b>%s</b></a>
                   </td>
                 </tr>
               </table>
@@ -77,7 +79,7 @@ func Newsletter(newsletter models.Newsletter) (string, error) {
 			// open grid tag
 			eventHTML = `
 					<tr>
-			<td class="body" style="line-height: 1.6; font-size: 16px; padding: 0px 40px;" align="left">
+						<td class="body" style="line-height: 1.6; font-size: 16px; padding: 0px 40px;" align="left">
 						<h2 style="margin-top: auto;">Kalender</h2>
 							<table width="100%" cellspacing="0" cellpadding="0" align="left" style="border-spacing: 0 10px;">
 						`
@@ -99,7 +101,7 @@ func Newsletter(newsletter models.Newsletter) (string, error) {
 				eventHTML += fmt.Sprintf(`
 					<tr>
 						<td class="datefield" style="width: 40px; background-color: [%%basecolor%%];">
-							<table width="100%%" cellspacing="0" cellpadding="0" style="color: #FFFFFF" align="center">
+							<table width="100%%" cellspacing="0" cellpadding="0" style="color: [%%colorfont%%]" align="center">
 								<tr>
 									<td align="center">
 										<b>%s</b>
@@ -142,8 +144,20 @@ func Newsletter(newsletter models.Newsletter) (string, error) {
 	msgToSend := strings.Replace(emailTemplate, "[%content%]", content, 1)
 
 	// replace colors
+	var colorfont string
+	isLight, err := isLightColor(newsletter.ColorBase)
+	if err != nil {
+		return "", err
+	}
+	if isLight {
+		colorfont = "#000000"
+	} else {
+		colorfont = "#FFFFFF"
+	}
+
 	msgToSend = strings.Replace(msgToSend, "[%basecolor%]", newsletter.ColorBase, -1)
 	msgToSend = strings.Replace(msgToSend, "[%accentcolor%]", newsletter.ColorAccent, -1)
+	msgToSend = strings.Replace(msgToSend, "[%colorfont%]", colorfont, -1)
 
 	// apply styles
 	msgToSend = strings.Replace(msgToSend, `<h1`, fmt.Sprintf(`<h1 style="color: %s"`, newsletter.ColorBase), -1)
@@ -165,4 +179,52 @@ func mdToHTML(md []byte) []byte {
 	renderer := html.NewRenderer(opts)
 
 	return markdown.Render(doc, renderer)
+}
+
+func isLightColor(s string) (bool, error) {
+	c, err := parseHexColorFast(s)
+	if err != nil {
+		return false, err
+	}
+
+	brightness := (int32(c.R)*299 + int32(c.G)*587 + int32(c.B)*114) / 1000
+
+	return brightness > 127, nil
+}
+
+var errInvalidFormat = errors.New("invalid format")
+
+func parseHexColorFast(s string) (c color.RGBA, err error) {
+	c.A = 0xff
+
+	if s[0] != '#' {
+		return c, errInvalidFormat
+	}
+
+	hexToByte := func(b byte) byte {
+		switch {
+		case b >= '0' && b <= '9':
+			return b - '0'
+		case b >= 'a' && b <= 'f':
+			return b - 'a' + 10
+		case b >= 'A' && b <= 'F':
+			return b - 'A' + 10
+		}
+		err = errInvalidFormat
+		return 0
+	}
+
+	switch len(s) {
+	case 7:
+		c.R = hexToByte(s[1])<<4 + hexToByte(s[2])
+		c.G = hexToByte(s[3])<<4 + hexToByte(s[4])
+		c.B = hexToByte(s[5])<<4 + hexToByte(s[6])
+	case 4:
+		c.R = hexToByte(s[1]) * 17
+		c.G = hexToByte(s[2]) * 17
+		c.B = hexToByte(s[3]) * 17
+	default:
+		err = errInvalidFormat
+	}
+	return
 }
