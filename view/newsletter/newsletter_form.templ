@@ -20,9 +20,15 @@ templ SubscriptionForm(r RecipientForm) {
 		<input class="newsletterinput" type="text" name="first_name" value={ r.FirstName } required/>
 		<input class="newsletterinput" type="text" name="family_name" value={ r.FirstName } required/>
 		<input class="newsletterinput" type="email" name="email" value={ r.Email } required/>
-		<button type="submit" class="newsletterbutton">abonnieren</button>
+		<button id="sendButton" type="submit" class="newsletterbutton">abonnieren</button>
 	</form>
 	<!--End Form-->
+	<script type="text/javascript">
+  button = document.getElementById("sendButton")
+  button.addEventListener('htmx:configRequest', (event) => {
+    event.detail.headers['X-CSRF-Token'] = document.getElementById('csrf_token').value
+  })
+</script>
 }
 
 templ SubscriptionSuccess(r RecipientForm) {
