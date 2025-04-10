@@ -22,7 +22,7 @@ func routes(app *config.AppConfig) http.Handler {
 		AllowedOrigins: []string{"https://db.prozessor-aarau.ch", "http://localhost", "https://prozessor-aarau.ch", "https://www.prozessor-aarau.ch"},
 		// AllowOriginFunc:  func(r *http.Request, origin string) bool { return true },
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token", "*"},
 		ExposedHeaders:   []string{"Link"},
 		AllowCredentials: false,
 		MaxAge:           300, // Maximum value not ignored by any of major browsers
