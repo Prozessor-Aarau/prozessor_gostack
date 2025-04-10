@@ -98,7 +98,7 @@ func Newsletter(newsletter models.Newsletter) (string, error) {
 
 				eventHTML += fmt.Sprintf(`
 					<tr>
-						<td class="datefield" style="border-left: 25px solid white; width: 50px; background-color: [%%basecolor%%];">
+						<td class="datefield" style="width: 40px; background-color: [%%basecolor%%];">
 							<table width="100%%" cellspacing="0" cellpadding="0" style="color: #FFFFFF" align="left">
 								<tr>
 									<td align="center">
@@ -112,8 +112,8 @@ func Newsletter(newsletter models.Newsletter) (string, error) {
 								</tr>
 							</table>
 						</td>
-						<td class="calenderlink linkfield" style="border-right: 25px solid white; padding-left: 10px; font-size: 16pt; padding-top: 10px; padding-bottom: 15px; line-height: 1.1;">
-							<a class="calenderlink" href="%s" target="_blank" style="text-decoration: none;"><b>%s</b></a>
+						<td class="calenderlink linkfield" style="padding-left: 10px; font-size: 16pt; padding-top: 10px; padding-bottom: 15px; line-height: 1.1;">
+					<a class="calenderlink" href="%s" target="_blank" style="color: black; text-decoration: none;"><b>%s</b></a>
 						</td>
 					</tr>
 					`,
