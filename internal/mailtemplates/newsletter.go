@@ -77,7 +77,7 @@ func Newsletter(newsletter models.Newsletter) (string, error) {
 			// open grid tag
 			eventHTML = `
 					<tr>
-						<td class="body" style="padding: 0px 40px;" align="left">
+			<td class="body" style="line-height: 1.6; font-size: 16px; padding: 0px 40px;" align="left">
 						<h2 style="margin-top: auto;">Kalender</h2>
 							<table width="100%" cellspacing="0" cellpadding="0" align="left" style="border-spacing: 0 10px;">
 						`
