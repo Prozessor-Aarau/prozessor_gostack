@@ -7,6 +7,7 @@ import (
 	"github.com/faebut/prozessor_gostack/internal/handlers"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/cors"
 )
 
 func routes(app *config.AppConfig) http.Handler {
@@ -16,6 +17,16 @@ func routes(app *config.AppConfig) http.Handler {
 	mux.Use(NoSurf)
 	mux.Use(SessionLoad)
 	mux.Use(middleware.Logger)
+	mux.Use(cors.Handler(cors.Options{
+		// AllowedOrigins:   []string{"https://foo.com"}, // Use this to allow specific origin hosts
+		AllowedOrigins: []string{"https://db.prozessor-aarau.ch", "http://localhost", "https://prozessor-aarau.ch", "https://www.prozessor-aarau.ch"},
+		// AllowOriginFunc:  func(r *http.Request, origin string) bool { return true },
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
+		ExposedHeaders:   []string{"Link"},
+		AllowCredentials: false,
+		MaxAge:           300, // Maximum value not ignored by any of major browsers
+	}))
 
 	// fileserver
 	fileServer := http.FileServer(http.Dir("./static/"))
