@@ -8,6 +8,7 @@ import (
 
 	"github.com/faebut/prozessor_gostack/internal/config"
 	"github.com/faebut/prozessor_gostack/internal/models"
+	"github.com/faebut/prozessor_gostack/view/newsletter"
 )
 
 type DatabaseRepo interface {
