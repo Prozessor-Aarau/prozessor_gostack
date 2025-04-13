@@ -93,7 +93,7 @@ type DatabaseRepo interface {
 	UpdateNewsletter(n models.Newsletter) error
 	GetNewsletterByID(id int) (models.Newsletter, error)
 	DeleteNewsletterImage(id string) (models.NewsletterElement, error)
-	NewsletterRecipients(members bool) ([]models.Visitor, error)
+	NewsletterRecipients(recipientGroup string) ([]models.Visitor, error)
 	NewsletterUnsubscribe(id string, member bool) (models.Visitor, error)
 	NewsletterSubscribe(recipient newsletter.RecipientForm) error
 }

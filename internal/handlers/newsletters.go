@@ -318,7 +318,7 @@ func (m *Repository) HandleNewsletterCreateEdit(w http.ResponseWriter, r *http.R
 	nl.Title = r.Form.Get("title")
 	nl.Description = r.Form.Get("description")
 	nl.Template.ID, _ = strconv.Atoi(r.Form.Get("template"))
-	nl.Members = form.BoxValue("members")
+	nl.RecipientGroup = r.Form.Get("recipient_group")
 	nl.ColorBase = r.Form.Get("color_base")
 	nl.ColorAccent = r.Form.Get("color_accent")
 
@@ -536,7 +536,7 @@ func (m *Repository) HandleNewsletterSendList(w http.ResponseWriter, r *http.Req
 	}
 
 	// get recipients
-	recipients, err := m.DB.NewsletterRecipients(nl.Members)
+	recipients, err := m.DB.NewsletterRecipients(nl.RecipientGroup)
 	if err != nil {
 		return err
 	}
@@ -577,7 +577,7 @@ func (m *Repository) sendNewsletters(id int) {
 	nl.Elements = elements
 
 	// get recipients
-	recipients, err := m.DB.NewsletterRecipients(nl.Members)
+	recipients, err := m.DB.NewsletterRecipients(nl.RecipientGroup)
 	if err != nil {
 		// TODO: error handling
 		log.Println(err)

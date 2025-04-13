@@ -22,7 +22,7 @@ func (m *postgresDBRepo) GetAllNewsletters() ([]models.Newsletter, int, error) {
     nl.id,
     nl.title,
     nl.description,
-    nl.members,
+    nl.recipient_group,
     nl.template_id,
     nt.name,
     nl.sent_count,
@@ -53,7 +53,7 @@ func (m *postgresDBRepo) GetAllNewsletters() ([]models.Newsletter, int, error) {
 			&n.ID,
 			&n.Title,
 			&n.Description,
-			&n.Members,
+			&n.RecipientGroup,
 			&n.Template.ID,
 			&n.Template.Name,
 			&sentCount,
@@ -95,7 +95,7 @@ func (m *postgresDBRepo) GetNewsletterByID(id int) (models.Newsletter, error) {
     nl.id,
     nl.title,
     nl.description,
-    nl.members,
+    nl.recipient_group,
     nl.template_id,
 		nl.color_base,
 		nl.color_accent,
@@ -121,7 +121,7 @@ func (m *postgresDBRepo) GetNewsletterByID(id int) (models.Newsletter, error) {
 		&n.ID,
 		&n.Title,
 		&n.Description,
-		&n.Members,
+		&n.RecipientGroup,
 		&n.Template.ID,
 		&n.ColorBase,
 		&n.ColorAccent,
@@ -292,7 +292,7 @@ func (m *postgresDBRepo) CreateNewsletter(n models.Newsletter) error {
 	title,
 	description,
 	template_id,
-	members,
+	recipient_group,
 	color_base,
 	color_accent,
 	updated_on,
@@ -304,7 +304,7 @@ func (m *postgresDBRepo) CreateNewsletter(n models.Newsletter) error {
 		n.Title,
 		n.Description,
 		n.Template.ID,
-		n.Members,
+		n.RecipientGroup,
 		n.ColorBase,
 		n.ColorAccent,
 		time.Now(),
@@ -391,7 +391,7 @@ func (m *postgresDBRepo) UpdateNewsletter(n models.Newsletter) error {
 		title = $1,
 		description = $2,
 		template_id = $3,
-		members = $4,
+		recipient_group = $4,
 		color_base = $5,
 		color_accent = $6,
 		updated_on = NOW()
@@ -401,7 +401,7 @@ func (m *postgresDBRepo) UpdateNewsletter(n models.Newsletter) error {
 		n.Title,
 		n.Description,
 		n.Template.ID,
-		n.Members,
+		n.RecipientGroup,
 		n.ColorBase,
 		n.ColorAccent,
 		n.ID,
@@ -536,31 +536,46 @@ func (m *postgresDBRepo) DeleteNewsletterImage(id string) (models.NewsletterElem
 	return element, nil
 }
 
-func (m *postgresDBRepo) NewsletterRecipients(members bool) ([]models.Visitor, error) {
+func (m *postgresDBRepo) NewsletterRecipients(recipientGroup string) ([]models.Visitor, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
 	var recipients []models.Visitor
 
-	memberQuery := ""
+	groupQuery := ""
 
-	if members {
-		memberQuery = "AND v.ressort_id > 0"
+	if recipientGroup == "mitglied" {
+		groupQuery = "AND v.ressort_id > 0"
+	} else if recipientGroup == "newsletter" {
+		groupQuery = "AND v.newsletter = true"
+	} else if recipientGroup == "abonnement" {
+		groupQuery = "AND b.number IS NOT NULL"
 	}
 
 	query := fmt.Sprintf(`SELECT
-  		v.id,
-  		v.first_name,
-  		v.family_name,
-  		v.email,
-			v.city
-		FROM
-  		visitors v
-		WHERE
-  		v.newsletter = true
-  		AND v.email IS NOT NULL
-  		%s`,
-		memberQuery,
+		v.id,
+		v.first_name,
+		v.family_name,
+		v.email,
+		v.city	
+	FROM
+		visitors v
+		LEFT JOIN LATERAL (
+			SELECT
+				*
+			FROM
+				badges
+			WHERE
+				v.id = badges.visitor_id
+			ORDER BY
+				badges.number DESC
+			LIMIT
+				1
+		) as b ON v.id = b.visitor_id
+	WHERE
+		v.email IS NOT NULL
+		%s`,
+		groupQuery,
 	)
 
 	rows, err := m.DB.QueryContext(ctx, query)
@@ -588,7 +603,7 @@ func (m *postgresDBRepo) NewsletterRecipients(members bool) ([]models.Visitor, e
 	}
 
 	// also get normal newsletter recipients that aren't registered
-	if !members {
+	if recipientGroup == "newsletter" {
 		queryNewsletter := `SELECT
   		id,
   		first_name,

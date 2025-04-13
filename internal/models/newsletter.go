@@ -26,16 +26,16 @@ type NewsletterTemplate struct {
 }
 
 type Newsletter struct {
-	ID          int
-	Title       string
-	Description string
-	Members     bool
-	Template    NewsletterTemplate
-	ColorBase   string
-	ColorAccent string
-	Elements    []NewsletterElement
-	SentCount   int
-	SentOn      time.Time
-	CreatedOn   time.Time
-	UpdatedOn   time.Time
+	ID             int
+	Title          string
+	Description    string
+	RecipientGroup string
+	Template       NewsletterTemplate
+	ColorBase      string
+	ColorAccent    string
+	Elements       []NewsletterElement
+	SentCount      int
+	SentOn         time.Time
+	CreatedOn      time.Time
+	UpdatedOn      time.Time
 }
