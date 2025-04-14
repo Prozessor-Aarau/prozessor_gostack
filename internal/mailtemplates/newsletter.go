@@ -48,8 +48,8 @@ func Newsletter(newsletter models.Newsletter) (string, error) {
               <table cellspacing="0" cellpadding="0" style="margin: auto;">
                 <tr>
                   <td class="button" align="center" style="background-color: [%%basecolor%%]; padding: 10px 20px; border-radius: 5px;">
-											<a href="https://%s" target="_blank"
-                      style="color: [%%colorfont%%]; text-decoration: none;"><b>%s</b></a>
+											<a style="color: [%%colorfont%%]; text-decoration: none;" href="https://%s" target="_blank"
+                      ><b>%s</b></a>
                   </td>
                 </tr>
               </table>
@@ -163,6 +163,7 @@ func Newsletter(newsletter models.Newsletter) (string, error) {
 	msgToSend = strings.Replace(msgToSend, `<h1`, fmt.Sprintf(`<h1 style="color: %s"`, newsletter.ColorBase), -1)
 	msgToSend = strings.Replace(msgToSend, `<h2`, fmt.Sprintf(`<h2 style="color: %s"`, newsletter.ColorBase), -1)
 	msgToSend = strings.Replace(msgToSend, `<h3`, fmt.Sprintf(`<h3 style="color: %s"`, newsletter.ColorBase), -1)
+	msgToSend = strings.Replace(msgToSend, `<a href`, fmt.Sprintf(`<a style="text-decoration: none; color: %s; font-style: italic;" href`, newsletter.ColorBase), -1)
 
 	return msgToSend, nil
 }
