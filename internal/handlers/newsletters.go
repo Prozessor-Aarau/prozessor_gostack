@@ -686,7 +686,7 @@ func (m *Repository) HandleNewsletterUnsubscribe(w http.ResponseWriter, r *http.
 func (m *Repository) HandleNewsletterSubscribeIndex(w http.ResponseWriter, r *http.Request) error {
 
 	// send back an empty form
-	return rendering(w, r, newsletter.SubscriptionForm(newsletter.RecipientForm{}))
+	return rendering(w, r, newsletter.SubscriptionForm(newsletter.RecipientForm{}, newsletter.RecipientFormError{}))
 }
 
 // HandleNewsletterSubscribe handles the newsletter subscription

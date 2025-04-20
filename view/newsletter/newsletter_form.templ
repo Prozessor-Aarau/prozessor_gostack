@@ -8,7 +8,13 @@ type RecipientForm struct {
 	Email      string
 }
 
-templ SubscriptionForm(r RecipientForm) {
+type RecipientFormError struct {
+	FirstName  string
+	FamilyName string
+	Email      string
+}
+
+templ SubscriptionForm(r RecipientForm, e RecipientFormError) {
 	<!-- Begin Newsletter Form -->
 	<form class="newsletterform" hx-post="https://db.prozessor-aarau.ch/subscribe" hx-swap="innerHTML">
 		@ui.CSRF()
@@ -20,17 +26,23 @@ templ SubscriptionForm(r RecipientForm) {
 		<div class="newsletterfield">
 			<span class="newsletterfieldname">Vorname</span>
 			<input class="newsletterinput" type="text" name="first_name" value={ r.FirstName } required/>
-			<span class="newslettererror">obligatorisches Feld</span>
+			if len(e.FirstName) >0 {
+				<span class="newslettererror">{ e.FirstName }</span>
+			}
 		</div>
 		<div class="newsletterfield">
 			<span class="newsletterfieldname">Nachname</span>
 			<input class="newsletterinput" type="text" name="family_name" value={ r.FirstName } required/>
-			<span class="newslettererror">obligatorisches Feld</span>
+			if len(e.FamilyName) >0 {
+				<span class="newslettererror">{ e.FamilyName }</span>
+			}
 		</div>
 		<div class="newsletterfield">
 			<span class="newsletterfieldname">E-Mail</span>
 			<input class="newsletterinput" type="email" name="email" value={ r.Email } required/>
-			<span class="newslettererror">falsches Format</span>
+			if len(e.Email) >0 {
+				<span class="newslettererror">{ e.Email }</span>
+			}
 		</div>
 		<button id="sendButton" type="submit" class="newsletterbutton">abonnieren</button>
 	</form>
