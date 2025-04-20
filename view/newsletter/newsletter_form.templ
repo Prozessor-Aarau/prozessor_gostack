@@ -17,9 +17,18 @@ templ SubscriptionForm(r RecipientForm) {
 			Melde dich für den Newsletter an und erhalte alle 1-2 Monate die aktuellsten Infos
 			sowie den aktuellen Kalender.
 		</p>
-		<input class="newsletterinput" type="text" name="first_name" value={ r.FirstName } required/>
-		<input class="newsletterinput" type="text" name="family_name" value={ r.FirstName } required/>
-		<input class="newsletterinput" type="email" name="email" value={ r.Email } required/>
+		<div class="newsletterfield">
+			<span class="newsletterfieldname">Vorname</span>
+			<input class="newsletterinput" type="text" name="first_name" value={ r.FirstName } required/>
+		</div>
+		<div class="newsletterfield">
+			<span class="newsletterfieldname">Nachname</span>
+			<input class="newsletterinput" type="text" name="family_name" value={ r.FirstName } required/>
+		</div>
+		<div class="newsletterfield">
+			<span class="newsletterfieldname">E-Mail</span>
+			<input class="newsletterinput" type="email" name="email" value={ r.Email } required/>
+		</div>
 		<button id="sendButton" type="submit" class="newsletterbutton">abonnieren</button>
 	</form>
 	<!--End Form-->
