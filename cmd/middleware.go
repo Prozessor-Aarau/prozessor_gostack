@@ -20,6 +20,9 @@ func NoSurf(next http.Handler) http.Handler {
 		SameSite: http.SameSiteLaxMode,
 	})
 
+	// do exempt newsletter subscribtion
+	csrfHandler.ExemptPath("/subscribe")
+
 	return csrfHandler
 }
 
