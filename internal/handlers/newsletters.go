@@ -705,7 +705,6 @@ func (m *Repository) HandleNewsletterSubscribe(w http.ResponseWriter, r *http.Re
 	form.Required("first_name", "family_name", "email")
 	form.IsEmail("email")
 
-	// TODO: this checks in the wrong table
 	// UniqueMail checks if the mail address is unique
 	if !form.IsEmpty("email") {
 		validmail, _ := m.DB.CheckSubscriptionUnique(recipient.Email)

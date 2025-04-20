@@ -32,7 +32,7 @@ templ SubscriptionForm(r RecipientForm, e RecipientFormError) {
   </div>
   <div class="newsletterfield">
     <span class="newsletterfieldname">Nachname</span>
-    <input class="newsletterinput" type="text" name="family_name" value={ r.FirstName } required />
+    <input class="newsletterinput" type="text" name="family_name" value={ r.FamilyName } required />
     if len(e.FamilyName) >0 {
     <span class="newslettererror">{ e.FamilyName }</span>
     }
