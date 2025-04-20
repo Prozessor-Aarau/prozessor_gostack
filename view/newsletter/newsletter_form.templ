@@ -16,7 +16,7 @@ Email string
 
 templ SubscriptionForm(r RecipientForm, e RecipientFormError) {
 <!-- Begin Newsletter Form -->
-<form class="newsletterform" hx-post="https://db.prozessor-aarau.ch/subscribe" hx-swap="innerHTML" novalidate>
+<form class="newsletterform" hx-post="https://db.prozessor-aarau.ch/subscribe" hx-swap="outerHTML" novalidate>
   @ui.CSRF()
   <h3 class="newslettertitle">Newsletter abonnieren</h3>
   <p class="newsletterinfo">
