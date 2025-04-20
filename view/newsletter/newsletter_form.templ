@@ -3,51 +3,51 @@ package newsletter
 import "github.com/faebut/prozessor_gostack/view/ui"
 
 type RecipientForm struct {
-	FirstName  string
-	FamilyName string
-	Email      string
+FirstName string
+FamilyName string
+Email string
 }
 
 type RecipientFormError struct {
-	FirstName  string
-	FamilyName string
-	Email      string
+FirstName string
+FamilyName string
+Email string
 }
 
 templ SubscriptionForm(r RecipientForm, e RecipientFormError) {
-	<!-- Begin Newsletter Form -->
-	<form class="newsletterform" hx-post="https://db.prozessor-aarau.ch/subscribe" hx-swap="innerHTML">
-		@ui.CSRF()
-		<h3 class="newslettertitle">Newsletter abonnieren</h3>
-		<p class="newsletterinfo">
-			Melde dich für den Newsletter an und erhalte alle 1-2 Monate ein Update aus dem Prozessor
-			sowie den aktuellen Kurs- und Veranstaltungs-Kalender.
-		</p>
-		<div class="newsletterfield">
-			<span class="newsletterfieldname">Vorname</span>
-			<input class="newsletterinput" type="text" name="first_name" value={ r.FirstName } required/>
-			if len(e.FirstName) >0 {
-				<span class="newslettererror">{ e.FirstName }</span>
-			}
-		</div>
-		<div class="newsletterfield">
-			<span class="newsletterfieldname">Nachname</span>
-			<input class="newsletterinput" type="text" name="family_name" value={ r.FirstName } required/>
-			if len(e.FamilyName) >0 {
-				<span class="newslettererror">{ e.FamilyName }</span>
-			}
-		</div>
-		<div class="newsletterfield">
-			<span class="newsletterfieldname">E-Mail</span>
-			<input class="newsletterinput" type="email" name="email" value={ r.Email } required/>
-			if len(e.Email) >0 {
-				<span class="newslettererror">{ e.Email }</span>
-			}
-		</div>
-		<button id="sendButton" type="submit" class="newsletterbutton">abonnieren</button>
-	</form>
-	<!--End Form-->
-	<script type="text/javascript">
+<!-- Begin Newsletter Form -->
+<form class="newsletterform" hx-post="https://db.prozessor-aarau.ch/subscribe" hx-swap="innerHTML" novalidate>
+  @ui.CSRF()
+  <h3 class="newslettertitle">Newsletter abonnieren</h3>
+  <p class="newsletterinfo">
+    Melde dich für den Newsletter an und erhalte alle 1-2 Monate ein Update aus dem Prozessor
+    sowie den aktuellen Kurs- und Veranstaltungs-Kalender.
+  </p>
+  <div class="newsletterfield">
+    <span class="newsletterfieldname">Vorname</span>
+    <input class="newsletterinput" type="text" name="first_name" value={ r.FirstName } required />
+    if len(e.FirstName) >0 {
+    <span class="newslettererror">{ e.FirstName }</span>
+    }
+  </div>
+  <div class="newsletterfield">
+    <span class="newsletterfieldname">Nachname</span>
+    <input class="newsletterinput" type="text" name="family_name" value={ r.FirstName } required />
+    if len(e.FamilyName) >0 {
+    <span class="newslettererror">{ e.FamilyName }</span>
+    }
+  </div>
+  <div class="newsletterfield">
+    <span class="newsletterfieldname">E-Mail</span>
+    <input class="newsletterinput" type="email" name="email" value={ r.Email } required />
+    if len(e.Email) >0 {
+    <span class="newslettererror">{ e.Email }</span>
+    }
+  </div>
+  <button id="sendButton" type="submit" class="newsletterbutton">abonnieren</button>
+</form>
+<!--End Form-->
+<script type="text/javascript">
   button = document.getElementById("sendButton")
   if (button != null) {
     button.addEventListener('htmx:configRequest', (event) => {
@@ -58,8 +58,8 @@ templ SubscriptionForm(r RecipientForm, e RecipientFormError) {
 }
 
 templ SubscriptionSuccess(r RecipientForm) {
-	<div class="newsletterform">
-		<h3 class="newslettertitle">Vielen Dank { r.FirstName }</h3>
-		<p class="newsletterinfo">Wir freuen uns, dir bald von uns zu berichten.</p>
-	</div>
+<div class="newsletterform">
+  <h3 class="newslettertitle">Vielen Dank { r.FirstName }</h3>
+  <p class="newsletterinfo">Wir freuen uns, dir bald von uns zu berichten.</p>
+</div>
 }

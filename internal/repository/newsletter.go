@@ -707,3 +707,25 @@ func (m *postgresDBRepo) NewsletterSubscribe(recipient newsletter.RecipientForm)
 
 	return nil
 }
+
+// checks if email is unique in subscription
+func (m *postgresDBRepo) CheckSubscriptionUnique(email string) (bool, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	query := `SELECT * FROM newsletter_recipients WHERE email = $1`
+
+	rows, err := m.DB.QueryContext(ctx, query, email)
+	if err != nil {
+		return false, err
+	}
+
+	defer rows.Close()
+
+	// return true, if there is no record set with the same email
+	if !rows.Next() {
+		return true, nil
+	}
+
+	return false, nil
+}

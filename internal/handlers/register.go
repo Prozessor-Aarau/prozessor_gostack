@@ -72,7 +72,7 @@ func (m *Repository) HandleRegisterCreate(w http.ResponseWriter, r *http.Request
 	}
 
 	// prepare data to send it to the templates
-	data := make(map[string]interface{})
+	data := make(map[string]any)
 	data["visitor"] = visitor
 
 	// what to do if form not valid

@@ -700,6 +700,29 @@ func (m *Repository) HandleNewsletterSubscribe(w http.ResponseWriter, r *http.Re
 	recipient.FamilyName = r.Form.Get("family_name")
 	recipient.Email = r.Form.Get("email")
 
+	// validation
+	form := forms.New(r.PostForm)
+	form.Required("first_name", "family_name", "email")
+	form.IsEmail("email")
+
+	// TODO: this checks in the wrong table
+	// UniqueMail checks if the mail address is unique
+	if !form.IsEmpty("email") {
+		validmail, _ := m.DB.CheckSubscriptionUnique(recipient.Email)
+		if !validmail {
+			form.Errors.Add("email", "Email Adresse wurde schon verwendet")
+		}
+	}
+
+	// what to do if form not valid
+	if !form.Valid() {
+		return rendering(w, r, newsletter.SubscriptionForm(recipient, newsletter.RecipientFormError{
+			FirstName:  form.Errors.Get("first_name"),
+			FamilyName: form.Errors.Get("family_name"),
+			Email:      form.Errors.Get("email"),
+		}))
+	}
+
 	err := m.DB.NewsletterSubscribe(recipient)
 	if err != nil {
 		return err
