@@ -138,10 +138,23 @@ func Newsletter(newsletter models.Newsletter) (string, error) {
 
 	}
 
-	// TODO: change color for logo
-
 	// replace placeholders with generated strings
 	msgToSend := strings.Replace(emailTemplate, "[%content%]", content, 1)
+
+	// replace unsubscribe if its a newsletter
+	newsletterString := ""
+	if newsletter.RecipientGroup == "newsletter" {
+		newsletterString = `
+			Du möchtest diesen Newsletter nicht mehr erhalten? Dann kannst du dich hier <a
+				style="text-decoration: none; color: [%basecolor%]; font-style: italic;" target="_blank"
+				href="https://db.prozessor-aarau.ch/unsubscribe/[%unsubscribe%]">abmelden</a>.
+			`
+	} else if newsletter.RecipientGroup == "abonnement" {
+		newsletterString = "Du erhältst diese Mail, weil du ein aktives Abonnement im Prozessor hast."
+	} else if newsletter.RecipientGroup == "mitglied" {
+		newsletterString = "Du erhältst diese Mail, weil du Vereinsmitglied im Prozessor bist."
+	}
+	msgToSend = strings.Replace(msgToSend, "[%unsubscribe%]", newsletterString, 1)
 
 	// replace colors
 	var colorfont string

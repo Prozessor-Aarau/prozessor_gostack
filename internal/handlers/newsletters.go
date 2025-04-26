@@ -597,9 +597,16 @@ func (m *Repository) sendNewsletters(id int) {
 
 	for i, r := range recipients {
 
-		// replace per user strings
-		unsubscribeString := r.ID + "?registered=" + strconv.FormatBool(len(r.City) > 0)
-		vTemplate := strings.Replace(template, "[%unsubscribe%]", unsubscribeString, 1)
+		// replace per user strings for recipient groups
+		// unsubscribe if its a newsletter
+		vTemplate := template
+		if nl.RecipientGroup == "newsletter" {
+			// string to replace with
+			unsubscribeString := r.ID + "?registered=" + strconv.FormatBool(len(r.City) > 0)
+
+			// replace string
+			vTemplate = strings.Replace(template, "[%unsubscribe%]", unsubscribeString, 1)
+		}
 
 		// create model for mail
 		msg := models.MailData{
