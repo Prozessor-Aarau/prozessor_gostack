@@ -63,6 +63,7 @@ func GetEvents() ([]models.Event, error) {
 			}
 
 			// if it is in the future and published, add to slice
+			// TODO: Filter for specific timeframe. (eg. max 2 months)
 			if e.Published && e.EventTime.After(currentDate) {
 				events = append(events, e)
 			}
