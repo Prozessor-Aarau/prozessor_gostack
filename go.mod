@@ -5,7 +5,7 @@ go 1.23.0
 require (
 	github.com/72nd/gopdf-wrapper v0.3.1
 	github.com/72nd/swiss-qr-invoice v1.0.2
-	github.com/a-h/templ v0.3.924
+	github.com/a-h/templ v0.3.943
 	github.com/adrg/frontmatter v0.2.0
 	github.com/alexedwards/scs/v2 v2.9.0
 	github.com/creasty/defaults v1.8.0
