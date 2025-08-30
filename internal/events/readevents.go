@@ -2,6 +2,8 @@ package events
 
 import (
 	"io"
+	"log"
+	"os"
 	"sort"
 	"strings"
 	"time"
@@ -9,18 +11,24 @@ import (
 	"github.com/adrg/frontmatter"
 	"github.com/faebut/prozessor_gostack/internal/models"
 	"github.com/jlaffaye/ftp"
+	"github.com/joho/godotenv"
 )
 
 // GetEvents returns the events parsed from the website
 func GetEvents() ([]models.Event, error) {
 	var events []models.Event
 
-	c, err := ftp.Dial("ftp.prozessor-aarau.ch:21", ftp.DialWithTimeout(5*time.Second))
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("error loading .env file")
+	}
+
+	c, err := ftp.Dial(os.Getenv("FTP_HOST"), ftp.DialWithTimeout(5*time.Second))
 	if err != nil {
 		return nil, err
 	}
 
-	err = c.Login("kalender@prozessor-aarau.ch", "eCNHMvAvczBGJU#Bv#6j")
+	err = c.Login(os.Getenv("FTP_USER"), os.Getenv("FTP_PASS"))
 	if err != nil {
 		return nil, err
 	}
@@ -30,6 +38,16 @@ func GetEvents() ([]models.Event, error) {
 
 	// current Date for comparison
 	currentDate := time.Now()
+
+	// limit search for the next two months. If it's the beginning of the month
+	// use this and next month else the next two months
+	y, m, d := currentDate.Date()
+	if d < 10 {
+		m = m + 2
+	} else {
+		m = m + 3
+	}
+	maxDate := time.Date(y, m, 0, 0, 0, 0, 0, time.Local)
 
 	for walker.Next() {
 		var e models.Event
@@ -63,8 +81,7 @@ func GetEvents() ([]models.Event, error) {
 			}
 
 			// if it is in the future and published, add to slice
-			// TODO: Filter for specific timeframe. (eg. max 2 months)
-			if e.Published && e.EventTime.After(currentDate) {
+			if e.Published && e.EventTime.After(currentDate) && e.EventTime.Before(maxDate) {
 				events = append(events, e)
 			}
 		}
