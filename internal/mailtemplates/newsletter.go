@@ -85,9 +85,7 @@ func Newsletter(newsletter models.Newsletter) (string, error) {
 						`
 			for _, e := range events {
 
-				// TODO: get black or white if basecolor is dark or light
-
-				if monday.Format(e.EventTime.Time, "Jan", monday.LocaleDeDE) != month {
+				if monday.Format(e.EventTime.Time, "January", monday.LocaleDeDE) != month {
 					month = monday.Format(e.EventTime.Time, "January", monday.LocaleDeDE)
 					eventHTML += fmt.Sprintf(`
                 <tr>
