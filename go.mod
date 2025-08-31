@@ -13,6 +13,7 @@ require (
 	github.com/fogleman/gg v1.3.0
 	github.com/go-chi/chi/v5 v5.2.2
 	github.com/go-chi/cors v1.2.2
+	github.com/go-echarts/go-echarts/v2 v2.6.1
 	github.com/gomarkdown/markdown v0.0.0-20250810172220-2e2c11897d1a
 	github.com/goodsign/monday v1.0.2
 	github.com/google/uuid v1.6.0

@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/faebut/prozessor_gostack/internal/chart"
 	"github.com/faebut/prozessor_gostack/internal/models"
 	"github.com/faebut/prozessor_gostack/view/statistics"
 )
@@ -32,7 +33,7 @@ func (m *Repository) HandleVisitorChart(w http.ResponseWriter, r *http.Request) 
 		return err
 	}
 
-	log.Println(visitCounts)
+	bar := chart.BarStack(visitCounts)
 
-	return rendering(w, r, statistics.Card())
+	return rendering(w, r, statistics.Chart(bar))
 }
