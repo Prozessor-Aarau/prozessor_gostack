@@ -1,15 +1,55 @@
 package statistics
 
 import (
-"github.com/faebut/prozessor_gostack/internal/models"
-"github.com/faebut/prozessor_gostack/view/layout"
+	"github.com/faebut/prozessor_gostack/internal/models"
+	"github.com/faebut/prozessor_gostack/view/layout"
 )
 
 templ Statistics(visitor models.Visitor) {
-@layout.App(true, visitor) {
-<div class="prose">
-  <h1>Statistik</h1>
-  <p>lorem ipsum sowieso</p>
-</div>
+	@layout.App(true, visitor) {
+		<div class="prose">
+			<h1>Statistik</h1>
+			<p>lorem ipsum sowieso</p>
+		</div>
+		<div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-5">
+			@card()
+			@card()
+			@card()
+			@card()
+		</div>
+	}
 }
+
+templ card() {
+	<div class="card bg-base-200 shadow-sm">
+		<div class="card-body">
+			<div class="flex justify-between">
+				<h2 class="text-3xl font-bold">Besuche</h2>
+				<span class="text-xl">Jan-Feb 2025</span>
+			</div>
+			<ul class="mt-6 flex flex-col gap-2 text-xs">
+				<li>
+					<span>High-resolution image generation</span>
+				</li>
+				<li>
+					<span>Customizable style templates</span>
+				</li>
+				<li>
+					<span>Batch processing capabilities</span>
+				</li>
+				<li>
+					<span>AI-driven image enhancements</span>
+				</li>
+				<li class="opacity-50">
+					<span class="line-through">Seamless cloud integration</span>
+				</li>
+				<li class="opacity-50">
+					<span class="line-through">Real-time collaboration tools</span>
+				</li>
+			</ul>
+			<div class="mt-6">
+				<button class="btn btn-primary btn-block">Subscribe</button>
+			</div>
+		</div>
+	</div>
 }

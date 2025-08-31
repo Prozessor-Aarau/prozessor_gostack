@@ -1,18 +1,18 @@
 package admin
 
 import (
-"github.com/faebut/prozessor_gostack/internal/models"
-"github.com/faebut/prozessor_gostack/view/layout"
+	"github.com/faebut/prozessor_gostack/internal/models"
+	"github.com/faebut/prozessor_gostack/view/layout"
 )
 
 templ Admin(visitor models.Visitor) {
-@layout.App(true, visitor) {
-<div class="prose">
-  <h2>Willkommen in der prozessor Datenbank, { visitor.FirstName }!</h2>
-  <p>Wähle aus einem der Punkte im Menu oben aus.</p>
-  <p>
-    Du kannst deine eigenen Informationen rechts oben bei deinen Initialen bearbeiten oder dich dort auch ausloggen.
-  </p>
-</div>
-}
+	@layout.App(true, visitor) {
+		<div class="prose">
+			<h2>Willkommen in der prozessor Datenbank, { visitor.FirstName }!</h2>
+			<p>Wähle aus einem der Punkte im Menu oben aus.</p>
+			<p>
+				Du kannst deine eigenen Informationen rechts oben bei deinen Initialen bearbeiten oder dich dort auch ausloggen.
+			</p>
+		</div>
+	}
 }
