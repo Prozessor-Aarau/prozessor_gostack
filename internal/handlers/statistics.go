@@ -8,7 +8,7 @@ import (
 	"github.com/faebut/prozessor_gostack/view/statistics"
 )
 
-// HandleAdminIndex is the admin page handler
+// HandleStatisticsIndex is the statistics page handler
 func (m *Repository) HandleStatisticsIndex(w http.ResponseWriter, r *http.Request) error {
 	// send the data to the template
 	visitor, ok := m.App.Session.Get(r.Context(), "visitor").(models.Visitor)
@@ -20,4 +20,19 @@ func (m *Repository) HandleStatisticsIndex(w http.ResponseWriter, r *http.Reques
 	}
 
 	return rendering(w, r, statistics.Statistics(visitor))
+}
+
+// HandleVisitorChart is the visitor chart handler
+func (m *Repository) HandleVisitorChart(w http.ResponseWriter, r *http.Request) error {
+
+	visitCounts, err := m.DB.GetStatisticsVisitsByRange()
+
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+
+	log.Println(visitCounts)
+
+	return rendering(w, r, statistics.Card())
 }

@@ -12,41 +12,19 @@ templ Statistics(visitor models.Visitor) {
 			<p>lorem ipsum sowieso</p>
 		</div>
 		<div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-5">
-			@card()
-			@card()
-			@card()
-			@card()
+			<div hx-get="/admin/statistics/charts/visitors" hx-trigger="load"></div>
 		</div>
 	}
 }
 
-templ card() {
+templ Card() {
 	<div class="card bg-base-200 shadow-sm">
 		<div class="card-body">
 			<div class="flex justify-between">
 				<h2 class="text-3xl font-bold">Besuche</h2>
 				<span class="text-xl">Jan-Feb 2025</span>
 			</div>
-			<ul class="mt-6 flex flex-col gap-2 text-xs">
-				<li>
-					<span>High-resolution image generation</span>
-				</li>
-				<li>
-					<span>Customizable style templates</span>
-				</li>
-				<li>
-					<span>Batch processing capabilities</span>
-				</li>
-				<li>
-					<span>AI-driven image enhancements</span>
-				</li>
-				<li class="opacity-50">
-					<span class="line-through">Seamless cloud integration</span>
-				</li>
-				<li class="opacity-50">
-					<span class="line-through">Real-time collaboration tools</span>
-				</li>
-			</ul>
+			<div>Content here</div>
 			<div class="mt-6">
 				<button class="btn btn-primary btn-block">Subscribe</button>
 			</div>

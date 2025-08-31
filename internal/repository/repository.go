@@ -97,6 +97,8 @@ type DatabaseRepo interface {
 	NewsletterUnsubscribe(id string, member bool) (models.Visitor, error)
 	NewsletterSubscribe(recipient newsletter.RecipientForm) error
 	CheckSubscriptionUnique(email string) (bool, error)
+	// statistics
+	GetStatisticsVisitsByRange() ([]models.ChartVisitCount, error)
 }
 
 type postgresDBRepo struct {
