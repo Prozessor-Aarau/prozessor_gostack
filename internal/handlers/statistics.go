@@ -24,6 +24,27 @@ func (m *Repository) HandleStatisticsIndex(w http.ResponseWriter, r *http.Reques
 	return rendering(w, r, statistics.Statistics(visitor))
 }
 
+// HandleStatisticsFilter handles the statistics filtering
+func (m *Repository) HandleStatisticsFilter(w http.ResponseWriter, r *http.Request) error {
+
+	minString := r.Form.Get("min_date")
+	maxString := r.Form.Get("max_date")
+
+	minDate, err := time.Parse("2006-01-02", minString)
+	maxDate, err := time.Parse("2006-01-02", maxString)
+
+	if err != nil {
+		return err
+	}
+
+	filter := statistics.Filter{
+		MinDate: minDate,
+		MaxDate: maxDate,
+	}
+
+	return rendering(w, r, statistics.CardStack(filter))
+}
+
 // HandleVisitorChart is the visitor chart handler
 func (m *Repository) HandleVisitorChart(w http.ResponseWriter, r *http.Request) error {
 

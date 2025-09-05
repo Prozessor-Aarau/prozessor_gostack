@@ -34,8 +34,8 @@ today := time.Now().Format("2006-01-02")
 					<span class="text-3xl i-mdi-magnify"></span>
 					<input
 						type="date"
-						id="start_date"
-						name="start_date"
+						id="min_date"
+						name="min_date"
 						class="grow"
 						value="2020-03-01"
 						min="2020-03-01"
@@ -44,13 +44,13 @@ today := time.Now().Format("2006-01-02")
 				</label>
 				<label class="input flex items-center gap-2 col-span-2">
 					<span class="text-3xl i-mdi-magnify"></span>
-					<input type="date" id="end_date" name="end_date" class="grow" value={ today } min="2020-03-01" max={ today }/>
+					<input type="date" id="max_date" name="max_date" class="grow" value={ today } min="2020-03-01" max={ today }/>
 				</label>
 				<div class="col-span-4 grid grid-cols-2 justify-items-center gap-3">
 					<button
 						type="submit"
-						hx-post="/admin/visitors/visitorlist"
-						hx-target="#visitorList"
+						hx-post="/admin/statistics/charts/filter"
+						hx-target="#cardStack"
 						class="btn btn-success btn-outline"
 					><span class="i-mdi-funnel"></span> filtern</button>
 					<a href="/admin/visitors" class="btn btn-error btn-outline">
@@ -72,7 +72,7 @@ templ CardStack(filter Filter) {
 stringMin := filter.MinDate.Format("2006-01-02")
 stringMax := filter.MaxDate.Format("2006-01-02")
 	}}
-	<div class="mt-6 flex flex-col gap-5">
+	<div id="cardStack" class="mt-6 flex flex-col gap-5">
 		<div hx-get={ "/admin/statistics/charts/visitors?min=" + stringMin + "&max=" + stringMax } hx-trigger="load"></div>
 		<div hx-get={ "/admin/statistics/charts/weekdays?min=" + stringMin + "&max=" + stringMax } hx-trigger="load"></div>
 		<div hx-get={ "/admin/statistics/charts/ateliers?min=" + stringMin + "&max=" + stringMax } hx-trigger="load"></div>

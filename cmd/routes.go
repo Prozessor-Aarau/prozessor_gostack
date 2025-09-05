@@ -253,6 +253,7 @@ func routes(app *config.AppConfig) http.Handler {
 		mux.Group(func(mux chi.Router) {
 			mux.Use(CheckPermission("ViewStatistics"))
 			mux.Get("/statistics", handlers.Make(handlers.Repo.HandleStatisticsIndex))
+			mux.Post("/statistics/charts/filter", handlers.Make(handlers.Repo.HandleStatisticsFilter))
 			mux.Get("/statistics/charts/visitors", handlers.Make(handlers.Repo.HandleVisitorChart))
 			mux.Get("/statistics/charts/weekdays", handlers.Make(handlers.Repo.HandleWeekdayChart))
 			mux.Get("/statistics/charts/ateliers", handlers.Make(handlers.Repo.HandleAtelierChart))
