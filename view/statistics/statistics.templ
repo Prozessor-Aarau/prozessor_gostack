@@ -14,7 +14,7 @@ templ Statistics(visitor models.Visitor) {
 			<h1>Statistik</h1>
 			<p>lorem ipsum sowieso</p>
 		</div>
-		<div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-5">
+		<div class="mt-6 grid grid-cols-1">
 			<div hx-get="/admin/statistics/charts/visitors" hx-trigger="load"></div>
 		</div>
 	}
@@ -31,9 +31,7 @@ templ Chart(graph *charts.Bar) {
 				<h2 class="text-3xl font-bold">Besuche</h2>
 				<span class="text-xl">Jan-Feb 2025</span>
 			</div>
-			<div>
-				@chart.ConvertChartToTemplComponent(graph)
-			</div>
+			@chart.ConvertChartToTemplComponent(graph)
 			<div class="mt-6">
 				<button class="btn btn-primary btn-block">Subscribe</button>
 			</div>
