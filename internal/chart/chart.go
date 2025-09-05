@@ -16,23 +16,8 @@ type Renderable interface {
 	Render(w io.Writer) error
 }
 
-func ConvertChartToTemplComponent(chart Renderable) templ.Component {
-	return templ.ComponentFunc(func(ctx context.Context, w io.Writer) error {
-		return chart.Render(w)
-	})
-}
-
-func generateBarItems(data []float64) []opts.BarData {
-	items := make([]opts.BarData, 0)
-	for _, item := range data {
-		items = append(items, opts.BarData{Value: item})
-	}
-	return items
-}
-
-func BarStack(counts models.ChartData) *charts.Bar {
-
-	const actionsWithEchartInstance = `
+// js to resize bar on load and on resize to fit in their container
+const actionsWithEchartInstance = `
  const myChart = %MY_ECHARTS%;
 
  window.onload = function ()
@@ -45,6 +30,24 @@ func BarStack(counts models.ChartData) *charts.Bar {
          myChart.resize();
      };`
 
+func ConvertChartToTemplComponent(chart Renderable) templ.Component {
+	return templ.ComponentFunc(func(ctx context.Context, w io.Writer) error {
+		return chart.Render(w)
+	})
+}
+
+// generateBarItems generates bar items from an array of float64
+func generateBarItems(data []float64) []opts.BarData {
+	items := make([]opts.BarData, 0)
+	for _, item := range data {
+		items = append(items, opts.BarData{Value: item})
+	}
+	return items
+}
+
+// BarStack generates a stacked or non stacked bar chart
+func Bar(counts models.ChartData, stacked bool) *charts.Bar {
+
 	bar := charts.NewBar()
 
 	// name x axis
@@ -56,11 +59,13 @@ func BarStack(counts models.ChartData) *charts.Bar {
 	}
 
 	// stack bars
-	bar.SetSeriesOptions(charts.WithBarChartOpts(opts.BarChart{
-		Stack: "stackA",
-	}))
+	if stacked {
+		bar.SetSeriesOptions(charts.WithBarChartOpts(opts.BarChart{
+			Stack: "stackA",
+		}))
+	}
 
-	bar.AddJSFuncs(actionsWithEchartInstance)
+	// bar.AddJSFuncs(actionsWithEchartInstance)
 
 	return bar
 }

@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"math"
 	"time"
 
 	"github.com/faebut/prozessor_gostack/internal/models"
@@ -108,7 +109,7 @@ func (m *postgresDBRepo) GetStatisticsAverageWeekday(startDate, endDate time.Tim
 			FROM
 				visits
 			WHERE
-				date_in BETWEEN '2024-01-01' and '2024-12-31'
+				date_in BETWEEN $1 and $2
 			GROUP BY
 				DATE_TRUNC('day', date_in)
 		) daily_counts
@@ -136,7 +137,7 @@ func (m *postgresDBRepo) GetStatisticsAverageWeekday(startDate, endDate time.Tim
 
 	// name Y-Axis
 
-	visits.AxisY = []string{"Besuche"}
+	visits.AxisY = []string{"Durchschn. Besuche"}
 
 	var arrAvg []float64
 
@@ -154,7 +155,7 @@ func (m *postgresDBRepo) GetStatisticsAverageWeekday(startDate, endDate time.Tim
 		}
 
 		visits.AxisX = append(visits.AxisX, weekday)
-		arrAvg = append(arrAvg, average)
+		arrAvg = append(arrAvg, math.Round(average*100)/100)
 	}
 
 	visits.Data = append(visits.Data, arrAvg)
