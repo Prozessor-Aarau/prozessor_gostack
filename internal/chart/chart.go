@@ -31,12 +31,21 @@ func generateBarItems(data []int) []opts.BarData {
 }
 
 func BarStack(counts models.ChartData) *charts.Bar {
+
+	const actionsWithEchartInstance = `
+ const myChart = %MY_ECHARTS%;
+
+ window.onload = function ()
+     {
+         myChart.resize();
+     };
+
+ window.onresize = function ()
+     {
+         myChart.resize();
+     };`
+
 	bar := charts.NewBar()
-	bar.SetGlobalOptions(
-		charts.WithTitleOpts(opts.Title{
-			Title: "stack style",
-		}),
-	)
 
 	// name x axis
 	bar.SetXAxis(counts.AxisX)
@@ -50,6 +59,8 @@ func BarStack(counts models.ChartData) *charts.Bar {
 	bar.SetSeriesOptions(charts.WithBarChartOpts(opts.BarChart{
 		Stack: "stackA",
 	}))
+
+	bar.AddJSFuncs(actionsWithEchartInstance)
 
 	return bar
 }
