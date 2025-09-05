@@ -30,19 +30,26 @@ func generateBarItems(data []int) []opts.BarData {
 	return items
 }
 
-func BarStack(counts models.ChartVisitCounts) *charts.Bar {
+func BarStack(counts models.ChartData) *charts.Bar {
 	bar := charts.NewBar()
 	bar.SetGlobalOptions(
 		charts.WithTitleOpts(opts.Title{
 			Title: "stack style",
 		}),
 	)
-	bar.SetXAxis(counts.ChartAxis()).
-		AddSeries("Tagesnutzung", generateBarItems(counts.ChartDailies())).
-		AddSeries("Abonnement", generateBarItems(counts.ChartAbonnements())).
-		AddSeries("Mitglied", generateBarItems(counts.ChartMembers())).
-		SetSeriesOptions(charts.WithBarChartOpts(opts.BarChart{
-			Stack: "stackA",
-		}))
+
+	// name x axis
+	bar.SetXAxis(counts.AxisX)
+
+	// add datapoints
+	for i, dataArr := range counts.Data {
+		bar.AddSeries(counts.AxisY[i], generateBarItems(dataArr))
+	}
+
+	// stack bars
+	bar.SetSeriesOptions(charts.WithBarChartOpts(opts.BarChart{
+		Stack: "stackA",
+	}))
+
 	return bar
 }
