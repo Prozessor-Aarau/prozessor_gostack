@@ -1,40 +1,39 @@
 package statistics
 
 import (
-	"github.com/faebut/prozessor_gostack/internal/chart"
-	"github.com/faebut/prozessor_gostack/internal/models"
-	"github.com/faebut/prozessor_gostack/view/layout"
-	"github.com/go-echarts/go-echarts/v2/charts"
+"github.com/faebut/prozessor_gostack/internal/chart"
+"github.com/faebut/prozessor_gostack/internal/models"
+"github.com/faebut/prozessor_gostack/view/layout"
+"github.com/go-echarts/go-echarts/v2/charts"
 )
 
 templ Statistics(visitor models.Visitor) {
-	@layout.App(true, visitor) {
-		<script src="https://go-echarts.github.io/go-echarts-assets/assets/echarts.min.js"></script>
-		<div class="prose">
-			<h1>Statistik</h1>
-			<p>lorem ipsum sowieso</p>
-		</div>
-		<div class="mt-6 grid grid-cols-1">
-			<div hx-get="/admin/statistics/charts/visitors" hx-trigger="load"></div>
-		</div>
-	}
+@layout.App(true, visitor) {
+<script src="https://go-echarts.github.io/go-echarts-assets/assets/echarts.min.js"></script>
+<div class="prose">
+  <h1>Statistik</h1>
+  <p>lorem ipsum sowieso</p>
+</div>
+<div class="mt-6 grid grid-cols-1">
+  <div hx-get="/admin/statistics/charts/visitors" hx-trigger="load"></div>
+</div>
+}
 }
 
 templ Card() {
-	<div>Content here</div>
+<div>Content here</div>
 }
 
 templ Chart(graph *charts.Bar) {
-	<div class="card bg-base-200 shadow-sm">
-		<div class="card-body">
-			<div class="flex justify-between">
-				<h2 class="text-3xl font-bold">Besuche</h2>
-				<span class="text-xl">Jan-Feb 2025</span>
-			</div>
-			@chart.ConvertChartToTemplComponent(graph)
-			<div class="mt-6">
-				<button class="btn btn-primary btn-block">Subscribe</button>
-			</div>
-		</div>
-	</div>
+<div class="card bg-base-200 shadow-sm">
+  <div class="card-body">
+    <div class="flex justify-between">
+      <h2 class="text-3xl font-bold">Besuche</h2>
+    </div>
+    @chart.ConvertChartToTemplComponent(graph)
+    <div class="mt-6">
+      <button class="btn btn-primary btn-block">Subscribe</button>
+    </div>
+  </div>
+</div>
 }

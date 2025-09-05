@@ -22,7 +22,7 @@ func ConvertChartToTemplComponent(chart Renderable) templ.Component {
 	})
 }
 
-func generateBarItems(data []int) []opts.BarData {
+func generateBarItems(data []float64) []opts.BarData {
 	items := make([]opts.BarData, 0)
 	for _, item := range data {
 		items = append(items, opts.BarData{Value: item})

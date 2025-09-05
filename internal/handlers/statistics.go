@@ -3,6 +3,7 @@ package handlers
 import (
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/faebut/prozessor_gostack/internal/chart"
 	"github.com/faebut/prozessor_gostack/internal/models"
@@ -26,7 +27,10 @@ func (m *Repository) HandleStatisticsIndex(w http.ResponseWriter, r *http.Reques
 // HandleVisitorChart is the visitor chart handler
 func (m *Repository) HandleVisitorChart(w http.ResponseWriter, r *http.Request) error {
 
-	visitCounts, err := m.DB.GetStatisticsVisitsByRange()
+	startDate, _ := time.Parse("2006-01-02", "2024-01-31")
+	endDate, _ := time.Parse("2006-01-02", "2024-06-30")
+
+	visitCounts, err := m.DB.GetStatisticsVisitsByType(startDate, endDate)
 
 	if err != nil {
 		log.Println(err)
