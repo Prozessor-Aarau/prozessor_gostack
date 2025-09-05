@@ -27,8 +27,14 @@ func (m *Repository) HandleStatisticsIndex(w http.ResponseWriter, r *http.Reques
 // HandleVisitorChart is the visitor chart handler
 func (m *Repository) HandleVisitorChart(w http.ResponseWriter, r *http.Request) error {
 
-	startDate, _ := time.Parse("2006-01-02", "2024-01-31")
-	endDate, _ := time.Parse("2006-01-02", "2024-06-30")
+	startString := r.URL.Query().Get("min")
+	endString := r.URL.Query().Get("max")
+
+	startDate, err := time.Parse("2006-01-02", startString)
+	endDate, err := time.Parse("2006-01-02", endString)
+	if err != nil {
+		return err
+	}
 
 	visitCounts, err := m.DB.GetStatisticsVisitsByType(startDate, endDate)
 
@@ -45,8 +51,14 @@ func (m *Repository) HandleVisitorChart(w http.ResponseWriter, r *http.Request) 
 // HandleWeekdayChart is the weekday chart handler
 func (m *Repository) HandleWeekdayChart(w http.ResponseWriter, r *http.Request) error {
 
-	startDate, _ := time.Parse("2006-01-02", "2024-01-31")
-	endDate, _ := time.Parse("2006-01-02", "2024-06-30")
+	startString := r.URL.Query().Get("min")
+	endString := r.URL.Query().Get("max")
+
+	startDate, err := time.Parse("2006-01-02", startString)
+	endDate, err := time.Parse("2006-01-02", endString)
+	if err != nil {
+		return err
+	}
 
 	visitCounts, err := m.DB.GetStatisticsAverageWeekday(startDate, endDate)
 
@@ -63,8 +75,14 @@ func (m *Repository) HandleWeekdayChart(w http.ResponseWriter, r *http.Request) 
 // HandleAtelierChart is the atelier chart handler
 func (m *Repository) HandleAtelierChart(w http.ResponseWriter, r *http.Request) error {
 
-	startDate, _ := time.Parse("2006-01-02", "2024-01-31")
-	endDate, _ := time.Parse("2006-01-02", "2024-06-30")
+	startString := r.URL.Query().Get("min")
+	endString := r.URL.Query().Get("max")
+
+	startDate, err := time.Parse("2006-01-02", startString)
+	endDate, err := time.Parse("2006-01-02", endString)
+	if err != nil {
+		return err
+	}
 
 	atelierCounts, err := m.DB.GetStatisticsAteliers(startDate, endDate)
 
