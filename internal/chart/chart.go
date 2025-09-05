@@ -69,3 +69,32 @@ func Bar(counts models.ChartData, stacked bool) *charts.Bar {
 
 	return bar
 }
+
+// generatePieItems converts the data to pie items
+func generatePieItems(counts models.ChartData) []opts.PieData {
+	items := make([]opts.PieData, 0)
+	for i, dataName := range counts.AxisX {
+		items = append(items, opts.PieData{Name: dataName, Value: counts.Data[0][i]})
+	}
+	return items
+}
+
+// Pie generates a pie chart
+func Pie(counts models.ChartData) *charts.Pie {
+	pie := charts.NewPie()
+
+	pie.SetGlobalOptions(
+		charts.WithLegendOpts(opts.Legend{
+			Right:  "right",
+			Orient: "vertical",
+		}))
+
+	pie.AddSeries("Besuche", generatePieItems(counts)).
+		SetSeriesOptions(charts.WithLabelOpts(
+			opts.Label{
+				Show:      opts.Bool(true),
+				Formatter: "{b}: {c}",
+			}),
+		)
+	return pie
+}

@@ -100,6 +100,7 @@ type DatabaseRepo interface {
 	// statistics
 	GetStatisticsVisitsByType(startDate, endDate time.Time) (models.ChartData, error)
 	GetStatisticsAverageWeekday(startDate, endDate time.Time) (models.ChartData, error)
+	GetStatisticsAteliers(startDate, endDate time.Time) (models.ChartData, error)
 }
 
 type postgresDBRepo struct {

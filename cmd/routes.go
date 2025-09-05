@@ -255,6 +255,7 @@ func routes(app *config.AppConfig) http.Handler {
 			mux.Get("/statistics", handlers.Make(handlers.Repo.HandleStatisticsIndex))
 			mux.Get("/statistics/charts/visitors", handlers.Make(handlers.Repo.HandleVisitorChart))
 			mux.Get("/statistics/charts/weekdays", handlers.Make(handlers.Repo.HandleWeekdayChart))
+			mux.Get("/statistics/charts/ateliers", handlers.Make(handlers.Repo.HandleAtelierChart))
 		})
 
 		// finances

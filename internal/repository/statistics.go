@@ -166,3 +166,64 @@ func (m *postgresDBRepo) GetStatisticsAverageWeekday(startDate, endDate time.Tim
 
 	return visits, nil
 }
+
+// GetStatisticsAteliers gets the usage number for all active ateliers
+func (m *postgresDBRepo) GetStatisticsAteliers(startDate, endDate time.Time) (models.ChartData, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	var visits models.ChartData
+
+	query := `
+	SELECT
+		a.atelier_name,
+		count(*)
+	FROM
+		visit_ateliers va
+		JOIN ateliers a ON a.id = va.atelier_id
+		JOIN visits v ON v.id = va.visit_id
+	WHERE
+		v.date_in BETWEEN $1 AND $2
+		AND a.active = true
+	GROUP BY
+		a.atelier_name;
+	`
+
+	rows, err := m.DB.QueryContext(ctx, query, startDate, endDate)
+	if err != nil {
+		return visits, err
+	}
+
+	defer rows.Close()
+
+	// name Y-Axis
+
+	visits.AxisY = []string{"Besuche"}
+
+	var arrAvg []float64
+
+	for rows.Next() {
+		var atelier string
+		var count float64
+
+		err := rows.Scan(
+			&atelier,
+			&count,
+		)
+
+		if err != nil {
+			return visits, err
+		}
+
+		visits.AxisX = append(visits.AxisX, atelier)
+		arrAvg = append(arrAvg, count)
+	}
+
+	visits.Data = append(visits.Data, arrAvg)
+
+	if err = rows.Err(); err != nil {
+		return visits, err
+	}
+
+	return visits, nil
+}

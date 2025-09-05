@@ -42,7 +42,7 @@ func (m *Repository) HandleVisitorChart(w http.ResponseWriter, r *http.Request) 
 	return rendering(w, r, statistics.Chart(bar, "Besuche pro Tag"))
 }
 
-// HandleVisitorChart is the visitor chart handler
+// HandleWeekdayChart is the weekday chart handler
 func (m *Repository) HandleWeekdayChart(w http.ResponseWriter, r *http.Request) error {
 
 	startDate, _ := time.Parse("2006-01-02", "2024-01-31")
@@ -58,4 +58,22 @@ func (m *Repository) HandleWeekdayChart(w http.ResponseWriter, r *http.Request) 
 	bar := chart.Bar(visitCounts, false)
 
 	return rendering(w, r, statistics.Chart(bar, "Durchschnitt pro Wochentag"))
+}
+
+// HandleAtelierChart is the atelier chart handler
+func (m *Repository) HandleAtelierChart(w http.ResponseWriter, r *http.Request) error {
+
+	startDate, _ := time.Parse("2006-01-02", "2024-01-31")
+	endDate, _ := time.Parse("2006-01-02", "2024-06-30")
+
+	atelierCounts, err := m.DB.GetStatisticsAteliers(startDate, endDate)
+
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+
+	pie := chart.Pie(atelierCounts)
+
+	return rendering(w, r, statistics.PieChart(pie, "Nutzung Ateliers"))
 }
