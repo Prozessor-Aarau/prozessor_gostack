@@ -15,7 +15,6 @@ import (
 	"github.com/faebut/prozessor_gostack/internal/handlers"
 	"github.com/faebut/prozessor_gostack/internal/helpers"
 	"github.com/faebut/prozessor_gostack/internal/models"
-	"github.com/faebut/prozessor_gostack/internal/render"
 	"github.com/faebut/prozessor_gostack/internal/slack"
 	"github.com/joho/godotenv"
 )
@@ -100,7 +99,7 @@ func run() (*driver.DB, error) {
 	app.InProduction = inProduction
 	app.UseCache = useCache
 
-	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
+	infoLog = log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
 	app.InfoLog = infoLog
 
 	errorLog = log.New(os.Stdout, "Error\t", log.Ldate|log.Ltime|log.Lshortfile)
@@ -133,17 +132,8 @@ func run() (*driver.DB, error) {
 	}
 	log.Println("Connected to database")
 
-	tc, err := render.CreateTemplateCache()
-	if err != nil {
-		log.Fatal("cannot create template cache", err)
-		return nil, err
-	}
-
-	app.TemplateCache = tc
-
 	repo := handlers.NewRepo(&app, db)
 	handlers.NewHandlers(repo)
-	render.NewRenderer(&app)
 	helpers.NewHelpers(&app)
 
 	return db, nil

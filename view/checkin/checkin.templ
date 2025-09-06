@@ -6,6 +6,7 @@ import (
 	"github.com/faebut/prozessor_gostack/internal/render"
 	"github.com/faebut/prozessor_gostack/view/layout"
 	"github.com/faebut/prozessor_gostack/view/ui"
+	"slices"
 	"strconv"
 	"time"
 )
@@ -360,8 +361,8 @@ templ CheckinForm(
 										name={ strconv.Itoa(a.ID) }
 										type="checkbox"
 										class="checkbox"
-										checked?={ render.Contains(a.ID,
-                checkedAteliers) }
+										checked?={ 
+                slices.Contains(checkedAteliers, a.ID) }
 									/>
 									{ a.AtelierName }
 								</label>
