@@ -4,6 +4,7 @@ import (
 	"context"
 	"log/slog"
 	"net/http"
+	"strings"
 
 	"github.com/a-h/templ"
 	"github.com/faebut/prozessor_gostack/internal/config"
@@ -44,8 +45,10 @@ func Make(h func(http.ResponseWriter, *http.Request) error) http.HandlerFunc {
 				visitorID = id.(string)
 			}
 
-			slog.Error("internal server error",
-				"err", err,
+			// Clean error message by removing "ERROR:" prefix
+			errMsg, _ := strings.CutPrefix(err.Error(), "ERROR: ")
+
+			slog.Error(errMsg,
 				"path", r.URL.Path,
 				"visitor_id", visitorID,
 			)

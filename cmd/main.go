@@ -4,6 +4,7 @@ import (
 	"encoding/gob"
 	"fmt"
 	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"strconv"
@@ -14,6 +15,7 @@ import (
 	"github.com/faebut/prozessor_gostack/internal/driver"
 	"github.com/faebut/prozessor_gostack/internal/handlers"
 	"github.com/faebut/prozessor_gostack/internal/helpers"
+	"github.com/faebut/prozessor_gostack/internal/logger"
 	"github.com/faebut/prozessor_gostack/internal/models"
 	"github.com/faebut/prozessor_gostack/internal/slack"
 	"github.com/joho/godotenv"
@@ -131,6 +133,14 @@ func run() (*driver.DB, error) {
 		log.Fatal("Cannot connect to database! Dying...")
 	}
 	log.Println("Connected to database")
+
+	// Initialize dual logging system
+	textHandler := slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
+		Level: slog.LevelInfo,
+	})
+	dbHandler := logger.NewDBHandler(db.SQL, textHandler)
+	slogLogger := slog.New(dbHandler)
+	slog.SetDefault(slogLogger)
 
 	repo := handlers.NewRepo(&app, db)
 	handlers.NewHandlers(repo)

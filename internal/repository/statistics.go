@@ -35,7 +35,7 @@ func (m *postgresDBRepo) GetStatisticsVisitsByType(startDate, endDate time.Time)
 		FROM
 			visits
 		WHERE
-			date_in BETWEEN $1 AND $2
+			date_in BETWEEN $3 AND $2
 		GROUP BY
 			DATE (date_in)
 		ORDER BY

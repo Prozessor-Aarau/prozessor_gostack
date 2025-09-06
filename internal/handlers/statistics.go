@@ -65,12 +65,10 @@ func (m *Repository) HandleVisitorChart(w http.ResponseWriter, r *http.Request) 
 	} else {
 		darkMode = false
 	}
-	log.Println("mode set is:", mode)
 
 	visitCounts, err := m.DB.GetStatisticsVisitsByType(startDate, endDate)
 
 	if err != nil {
-		log.Println(err)
 		return err
 	}
 
@@ -103,7 +101,6 @@ func (m *Repository) HandleWeekdayChart(w http.ResponseWriter, r *http.Request) 
 	visitCounts, err := m.DB.GetStatisticsAverageWeekday(startDate, endDate)
 
 	if err != nil {
-		log.Println(err)
 		return err
 	}
 
@@ -136,7 +133,6 @@ func (m *Repository) HandleAtelierChart(w http.ResponseWriter, r *http.Request) 
 	atelierCounts, err := m.DB.GetStatisticsAteliers(startDate, endDate)
 
 	if err != nil {
-		log.Println(err)
 		return err
 	}
 
@@ -169,7 +165,6 @@ func (m *Repository) HandleAgesChart(w http.ResponseWriter, r *http.Request) err
 	agesCounts, err := m.DB.GetStatisticsAges(startDate, endDate)
 
 	if err != nil {
-		log.Println(err)
 		return err
 	}
 
@@ -193,7 +188,6 @@ func (m *Repository) HandleKeyFigures(w http.ResponseWriter, r *http.Request) er
 	figures, err := m.DB.GetStatisticsKeyFigures(startDate, endDate)
 
 	if err != nil {
-		log.Println(err)
 		return err
 	}
 
