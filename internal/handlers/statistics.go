@@ -48,14 +48,24 @@ func (m *Repository) HandleStatisticsFilter(w http.ResponseWriter, r *http.Reque
 // HandleVisitorChart is the visitor chart handler
 func (m *Repository) HandleVisitorChart(w http.ResponseWriter, r *http.Request) error {
 
+	var darkMode bool
+
 	startString := r.URL.Query().Get("min")
 	endString := r.URL.Query().Get("max")
+	mode := r.URL.Query().Get("mode")
 
 	startDate, err := time.Parse("2006-01-02", startString)
 	endDate, err := time.Parse("2006-01-02", endString)
 	if err != nil {
 		return err
 	}
+
+	if mode == "dark" {
+		darkMode = true
+	} else {
+		darkMode = false
+	}
+	log.Println("mode set is:", mode)
 
 	visitCounts, err := m.DB.GetStatisticsVisitsByType(startDate, endDate)
 
@@ -64,7 +74,7 @@ func (m *Repository) HandleVisitorChart(w http.ResponseWriter, r *http.Request) 
 		return err
 	}
 
-	bar := chart.Bar(visitCounts, true)
+	bar := chart.Bar(visitCounts, true, darkMode)
 
 	return rendering(w, r, statistics.Chart(bar, "Besuche pro Tag"))
 }
@@ -72,13 +82,22 @@ func (m *Repository) HandleVisitorChart(w http.ResponseWriter, r *http.Request) 
 // HandleWeekdayChart is the weekday chart handler
 func (m *Repository) HandleWeekdayChart(w http.ResponseWriter, r *http.Request) error {
 
+	var darkMode bool
+
 	startString := r.URL.Query().Get("min")
 	endString := r.URL.Query().Get("max")
+	mode := r.URL.Query().Get("mode")
 
 	startDate, err := time.Parse("2006-01-02", startString)
 	endDate, err := time.Parse("2006-01-02", endString)
 	if err != nil {
 		return err
+	}
+
+	if mode == "dark" {
+		darkMode = true
+	} else {
+		darkMode = false
 	}
 
 	visitCounts, err := m.DB.GetStatisticsAverageWeekday(startDate, endDate)
@@ -88,7 +107,7 @@ func (m *Repository) HandleWeekdayChart(w http.ResponseWriter, r *http.Request) 
 		return err
 	}
 
-	bar := chart.Bar(visitCounts, true)
+	bar := chart.Bar(visitCounts, true, darkMode)
 
 	return rendering(w, r, statistics.Chart(bar, "Durchschnitt pro Wochentag"))
 }
@@ -96,13 +115,22 @@ func (m *Repository) HandleWeekdayChart(w http.ResponseWriter, r *http.Request) 
 // HandleAtelierChart is the atelier chart handler
 func (m *Repository) HandleAtelierChart(w http.ResponseWriter, r *http.Request) error {
 
+	var darkMode bool
+
 	startString := r.URL.Query().Get("min")
 	endString := r.URL.Query().Get("max")
+	mode := r.URL.Query().Get("mode")
 
 	startDate, err := time.Parse("2006-01-02", startString)
 	endDate, err := time.Parse("2006-01-02", endString)
 	if err != nil {
 		return err
+	}
+
+	if mode == "dark" {
+		darkMode = true
+	} else {
+		darkMode = false
 	}
 
 	atelierCounts, err := m.DB.GetStatisticsAteliers(startDate, endDate)
@@ -112,7 +140,7 @@ func (m *Repository) HandleAtelierChart(w http.ResponseWriter, r *http.Request) 
 		return err
 	}
 
-	pie := chart.Pie(atelierCounts)
+	pie := chart.Pie(atelierCounts, darkMode)
 
 	return rendering(w, r, statistics.PieChart(pie, "Nutzung Ateliers"))
 }
@@ -120,13 +148,22 @@ func (m *Repository) HandleAtelierChart(w http.ResponseWriter, r *http.Request) 
 // HandleAgesChart is the ages chart handler
 func (m *Repository) HandleAgesChart(w http.ResponseWriter, r *http.Request) error {
 
+	var darkMode bool
+
 	startString := r.URL.Query().Get("min")
 	endString := r.URL.Query().Get("max")
+	mode := r.URL.Query().Get("mode")
 
 	startDate, err := time.Parse("2006-01-02", startString)
 	endDate, err := time.Parse("2006-01-02", endString)
 	if err != nil {
 		return err
+	}
+
+	if mode == "dark" {
+		darkMode = true
+	} else {
+		darkMode = false
 	}
 
 	agesCounts, err := m.DB.GetStatisticsAges(startDate, endDate)
@@ -136,7 +173,7 @@ func (m *Repository) HandleAgesChart(w http.ResponseWriter, r *http.Request) err
 		return err
 	}
 
-	pie := chart.Pie(agesCounts)
+	pie := chart.Pie(agesCounts, darkMode)
 
 	return rendering(w, r, statistics.PieChart(pie, "Nutzung nach Altersgruppe"))
 }

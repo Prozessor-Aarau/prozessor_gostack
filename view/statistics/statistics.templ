@@ -75,12 +75,53 @@ stringMin := filter.MinDate.Format("2006-01-02")
 stringMax := filter.MaxDate.Format("2006-01-02")
 	}}
 	<div id="cardStack" class="mt-6 flex flex-col gap-5">
-		<div hx-get={ "/admin/statistics/charts/keyfigures?min=" + stringMin + "&max=" + stringMax } hx-trigger="load"></div>
-		<div hx-get={ "/admin/statistics/charts/visitors?min=" + stringMin + "&max=" + stringMax } hx-trigger="load"></div>
-		<div hx-get={ "/admin/statistics/charts/weekdays?min=" + stringMin + "&max=" + stringMax } hx-trigger="load"></div>
-		<div hx-get={ "/admin/statistics/charts/ateliers?min=" + stringMin + "&max=" + stringMax } hx-trigger="load"></div>
-		<div hx-get={ "/admin/statistics/charts/ages?min=" + stringMin + "&max=" + stringMax } hx-trigger="load"></div>
+		<div
+			id="keyfigures-chart"
+			hx-get={ "/admin/statistics/charts/keyfigures?min=" + stringMin + "&max=" + stringMax }
+			hx-trigger="load"
+		></div>
+		<div
+			id="visitors-chart"
+			hx-get={ "/admin/statistics/charts/visitors?min=" + stringMin + "&max=" + stringMax }
+			hx-trigger="load, refreshCharts from:document"
+		></div>
+		<div
+			id="weekdays-chart"
+			hx-get={ "/admin/statistics/charts/weekdays?min=" + stringMin + "&max=" + stringMax }
+			hx-trigger="load, refreshCharts from:document"
+		></div>
+		<div
+			id="ateliers-chart"
+			hx-get={ "/admin/statistics/charts/ateliers?min=" + stringMin + "&max=" + stringMax }
+			hx-trigger="load, refreshCharts from:document"
+		></div>
+		<div
+			id="ages-chart"
+			hx-get={ "/admin/statistics/charts/ages?min=" + stringMin + "&max=" + stringMax }
+			hx-trigger="load, refreshCharts from:document"
+		></div>
 	</div>
+	<script>
+  (() => {
+    function isDarkMode() {
+      return window.matchMedia('(prefers-color-scheme: dark)').matches;
+    }
+
+    document.addEventListener('htmx:configRequest', function (evt) {
+      if (evt.detail.elt.id.includes('-chart') && evt.detail.elt.id !== 'keyfigures-chart') {
+        const mode = isDarkMode() ? 'dark' : 'light';
+        evt.detail.parameters.mode = mode;
+      }
+    });
+  })()
+  // Listen for changes and dispatch event
+  const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+  mediaQuery.addEventListener('change', function () {
+    document.dispatchEvent(new CustomEvent('refreshCharts'));
+    console.log("mode changed");
+  });
+
+</script>
 }
 
 templ FigureCard(data models.ChartData, title string) {

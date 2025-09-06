@@ -47,7 +47,7 @@ func generateBarItems(data []float64) []opts.BarData {
 }
 
 // BarStack generates a stacked or non stacked bar chart
-func Bar(counts models.ChartData, stacked bool) *charts.Bar {
+func Bar(counts models.ChartData, stacked bool, darkMode bool) *charts.Bar {
 
 	bar := charts.NewBar()
 
@@ -66,6 +66,13 @@ func Bar(counts models.ChartData, stacked bool) *charts.Bar {
 		}))
 	}
 
+	// change theme according to dark or light mode
+	if darkMode {
+		setDraculaTheme(bar)
+	} else {
+		setNordTheme(bar)
+	}
+
 	// add script to add dynamic resizing
 	bar.AddJSFuncs(actionsWithEchartInstance)
 
@@ -82,22 +89,28 @@ func generatePieItems(counts models.ChartData) []opts.PieData {
 }
 
 // Pie generates a pie chart
-func Pie(counts models.ChartData) *charts.Pie {
+func Pie(counts models.ChartData, darkMode bool) *charts.Pie {
 	pie := charts.NewPie()
 
-	pie.SetGlobalOptions(
-		charts.WithLegendOpts(opts.Legend{
-			Right:  "right",
-			Orient: "vertical",
-		}))
-
 	pie.AddSeries("Besuche", generatePieItems(counts)).
-		SetSeriesOptions(charts.WithLabelOpts(
-			opts.Label{
+		SetSeriesOptions(
+			charts.WithPieChartOpts(opts.PieChart{
+				Center: []string{"35%", "50%"}, // Move center to 35% from left, 50% from top
+				// Radius: []string{"0%", "60%"},  // Optional: adjust radius if needed
+			}),
+			charts.WithLabelOpts(opts.Label{
 				Show:      opts.Bool(true),
+				Color:     "#2e3440",
 				Formatter: "{b}: {c}",
 			}),
 		)
+
+	// change theme according to dark or light mode
+	if darkMode {
+		setDraculaTheme(pie)
+	} else {
+		setNordTheme(pie)
+	}
 
 	// add script to add dynamic resizing
 	pie.AddJSFuncs(actionsWithEchartInstance)
