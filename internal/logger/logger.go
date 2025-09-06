@@ -3,6 +3,8 @@ package logger
 import (
 	"context"
 	"database/sql"
+	"fmt"
+	"io"
 	"log"
 	"log/slog"
 	"runtime"
@@ -127,6 +129,66 @@ func (h *DBHandler) WithGroup(name string) slog.Handler {
 		db:   h.db,
 		next: h.next.WithGroup(name),
 	}
+}
+
+const (
+	ColorReset  = "\033[0m"
+	ColorRed    = "\033[31m"
+	ColorYellow = "\033[33m"
+	ColorBlue   = "\033[34m"
+	ColorGray   = "\033[37m"
+)
+
+type ColoredHandler struct {
+	writer io.Writer
+	level  slog.Level
+}
+
+func NewColoredHandler(w io.Writer, level slog.Level) *ColoredHandler {
+	return &ColoredHandler{
+		writer: w,
+		level:  level,
+	}
+}
+
+func (h *ColoredHandler) Handle(ctx context.Context, r slog.Record) error {
+	timestamp := r.Time.Format("2006-01-02 15:04:05")
+
+	var levelColor, levelText string
+	switch r.Level {
+	case slog.LevelDebug:
+		levelColor = ColorGray
+		levelText = "DEBUG"
+	case slog.LevelInfo:
+		levelColor = ColorBlue
+		levelText = "INFO"
+	case slog.LevelWarn:
+		levelColor = ColorYellow
+		levelText = "WARN"
+	case slog.LevelError:
+		levelColor = ColorRed
+		levelText = "ERROR"
+	default:
+		levelColor = ColorReset
+		levelText = r.Level.String()
+	}
+
+	fmt.Fprintf(h.writer, "%s [%s%s%s] %s\n",
+		timestamp, levelColor, levelText, ColorReset, r.Message)
+
+	return nil
+}
+
+func (h *ColoredHandler) Enabled(ctx context.Context, level slog.Level) bool {
+	return level >= h.level
+}
+
+func (h *ColoredHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
+	return h
+}
+
+func (h *ColoredHandler) WithGroup(name string) slog.Handler {
+	return h
 }
 
 // LogError is a convenience function for logging errors with additional attributes.

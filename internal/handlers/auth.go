@@ -85,7 +85,7 @@ func (m *Repository) HandleLoginCreate(w http.ResponseWriter, r *http.Request) e
 		))
 	}
 
-	m.App.Session.Put(r.Context(), "user_id", id)
+	m.App.Session.Put(r.Context(), "visitor_id", id)
 	m.App.Session.Put(r.Context(), "visitor", visitor)
 
 	// TODO remove acces as it is not needed anymore

@@ -135,10 +135,8 @@ func run() (*driver.DB, error) {
 	log.Println("Connected to database")
 
 	// Initialize dual logging system
-	textHandler := slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
-		Level: slog.LevelInfo,
-	})
-	dbHandler := logger.NewDBHandler(db.SQL, textHandler)
+	coloredHandler := logger.NewColoredHandler(os.Stdout, slog.LevelInfo)
+	dbHandler := logger.NewDBHandler(db.SQL, coloredHandler)
 	slogLogger := slog.New(dbHandler)
 	slog.SetDefault(slogLogger)
 

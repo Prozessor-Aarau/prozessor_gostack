@@ -34,7 +34,7 @@ func ServerError(w http.ResponseWriter, err error) {
 }
 
 func IsAuthenticated(r *http.Request) bool {
-	exists := app.Session.Exists(r.Context(), "user_id")
+	exists := app.Session.Exists(r.Context(), "visitor_id")
 	return exists
 }
 
