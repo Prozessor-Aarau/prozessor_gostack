@@ -50,7 +50,7 @@ func (m *postgresDBRepo) GetStatisticsVisitsByType(startDate, endDate time.Time)
 	defer rows.Close()
 
 	// name Y-Axis
-	visits.AxisY = []string{"Tagesnutzung", "Abonnement", "Mitglied"}
+	visits.AxisY = []string{"Mitglied", "Abonnement", "Tagesnutzung"}
 
 	var arrDaily []float64
 	var arrAbo []float64
@@ -79,9 +79,9 @@ func (m *postgresDBRepo) GetStatisticsVisitsByType(startDate, endDate time.Time)
 		arrMember = append(arrMember, member)
 	}
 
-	visits.Data = append(visits.Data, arrDaily)
-	visits.Data = append(visits.Data, arrAbo)
 	visits.Data = append(visits.Data, arrMember)
+	visits.Data = append(visits.Data, arrAbo)
+	visits.Data = append(visits.Data, arrDaily)
 
 	if err = rows.Err(); err != nil {
 		return visits, err
@@ -100,12 +100,27 @@ func (m *postgresDBRepo) GetStatisticsAverageWeekday(startDate, endDate time.Tim
 	query := `
 	SELECT
 		TO_CHAR(DATE_TRUNC('day', date_in), 'Day') as day_name,
-		AVG(daily_count) as avg_checkins_per_day
+		AVG(daily_count) as avg_daily,
+		AVG(daily_abonnement) as avg_abonnement,
+		AVG(daily_member) as avg_member
 	FROM
 		(
 			SELECT
 				DATE_TRUNC('day', date_in) as date_in,
-				COUNT(*) as daily_count
+				COUNT(*) FILTER (
+					WHERE
+						ressort_id IS NULL
+						AND abonnement = false
+				) as daily_count,
+				COUNT(*) FILTER (
+					WHERE
+						ressort_id IS NULL
+						AND abonnement = true
+				) as daily_abonnement,
+				COUNT(*) FILTER (
+					WHERE
+						ressort_id IS NOT NULL
+				) as daily_member
 			FROM
 				visits
 			WHERE
@@ -136,18 +151,23 @@ func (m *postgresDBRepo) GetStatisticsAverageWeekday(startDate, endDate time.Tim
 	defer rows.Close()
 
 	// name Y-Axis
+	visits.AxisY = []string{"Mitglied", "Abonnement", "Tagesnutzung"}
 
-	visits.AxisY = []string{"Durchschn. Besuche"}
-
-	var arrAvg []float64
+	var arrDaily []float64
+	var arrAbo []float64
+	var arrMember []float64
 
 	for rows.Next() {
 		var weekday string
-		var average float64
+		var daily float64
+		var abo float64
+		var member float64
 
 		err := rows.Scan(
 			&weekday,
-			&average,
+			&daily,
+			&abo,
+			&member,
 		)
 
 		if err != nil {
@@ -155,10 +175,14 @@ func (m *postgresDBRepo) GetStatisticsAverageWeekday(startDate, endDate time.Tim
 		}
 
 		visits.AxisX = append(visits.AxisX, weekday)
-		arrAvg = append(arrAvg, math.Round(average*100)/100)
+		arrDaily = append(arrDaily, math.Round(daily*100)/100)
+		arrAbo = append(arrAbo, math.Round(abo*100)/100)
+		arrMember = append(arrMember, math.Round(member*100)/100)
 	}
 
-	visits.Data = append(visits.Data, arrAvg)
+	visits.Data = append(visits.Data, arrMember)
+	visits.Data = append(visits.Data, arrAbo)
+	visits.Data = append(visits.Data, arrDaily)
 
 	if err = rows.Err(); err != nil {
 		return visits, err

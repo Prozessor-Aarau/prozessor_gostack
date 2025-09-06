@@ -88,7 +88,7 @@ func (m *Repository) HandleWeekdayChart(w http.ResponseWriter, r *http.Request) 
 		return err
 	}
 
-	bar := chart.Bar(visitCounts, false)
+	bar := chart.Bar(visitCounts, true)
 
 	return rendering(w, r, statistics.Chart(bar, "Durchschnitt pro Wochentag"))
 }
