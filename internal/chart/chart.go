@@ -18,17 +18,18 @@ type Renderable interface {
 
 // js to resize bar on load and on resize to fit in their container
 const actionsWithEchartInstance = `
- const myChart = %MY_ECHARTS%;
+(function() {
+const myChart = %MY_ECHARTS%;
 
- window.onload = function ()
-     {
-         myChart.resize();
-     };
+window.addEventListener('load', function() {
+myChart.resize();
+});
 
- window.onresize = function ()
-     {
-         myChart.resize();
-     };`
+window.addEventListener('resize', function() {
+myChart.resize();
+});
+})();
+`
 
 func ConvertChartToTemplComponent(chart Renderable) templ.Component {
 	return templ.ComponentFunc(func(ctx context.Context, w io.Writer) error {
@@ -65,7 +66,8 @@ func Bar(counts models.ChartData, stacked bool) *charts.Bar {
 		}))
 	}
 
-	// bar.AddJSFuncs(actionsWithEchartInstance)
+	// add script to add dynamic resizing
+	bar.AddJSFuncs(actionsWithEchartInstance)
 
 	return bar
 }
@@ -96,5 +98,9 @@ func Pie(counts models.ChartData) *charts.Pie {
 				Formatter: "{b}: {c}",
 			}),
 		)
+
+	// add script to add dynamic resizing
+	pie.AddJSFuncs(actionsWithEchartInstance)
+
 	return pie
 }
