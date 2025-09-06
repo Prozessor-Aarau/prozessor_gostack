@@ -1,8 +1,8 @@
 package bills
 
 import (
+	"github.com/faebut/prozessor_gostack/internal/helpers"
 	"github.com/faebut/prozessor_gostack/internal/models"
-	"github.com/faebut/prozessor_gostack/internal/render"
 	"github.com/faebut/prozessor_gostack/view/ui"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
@@ -254,8 +254,8 @@ templ CustomBillForm(bill models.BillData, errors FormErrors, categories []strin
 					id="date"
 					name="date"
 					class={ "input w-full" , templ.KV("input-error", len(errors.Date)> 0) }
-					if render.RealDate(bill.Date) {
-						value={ render.HumanDate(bill.Date) }
+					if helpers.RealDate(bill.Date) {
+						value={ helpers.HumanDate(bill.Date) }
 					}
 					required
 				/>

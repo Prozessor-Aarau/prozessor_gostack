@@ -2,8 +2,8 @@ package statistics
 
 import (
 	"github.com/faebut/prozessor_gostack/internal/chart"
+	"github.com/faebut/prozessor_gostack/internal/helpers"
 	"github.com/faebut/prozessor_gostack/internal/models"
-	"github.com/faebut/prozessor_gostack/internal/render"
 	"github.com/faebut/prozessor_gostack/view/layout"
 	"github.com/faebut/prozessor_gostack/view/ui"
 	"github.com/go-echarts/go-echarts/v2/charts"
@@ -149,7 +149,7 @@ for i, key := range data.AxisX {
 				for _, data := range figures {
 					<div class="stat">
 						<div class="stat-title">{ data.key }</div>
-						<div class="stat-value">{ render.FormatFloat(data.value, 0) }</div>
+						<div class="stat-value">{ helpers.FormatFloat(data.value, 0) }</div>
 					</div>
 				}
 			</div>

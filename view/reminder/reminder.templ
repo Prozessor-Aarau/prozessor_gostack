@@ -1,114 +1,118 @@
 package reminder
 
 import (
-"github.com/faebut/prozessor_gostack/internal/models"
-"github.com/faebut/prozessor_gostack/internal/render"
-"github.com/faebut/prozessor_gostack/view/layout"
-"github.com/faebut/prozessor_gostack/view/ui"
-"strconv"
+	"github.com/faebut/prozessor_gostack/internal/helpers"
+	"github.com/faebut/prozessor_gostack/internal/models"
+	"github.com/faebut/prozessor_gostack/view/layout"
+	"github.com/faebut/prozessor_gostack/view/ui"
+	"strconv"
 )
 
 templ Reminder(visitor models.Visitor) {
-@layout.App(true, visitor) {
-<div class="prose mb-10">
-  <h1>Reminder für Abonnements</h1>
-</div>
-<div id="content">
-  <!-- @abonnementsFilter() -->
-  <div id="reminderList" hx-get="/admin/reminder/list" hx-trigger="load"></div>
-</div>
-}
+	@layout.App(true, visitor) {
+		<div class="prose mb-10">
+			<h1>Reminder für Abonnements</h1>
+		</div>
+		<div id="content">
+			<!-- @abonnementsFilter() -->
+			<div id="reminderList" hx-get="/admin/reminder/list" hx-trigger="load"></div>
+		</div>
+	}
 }
 
 templ ReminderList(visitors []models.ReminderVisitor, count int, sending bool) {
-{{ prm := ctx.Value("permission").(models.Role) }}
-if sending {
-@ReminderProgressPage()
-} else {
-if count > 0 {
-<form>
-  @ui.CSRF()
-  if prm.AddReminder {
-  if len(visitors) > 0 {
-  <div class="mb-3">
-    <button class="btn btn-primary" hx-post="/admin/reminder/list" hx-target="#content">Reminder versenden</button>
-  </div>
-  }
-  }
-  <div class="overflow-x-auto w-full">
-    <table class="table table-pin-cols table-pin-rows">
-      <!-- head -->
-      <thead>
-        <tr>
-          <th>
-            <label>
-              <input id="masterCheckBox" type="checkbox" class="checkbox" disabled?={ !prm.AddReminder } />
-            </label>
-          </th>
-          <th>Abo</th>
-          <th>Badge</th>
-          <th>Mitglied</th>
-          <th>Name Besucher:in</th>
-          <th>letzer Reminder</th>
-        </tr>
-      </thead>
-      <tbody>
-        <!-- start row -->
-        for _, v := range visitors {
-        <tr>
-          <th>
-            <label>
-              <input disabled?={ !prm.AddReminder } name={ v.Visitor.ID } type="checkbox"
-                class="checkbox remindercheckbox" />
-            </label>
-          </th>
-          <td>
-            if !v.BuyDate.IsZero() {
-            <span class={ templ.KV("text-error", v.Difference <=0), templ.KV("text-warning", v.Difference> 0) }>
-              { strconv.Itoa(v.Difference) }
-              Tage
-            </span>
-            } else {
-            <span class="text-secondary">kein Abo!</span>
-            }
-          </td>
-          <td>
-            <div class="text-primary flex items-center gap-3">
-              <span class="text-xl i-mdi-key"></span>
-              { strconv.Itoa(v.BadgeNumber) }
-            </div>
-          </td>
-          <td>
-            <div class="text-2xl flex items-center">
-              if v.RessortID > 0 {
-              <span class="i-mdi-account-group"></span>
-              }
-            </div>
-          </td>
-          <td>
-            { v.Visitor.FirstName } { v.Visitor.FamilyName }
-          </td>
-          <td>
-            if !v.Reminder.IsZero() {
-            { render.HumanDate(v.Reminder) }
-            } else {
-            if v.BuyDate.IsZero() {
-            <span class="text-error">Reminder unklar</span>
-            } else {
-            kein Reminder
-            }
-            }
-          </td>
-        </tr>
-        }
-        <!-- end row -->
-      </tbody>
-      <!-- foot -->
-    </table>
-  </div>
-</form>
-<!-- script for checkboxes -->
-<script>
+	{{ prm := ctx.Value("permission").(models.Role) }}
+	if sending {
+		@ReminderProgressPage()
+	} else {
+		if count > 0 {
+			<form>
+				@ui.CSRF()
+				if prm.AddReminder {
+					if len(visitors) > 0 {
+						<div class="mb-3">
+							<button class="btn btn-primary" hx-post="/admin/reminder/list" hx-target="#content">Reminder versenden</button>
+						</div>
+					}
+				}
+				<div class="overflow-x-auto w-full">
+					<table class="table table-pin-cols table-pin-rows">
+						<!-- head -->
+						<thead>
+							<tr>
+								<th>
+									<label>
+										<input id="masterCheckBox" type="checkbox" class="checkbox" disabled?={ !prm.AddReminder }/>
+									</label>
+								</th>
+								<th>Abo</th>
+								<th>Badge</th>
+								<th>Mitglied</th>
+								<th>Name Besucher:in</th>
+								<th>letzer Reminder</th>
+							</tr>
+						</thead>
+						<tbody>
+							<!-- start row -->
+							for _, v := range visitors {
+								<tr>
+									<th>
+										<label>
+											<input
+												disabled?={ !prm.AddReminder }
+												name={ v.Visitor.ID }
+												type="checkbox"
+												class="checkbox remindercheckbox"
+											/>
+										</label>
+									</th>
+									<td>
+										if !v.BuyDate.IsZero() {
+											<span class={ templ.KV("text-error", v.Difference <=0), templ.KV("text-warning", v.Difference> 0) }>
+												{ strconv.Itoa(v.Difference) }
+												Tage
+											</span>
+										} else {
+											<span class="text-secondary">kein Abo!</span>
+										}
+									</td>
+									<td>
+										<div class="text-primary flex items-center gap-3">
+											<span class="text-xl i-mdi-key"></span>
+											{ strconv.Itoa(v.BadgeNumber) }
+										</div>
+									</td>
+									<td>
+										<div class="text-2xl flex items-center">
+											if v.RessortID > 0 {
+												<span class="i-mdi-account-group"></span>
+											}
+										</div>
+									</td>
+									<td>
+										{ v.Visitor.FirstName } { v.Visitor.FamilyName }
+									</td>
+									<td>
+										if !v.Reminder.IsZero() {
+											{ helpers.HumanDate(v.Reminder) }
+										} else {
+											if v.BuyDate.IsZero() {
+												<span class="text-error">Reminder unklar</span>
+											} else {
+												kein Reminder
+											}
+										}
+									</td>
+								</tr>
+							}
+							<!-- end row -->
+						</tbody>
+						<!-- foot -->
+					</table>
+				</div>
+			</form>
+			<!-- script for checkboxes -->
+			<script>
   var masterCheckBox = document.getElementById("masterCheckBox")
   var allCheckBoxes = document.getElementsByClassName("remindercheckbox")
 
@@ -124,110 +128,124 @@ if count > 0 {
     }
   });
 </script>
-} else {
-@layout.Warning("Keine offenen Reminder oder Reminder die älter als 45 Tage sind")
-}
-}
+		} else {
+			@layout.Warning("Keine offenen Reminder oder Reminder die älter als 45 Tage sind")
+		}
+	}
 }
 
 templ ReminderCreateForm(visitors []models.ReminderVisitor) {
-<form class="grid grid-cols-2 items-center gap-3">
-  @ui.CSRF()
-  <div class="prose col-span-full">
-    <h2>Reminder versenden</h2>
-  </div>
-  <div class="prose col-span-full">
-    <h3>Liste Empfänger:innen</h3>
-  </div>
-  <div class="col-span-full overflow-x-auto w-full">
-    <table class="table table-pin-cols table-pin-rows table-xs">
-      <!-- head -->
-      <thead>
-        <tr>
-          <th>Name Besucher:in</th>
-          <th>Version Reminder</th>
-          <th>Wiederholung</th>
-          <th>Preview</th>
-        </tr>
-      </thead>
-      <tbody>
-        <!-- start row -->
-        for _, v := range visitors {
-        <tr>
-          <td>
-            <input type="hidden" name={ v.Visitor.ID } value="true" />
-            { v.Visitor.FirstName } { v.Visitor.FamilyName }
-          </td>
-          <td>
-            if !v.BuyDate.IsZero() {
-            if v.Difference > 0 {
-            <span class="text-warning">Abo läuft bald ab</span>
-            } else {
-            <span class="text-error">Abo abgelaufen</span>
-            }
-            } else {
-            <span class="text-secondary">noch kein Abonnement</span>
-            }
-          </td>
-          <td>
-            if v.Reminder.IsZero() {
-            <span class="text-success">nein</span>
-            } else {
-            <span class="text-error">ja</span>
-            }
-          </td>
-          <td>
-            <button type="button" class="btn btn-ghost btn-sm" hx-get={ "/admin/reminder/preview/" + v.Visitor.ID }
-              hx-target="#preview" hx-swap="innerHTML">anzeigen</button>
-          </td>
-        </tr>
-        }
-        <!-- end row -->
-      </tbody>
-      <!-- foot -->
-    </table>
-  </div>
-  if len(visitors)>0 {
-  <button class="btn btn-success" hx-post="/admin/reminder/confirm" hx-target="#content">Reminder versenden</button>
-  }
-  <a href="/admin/reminder" class="btn btn-warning">Abbrechen</a>
-</form>
-<div id="preview" class="my-8"></div>
+	<form class="grid grid-cols-2 items-center gap-3">
+		@ui.CSRF()
+		<div class="prose col-span-full">
+			<h2>Reminder versenden</h2>
+		</div>
+		<div class="prose col-span-full">
+			<h3>Liste Empfänger:innen</h3>
+		</div>
+		<div class="col-span-full overflow-x-auto w-full">
+			<table class="table table-pin-cols table-pin-rows table-xs">
+				<!-- head -->
+				<thead>
+					<tr>
+						<th>Name Besucher:in</th>
+						<th>Version Reminder</th>
+						<th>Wiederholung</th>
+						<th>Preview</th>
+					</tr>
+				</thead>
+				<tbody>
+					<!-- start row -->
+					for _, v := range visitors {
+						<tr>
+							<td>
+								<input type="hidden" name={ v.Visitor.ID } value="true"/>
+								{ v.Visitor.FirstName } { v.Visitor.FamilyName }
+							</td>
+							<td>
+								if !v.BuyDate.IsZero() {
+									if v.Difference > 0 {
+										<span class="text-warning">Abo läuft bald ab</span>
+									} else {
+										<span class="text-error">Abo abgelaufen</span>
+									}
+								} else {
+									<span class="text-secondary">noch kein Abonnement</span>
+								}
+							</td>
+							<td>
+								if v.Reminder.IsZero() {
+									<span class="text-success">nein</span>
+								} else {
+									<span class="text-error">ja</span>
+								}
+							</td>
+							<td>
+								<button
+									type="button"
+									class="btn btn-ghost btn-sm"
+									hx-get={ "/admin/reminder/preview/" + v.Visitor.ID }
+									hx-target="#preview"
+									hx-swap="innerHTML"
+								>anzeigen</button>
+							</td>
+						</tr>
+					}
+					<!-- end row -->
+				</tbody>
+				<!-- foot -->
+			</table>
+		</div>
+		if len(visitors)>0 {
+			<button class="btn btn-success" hx-post="/admin/reminder/confirm" hx-target="#content">Reminder versenden</button>
+		}
+		<a href="/admin/reminder" class="btn btn-warning">Abbrechen</a>
+	</form>
+	<div id="preview" class="my-8"></div>
 }
 
 templ ReminderProgressPage() {
-<div id="progressbar" class="w-full" hx-ext="sse" sse-connect="/admin/reminder/progress" sse-swap="message"
-  sse-close="stop"></div>
+	<div
+		id="progressbar"
+		class="w-full"
+		hx-ext="sse"
+		sse-connect="/admin/reminder/progress"
+		sse-swap="message"
+		sse-close="stop"
+	></div>
 }
 
 templ ReminderProgressBar(r models.MailData) {
-<div class="flex flex-col items-center gap-5 w-full">
-  if r.Count > r.Progress {
-  <div class="flex flex-col items-center prose">
-    <h2 class="text-primary">Reminder werden versendet</h2>
-    <h3 class="text-primary">{ strconv.Itoa(r.Progress) } / { strconv.Itoa(r.Count) }</h3>
-  </div>
-  <progress class="progress progress-primary w-56" value={ strconv.Itoa(r.Progress) } max={ strconv.Itoa(r.Count)
-    }></progress>
-  <div class="prose">
-    <h4 class="text-primary">Sende an: { r.FirstName } { r.FamilyName }</h4>
-  </div>
-  } else {
-  <div class="prose">
-    <h2 class="text-success">Alle { strconv.Itoa(r.Count) } Reminder wurden versendet!</h2>
-  </div>
-  <a class="btn btn-primary" href="/admin/reminder">Zurück zur Liste</a>
-  }
-</div>
+	<div class="flex flex-col items-center gap-5 w-full">
+		if r.Count > r.Progress {
+			<div class="flex flex-col items-center prose">
+				<h2 class="text-primary">Reminder werden versendet</h2>
+				<h3 class="text-primary">{ strconv.Itoa(r.Progress) } / { strconv.Itoa(r.Count) }</h3>
+			</div>
+			<progress
+				class="progress progress-primary w-56"
+				value={ strconv.Itoa(r.Progress) }
+				max={ strconv.Itoa(r.Count) }
+			></progress>
+			<div class="prose">
+				<h4 class="text-primary">Sende an: { r.FirstName } { r.FamilyName }</h4>
+			</div>
+		} else {
+			<div class="prose">
+				<h2 class="text-success">Alle { strconv.Itoa(r.Count) } Reminder wurden versendet!</h2>
+			</div>
+			<a class="btn btn-primary" href="/admin/reminder">Zurück zur Liste</a>
+		}
+	</div>
 }
 
 templ ReminderPreview(template string) {
-<div class="prose mb-6">
-  <h2>Preview</h2>
-</div>
-<div class="mockup-window bg-base-300 border w-full">
-  <div class="flex justify-center p-4" data-theme="light">
-    @templ.Raw(template)
-  </div>
-</div>
+	<div class="prose mb-6">
+		<h2>Preview</h2>
+	</div>
+	<div class="mockup-window bg-base-300 border w-full">
+		<div class="flex justify-center p-4" data-theme="light">
+			@templ.Raw(template)
+		</div>
+	</div>
 }

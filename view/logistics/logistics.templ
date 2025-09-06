@@ -1,8 +1,8 @@
 package logistics
 
 import (
+	"github.com/faebut/prozessor_gostack/internal/helpers"
 	"github.com/faebut/prozessor_gostack/internal/models"
-	"github.com/faebut/prozessor_gostack/internal/render"
 	"github.com/faebut/prozessor_gostack/view/layout"
 	"github.com/faebut/prozessor_gostack/view/ui"
 	"strconv"
@@ -176,7 +176,7 @@ if len(l.Visitor.Phone) > 0 {
 }
 
 templ pagination(pages int, onpage int, filter string) {
-	{{ pagesslice := render.Iterate(pages) }}
+	{{ pagesslice := helpers.Iterate(pages) }}
 	<div class="grid justify-items-center">
 		<div class="join pt-6">
 			<button

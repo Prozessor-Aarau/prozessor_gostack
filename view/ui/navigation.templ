@@ -1,8 +1,8 @@
 package ui
 
 import (
+	"github.com/faebut/prozessor_gostack/internal/helpers"
 	"github.com/faebut/prozessor_gostack/internal/models"
-	"github.com/faebut/prozessor_gostack/internal/render"
 )
 
 templ Navigation(visitor models.Visitor) {
@@ -28,7 +28,7 @@ templ Navigation(visitor models.Visitor) {
 							} else {
 								<div class="avatar avatar-placeholder">
 									<div class="bg-neutral text-neutral-content w-12 rounded-full">
-										<span>{ render.Initials(visitor.FirstName, visitor.FamilyName) }</span>
+										<span>{ helpers.Initials(visitor.FirstName, visitor.FamilyName) }</span>
 									</div>
 								</div>
 							}

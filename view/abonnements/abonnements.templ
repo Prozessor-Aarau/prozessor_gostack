@@ -1,8 +1,8 @@
 package abonnements
 
 import (
+	"github.com/faebut/prozessor_gostack/internal/helpers"
 	"github.com/faebut/prozessor_gostack/internal/models"
-	"github.com/faebut/prozessor_gostack/internal/render"
 	"github.com/faebut/prozessor_gostack/view/layout"
 	"github.com/faebut/prozessor_gostack/view/ui"
 	"strconv"
@@ -117,11 +117,11 @@ templ AbonnementsList(abonnements []models.Abonnement, count int, pages int, onp
 			>
 				<div class="col-span-1">
 					<span
-						class={ "mr-5" , templ.KV("text-error", render.ToToday(a.BuyDate) < 0 ), templ.KV("text-warning",
-      render.ToToday(a.BuyDate)>=0 &&
-      render.ToToday(a.BuyDate) <= 45), templ.KV("text-success", render.ToToday(a.BuyDate)> 45) }
+						class={ "mr-5" , templ.KV("text-error", helpers.ToToday(a.BuyDate) < 0 ), templ.KV("text-warning",
+      helpers.ToToday(a.BuyDate)>=0 &&
+      helpers.ToToday(a.BuyDate) <= 45), templ.KV("text-success", helpers.ToToday(a.BuyDate)> 45) }
 					>
-						{ strconv.Itoa(render.ToToday(a.BuyDate)) }
+						{ strconv.Itoa(helpers.ToToday(a.BuyDate)) }
 						Tage
 					</span>
 				</div>
@@ -153,7 +153,7 @@ templ AbonnementsList(abonnements []models.Abonnement, count int, pages int, onp
 }
 
 templ pagination(pages int, onpage int, filter string) {
-	{{ pagesslice := render.Iterate(pages) }}
+	{{ pagesslice := helpers.Iterate(pages) }}
 	<div class="grid justify-items-center">
 		<div class="join pt-6">
 			<button
