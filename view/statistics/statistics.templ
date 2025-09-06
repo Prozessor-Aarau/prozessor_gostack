@@ -3,6 +3,7 @@ package statistics
 import (
 	"github.com/faebut/prozessor_gostack/internal/chart"
 	"github.com/faebut/prozessor_gostack/internal/models"
+	"github.com/faebut/prozessor_gostack/internal/render"
 	"github.com/faebut/prozessor_gostack/view/layout"
 	"github.com/faebut/prozessor_gostack/view/ui"
 	"github.com/go-echarts/go-echarts/v2/charts"
@@ -54,7 +55,7 @@ today := time.Now().Format("2006-01-02")
 						hx-swap="outerHTML"
 						class="btn btn-success btn-outline"
 					><span class="i-mdi-funnel"></span> filtern</button>
-					<a href="/admin/visitors" class="btn btn-error btn-outline">
+					<a href="/admin/statistics" class="btn btn-error btn-outline">
 						<span class="i-mdi-close"></span> zurücksetzen
 					</a>
 				</div>
@@ -84,21 +85,32 @@ stringMax := filter.MaxDate.Format("2006-01-02")
 
 templ FigureCard(data models.ChartData, title string) {
 	{{
-figures := make(map[string]float64)
+type keyValue struct {
+	key   string
+	value float64
+}
 
-for i, fig := range data.AxisX {
-	figures[fig] = data.Data[0][i]
+var figures []keyValue
+
+for i, key := range data.AxisX {
+	var fig keyValue
+	fig.key = key
+	fig.value = data.Data[0][i]
+	figures = append(figures, fig)
 }
 	}}
 	<div class="card bg-base-200 shadow-sm">
+		German
 		<div class="card-body">
 			<div class="flex justify-between">
 				<h2 class="text-3xl font-bold">{ title }</h2>
 			</div>
-			<div class="grid grid-cols-2">
-				for i, data := range figures {
-					<div>{ i }:</div>
-					<div>{ data }</div>
+			<div class="stats stats-vertical grid-cols-1 md:grid-cols-3">
+				for _, data := range figures {
+					<div class="stat">
+						<div class="stat-title">{ data.key }</div>
+						<div class="stat-value">{ render.FormatFloat(data.value, 0) }</div>
+					</div>
 				}
 			</div>
 		</div>

@@ -16,6 +16,8 @@ import (
 	"github.com/faebut/prozessor_gostack/internal/config"
 	"github.com/faebut/prozessor_gostack/internal/models"
 	"github.com/justinas/nosurf"
+	"golang.org/x/text/language"
+	"golang.org/x/text/message"
 )
 
 var functions = template.FuncMap{
@@ -76,6 +78,25 @@ func FormatDate(t time.Time, f string) string {
 func RealDate(t time.Time) bool {
 	compareDate := time.Date(1910, 1, 1, 0, 0, 0, 0, time.UTC)
 	return !t.Before(compareDate)
+}
+
+// format Numbers using the swiss locale
+var swissPrinter = message.NewPrinter(language.Make("de-CH"))
+
+// FormatInt returns a swiss formated int
+func FormatInt(num int) string {
+	return swissPrinter.Sprintf("%d", num)
+}
+
+// FormatFloat returns a swiss formated float with a specified number of decimals
+func FormatFloat(num float64, decimals int) string {
+	format := fmt.Sprintf("%%.%df", decimals)
+	return swissPrinter.Sprintf(format, num)
+}
+
+// FormatCurrency returns a number as formated swiss currency
+func FormatCurrency(num float64) string {
+	return swissPrinter.Sprintf("CHF %.2f", num)
 }
 
 // TimeElapsed returns the elapsed hours and minutes in 00:00 format from a timestamp to now
