@@ -251,3 +251,200 @@ func (m *postgresDBRepo) GetStatisticsAteliers(startDate, endDate time.Time) (mo
 
 	return visits, nil
 }
+
+// GetStatisticsAges gets the ages of the visitors by visits
+func (m *postgresDBRepo) GetStatisticsAges(startDate, endDate time.Time) (models.ChartData, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	var ages models.ChartData
+
+	query := `
+	WITH
+		visitor_ages AS (
+			SELECT
+				EXTRACT(
+					YEAR
+					FROM
+						AGE (CURRENT_DATE, vi.birthdate)
+				) AS age
+			FROM
+				visits v
+				JOIN visitors vi ON vi.id = v.visitor_id
+			WHERE
+				v.date_in BETWEEN $1 AND $2
+		)
+	SELECT
+		ROUND(
+			COUNT(*) FILTER (
+				WHERE
+					age < 20
+			) * 100.0 / COUNT(*),
+			2
+		) AS "-20",
+		ROUND(
+			COUNT(*) FILTER (
+				WHERE
+					age BETWEEN 21 AND 30
+			) * 100.0 / COUNT(*),
+			2
+		) AS "20-30",
+		ROUND(
+			COUNT(*) FILTER (
+				WHERE
+					age BETWEEN 31 AND 40
+			) * 100.0 / COUNT(*),
+			2
+		) AS "31-40",
+		ROUND(
+			COUNT(*) FILTER (
+				WHERE
+					age BETWEEN 41 AND 50
+			) * 100.0 / COUNT(*),
+			2
+		) AS "41-50",
+		ROUND(
+			COUNT(*) FILTER (
+				WHERE
+					age BETWEEN 51 AND 65
+			) * 100.0 / COUNT(*),
+			2
+		) AS "51-65",
+		ROUND(
+			COUNT(*) FILTER (
+				WHERE
+					age > 65
+			) * 100.0 / COUNT(*),
+			2
+		) AS "65+"
+	FROM
+		visitor_ages;	
+	`
+
+	rows, err := m.DB.QueryContext(ctx, query, startDate, endDate)
+	if err != nil {
+		return ages, err
+	}
+
+	defer rows.Close()
+
+	// name Y-Axis
+
+	ages.AxisY = []string{"Alter"}
+	ages.AxisX = []string{"<20", "21-30", "31-40", "41-50", "51-65", ">65"}
+
+	var arrAges [6]float64
+
+	for rows.Next() {
+
+		err := rows.Scan(
+			&arrAges[0],
+			&arrAges[1],
+			&arrAges[2],
+			&arrAges[3],
+			&arrAges[4],
+			&arrAges[5],
+		)
+
+		if err != nil {
+			return ages, err
+		}
+	}
+
+	ages.Data = append(ages.Data, arrAges[:])
+
+	if err = rows.Err(); err != nil {
+		return ages, err
+	}
+
+	return ages, nil
+}
+
+// GetStatisticsKeyFigures gets the key figures of the visitors and visits
+func (m *postgresDBRepo) GetStatisticsKeyFigures(startDate, endDate time.Time) (models.ChartData, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	var figures models.ChartData
+
+	query := `
+	WITH
+		active_visitors AS (
+			SELECT
+				v.*,
+				(
+					a.buydate + interval '1 year' BETWEEN $1 AND $2
+					OR a.buydate BETWEEN $1 AND $2
+				) AS abo_active
+			FROM
+				visitors v
+				LEFT JOIN abonnements a ON a.visitor_id = v.id
+		)
+	SELECT
+		(
+			SELECT
+				COUNT(*)
+			FROM
+				visits
+			WHERE
+				visits.date_in BETWEEN $1 AND $2
+		) visits,
+		COUNT(*) FILTER (
+			WHERE
+				created_on <= $2
+		) AS total_registered,
+		COUNT(*) FILTER (
+			WHERE
+				created_on BETWEEN $1 AND $2 
+		) AS new_registered,
+		COUNT(*) FILTER (
+			WHERE
+				abo_active
+				AND ressort_id IS NULL
+		) AS active_abonnements,
+		COUNT(*) FILTER (
+			WHERE
+				abo_active
+				AND ressort_id IS NOT NULL
+		) AS active_members
+	FROM
+		active_visitors;
+	`
+
+	rows, err := m.DB.QueryContext(ctx, query, startDate, endDate)
+	if err != nil {
+		return figures, err
+	}
+
+	defer rows.Close()
+
+	// name Y-Axis
+
+	figures.AxisY = []string{"Kennzahlen"}
+	figures.AxisX = []string{"Besuche", "Total Registrationen", "neue Registrationen", "gültige Abonnements", "aktive Mitglieder"}
+
+	var arrFigures [5]float64
+
+	for rows.Next() {
+
+		err := rows.Scan(
+			&arrFigures[0],
+			&arrFigures[1],
+			&arrFigures[2],
+			&arrFigures[3],
+			&arrFigures[4],
+		)
+
+		if err != nil {
+			return figures, err
+		}
+	}
+
+	figures.Data = append(figures.Data, arrFigures[:])
+
+	if err = rows.Err(); err != nil {
+		return figures, err
+	}
+
+	return figures, nil
+}

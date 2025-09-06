@@ -51,6 +51,7 @@ today := time.Now().Format("2006-01-02")
 						type="submit"
 						hx-post="/admin/statistics/charts/filter"
 						hx-target="#cardStack"
+						hx-swap="outerHTML"
 						class="btn btn-success btn-outline"
 					><span class="i-mdi-funnel"></span> filtern</button>
 					<a href="/admin/visitors" class="btn btn-error btn-outline">
@@ -73,9 +74,34 @@ stringMin := filter.MinDate.Format("2006-01-02")
 stringMax := filter.MaxDate.Format("2006-01-02")
 	}}
 	<div id="cardStack" class="mt-6 flex flex-col gap-5">
+		<div hx-get={ "/admin/statistics/charts/keyfigures?min=" + stringMin + "&max=" + stringMax } hx-trigger="load"></div>
 		<div hx-get={ "/admin/statistics/charts/visitors?min=" + stringMin + "&max=" + stringMax } hx-trigger="load"></div>
 		<div hx-get={ "/admin/statistics/charts/weekdays?min=" + stringMin + "&max=" + stringMax } hx-trigger="load"></div>
 		<div hx-get={ "/admin/statistics/charts/ateliers?min=" + stringMin + "&max=" + stringMax } hx-trigger="load"></div>
+		<div hx-get={ "/admin/statistics/charts/ages?min=" + stringMin + "&max=" + stringMax } hx-trigger="load"></div>
+	</div>
+}
+
+templ FigureCard(data models.ChartData, title string) {
+	{{
+figures := make(map[string]float64)
+
+for i, fig := range data.AxisX {
+	figures[fig] = data.Data[0][i]
+}
+	}}
+	<div class="card bg-base-200 shadow-sm">
+		<div class="card-body">
+			<div class="flex justify-between">
+				<h2 class="text-3xl font-bold">{ title }</h2>
+			</div>
+			<div class="grid grid-cols-2">
+				for i, data := range figures {
+					<div>{ i }:</div>
+					<div>{ data }</div>
+				}
+			</div>
+		</div>
 	</div>
 }
 

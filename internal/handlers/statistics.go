@@ -116,3 +116,49 @@ func (m *Repository) HandleAtelierChart(w http.ResponseWriter, r *http.Request) 
 
 	return rendering(w, r, statistics.PieChart(pie, "Nutzung Ateliers"))
 }
+
+// HandleAgesChart is the ages chart handler
+func (m *Repository) HandleAgesChart(w http.ResponseWriter, r *http.Request) error {
+
+	startString := r.URL.Query().Get("min")
+	endString := r.URL.Query().Get("max")
+
+	startDate, err := time.Parse("2006-01-02", startString)
+	endDate, err := time.Parse("2006-01-02", endString)
+	if err != nil {
+		return err
+	}
+
+	agesCounts, err := m.DB.GetStatisticsAges(startDate, endDate)
+
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+
+	pie := chart.Pie(agesCounts)
+
+	return rendering(w, r, statistics.PieChart(pie, "Nutzung nach Altersgruppe"))
+}
+
+// HandleKeyFigures is the key figures handler
+func (m *Repository) HandleKeyFigures(w http.ResponseWriter, r *http.Request) error {
+
+	startString := r.URL.Query().Get("min")
+	endString := r.URL.Query().Get("max")
+
+	startDate, err := time.Parse("2006-01-02", startString)
+	endDate, err := time.Parse("2006-01-02", endString)
+	if err != nil {
+		return err
+	}
+
+	figures, err := m.DB.GetStatisticsKeyFigures(startDate, endDate)
+
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+
+	return rendering(w, r, statistics.FigureCard(figures, "Kennzahlen"))
+}
