@@ -42,9 +42,8 @@ func IsAuthenticated(r *http.Request) bool {
 
 // Iterate returns a slice of ints, starting at 1, going to count
 func Iterate(count int) []int {
-	var i int
 	var items []int
-	for i = 0; i < count; i++ {
+	for i := range count {
 		items = append(items, i+1)
 	}
 	return items
