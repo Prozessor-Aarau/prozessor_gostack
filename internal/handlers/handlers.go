@@ -38,7 +38,17 @@ func NewHandlers(r *Repository) {
 func Make(h func(http.ResponseWriter, *http.Request) error) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if err := h(w, r); err != nil {
-			slog.Error("internal server error", "err", err, "path", r.URL.Path)
+			// Get visitor ID from session if available
+			visitorID := ""
+			if id := Repo.App.Session.Get(r.Context(), "visitor_id"); id != nil {
+				visitorID = id.(string)
+			}
+
+			slog.Error("internal server error",
+				"err", err,
+				"path", r.URL.Path,
+				"visitor_id", visitorID,
+			)
 		}
 	}
 }
@@ -47,7 +57,7 @@ func Make(h func(http.ResponseWriter, *http.Request) error) http.HandlerFunc {
 // render helps rendering the templ and adds default data
 func rendering(w http.ResponseWriter, r *http.Request, component templ.Component) error {
 	// set nosurf Token in new context with value
-  aCtx := context.WithValue(r.Context(), "permission", Repo.App.Session.Get(r.Context(), "permission"))
+	aCtx := context.WithValue(r.Context(), "permission", Repo.App.Session.Get(r.Context(), "permission"))
 	ctx := context.WithValue(aCtx, "csrf.Token", nosurf.Token(r))
 	return component.Render(ctx, w)
 }
