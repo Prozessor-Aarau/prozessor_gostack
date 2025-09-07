@@ -2,13 +2,14 @@ package handlers
 
 import (
 	"fmt"
-	"log"
+	"log/slog"
 	"math"
 	"net/http"
 	"strconv"
 	"strings"
 
 	"github.com/faebut/prozessor_gostack/internal/forms"
+	"github.com/faebut/prozessor_gostack/internal/logger"
 	"github.com/faebut/prozessor_gostack/internal/models"
 	"github.com/faebut/prozessor_gostack/view/abonnements"
 	"github.com/go-chi/chi/v5"
@@ -18,7 +19,9 @@ import (
 func (m *Repository) HandleAbonnementsIndex(w http.ResponseWriter, r *http.Request) error {
 	visitor, ok := m.App.Session.Get(r.Context(), "visitor").(models.Visitor)
 	if !ok {
-		log.Println("could not get visitor from Session")
+		slog.Error("could not get visitor from session", "path", r.URL.Path)
+		m.App.Session.Put(r.Context(), "error", "Can't get visitor from session")
+
 		return hxRedirect(w, r, "/admin/logout")
 	}
 
@@ -39,7 +42,7 @@ func (m *Repository) AbonnementCreatePrice(w http.ResponseWriter, r *http.Reques
 
 	visitor, err := m.DB.VisitorByID(id)
 	if err != nil {
-		log.Println("could not get visitor from DB: ", err)
+		slog.Error(fmt.Errorf("failed to get visitor: %w", err).Error())
 	}
 	member := "Abonnement"
 	price := 400
@@ -70,7 +73,7 @@ func (m *Repository) HandleAbonnementCreate(w http.ResponseWriter, r *http.Reque
 	abo.BuyDate = r.Form.Get("buydate")
 	stringPrice, err := strconv.Atoi(r.Form.Get("price"))
 	if err != nil {
-		log.Println("error converting string to int:", err)
+		return fmt.Errorf("failed to convert string to int: %w", err)
 	}
 	abo.Price = stringPrice
 	abo.VisitorID = r.Form.Get("member")
@@ -104,8 +107,15 @@ func (m *Repository) HandleAbonnementCreate(w http.ResponseWriter, r *http.Reque
 
 	_, err = m.DB.CreateAbonnement(abo)
 	if err != nil {
-		log.Println("Error creating abonnement:", err)
-		return err
+		return fmt.Errorf("failed to create abonnement: %w", err)
+	}
+
+	// log successful abonnement creation
+	visitor, err := m.DB.VisitorByID(abo.VisitorID)
+	if err == nil {
+
+		logger.Success(r, m.App.Session,
+			fmt.Sprintf("abo for visitor %s %s successfully created", visitor.FirstName, visitor.FamilyName))
 	}
 
 	// redirect on success
@@ -144,8 +154,7 @@ func (m *Repository) HandleAbonnementsList(w http.ResponseWriter, r *http.Reques
 
 	aboList, count, err := m.DB.AllAbonnements(page, filter)
 	if err != nil {
-		log.Println("could not get abonnements from DB: ", err)
-		return err
+		return fmt.Errorf("failed to get abonnements: %w", err)
 	}
 
 	// make url search string
@@ -196,8 +205,7 @@ func (m *Repository) HandleAbonnementsListFilter(w http.ResponseWriter, r *http.
 
 	aboList, count, err := m.DB.AllAbonnements(page, filter)
 	if err != nil {
-		log.Println("could not get abonnements from DB: ", err)
-		return err
+		return fmt.Errorf("failed to get abonnements: %w", err)
 	}
 
 	// make url search string
