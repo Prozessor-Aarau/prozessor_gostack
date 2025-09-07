@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/gob"
 	"fmt"
-	"log"
 	"log/slog"
 	"net/http"
 	"os"
@@ -23,31 +22,32 @@ import (
 
 var app config.AppConfig
 var session *scs.SessionManager
-var infoLog *log.Logger
-var errorLog *log.Logger
+
+// var infoLog *log.Logger
+// var errorLog *log.Logger
 
 func main() {
 	db, err := run()
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal("error starting app", slog.String("error", err.Error()))
 	}
 
 	defer db.SQL.Close()
 
 	defer close(app.MailChan)
 
-	log.Println("Starting mail listener...")
+	slog.Info("Starting mail listener...")
 	// start listening for mail
 	listenForMail()
 
 	err = godotenv.Load()
 	if err != nil {
-		log.Fatal("error loading .env file")
+		logger.Fatal("loading .env file", slog.String("error", err.Error()))
 	}
 
 	portNumber := os.Getenv("PORT")
 
-	log.Println("Starting application on port", portNumber)
+	slog.Info("Starting application on port", portNumber)
 
 	srv := &http.Server{
 		Addr:    portNumber,
@@ -55,7 +55,7 @@ func main() {
 	}
 
 	err = srv.ListenAndServe()
-	log.Fatal(err)
+	logger.Fatal("listen and serve", slog.String("error", err.Error()))
 }
 
 func run() (*driver.DB, error) {
@@ -66,17 +66,17 @@ func run() (*driver.DB, error) {
 
 	err := godotenv.Load()
 	if err != nil {
-		log.Fatal("error loading .env file")
+		logger.Fatal("loading .env file", slog.String("error", err.Error()))
 	}
 
 	// read env
 	inProduction, err := strconv.ParseBool(os.Getenv("PRODUCTION"))
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal("parsing .env file", slog.String("error", err.Error()))
 	}
 	useCache, err := strconv.ParseBool(os.Getenv("CACHE"))
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal("parsing .env file", slog.String("error", err.Error()))
 	}
 	dbHost := os.Getenv("DBHOST")
 	dbName := os.Getenv("DBNAME")
@@ -100,12 +100,12 @@ func run() (*driver.DB, error) {
 	// change this to true when in production
 	app.InProduction = inProduction
 	app.UseCache = useCache
-
-	infoLog = log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
-	app.InfoLog = infoLog
-
-	errorLog = log.New(os.Stdout, "Error\t", log.Ldate|log.Ltime|log.Lshortfile)
-	app.ErrorLog = errorLog
+	//
+	// infoLog = log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
+	// app.InfoLog = infoLog
+	//
+	// errorLog = log.New(os.Stdout, "Error\t", log.Ldate|log.Ltime|log.Lshortfile)
+	// app.ErrorLog = errorLog
 
 	session = scs.New()
 	session.Lifetime = 4 * time.Hour
@@ -116,7 +116,7 @@ func run() (*driver.DB, error) {
 	app.Session = session
 
 	// connect to database
-	log.Println("Connecting to database...")
+	slog.Info("Connecting to database...")
 	connectionString := fmt.Sprintf(
 		"host=%s port=%s dbname=%s user=%s password=%s sslmode=%s",
 		dbHost,
@@ -130,9 +130,9 @@ func run() (*driver.DB, error) {
 	// connect to db
 	db, err := driver.ConnectSQL(connectionString)
 	if err != nil {
-		log.Fatal("Cannot connect to database! Dying...")
+		logger.Fatal("connecting to database", slog.String("error", err.Error()))
 	}
-	log.Println("Connected to database")
+	slog.Info("Connected to database")
 
 	// Initialize dual logging system
 	coloredHandler := logger.NewColoredHandler(os.Stdout, slog.LevelInfo)

@@ -2,13 +2,14 @@ package events
 
 import (
 	"io"
-	"log"
+	"log/slog"
 	"os"
 	"sort"
 	"strings"
 	"time"
 
 	"github.com/adrg/frontmatter"
+	"github.com/faebut/prozessor_gostack/internal/logger"
 	"github.com/faebut/prozessor_gostack/internal/models"
 	"github.com/jlaffaye/ftp"
 	"github.com/joho/godotenv"
@@ -20,7 +21,7 @@ func GetEvents() ([]models.Event, error) {
 
 	err := godotenv.Load()
 	if err != nil {
-		log.Fatal("error loading .env file")
+		logger.Fatal("loading .env file", slog.String("error", err.Error()))
 	}
 
 	c, err := ftp.Dial(os.Getenv("FTP_HOST"), ftp.DialWithTimeout(5*time.Second))

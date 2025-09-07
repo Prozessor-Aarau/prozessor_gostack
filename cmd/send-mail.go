@@ -1,11 +1,12 @@
 package main
 
 import (
-	"log"
+	"log/slog"
 	"os"
 	"strconv"
 	"time"
 
+	"github.com/faebut/prozessor_gostack/internal/logger"
 	"github.com/faebut/prozessor_gostack/internal/models"
 	"github.com/joho/godotenv"
 	mail "github.com/xhit/go-simple-mail/v2"
@@ -25,14 +26,14 @@ func sendMsg(m models.MailData) {
 	// get .env file
 	err := godotenv.Load()
 	if err != nil {
-		log.Fatal("error loading .env file")
+		logger.Fatal("loading .env file", slog.String("error", err.Error()))
 	}
 
 	server := mail.NewSMTPClient()
 	server.Host = os.Getenv("SMTP_HOST")
 	server.Port, err = strconv.Atoi(os.Getenv("SMTP_PORT"))
 	if err != nil {
-		errorLog.Println(err)
+		slog.Error(err.Error())
 		return
 	}
 
@@ -42,7 +43,7 @@ func sendMsg(m models.MailData) {
 
 	encryption, err := strconv.ParseBool(os.Getenv("SMTP_ENCRYPTION"))
 	if err != nil {
-		errorLog.Println(err)
+		slog.Error(err.Error())
 		return
 	}
 
@@ -58,7 +59,7 @@ func sendMsg(m models.MailData) {
 
 	client, err := server.Connect()
 	if err != nil {
-		errorLog.Println(err)
+		slog.Error(err.Error())
 		return
 	}
 
@@ -72,7 +73,7 @@ func sendMsg(m models.MailData) {
 
 	err = email.Send(client)
 	if err != nil {
-		log.Println(err)
+		slog.Error(err.Error())
 		return
 	}
 }

@@ -4,12 +4,13 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"log"
+	"log/slog"
 	"mime/multipart"
 	"net/http"
 	"os"
 	"strconv"
 
+	"github.com/faebut/prozessor_gostack/internal/logger"
 	"github.com/faebut/prozessor_gostack/internal/models"
 	"github.com/fogleman/gg"
 	"github.com/google/uuid"
@@ -115,7 +116,7 @@ func DeleteLabel(l models.Logistic) error {
 func PrintLabel(l models.Logistic) error {
 	err := godotenv.Load()
 	if err != nil {
-		log.Fatal("error loading .env file")
+		logger.Fatal("loading .env file", slog.String("error", err.Error()))
 	}
 
 	api := os.Getenv("QR_PRINT_SERVER")

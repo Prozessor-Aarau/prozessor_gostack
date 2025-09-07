@@ -2,13 +2,14 @@ package handlers
 
 import (
 	"fmt"
-	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"strconv"
 	"strings"
 
 	"github.com/faebut/prozessor_gostack/internal/forms"
+	"github.com/faebut/prozessor_gostack/internal/logger"
 	"github.com/faebut/prozessor_gostack/internal/models"
 	"github.com/faebut/prozessor_gostack/view/auth"
 	"github.com/joho/godotenv"
@@ -27,7 +28,7 @@ func (m *Repository) HandleLoginCreate(w http.ResponseWriter, r *http.Request) e
 
 	err := r.ParseForm()
 	if err != nil {
-		log.Println(err)
+		return err
 	}
 
 	email := r.Form.Get("email")
@@ -53,7 +54,7 @@ func (m *Repository) HandleLoginCreate(w http.ResponseWriter, r *http.Request) e
 
 	id, visitor, err := m.DB.Authenticate(email, password)
 	if err != nil {
-		log.Println(err)
+		slog.Warn(fmt.Sprintf("login unsuccessfull for %s", email))
 
 		// send the data to the template
 		return rendering(w, r, auth.LoginForm(
@@ -74,7 +75,7 @@ func (m *Repository) HandleLoginCreate(w http.ResponseWriter, r *http.Request) e
 	permissions, err := m.DB.RoleByID(visitor.RoleID)
 
 	if err != nil {
-		log.Println(err)
+		slog.Warn(fmt.Sprintf("no role permission for %s", email))
 
 		// send the data to the template
 		return rendering(w, r, auth.LoginForm(
@@ -150,12 +151,12 @@ func (m *Repository) CreateLoginMail(w http.ResponseWriter, r *http.Request) {
 
 	byteTemplate, err := os.ReadFile("./email-templates/register-link.html")
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal("reading template", slog.String("error", err.Error()))
 	}
 
 	err = godotenv.Load()
 	if err != nil {
-		log.Fatal("error loading .env file")
+		logger.Fatal("loading .env file", slog.String("error", err.Error()))
 	}
 
 	baseUrl := os.Getenv("BASE_URL")
@@ -179,7 +180,7 @@ func (m *Repository) CreateLoginMail(w http.ResponseWriter, r *http.Request) {
 
 	m.App.MailChan <- msg
 
-	log.Printf("E-Mail an %s %s versendet", visitor.FirstName, visitor.FamilyName)
+	slog.Info(fmt.Sprintf("Login Mail an %s %s versendet", visitor.FirstName, visitor.FamilyName))
 	// send the data to the template
 	fmt.Fprint(
 		w,

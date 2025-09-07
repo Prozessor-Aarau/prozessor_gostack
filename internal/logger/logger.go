@@ -7,6 +7,7 @@ import (
 	"io"
 	"log"
 	"log/slog"
+	"os"
 	"time"
 )
 
@@ -167,4 +168,10 @@ func (h *ColoredHandler) WithGroup(name string) slog.Handler {
 func LogError(ctx context.Context, msg string, err error, attrs ...slog.Attr) {
 	allAttrs := append([]slog.Attr{slog.String("error", err.Error())}, attrs...)
 	slog.LogAttrs(ctx, slog.LevelError, msg, allAttrs...)
+}
+
+// Fatal error logger
+func Fatal(msg string, attrs ...slog.Attr) {
+	slog.LogAttrs(context.Background(), slog.LevelError, msg, attrs...)
+	os.Exit(1)
 }

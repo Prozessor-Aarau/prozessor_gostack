@@ -2,7 +2,7 @@ package billing
 
 import (
 	"fmt"
-	"log"
+	"log/slog"
 	"os"
 	"strconv"
 	"strings"
@@ -22,7 +22,6 @@ func CreateBill(data models.BillData, m repository.DatabaseRepo) (string, int, e
 	// create initial bill
 	bill, err := qrbill.New(false)
 	if err != nil {
-		log.Println(err)
 		return "", 0, err
 	}
 
@@ -165,19 +164,16 @@ func LetterWithItems(data models.BillData) (*gopdf.GoPdf, error) {
 	// add fonts
 	err = pdf.AddTTFFont("fira-extralight", "./static/assets/FiraSans-ExtraLight.ttf")
 	if err != nil {
-		log.Print(err.Error())
 		return &pdf, err
 	}
 
 	err = pdf.AddTTFFont("fira-regular", "./static/assets/FiraSans-Regular.ttf")
 	if err != nil {
-		log.Print(err.Error())
 		return &pdf, err
 	}
 
 	err = pdf.AddTTFFont("fira-bold", "./static/assets/FiraSans-Bold.ttf")
 	if err != nil {
-		log.Print(err.Error())
 		return &pdf, err
 	}
 
@@ -185,7 +181,6 @@ func LetterWithItems(data models.BillData) (*gopdf.GoPdf, error) {
 	pdf.AddHeader(func() {
 		err := pdf.Image("./static/assets/logo.png", 184, 10.5, &gopdf.Rect{W: 18.3, H: 18.3})
 		if err != nil {
-			log.Fatal(err)
 			return
 		}
 
@@ -197,7 +192,7 @@ func LetterWithItems(data models.BillData) (*gopdf.GoPdf, error) {
 
 		err = pdf.SetFont("fira-extralight", "", 10)
 		if err != nil {
-			log.Fatal(err)
+			slog.Error(err.Error())
 			return
 		}
 
@@ -249,7 +244,6 @@ func LetterWithItems(data models.BillData) (*gopdf.GoPdf, error) {
 	// address
 	err = pdf.SetFont("fira-regular", "", fontsize)
 	if err != nil {
-		log.Fatal(err)
 		return &pdf, err
 	}
 
@@ -272,7 +266,6 @@ func LetterWithItems(data models.BillData) (*gopdf.GoPdf, error) {
 	// right items
 	err = pdf.SetFont("fira-extralight", "", fontsize)
 	if err != nil {
-		log.Fatal(err)
 		return &pdf, err
 	}
 	pdf.SetXY(maxX-77, infoblockY)
@@ -288,7 +281,6 @@ func LetterWithItems(data models.BillData) (*gopdf.GoPdf, error) {
 	// values
 	err = pdf.SetFont("fira-regular", "", fontsize)
 	if err != nil {
-		log.Fatal(err)
 		return &pdf, err
 	}
 	pdf.SetXY(maxX-40.5, infoblockY)
@@ -306,7 +298,6 @@ func LetterWithItems(data models.BillData) (*gopdf.GoPdf, error) {
 	// title
 	err = pdf.SetFont("fira-bold", "", titlesize)
 	if err != nil {
-		log.Fatal(err)
 		return &pdf, err
 	}
 
@@ -317,7 +308,6 @@ func LetterWithItems(data models.BillData) (*gopdf.GoPdf, error) {
 	// content
 	err = pdf.SetFont("fira-regular", "", fontsize)
 	if err != nil {
-		log.Fatal(err)
 		return &pdf, err
 	}
 
@@ -397,7 +387,6 @@ func LetterWithItems(data models.BillData) (*gopdf.GoPdf, error) {
 	// TOTAL bottom
 	err = pdf.SetFont("fira-bold", "", cellfont)
 	if err != nil {
-		log.Fatal(err)
 		return &pdf, err
 	}
 	pdf.SetXY(maxX-45, bottomcell)
@@ -415,7 +404,6 @@ func LetterWithItems(data models.BillData) (*gopdf.GoPdf, error) {
 	// content
 	err = pdf.SetFont("fira-regular", "", fontsize)
 	if err != nil {
-		log.Fatal(err)
 		return &pdf, err
 	}
 
@@ -432,7 +420,6 @@ func LetterWithItems(data models.BillData) (*gopdf.GoPdf, error) {
 		width,
 	)
 	if err != nil {
-		log.Fatal(err)
 		return &pdf, err
 	}
 

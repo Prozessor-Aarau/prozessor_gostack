@@ -4,11 +4,12 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"log"
+	"log/slog"
 	"mime/multipart"
 	"net/http"
 	"os"
 
+	"github.com/faebut/prozessor_gostack/internal/logger"
 	"github.com/faebut/prozessor_gostack/internal/models"
 	"github.com/fogleman/gg"
 	"github.com/joho/godotenv"
@@ -21,7 +22,7 @@ func GenerateQRCode(machine models.Machine) error {
 	// load env file to read base URL
 	err := godotenv.Load()
 	if err != nil {
-		log.Fatal("error loading .env file")
+		logger.Fatal("loading .env file", slog.String("error", err.Error()))
 	}
 	baseUrl := os.Getenv("BASE_URL")
 
@@ -47,10 +48,12 @@ func GenerateQRCode(machine models.Machine) error {
 		return fmt.Errorf("could not save image: %v", err.Error())
 	}
 
+	// TODO: do this without creating a temporary file
+
 	// load temp file
 	im, err := gg.LoadJPG(fmt.Sprintf("./static/qr_codes/tmp_%s.jpg", machine.ID))
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal("loading temp file", slog.String("error", err.Error()))
 	}
 	dimensions := im.Bounds().Size()
 
@@ -101,7 +104,7 @@ func RemoveQRCode(machine models.Machine) error {
 func PrintQRCode(machine models.Machine) error {
 	err := godotenv.Load()
 	if err != nil {
-		log.Fatal("error loading .env file")
+		logger.Fatal("loading .env file", slog.String("error", err.Error()))
 	}
 
 	api := os.Getenv("QR_PRINT_SERVER")
