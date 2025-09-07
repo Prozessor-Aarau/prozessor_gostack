@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -34,16 +33,8 @@ func (m *Repository) HandleBadgesList(w http.ResponseWriter, r *http.Request) er
 
 	badgesList, _, err := m.DB.AllBadges(filter)
 	if err != nil {
-		log.Println("could not get badges from DB: ", err)
-		m.DB.CreateLog(
-			models.Log{
-				Typ:     "error",
-				Module:  "badges",
-				Message: fmt.Sprintf("Can't get badges from database: %s", err),
-			},
-		)
-
-		m.App.Session.Put(r.Context(), "error", "Can't get badges from database")
+		// m.App.Session.Put(r.Context(), "error", "Can't get badges from database")
+		return err
 	}
 
 	return rendering(w, r, badges.BadgesList(badgesList))
@@ -60,15 +51,8 @@ func (m *Repository) HandleBadgesListFilter(w http.ResponseWriter, r *http.Reque
 
 	badgesList, _, err := m.DB.AllBadges(filter)
 	if err != nil {
-		log.Println("could not get badges from DB: ", err)
-		m.DB.CreateLog(
-			models.Log{
-				Typ:     "error",
-				Module:  "badges",
-				Message: fmt.Sprintf("Can't get badges from database: %s", err),
-			},
-		)
-		m.App.Session.Put(r.Context(), "error", "Can't get badges from database")
+		// m.App.Session.Put(r.Context(), "error", "Can't get badges from database")
+		return err
 	}
 
 	return rendering(w, r, badges.BadgesList(badgesList))

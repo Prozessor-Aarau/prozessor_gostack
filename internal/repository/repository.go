@@ -3,7 +3,6 @@ package repository
 import (
 	"context"
 	"database/sql"
-	"log"
 	"time"
 
 	"github.com/faebut/prozessor_gostack/internal/config"
@@ -37,7 +36,6 @@ type DatabaseRepo interface {
 	CreateAbonnement(a models.Abonnement) (int, error)
 	DeleteAbonnement(id int) error
 	AllAbonnements(page int, filter models.AbonnementFilter) ([]models.Abonnement, int, error)
-	CreateLog(l models.Log)
 	// ressorts
 	AllRessorts() ([]models.Ressort, error)
 	RessortByID(id int) (models.Ressort, error)
@@ -159,29 +157,6 @@ func NewNullTime(t time.Time) sql.NullTime {
 		}
 	}
 	return sql.NullTime{}
-}
-
-// CreateLog creates a log in the database
-func (m *postgresDBRepo) CreateLog(l models.Log) {
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-	defer cancel()
-
-	stmt := `INSERT INTO log (type, module, message, visitor_id, created_on)
-  VALUES($1, $2, $3, $4, $5)`
-
-	_, err := m.DB.ExecContext(
-		ctx,
-		stmt,
-		l.Typ,
-		l.Module,
-		l.Message,
-		NewNullString(l.VisitorID),
-		time.Now(),
-	)
-
-	if err != nil {
-		log.Println(err)
-	}
 }
 
 func (m *postgresDBRepo) GetAllAteliers() ([]models.Atelier, error) {

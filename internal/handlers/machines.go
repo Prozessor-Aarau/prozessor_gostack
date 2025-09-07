@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -28,16 +27,8 @@ func (m *Repository) HandleMachinesIndex(w http.ResponseWriter, r *http.Request)
 	ressorts = ressorts[:len(ressorts)-1]
 
 	if err != nil {
-		log.Println("could not get ressorts from DB: ", err)
-		m.DB.CreateLog(
-			models.Log{
-				Typ:     "error",
-				Module:  "machines",
-				Message: fmt.Sprintf("Can't get ressorts from database: %s", err),
-			},
-		)
-
-		m.App.Session.Put(r.Context(), "error", "Can't get ressorts from database")
+		// m.App.Session.Put(r.Context(), "error", "Can't get ressorts from database")
+		return err
 	}
 
 	// render the template
@@ -100,16 +91,8 @@ func (m *Repository) HandleMachinesCreateIndex(w http.ResponseWriter, r *http.Re
 	ressorts = ressorts[:len(ressorts)-1]
 
 	if err != nil {
-		log.Println("could not get ressorts from DB: ", err)
-		m.DB.CreateLog(
-			models.Log{
-				Typ:     "error",
-				Module:  "machines",
-				Message: fmt.Sprintf("Can't get ressorts from database: %s", err),
-			},
-		)
-
-		m.App.Session.Put(r.Context(), "error", "Can't get badges from database")
+		// m.App.Session.Put(r.Context(), "error", "Can't get badges from database")
+		return err
 	}
 
 	// render the template
@@ -145,16 +128,8 @@ func (m *Repository) HandleMachinesCreate(w http.ResponseWriter, r *http.Request
 		ressorts, err := m.DB.AllRessorts()
 		ressorts = ressorts[:len(ressorts)-1]
 		if err != nil {
-			log.Println("could not get ressorts from DB: ", err)
-			m.DB.CreateLog(
-				models.Log{
-					Typ:     "error",
-					Module:  "machines",
-					Message: fmt.Sprintf("Can't get ressorts from database: %s", err),
-				},
-			)
-
-			m.App.Session.Put(r.Context(), "error", "Can't get badges from database")
+			// m.App.Session.Put(r.Context(), "error", "Can't get badges from database")
+			return err
 		}
 		// return form with errors and allready filled fields
 		return rendering(w, r, machines.MachinesForm(
@@ -187,28 +162,14 @@ func (m *Repository) HandleMachinesEditIndex(w http.ResponseWriter, r *http.Requ
 	ressorts = ressorts[:len(ressorts)-1]
 
 	if err != nil {
-		log.Println("could not get ressorts from DB: ", err)
-		m.DB.CreateLog(
-			models.Log{
-				Typ:     "error",
-				Module:  "machines",
-				Message: fmt.Sprintf("Can't get ressorts from database: %s", err),
-			},
-		)
+		return err
 	}
 
 	id := chi.URLParam(r, "id")
 
 	machine, err := m.DB.MachineByID(id)
 	if err != nil {
-		log.Println("could not get machine from DB: ", err)
-		m.DB.CreateLog(
-			models.Log{
-				Typ:     "error",
-				Module:  "machines",
-				Message: fmt.Sprintf("Can't get machine from database: %s", err),
-			},
-		)
+		return err
 	}
 
 	// render the template
@@ -248,16 +209,8 @@ func (m *Repository) HandleMachinesEdit(w http.ResponseWriter, r *http.Request) 
 		ressorts = ressorts[:len(ressorts)-1]
 
 		if err != nil {
-			log.Println("could not get ressorts from DB: ", err)
-			m.DB.CreateLog(
-				models.Log{
-					Typ:     "error",
-					Module:  "machines",
-					Message: fmt.Sprintf("Can't get ressorts from database: %s", err),
-				},
-			)
-
-			m.App.Session.Put(r.Context(), "error", "Can't get machine from database")
+			// m.App.Session.Put(r.Context(), "error", "Can't get machine from database")
+			return err
 		}
 		// return form with errors and allready filled fields
 		return rendering(w, r, machines.MachinesForm(
@@ -288,29 +241,13 @@ func (m *Repository) HandleMachinesQRCreate(w http.ResponseWriter, r *http.Reque
 
 	machine, err := m.DB.MachineByID(id)
 	if err != nil {
-		log.Println("could not get machine from DB: ", err)
-		m.DB.CreateLog(
-			models.Log{
-				Typ:     "error",
-				Module:  "machines",
-				Message: fmt.Sprintf("Can't get machine from database: %s", err),
-			},
-		)
-		return nil
+		return err
 	}
 
 	err = qrcodes.GenerateQRCode(machine)
 
 	if err != nil {
-		log.Println("could not Generate QR Code: ", err)
-		m.DB.CreateLog(
-			models.Log{
-				Typ:     "error",
-				Module:  "machines",
-				Message: fmt.Sprintf("Can't generate QR-Code: %s", err),
-			},
-		)
-		return nil
+		return err
 	}
 
 	// write changes to database
@@ -332,36 +269,19 @@ func (m *Repository) HandleMachinesQRDelete(w http.ResponseWriter, r *http.Reque
 
 	machine, err := m.DB.MachineByID(id)
 	if err != nil {
-		log.Println("could not get machine from DB: ", err)
-		m.DB.CreateLog(
-			models.Log{
-				Typ:     "error",
-				Module:  "machines",
-				Message: fmt.Sprintf("Can't get machine from database: %s", err),
-			},
-		)
-		return nil
+		return err
 	}
 
 	err = qrcodes.RemoveQRCode(machine)
 
 	if err != nil {
-		log.Println("could not Delete QR Code: ", err)
-		m.DB.CreateLog(
-			models.Log{
-				Typ:     "error",
-				Module:  "machines",
-				Message: fmt.Sprintf("Can't delete QR-Code: %s", err),
-			},
-		)
-		return nil
+		return err
 	}
 
 	// write changes to database
 	err = m.DB.DeleteMachineQR(machine)
 	if err != nil {
-		log.Println("could not delete QR Code from DB: ", err)
-		return nil
+		return err
 	}
 
 	machine.QR = ""
@@ -377,21 +297,13 @@ func (m *Repository) HandleMachinesQRPrint(w http.ResponseWriter, r *http.Reques
 
 	machine, err := m.DB.MachineByID(id)
 	if err != nil {
-		log.Println("could not get machine from DB: ", err)
-		m.DB.CreateLog(
-			models.Log{
-				Typ:     "error",
-				Module:  "machines",
-				Message: fmt.Sprintf("Can't get machine from database: %s", err),
-			},
-		)
-		return rendering(w, r, machines.ErrorButton("Datenbankfehler!"))
+		return err
 	}
 
 	// print the QR-Code
 	err = qrcodes.PrintQRCode(machine)
 	if err != nil {
-		log.Println(err)
+		// TODO: add logging to db here and do something else in the frontend
 		return rendering(w, r, machines.ErrorButton("Druckerfehler!"))
 	}
 
