@@ -7,8 +7,6 @@ import (
 	"io"
 	"log"
 	"log/slog"
-	"runtime"
-	"strings"
 	"time"
 )
 
@@ -45,20 +43,19 @@ func (h *DBHandler) Handle(ctx context.Context, r slog.Record) error {
 
 // logToDB writes a log record to the database.
 // It extracts the visitor_id attribute if present and determines the calling package.
-// Uses PostgreSQL parameter placeholders ($1, $2, etc.).
 func (h *DBHandler) logToDB(r slog.Record) {
-	// Extract visitor_id from log attributes
+	// Extract visitor_id and path from log attributes
 	visitorID := ""
+	requestPath := ""
 	r.Attrs(func(a slog.Attr) bool {
-		if a.Key == "visitor_id" {
+		switch a.Key {
+		case "visitor_id":
 			visitorID = a.Value.String()
-			return false // stop iteration
+		case "path":
+			requestPath = a.Value.String()
 		}
 		return true // continue iteration
 	})
-
-	// Get the package name where the log call originated
-	packageName := h.getCallerPackage()
 
 	// Handle NULL visitor_id for UUID database column
 	var visitorIDParam any
@@ -68,43 +65,17 @@ func (h *DBHandler) logToDB(r slog.Record) {
 		visitorIDParam = visitorID
 	}
 
+	// Use "system" if no path
+	if requestPath == "" {
+		requestPath = "system"
+	}
+
 	// Insert log entry into database
-	query := `INSERT INTO log (type, module, message, visitor_id, created_on) VALUES ($1, $2, $3, $4, $5)`
-	_, err := h.db.Exec(query, r.Level.String(), packageName, r.Message, visitorIDParam, time.Now())
+	query := `INSERT INTO log (level, location, message, visitor_id, created_on) VALUES ($1, $2, $3, $4, $5)`
+	_, err := h.db.Exec(query, r.Level.String(), requestPath, r.Message, visitorIDParam, time.Now())
 	if err != nil {
-		// Use standard log to avoid recursion with slog
 		log.Printf("failed to log to database: %v", err)
 	}
-}
-
-// getCallerPackage extracts the package name from the call stack.
-// It skips several frames to get to the actual caller that initiated the log call.
-// Returns "unknown" if the package name cannot be determined.
-func (h *DBHandler) getCallerPackage() string {
-	// Skip frames: runtime.Callers, getCallerPackage, logToDB, Handle, slog internals
-	const skip = 6
-	pc := make([]uintptr, 1)
-	n := runtime.Callers(skip, pc)
-	if n == 0 {
-		return "unknown"
-	}
-
-	frame, _ := runtime.CallersFrames(pc).Next()
-	if frame.Function == "" {
-		return "unknown"
-	}
-
-	// Extract package name from function name
-	// e.g., "github.com/user/project/internal/handlers.(*Repository).SomeHandler" -> "handlers"
-	parts := strings.Split(frame.Function, "/")
-	if len(parts) > 0 {
-		lastPart := parts[len(parts)-1]
-		if dotIndex := strings.Index(lastPart, "."); dotIndex != -1 {
-			return lastPart[:dotIndex]
-		}
-	}
-
-	return "unknown"
 }
 
 // Enabled reports whether the handler handles records at the given level.
