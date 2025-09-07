@@ -7,8 +7,11 @@ import (
 	"io"
 	"log"
 	"log/slog"
+	"net/http"
 	"os"
 	"time"
+
+	"github.com/alexedwards/scs/v2"
 )
 
 // DBHandler is a custom slog.Handler that writes log entries to both stdout and database.
@@ -174,4 +177,17 @@ func LogError(ctx context.Context, msg string, err error, attrs ...slog.Attr) {
 func Fatal(msg string, attrs ...slog.Attr) {
 	slog.LogAttrs(context.Background(), slog.LevelError, msg, attrs...)
 	os.Exit(1)
+}
+
+// Success logs a successful operation with request context
+func Success(r *http.Request, session *scs.SessionManager, message string) {
+	visitorID := ""
+	if id := session.Get(r.Context(), "visitor_id"); id != nil {
+		visitorID = id.(string)
+	}
+
+	slog.Info(message,
+		"path", r.URL.Path,
+		"visitor_id", visitorID,
+	)
 }

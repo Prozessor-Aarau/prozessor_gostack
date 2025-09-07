@@ -2,12 +2,13 @@ package handlers
 
 import (
 	"fmt"
-	"log"
+	"log/slog"
 	"math"
 	"net/http"
 	"strconv"
 	"time"
 
+	"github.com/faebut/prozessor_gostack/internal/logger"
 	"github.com/faebut/prozessor_gostack/internal/models"
 	"github.com/faebut/prozessor_gostack/view/checkin"
 	"github.com/go-chi/chi/v5"
@@ -17,7 +18,7 @@ import (
 func (m *Repository) HandleCheckinIndex(w http.ResponseWriter, r *http.Request) error {
 	visitor, ok := m.App.Session.Get(r.Context(), "visitor").(models.Visitor)
 	if !ok {
-		log.Println("could not get visitor from Session")
+		slog.Error("could not get visitor from session", "path", r.URL.Path)
 		m.App.Session.Put(r.Context(), "error", "Can't get visitor from session")
 
 		return hxRedirect(w, r, "/admin/logout")
@@ -29,12 +30,10 @@ func (m *Repository) HandleCheckinIndex(w http.ResponseWriter, r *http.Request) 
 
 	visitors, count, err := m.DB.CheckinAllVisitors(page, filter)
 	if err != nil {
-		log.Println(err)
 		return err
 	}
 	visits, vCount, err := m.DB.GetVisitsByDate(time.Now())
 	if err != nil {
-		log.Println(err)
 		return err
 	}
 
@@ -67,7 +66,6 @@ func (m *Repository) HandleCheckinList(w http.ResponseWriter, r *http.Request) e
 
 	visitors, count, err := m.DB.CheckinAllVisitors(page, filter)
 	if err != nil {
-		log.Println("could not get visitors from DB: ", err)
 		return err
 	}
 
@@ -92,7 +90,6 @@ func (m *Repository) HandleCheckinListFilter(w http.ResponseWriter, r *http.Requ
 
 	visitors, count, err := m.DB.CheckinAllVisitors(page, filter)
 	if err != nil {
-		log.Println("could not get visitors from DB: ", err)
 		return err
 	}
 
@@ -121,7 +118,6 @@ func (m *Repository) HandleCheckinFormIndex(w http.ResponseWriter, r *http.Reque
 	if edit {
 		visit, err = m.DB.GetVisitByID(vid)
 		if err != nil {
-			log.Println("Error getting visit from DB:", err)
 			return err
 		}
 		// pushing all atelier IDs that are in visit to checkedAteliers slice
@@ -132,12 +128,10 @@ func (m *Repository) HandleCheckinFormIndex(w http.ResponseWriter, r *http.Reque
 
 	visitor, err := m.DB.VisitorByID(userID)
 	if err != nil {
-		log.Println("could not get visitor from DB: ", err)
 		return err
 	}
 	ateliers, err := m.DB.GetAllAteliers()
 	if err != nil {
-		log.Println("could not get ateliers from DB: ", err)
 		return err
 	}
 
@@ -165,7 +159,6 @@ func (m *Repository) HandleCheckinForm(w http.ResponseWriter, r *http.Request) e
 	if edit {
 		visit, err = m.DB.GetVisitByID(vid)
 		if err != nil {
-			log.Println("Error getting visit from DB:", err)
 			return err
 		}
 	}
@@ -189,12 +182,10 @@ func (m *Repository) HandleCheckinForm(w http.ResponseWriter, r *http.Request) e
 
 		visitor, err := m.DB.VisitorByID(userID)
 		if err != nil {
-			log.Println("could not get visitor from DB: ", err)
 			return err
 		}
 		ateliers, err := m.DB.GetAllAteliers()
 		if err != nil {
-			log.Println("could not get ateliers from DB: ", err)
 			return err
 		}
 
@@ -206,7 +197,7 @@ func (m *Repository) HandleCheckinForm(w http.ResponseWriter, r *http.Request) e
 	visit.Visitor.ID = userID
 	ressortID, err := strconv.Atoi(r.Form.Get("ressort"))
 	if err != nil {
-		log.Println(err)
+		return err
 	}
 	if ressortID > 0 {
 		visit.Ressort.ID = ressortID
@@ -223,13 +214,25 @@ func (m *Repository) HandleCheckinForm(w http.ResponseWriter, r *http.Request) e
 	if edit {
 		err = m.DB.UpdateVisit(visit, checkedAteliers, vid)
 		if err != nil {
-			log.Println(err)
+			return err
 		}
 	} else {
 		err = m.DB.PostVisit(visit, checkedAteliers)
 		if err != nil {
-			log.Println(err)
+			return err
 		}
+	}
+
+	// Log successful checkin
+	visitor, err := m.DB.VisitorByID(userID)
+	if err == nil {
+		action := "checked in"
+		if edit {
+			action = "updated checkin"
+		}
+
+		logger.Success(r, m.App.Session,
+			fmt.Sprintf("visitor %s %s successfully %s", visitor.FirstName, visitor.FamilyName, action))
 	}
 
 	// redirect
@@ -240,14 +243,17 @@ func (m *Repository) HandleCheckinForm(w http.ResponseWriter, r *http.Request) e
 func (m *Repository) HandleCheckinDelete(w http.ResponseWriter, r *http.Request) error {
 	visitId, err := strconv.Atoi(chi.URLParam(r, "id"))
 	if err != nil {
-		log.Println(err)
+		return err
 	}
 
 	err = m.DB.DeleteVisit(visitId)
 	if err != nil {
-		log.Println(err)
 		return err
 	}
+
+	// Log successful deletion
+	logger.Success(r, m.App.Session,
+		fmt.Sprintf("visit %d successfully deleted", visitId))
 
 	// get new visitorlist
 	return hxRedirect(w, r, "/admin/checkin")
