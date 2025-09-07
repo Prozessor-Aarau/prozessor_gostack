@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"log"
+	"log/slog"
 	"net/http"
 
 	"github.com/faebut/prozessor_gostack/internal/models"
@@ -13,7 +13,7 @@ func (m *Repository) HandleAdminIndex(w http.ResponseWriter, r *http.Request) er
 	// send the data to the template
 	visitor, ok := m.App.Session.Get(r.Context(), "visitor").(models.Visitor)
 	if !ok {
-		log.Println("could not get visitor from Session")
+		slog.Error("could not get visitor from session", "path", r.URL.Path)
 		m.App.Session.Put(r.Context(), "error", "Can't get visitor from session")
 
 		return hxRedirect(w, r, "/admin/logout")

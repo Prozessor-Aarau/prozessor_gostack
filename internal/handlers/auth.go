@@ -28,7 +28,7 @@ func (m *Repository) HandleLoginCreate(w http.ResponseWriter, r *http.Request) e
 
 	err := r.ParseForm()
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to parse form: %w", err)
 	}
 
 	email := r.Form.Get("email")
@@ -54,7 +54,7 @@ func (m *Repository) HandleLoginCreate(w http.ResponseWriter, r *http.Request) e
 
 	id, visitor, err := m.DB.Authenticate(email, password)
 	if err != nil {
-		slog.Warn(fmt.Sprintf("login unsuccessfull for %s", email))
+		slog.Warn(fmt.Sprintf("login unsuccessful for %s", email))
 
 		// send the data to the template
 		return rendering(w, r, auth.LoginForm(
@@ -70,7 +70,6 @@ func (m *Repository) HandleLoginCreate(w http.ResponseWriter, r *http.Request) e
 		))
 	}
 
-	// TODO GET Role by ID
 	// get permissions
 	permissions, err := m.DB.RoleByID(visitor.RoleID)
 
@@ -94,6 +93,10 @@ func (m *Repository) HandleLoginCreate(w http.ResponseWriter, r *http.Request) e
 
 	m.App.Session.Put(r.Context(), "permission", permissions)
 	// m.App.Session.Put(r.Context(), "flash", "Logged in successfully")
+
+	// log successful login
+	logger.Success(r, m.App.Session,
+		fmt.Sprintf("%s %s successfully logged in", visitor.FirstName, visitor.FamilyName))
 
 	return hxRedirect(w, r, "/admin")
 }
@@ -180,7 +183,10 @@ func (m *Repository) CreateLoginMail(w http.ResponseWriter, r *http.Request) {
 
 	m.App.MailChan <- msg
 
-	slog.Info(fmt.Sprintf("Login Mail an %s %s versendet", visitor.FirstName, visitor.FamilyName))
+	// log successful mail creation
+	logger.Success(r, m.App.Session,
+		fmt.Sprintf("login mail successfully sent to %s %s", visitor.FirstName, visitor.FamilyName))
+
 	// send the data to the template
 	fmt.Fprint(
 		w,
@@ -256,6 +262,10 @@ func (m *Repository) HandleCreateLogin(w http.ResponseWriter, r *http.Request) e
 		// send the data to the template
 		return rendering(w, r, auth.CreateLoginForm(visitor, errors))
 	}
+
+	// log successful login creation
+	logger.Success(r, m.App.Session,
+		fmt.Sprintf("login successfully created for %s", visitor.Email))
 
 	// redirect
 	return hxRedirect(w, r, "/admin")
