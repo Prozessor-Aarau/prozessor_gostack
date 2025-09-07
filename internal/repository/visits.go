@@ -10,6 +10,7 @@ import (
 	"github.com/lib/pq"
 )
 
+// GetVisitsByDate gets all visits for the provided date
 func (m *postgresDBRepo) GetVisitsByDate(date time.Time) ([]models.Visit, int, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()

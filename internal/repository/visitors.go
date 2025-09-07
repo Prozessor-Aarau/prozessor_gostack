@@ -479,7 +479,7 @@ func (m *postgresDBRepo) CheckEmailUnique(email string) (bool, error) {
 	return false, nil
 }
 
-// GetAllVisitors gets all visitors and returns also count
+// CheckinAllVisitors gets all visitors that are not checked in
 func (m *postgresDBRepo) CheckinAllVisitors(
 	page int,
 	filter models.VisitorFilter,

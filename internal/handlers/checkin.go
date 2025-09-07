@@ -30,11 +30,11 @@ func (m *Repository) HandleCheckinIndex(w http.ResponseWriter, r *http.Request) 
 
 	visitors, count, err := m.DB.CheckinAllVisitors(page, filter)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get visitors for checkin: %w", err)
 	}
 	visits, vCount, err := m.DB.GetVisitsByDate(time.Now())
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get visits: %w", err)
 	}
 
 	return rendering(w, r, checkin.Checkin(
@@ -66,7 +66,7 @@ func (m *Repository) HandleCheckinList(w http.ResponseWriter, r *http.Request) e
 
 	visitors, count, err := m.DB.CheckinAllVisitors(page, filter)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get visitors for checkin: %w", err)
 	}
 
 	return rendering(w, r, checkin.VisitorList(
@@ -90,7 +90,7 @@ func (m *Repository) HandleCheckinListFilter(w http.ResponseWriter, r *http.Requ
 
 	visitors, count, err := m.DB.CheckinAllVisitors(page, filter)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get visitors for checkin: %w", err)
 	}
 
 	return rendering(w, r, checkin.VisitorList(
@@ -118,7 +118,7 @@ func (m *Repository) HandleCheckinFormIndex(w http.ResponseWriter, r *http.Reque
 	if edit {
 		visit, err = m.DB.GetVisitByID(vid)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to get visit: %w", err)
 		}
 		// pushing all atelier IDs that are in visit to checkedAteliers slice
 		for _, v := range visit.Ateliers {
@@ -128,11 +128,11 @@ func (m *Repository) HandleCheckinFormIndex(w http.ResponseWriter, r *http.Reque
 
 	visitor, err := m.DB.VisitorByID(userID)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get visitor: %w", err)
 	}
 	ateliers, err := m.DB.GetAllAteliers()
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get ateliers: %w", err)
 	}
 
 	return rendering(w, r, checkin.CheckinForm(
@@ -159,7 +159,7 @@ func (m *Repository) HandleCheckinForm(w http.ResponseWriter, r *http.Request) e
 	if edit {
 		visit, err = m.DB.GetVisitByID(vid)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to get visit: %w", err)
 		}
 	}
 
@@ -182,11 +182,11 @@ func (m *Repository) HandleCheckinForm(w http.ResponseWriter, r *http.Request) e
 
 		visitor, err := m.DB.VisitorByID(userID)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to get visitor: %w", err)
 		}
 		ateliers, err := m.DB.GetAllAteliers()
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to get ateliers: %w", err)
 		}
 
 		// send the data to the template
@@ -197,7 +197,7 @@ func (m *Repository) HandleCheckinForm(w http.ResponseWriter, r *http.Request) e
 	visit.Visitor.ID = userID
 	ressortID, err := strconv.Atoi(r.Form.Get("ressort"))
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to convert string to int: %w", err)
 	}
 	if ressortID > 0 {
 		visit.Ressort.ID = ressortID
@@ -214,12 +214,12 @@ func (m *Repository) HandleCheckinForm(w http.ResponseWriter, r *http.Request) e
 	if edit {
 		err = m.DB.UpdateVisit(visit, checkedAteliers, vid)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to update visit: %w", err)
 		}
 	} else {
 		err = m.DB.PostVisit(visit, checkedAteliers)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to post visit: %w", err)
 		}
 	}
 
@@ -243,12 +243,12 @@ func (m *Repository) HandleCheckinForm(w http.ResponseWriter, r *http.Request) e
 func (m *Repository) HandleCheckinDelete(w http.ResponseWriter, r *http.Request) error {
 	visitId, err := strconv.Atoi(chi.URLParam(r, "id"))
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to convert string to int: %w", err)
 	}
 
 	err = m.DB.DeleteVisit(visitId)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to delete visit: %w", err)
 	}
 
 	// Log successful deletion
