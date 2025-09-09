@@ -2,13 +2,15 @@ package handlers
 
 import (
 	"context"
-	"log"
+	"fmt"
+	"log/slog"
 	"net/http"
 	"strconv"
 	"time"
 
 	"github.com/faebut/prozessor_gostack/internal/cardreader"
 	"github.com/faebut/prozessor_gostack/internal/forms"
+	"github.com/faebut/prozessor_gostack/internal/logger"
 	"github.com/faebut/prozessor_gostack/internal/models"
 	"github.com/faebut/prozessor_gostack/view/badges"
 	"github.com/go-chi/chi/v5"
@@ -19,9 +21,12 @@ func (m *Repository) HandleBadgesIndex(w http.ResponseWriter, r *http.Request) e
 	// get visitor
 	visitor, ok := m.App.Session.Get(r.Context(), "visitor").(models.Visitor)
 	if !ok {
-		log.Println("could not get visitor from Session")
+		slog.Error("could not get visitor from session", "path", r.URL.Path)
+		m.App.Session.Put(r.Context(), "error", "Can't get visitor from session")
+
 		return hxRedirect(w, r, "/admin/logout")
 	}
+
 	return rendering(w, r, badges.Badges(visitor))
 }
 
@@ -34,7 +39,7 @@ func (m *Repository) HandleBadgesList(w http.ResponseWriter, r *http.Request) er
 	badgesList, _, err := m.DB.AllBadges(filter)
 	if err != nil {
 		// m.App.Session.Put(r.Context(), "error", "Can't get badges from database")
-		return err
+		return fmt.Errorf("failed to get badges: %w", err)
 	}
 
 	return rendering(w, r, badges.BadgesList(badgesList))
@@ -52,7 +57,7 @@ func (m *Repository) HandleBadgesListFilter(w http.ResponseWriter, r *http.Reque
 	badgesList, _, err := m.DB.AllBadges(filter)
 	if err != nil {
 		// m.App.Session.Put(r.Context(), "error", "Can't get badges from database")
-		return err
+		return fmt.Errorf("failed to get badges: %w", err)
 	}
 
 	return rendering(w, r, badges.BadgesList(badgesList))
@@ -63,20 +68,20 @@ func (m *Repository) HandleBadgeEditIndex(w http.ResponseWriter, r *http.Request
 
 	visitor, ok := m.App.Session.Get(r.Context(), "visitor").(models.Visitor)
 	if !ok {
-		log.Println("could not get visitor from Session")
+		slog.Error("could not get visitor from session", "path", r.URL.Path)
+		m.App.Session.Put(r.Context(), "error", "Can't get visitor from session")
+
 		return hxRedirect(w, r, "/admin/logout")
 	}
 
 	bID, err := strconv.Atoi(chi.URLParam(r, "id"))
 	if err != nil {
-		log.Println("Error converting badge id to int", err)
-		return err
+		return fmt.Errorf("failed to convert string to int: %w", err)
 	}
 
 	badge, err := m.DB.BadgeByID(bID)
 	if err != nil {
-		log.Println("Error getting badge from database:", err)
-		return err
+		return fmt.Errorf("failed to get badge: %w", err)
 	}
 
 	return rendering(w, r, badges.BadgeEdit(badge, badges.BadgeEditErrors{}, visitor, badges.BadgeEditFormParams{}))
@@ -86,15 +91,17 @@ func (m *Repository) HandleBadgeEditIndex(w http.ResponseWriter, r *http.Request
 func (m *Repository) HandleBadgeReset(w http.ResponseWriter, r *http.Request) error {
 	id, err := strconv.Atoi(chi.URLParam(r, "id"))
 	if err != nil {
-		log.Println("Error converting string to int:", err)
-		return err
+		return fmt.Errorf("failed to convert string to int: %w", err)
 	}
 
 	err = m.DB.ResetBadge(id)
 	if err != nil {
-		log.Println("Error resetting badge:", err)
-		return err
+		return fmt.Errorf("failed to reset badge: %w", err)
 	}
+
+	// log successful badge edit
+	logger.Success(r, m.App.Session,
+		fmt.Sprintf("badge with id %d successfully resetted", id))
 
 	return hxRedirect(w, r, "/admin/badges")
 }
@@ -103,7 +110,9 @@ func (m *Repository) HandleBadgeReset(w http.ResponseWriter, r *http.Request) er
 func (m *Repository) HandleBadgeUpdate(w http.ResponseWriter, r *http.Request) error {
 	visitor, ok := m.App.Session.Get(r.Context(), "visitor").(models.Visitor)
 	if !ok {
-		log.Println("could not get visitor from Session")
+		slog.Error("could not get visitor from session", "path", r.URL.Path)
+		m.App.Session.Put(r.Context(), "error", "Can't get visitor from session")
+
 		return hxRedirect(w, r, "/admin/logout")
 	}
 
@@ -112,8 +121,7 @@ func (m *Repository) HandleBadgeUpdate(w http.ResponseWriter, r *http.Request) e
 	// get id for badge
 	bid, err := strconv.Atoi(chi.URLParam(r, "id"))
 	if err != nil {
-		log.Println("Error converting string to int:", err)
-		return err
+		return fmt.Errorf("failed to convert string to int: %w", err)
 	}
 	badge.ID = bid
 
@@ -121,8 +129,7 @@ func (m *Repository) HandleBadgeUpdate(w http.ResponseWriter, r *http.Request) e
 	// get editable fields
 	badge.Number, err = strconv.Atoi(r.Form.Get("number"))
 	if err != nil {
-		log.Println("Error converting string to int:", err)
-		return err
+		return fmt.Errorf("failed to convert string to int: %w", err)
 	}
 	badge.UID = r.Form.Get("uid")
 
@@ -170,25 +177,37 @@ func (m *Repository) HandleBadgeUpdate(w http.ResponseWriter, r *http.Request) e
 		err := m.DB.UpdateBadge(badge)
 
 		if err != nil {
-			log.Println("Error updating badge:", err)
-			return err
+			return fmt.Errorf("failed to update badge with id %d: %w", badge.ID, err)
 		}
+
+		// log success
+		logger.Success(r, m.App.Session,
+			fmt.Sprintf("badge with ID %d successfully updated", badge.ID))
 	} else {
+
+		// TODO: is this still valid? does not check for a specific permission but for the role ID, does it really matter? If it is not in use, it should be resetted anyways
+
 		// what to do if not in use. Do Update with new values, because of what a superuser can do or reset if not superuser
 		if visitor.RoleID >= 8 {
 			// write values to database
 			err := m.DB.UpdateBadge(badge)
 
 			if err != nil {
-				log.Println("Error updating badge:", err)
-				return err
+				return fmt.Errorf("failed to update badge with id %d: %w", badge.ID, err)
 			}
+
+			// log success
+			logger.Success(r, m.App.Session,
+				fmt.Sprintf("badge with ID %d successfully updated", badge.ID))
 		} else {
 			err = m.DB.ResetBadge(badge.ID)
 			if err != nil {
-				log.Println("Error resetting badge:", err)
-				return err
+				return fmt.Errorf("failed to reset badge with id %d: %w", badge.ID, err)
 			}
+
+			// log success
+			logger.Success(r, m.App.Session,
+				fmt.Sprintf("badge with ID %d successfully resetted", badge.ID))
 		}
 	}
 
@@ -215,13 +234,13 @@ func (m *Repository) HandleBadgeCreate(w http.ResponseWriter, r *http.Request) e
 	badge.UID = r.Form.Get("uid")
 	number, err := strconv.Atoi(r.Form.Get("number"))
 	if err != nil {
-		log.Println("Error converting string to int:", err)
+		return fmt.Errorf("failed to convert string to int: %w", err)
 	}
 	badge.Number = number
 
 	numValid, uidValid, err := m.DB.UniqueBadge(badge.Number, badge.UID)
 	if err != nil {
-		log.Println("error getting uniqueness of id and num:", err)
+		slog.Error("error getting uniqueness of id and num", err)
 	}
 
 	if !numValid {
@@ -237,11 +256,15 @@ func (m *Repository) HandleBadgeCreate(w http.ResponseWriter, r *http.Request) e
 		return rendering(w, r, badges.BadgeCreate(badge, formErrors))
 	}
 
-	_, err = m.DB.CreateBadge(badge)
+	badgeID, err := m.DB.CreateBadge(badge)
 	if err != nil {
-		log.Println("error creating badge", err)
-		return err
+		return fmt.Errorf("failed to create badge: %w", err)
 	}
+
+	// log success
+	logger.Success(r, m.App.Session,
+		fmt.Sprintf("badge with ID %d successfully created", badgeID))
+
 	// redirect on success
 	return hxRedirect(w, r, "/admin/badges")
 }
@@ -250,15 +273,18 @@ func (m *Repository) HandleBadgeCreate(w http.ResponseWriter, r *http.Request) e
 func (m *Repository) HandleBadgeDelete(w http.ResponseWriter, r *http.Request) error {
 	id, err := strconv.Atoi(chi.URLParam(r, "id"))
 	if err != nil {
-		log.Println("Error converting string to int:", err)
-		return err
+		return fmt.Errorf("failed to convert string to int: %w", err)
 	}
 
 	err = m.DB.DeleteBadge(id)
 	if err != nil {
-		log.Println("Error deleting badge:", err)
-		return err
+		return fmt.Errorf("failed to delete badge: %w", err)
 	}
+
+	// log success
+	logger.Success(r, m.App.Session,
+		fmt.Sprintf("badge with ID %d successfully deleted", id))
+
 	// redirect on success
 	return hxRedirect(w, r, "/admin/badges")
 }
@@ -272,7 +298,7 @@ func (m *Repository) HandleBadgeRead(w http.ResponseWriter, r *http.Request) err
 	// start reader
 	myReader, err := cardreader.NewCardReader()
 	if err != nil {
-		log.Println(err)
+		slog.Error(fmt.Errorf("failed to start card reader: %w", err).Error())
 		return rendering(w, r, badges.BadgeReturnUID("", "noreader"))
 	}
 
@@ -282,8 +308,7 @@ func (m *Repository) HandleBadgeRead(w http.ResponseWriter, r *http.Request) err
 		if err.Error() == "Deadline Exceeded" {
 			return rendering(w, r, badges.BadgeReturnUID("", "deadline"))
 		} else {
-			log.Println("error handling for other errors", err)
-			return err
+			return fmt.Errorf("failed to handle card reader: %w", err)
 		}
 	}
 
