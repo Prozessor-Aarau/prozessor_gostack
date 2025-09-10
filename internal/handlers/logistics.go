@@ -1,9 +1,8 @@
 package handlers
 
 import (
-	"errors"
 	"fmt"
-	"log"
+	"log/slog"
 	"math"
 	"net/http"
 	"strconv"
@@ -12,6 +11,7 @@ import (
 	"github.com/faebut/prozessor_gostack/internal/billing"
 	"github.com/faebut/prozessor_gostack/internal/forms"
 	"github.com/faebut/prozessor_gostack/internal/labels"
+	"github.com/faebut/prozessor_gostack/internal/logger"
 	"github.com/faebut/prozessor_gostack/internal/mailtemplates"
 	"github.com/faebut/prozessor_gostack/internal/models"
 	"github.com/faebut/prozessor_gostack/view/layout"
@@ -25,7 +25,9 @@ func (m *Repository) HandleLogisticsIndex(w http.ResponseWriter, r *http.Request
 	// get visitor
 	visitor, ok := m.App.Session.Get(r.Context(), "visitor").(models.Visitor)
 	if !ok {
-		log.Println("could not get visitor from Session")
+		slog.Error("could not get visitor from session", "path", r.URL.Path)
+		m.App.Session.Put(r.Context(), "error", "Can't get visitor from session")
+
 		return hxRedirect(w, r, "/admin/logout")
 	}
 
@@ -33,7 +35,7 @@ func (m *Repository) HandleLogisticsIndex(w http.ResponseWriter, r *http.Request
 	categories, err := m.DB.AllLogisticCategories()
 
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get categories: %w", err)
 	}
 
 	return rendering(w, r, logistics.Logistics(visitor, categories))
@@ -64,8 +66,7 @@ func (m *Repository) HandleLogisticsList(w http.ResponseWriter, r *http.Request)
 
 	logisticsList, count, err := m.DB.AllLogistics(page, filter)
 	if err != nil {
-		log.Println("could not get logistics from DB: ", err)
-		return err
+		return fmt.Errorf("failed to get logistics: %w", err)
 	}
 
 	// make url search string
@@ -102,8 +103,7 @@ func (m *Repository) HandleLogisticsListFilter(w http.ResponseWriter, r *http.Re
 
 	logisticsList, count, err := m.DB.AllLogistics(page, filter)
 	if err != nil {
-		log.Println("could not get logistics from DB: ", err)
-		return err
+		return fmt.Errorf("failed to get logistics: %w", err)
 	}
 
 	// make url search string
@@ -134,14 +134,12 @@ func (m *Repository) HandleLogisticsEditIndex(w http.ResponseWriter, r *http.Req
 
 	lID, err := strconv.Atoi(chi.URLParam(r, "id"))
 	if err != nil {
-		log.Println("Error converting badge id to int", err)
-		return err
+		return fmt.Errorf("failed to convert string to int: %w", err)
 	}
 
 	l, err := m.DB.LogisticsByID(lID)
 	if err != nil {
-		log.Println("Error getting logistic from database:", err)
-		return err
+		return fmt.Errorf("failed to get logistics: %w", err)
 	}
 
 	return rendering(w, r, logistics.LogisticsForm(
@@ -157,7 +155,7 @@ func (m *Repository) HandleLogisticsCreateIndex(w http.ResponseWriter, r *http.R
 	categories, err := m.DB.AllLogisticCategories()
 
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get categories: %w", err)
 	}
 	// return an empty form
 	return rendering(w, r, logistics.LogisticsForm(models.Logistic{}, categories, logistics.FormErrors{}, false))
@@ -175,7 +173,7 @@ func (m *Repository) HandleLogisticsCreateAndEdit(w http.ResponseWriter, r *http
 	// TODO check if enddate is after startdate
 
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get categories: %w", err)
 	}
 	// create empty logistic
 	var newLogistic models.Logistic
@@ -190,7 +188,7 @@ func (m *Repository) HandleLogisticsCreateAndEdit(w http.ResponseWriter, r *http
 	if freePlace {
 		catID, err := strconv.Atoi(r.Form.Get("free_cat"))
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to convert string to int: %w", err)
 		}
 		newLogistic.Category.ID = catID
 		// get category and set number
@@ -211,12 +209,12 @@ func (m *Repository) HandleLogisticsCreateAndEdit(w http.ResponseWriter, r *http
 		// parse dates
 		start, err := time.Parse("2006-01-02", r.Form.Get("startdate"))
 		if err != nil {
-			log.Println("cannot parse date", err)
+			return fmt.Errorf("failed to parse date: %w", err)
 		}
 		newLogistic.StartDate = start
 		end, err := time.Parse("2006-01-02", r.Form.Get("enddate"))
 		if err != nil {
-			log.Println("cannot parse date", err)
+			return fmt.Errorf("failed to parse date: %w", err)
 		}
 		newLogistic.EndDate = end
 
@@ -235,7 +233,7 @@ func (m *Repository) HandleLogisticsCreateAndEdit(w http.ResponseWriter, r *http
 		// get membership
 		member, err := strconv.ParseBool(r.Form.Get("membership"))
 		if err != nil {
-			log.Println("cannot parse bool", err)
+			return fmt.Errorf("failed to parse bool: %w", err)
 		}
 		newLogistic.Member = member
 
@@ -246,7 +244,7 @@ func (m *Repository) HandleLogisticsCreateAndEdit(w http.ResponseWriter, r *http
 		form.Required("number")
 		number, err := strconv.Atoi(r.Form.Get("number"))
 		if err != nil {
-			log.Println("can not parse number", err)
+			return fmt.Errorf("failed to parse number: %w", err)
 		}
 		newLogistic.Number = number
 
@@ -255,7 +253,7 @@ func (m *Repository) HandleLogisticsCreateAndEdit(w http.ResponseWriter, r *http
 		}
 		catID, err := strconv.Atoi(r.Form.Get("fix_cat"))
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to convert string to int: %w", err)
 		}
 		newLogistic.Category.ID = catID
 
@@ -284,7 +282,7 @@ func (m *Repository) HandleLogisticsCreateAndEdit(w http.ResponseWriter, r *http
 			// get membership
 			member, err := strconv.ParseBool(r.Form.Get("membership"))
 			if err != nil {
-				log.Println("cannot parse membership", err)
+				return fmt.Errorf("failed to parse membership: %w", err)
 			}
 			newLogistic.Member = member
 
@@ -310,6 +308,9 @@ func (m *Repository) HandleLogisticsCreateAndEdit(w http.ResponseWriter, r *http
 		}
 	}
 
+	// define action
+	var action string
+
 	id := r.Form.Get("id")
 	newLogistic.ID, _ = strconv.Atoi(id)
 	if newLogistic.ID > 0 {
@@ -332,14 +333,24 @@ func (m *Repository) HandleLogisticsCreateAndEdit(w http.ResponseWriter, r *http
 		// update existing Logistic
 		err = m.DB.UpdateLogistic(newLogistic)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to update logistic: %w", err)
 		}
+		action = "updated"
 	} else {
 		// create a new logistic place
 		err = m.DB.CreateLogistic(newLogistic)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to create logistic: %w", err)
 		}
+		action = "created"
+	}
+
+	// log success
+	visitor, err := m.DB.VisitorByID(newLogistic.Visitor.ID)
+	if err == nil {
+
+		logger.Success(r, m.App.Session,
+			fmt.Sprintf("logistic for visitor %s %s successfully %s", visitor.FirstName, visitor.FamilyName, action))
 	}
 
 	// redirect on success
@@ -365,30 +376,32 @@ func calcPrice(start time.Time, end time.Time, unit float64) float64 {
 func (m *Repository) HandleLogisticsDelete(w http.ResponseWriter, r *http.Request) error {
 	id, err := strconv.Atoi(chi.URLParam(r, "id"))
 	if err != nil {
-		log.Println("Error converting string to int:", err)
-		return err
+		return fmt.Errorf("failed to convert string to int: %w", err)
 	}
 
 	l, err := m.DB.LogisticsByID(id)
 	if err != nil {
-		log.Println("could not get logistic from DB: ", err)
-		return err
+		return fmt.Errorf("failed to get logistic: %w", err)
 	}
 
 	// check if there is a label that has to be deleted
 	if len(l.Label) > 0 {
 		err := labels.DeleteLabel(l)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to delete label: %w", err)
 		}
 	}
 
 	// delete the logistic place
 	err = m.DB.DeleteLogistic(id)
 	if err != nil {
-		log.Println("Error deleting logistics:", err)
-		return err
+		return fmt.Errorf("failed to delete logistic: %w", err)
 	}
+
+	// log success
+	logger.Success(r, m.App.Session,
+		fmt.Sprintf("logistics with id %d belonging to %s %s successfully deleted", id, l.Visitor.FirstName, l.Visitor.FamilyName))
+
 	// redirect on success
 	return hxRedirect(w, r, "/admin/logistics")
 }
@@ -400,24 +413,25 @@ func (m *Repository) HandleLogisticsLabelCreate(w http.ResponseWriter, r *http.R
 
 	l, err := m.DB.LogisticsByID(id)
 	if err != nil {
-		log.Println("could not get logistic from DB: ", err)
-		return err
+		return fmt.Errorf("failed to get logistic: %w", err)
 	}
 
 	// generate file
 	filename, err := labels.GenerateLabel(l)
 	if err != nil {
-		log.Println("error creating label", err)
-		return err
+		return fmt.Errorf("failed to generate label: %w", err)
 	}
 
 	// write changes to database
 	l.Label = filename
 	err = m.DB.SetLogisticLabel(l)
 	if err != nil {
-		log.Println("could not write Label to DB: ", err)
-		return nil
+		return fmt.Errorf("failed to write label to DB: %w", err)
 	}
+
+	// log success
+	logger.Success(r, m.App.Session,
+		fmt.Sprintf("label for logistic with id %d successfully created", id))
 
 	// if everything okay, go back to machines
 	return rendering(w, r, logistics.Label(l))
@@ -429,25 +443,26 @@ func (m *Repository) HandleLogisticsLabelDelete(w http.ResponseWriter, r *http.R
 	id, _ := strconv.Atoi(chi.URLParam(r, "id"))
 	l, err := m.DB.LogisticsByID(id)
 	if err != nil {
-		log.Println("could not get logistic from DB: ", err)
-		return err
+		return fmt.Errorf("failed to get logistic: %w", err)
 	}
 
 	err = labels.DeleteLabel(l)
 
 	if err != nil {
-		log.Println("could not Delete label: ", err)
-		return err
+		return fmt.Errorf("failed to delete label: %w", err)
 	}
 
 	// write changes to database
 	err = m.DB.DeleteLogisticLabel(l)
 	if err != nil {
-		log.Println("could not delete Label from DB: ", err)
-		return err
+		return fmt.Errorf("failed to delete label from DB: %w", err)
 	}
 
 	l.Label = ""
+
+	// log success
+	logger.Success(r, m.App.Session,
+		fmt.Sprintf("label for logistic with id %d successfully deleted", id))
 
 	// if everything okay, go back to machines
 	return rendering(w, r, logistics.Label(l))
@@ -459,14 +474,13 @@ func (m *Repository) HandleLogisticsLabelPrint(w http.ResponseWriter, r *http.Re
 	id, _ := strconv.Atoi(chi.URLParam(r, "id"))
 	l, err := m.DB.LogisticsByID(id)
 	if err != nil {
-		log.Println("could not get logistic from DB: ", err)
-		return err
+		return fmt.Errorf("failed to get logistic: %w", err)
 	}
 
 	// print the QR-Code
 	err = labels.PrintLabel(l)
 	if err != nil {
-		log.Println(err)
+		slog.Error(fmt.Errorf("could not print label: %w", err).Error())
 		return rendering(w, r, logistics.ErrorButton("Druckerfehler!"))
 	}
 
@@ -486,7 +500,7 @@ func (m *Repository) HandleLogisticsBillList(w http.ResponseWriter, r *http.Requ
 	// get logistics by visitor id
 	logList, err := m.DB.LogisticsByVisitorID(vID)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get logistics: %w", err)
 	}
 
 	// return an empty form
@@ -500,19 +514,19 @@ func (m *Repository) HandleLogisticsCreateBillPost(w http.ResponseWriter, r *htt
 	vID := r.Form.Get("vid")
 
 	if len(vID) < 1 {
-		return errors.New("no visitor ID given")
+		return fmt.Errorf("no visitor ID given")
 	}
 
 	// get visitor
 	visitor, err := m.DB.VisitorByID(vID)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get visitor: %w", err)
 	}
 
 	// get logistics by visitor id
 	logList, err := m.DB.LogisticsByVisitorID(vID)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get logistic: %w", err)
 	}
 
 	// check for all ids if the checkbox is checked and add visitor to new slice
@@ -583,7 +597,7 @@ func (m *Repository) HandleLogisticsCreateBillPost(w http.ResponseWriter, r *htt
 	err = m.DB.UpdateLogisticsBillID(billID, logSlice)
 
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to update logistics bill id: %w", err)
 	}
 
 	// if mail has to be send create mail and send it
@@ -591,7 +605,7 @@ func (m *Repository) HandleLogisticsCreateBillPost(w http.ResponseWriter, r *htt
 		// get email template
 		template, err := mailtemplates.LogisticsBill(visitor, selectedLogistics)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to get email template: %w", err)
 		}
 
 		// create mail
@@ -608,11 +622,18 @@ func (m *Repository) HandleLogisticsCreateBillPost(w http.ResponseWriter, r *htt
 
 	// message string for success
 	var messageString string
+	var action string
 	if sending {
 		messageString = "Rechnung erfolgreich versendet."
+		action = "sent"
 	} else {
 		messageString = "Rechnung erfolgreich gespeichert."
+		action = "saved"
 	}
+
+	// log success
+	logger.Success(r, m.App.Session,
+		fmt.Sprintf("bill for %s %s successfully %s", visitor.FirstName, visitor.FamilyName, action))
 
 	return rendering(w, r, layout.Success(messageString))
 }
