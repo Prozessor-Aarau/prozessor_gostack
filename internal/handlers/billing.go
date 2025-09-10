@@ -2,7 +2,7 @@ package handlers
 
 import (
 	"fmt"
-	"log"
+	"log/slog"
 	"math"
 	"net/http"
 	"strconv"
@@ -11,6 +11,7 @@ import (
 
 	"github.com/faebut/prozessor_gostack/internal/billing"
 	"github.com/faebut/prozessor_gostack/internal/forms"
+	"github.com/faebut/prozessor_gostack/internal/logger"
 	"github.com/faebut/prozessor_gostack/internal/models"
 	"github.com/faebut/prozessor_gostack/view/bills"
 	"github.com/go-chi/chi/v5"
@@ -22,13 +23,15 @@ func (m *Repository) HandleBillingIndex(w http.ResponseWriter, r *http.Request) 
 	// get visitor
 	visitor, ok := m.App.Session.Get(r.Context(), "visitor").(models.Visitor)
 	if !ok {
-		log.Println("could not get visitor from Session")
+		slog.Error("could not get visitor from session", "path", r.URL.Path)
+		m.App.Session.Put(r.Context(), "error", "Can't get visitor from session")
+
 		return hxRedirect(w, r, "/admin/logout")
 	}
 
 	categories, err := m.DB.GetBillCategories()
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get categories: %w", err)
 	}
 
 	return rendering(w, r, bills.Bills(visitor, categories))
@@ -56,8 +59,7 @@ func (m *Repository) HandleBillingList(w http.ResponseWriter, r *http.Request) e
 
 	billsList, count, err := m.DB.GetAllBills(page, filter)
 	if err != nil {
-		log.Println("could not get bills from DB: ", err)
-		return err
+		return fmt.Errorf("failed to get bills: %w", err)
 	}
 
 	// make url search string
@@ -92,8 +94,7 @@ func (m *Repository) HandleBillingListFilter(w http.ResponseWriter, r *http.Requ
 
 	billsList, count, err := m.DB.GetAllBills(page, filter)
 	if err != nil {
-		log.Println("could not get bills from DB: ", err)
-		return err
+		return fmt.Errorf("failed to get bills: %w", err)
 	}
 
 	// make url search string
@@ -116,30 +117,30 @@ func (m *Repository) HandleBillingListFilter(w http.ResponseWriter, r *http.Requ
 func (m *Repository) HandleBillingDelete(w http.ResponseWriter, r *http.Request) error {
 	id, err := strconv.Atoi(chi.URLParam(r, "id"))
 	if err != nil {
-		log.Println("Error converting string to int:", err)
-		return err
+		return fmt.Errorf("failed to convert string to int: %w", err)
 	}
 
 	bill, err := m.DB.GetBillByID(id)
 	if err != nil {
-		log.Println("could not get bill from DB: ", err)
-		return err
+		return fmt.Errorf("failed to get bill: %w", err)
 	}
 
 	// check if there is an invoice that has to be deleted
 	if len(bill.FileName) > 0 {
 		err := billing.DeleteBill(bill)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to to delete invoice from filesystem: %w", err)
 		}
 	}
 
 	// delete the delete
 	err = m.DB.DeleteBill(id)
 	if err != nil {
-		log.Println("Error deleting bill:", err)
-		return err
+		return fmt.Errorf("failed to to delete bill: %w", err)
 	}
+
+	logger.Success(r, m.App.Session,
+		fmt.Sprintf("bill with id %d successfully deleted", id))
 
 	// return empty string
 	fmt.Fprint(w, "")
@@ -152,23 +153,31 @@ func (m *Repository) HandleBillingPayment(w http.ResponseWriter, r *http.Request
 
 	billID, err := strconv.Atoi(billStringID)
 	if err != nil {
-		log.Println("could not convert id to int:", err)
-		return err
+		return fmt.Errorf("failed to convert string to int: %w", err)
 	}
 
 	bill, err := m.DB.GetBillByID(billID)
 	if err != nil {
-		log.Println("could not get bill from db:", err)
-		return err
+		return fmt.Errorf("failed to get bill: %w", err)
 	}
 
 	bill.Paid = !bill.Paid
 
 	err = m.DB.SetBillPayment(bill)
 	if err != nil {
-		log.Println("could not set payment:", err)
-		return err
+		return fmt.Errorf("failed to set payment: %w", err)
 	}
+
+	// log success
+	var status string
+	if bill.Paid {
+		status = "paid"
+	} else {
+		status = "unpaid"
+	}
+
+	logger.Success(r, m.App.Session,
+		fmt.Sprintf("payment status of bill with id %d successfully set to %s", bill.ID, status))
 
 	return rendering(w, r, bills.PayButton(bill))
 }
@@ -178,7 +187,7 @@ func (m *Repository) HandleBillCreateIndex(w http.ResponseWriter, r *http.Reques
 	// get categories
 	categories, err := m.DB.GetBillCategories()
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get categories: %w", err)
 	}
 	// return an empty form
 	return rendering(w, r, bills.CustomBillForm(models.BillData{}, bills.FormErrors{}, categories))
@@ -203,7 +212,7 @@ func (m *Repository) HandleBillCreateEditPost(w http.ResponseWriter, r *http.Req
 	// get categories
 	categories, err := m.DB.GetBillCategories()
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get categories: %w", err)
 	}
 
 	// create bill item
@@ -214,8 +223,7 @@ func (m *Repository) HandleBillCreateEditPost(w http.ResponseWriter, r *http.Req
 	if exploded[3] == "edit" {
 		id, err := strconv.Atoi(chi.URLParam(r, "id"))
 		if err != nil {
-			log.Println("Error converting string to int:", err)
-			return err
+			return fmt.Errorf("failed to convert string to int: %w", err)
 		}
 		bill.ID = id
 		edit = true
@@ -383,7 +391,7 @@ func (m *Repository) HandleBillCreateEditPost(w http.ResponseWriter, r *http.Req
 		// get all of visitor
 		visitor, err := m.DB.VisitorByID(bill.Visitor.ID)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to get visitor: %w", err)
 		}
 		bill.Visitor = visitor
 	}
@@ -401,10 +409,14 @@ func (m *Repository) HandleBillCreateEditPost(w http.ResponseWriter, r *http.Req
 	bill.Custom = true
 
 	// create bill
-	_, _, err = billing.CreateBill(bill, m.DB)
+	_, bill.ID, err = billing.CreateBill(bill, m.DB)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to create bill: %w", err)
 	}
+
+	// log success
+	logger.Success(r, m.App.Session,
+		fmt.Sprintf("bill with id %d for visitor %s %s successfully created/updated", bill.ID, bill.Visitor.FirstName, bill.Visitor.FamilyName))
 
 	return hxRedirect(w, r, "/admin/billing")
 }
@@ -413,20 +425,18 @@ func (m *Repository) HandleBillCreateEditPost(w http.ResponseWriter, r *http.Req
 func (m *Repository) HandleBillEditIndex(w http.ResponseWriter, r *http.Request) error {
 	bID, err := strconv.Atoi(chi.URLParam(r, "id"))
 	if err != nil {
-		log.Println("Error converting bill id to int", err)
-		return err
+		return fmt.Errorf("failed to convert string to int: %w", err)
 	}
 
 	bill, err := m.DB.GetBillByID(bID)
 	if err != nil {
-		log.Println("Error getting bill from database:", err)
-		return err
+		return fmt.Errorf("failed to get bill: %w", err)
 	}
 
 	// get categories
 	categories, err := m.DB.GetBillCategories()
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get categories: %w", err)
 	}
 	// return an empty form
 	return rendering(
