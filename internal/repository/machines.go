@@ -171,6 +171,7 @@ func (m *postgresDBRepo) AllMachines(filter models.MachineFilter) ([]models.Mach
 
 	var count int
 
+	// TODO: change filter so it ignores upper or lowercase
 	search := "%" + filter.MachineName + "%"
 	ressort := ""
 
