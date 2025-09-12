@@ -113,14 +113,14 @@ stringMax := filter.MaxDate.Format("2006-01-02")
         evt.detail.parameters.mode = mode;
       }
     });
-  })()
-  // Listen for changes and dispatch event
-  const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-  mediaQuery.addEventListener('change', function () {
-    document.dispatchEvent(new CustomEvent('refreshCharts'));
-    console.log("mode changed");
-  });
 
+    // Listen for changes and dispatch event
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    mediaQuery.addEventListener('change', function () {
+      document.dispatchEvent(new CustomEvent('refreshCharts'));
+    });
+
+  })()
 </script>
 }
 
