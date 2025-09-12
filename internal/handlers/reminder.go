@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"log"
+	"log/slog"
 	"net/http"
 	"time"
 
@@ -22,7 +22,9 @@ import (
 func (m *Repository) HandleReminderIndex(w http.ResponseWriter, r *http.Request) error {
 	visitor, ok := m.App.Session.Get(r.Context(), "visitor").(models.Visitor)
 	if !ok {
-		log.Println("could not get visitor from Session")
+		slog.Error("could not get visitor from session", "path", r.URL.Path)
+		m.App.Session.Put(r.Context(), "error", "Can't get visitor from session")
+
 		return hxRedirect(w, r, "/admin/logout")
 	}
 
@@ -33,8 +35,7 @@ func (m *Repository) HandleReminderIndex(w http.ResponseWriter, r *http.Request)
 func (m *Repository) HandleReminderList(w http.ResponseWriter, r *http.Request) error {
 	visitors, count, err := m.DB.AllToRemindVisitors()
 	if err != nil {
-		log.Println("could not get reminder visitors from DB: ", err)
-		return err
+		return fmt.Errorf("failed to get visitors: %w", err)
 	}
 
 	return rendering(w, r, reminder.ReminderList(visitors, count, m.App.Reminder.Active))
@@ -44,8 +45,7 @@ func (m *Repository) HandleReminderList(w http.ResponseWriter, r *http.Request) 
 func (m *Repository) HandleReminderListPost(w http.ResponseWriter, r *http.Request) error {
 	visitors, _, err := m.DB.AllToRemindVisitors()
 	if err != nil {
-		log.Println("could not get reminder visitors from DB: ", err)
-		return err
+		return fmt.Errorf("failed to get to remind visitors: %w", err)
 	}
 
 	// check for all ids if the checkbox is checked and add visitor to new slice
@@ -65,7 +65,7 @@ func (m *Repository) HandleReminderListPost(w http.ResponseWriter, r *http.Reque
 func (m *Repository) HandleReminderSend(w http.ResponseWriter, r *http.Request) error {
 	visitors, _, err := m.DB.AllToRemindVisitors()
 	if err != nil {
-		log.Println("could not get reminder visitors from DB: ", err)
+		return fmt.Errorf("failed to get to remind visitors: %w", err)
 	}
 
 	// check for all ids if the checkbox is checked and add visitor to new slice
@@ -90,16 +90,23 @@ func (m *Repository) sendReminder(visitors []models.ReminderVisitor) {
 	count := len(visitors)
 
 	// Open new Channel to send data to the template.
-	log.Println("open new channel")
+	slog.Info("open new channel for reminders")
 	m.App.Reminder.WaitList = make(chan models.MailData, count)
 	m.App.Reminder.Active = true
+
+	// clean up after being done
+	defer func() {
+		slog.Info("closing channel for reminders")
+		m.App.Reminder.Active = false
+		close(m.App.Reminder.WaitList)
+	}()
 
 	for i, v := range visitors {
 
 		// create template
 		template, err := mailtemplates.Reminder(v)
 		if err != nil {
-			log.Println("error creating template:", err)
+			slog.Error(fmt.Errorf("failed to create template: %w", err).Error())
 			return
 		}
 
@@ -143,7 +150,7 @@ func (m *Repository) sendReminder(visitors []models.ReminderVisitor) {
 		)
 
 		if err != nil {
-			log.Println("error creating bill:", err)
+			slog.Error(fmt.Errorf("failed to create bill: %w", err).Error())
 			return
 		}
 
@@ -159,7 +166,7 @@ func (m *Repository) sendReminder(visitors []models.ReminderVisitor) {
 		if v.AboID > 0 {
 			err := m.DB.SetReminderDate(v)
 			if err != nil {
-				log.Println("error setting reminder date:", err)
+				slog.Error(fmt.Errorf("failed to set reminder date: %w", err).Error())
 				return
 			}
 		}
@@ -179,9 +186,6 @@ func (m *Repository) sendReminder(visitors []models.ReminderVisitor) {
 		time.Sleep(time.Millisecond * 500)
 	}
 
-	log.Println("closing channel")
-	m.App.Reminder.Active = false
-	close(m.App.Reminder.WaitList)
 }
 
 // HandleReminderProgressBar handles the SSE channel to send an updated progress bar for the sending of reminders
@@ -204,7 +208,7 @@ func (m *Repository) HandleReminderProgressBar(w http.ResponseWriter, r *http.Re
 		default:
 			template, err := templ.ToGoHTML(ctx, reminder.ReminderProgressBar(data))
 			if err != nil {
-				log.Println(err)
+				slog.Error(fmt.Errorf("failed to render template: %w", err).Error())
 			}
 
 			fmt.Fprintf(w, "data: %s\n\n", template)
@@ -223,8 +227,7 @@ func (m *Repository) HandleReminderPreview(w http.ResponseWriter, r *http.Reques
 
 	visitor, err := m.DB.VisitorByID(id)
 	if err != nil {
-		log.Println("could not get visitor from DB: ", err)
-		return err
+		return fmt.Errorf("failed to get visitor: %w", err)
 	}
 
 	var buydate time.Time
@@ -233,8 +236,7 @@ func (m *Repository) HandleReminderPreview(w http.ResponseWriter, r *http.Reques
 	if len(visitor.AboLast.BuyDate) > 0 {
 		buydate, err = time.Parse("2006-01-02", visitor.AboLast.BuyDate)
 		if err != nil {
-			log.Println("cannot parse buydate", err)
-			return err
+			return fmt.Errorf("failed to parse date: %w", err)
 		}
 		enddate = buydate.AddDate(1, 0, 0)
 	}
@@ -250,8 +252,7 @@ func (m *Repository) HandleReminderPreview(w http.ResponseWriter, r *http.Reques
 
 	node, err = html.Parse(bytes.NewBufferString("<body>"))
 	if err != nil {
-		log.Println("making bytes of template:", err)
-		return err
+		return fmt.Errorf("failed to make bytes of template: %w", err)
 	}
 
 	// create template
@@ -259,8 +260,7 @@ func (m *Repository) HandleReminderPreview(w http.ResponseWriter, r *http.Reques
 
 	b = *bytes.NewBuffer([]byte(template))
 	if err != nil {
-		log.Println("error creating buffer from template:", err)
-		return err
+		return fmt.Errorf("failed to create buffer from template: %w", err)
 	}
 
 	html.Render(&b, node)
