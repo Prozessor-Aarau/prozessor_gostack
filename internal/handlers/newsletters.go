@@ -594,6 +594,13 @@ func (m *Repository) sendNewsletters(id int) {
 	m.App.Newsletter.WaitList = make(chan models.MailData, len(recipients))
 	m.App.Newsletter.Active = true
 
+	// clean up after being done
+	defer func() {
+		slog.Info(fmt.Sprintf("close channel for newsletter: %s", nl.Title))
+		m.App.Newsletter.Active = false
+		close(m.App.Newsletter.WaitList)
+	}()
+
 	// create template
 	template, err := mailtemplates.Newsletter(nl)
 	if err != nil {
@@ -635,10 +642,6 @@ func (m *Repository) sendNewsletters(id int) {
 		}
 		time.Sleep(time.Millisecond * 500)
 	}
-
-	slog.Info(fmt.Sprintf("close channel for newsletter: %s", nl.Title))
-	m.App.Newsletter.Active = false
-	close(m.App.Newsletter.WaitList)
 }
 
 // HandleNewsletterProgressBar handles the SSE channel to send an updated progress bar for the sending of newsletters
