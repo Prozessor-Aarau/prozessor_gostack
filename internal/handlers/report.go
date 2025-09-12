@@ -1,11 +1,12 @@
 package handlers
 
 import (
-	"log"
+	"fmt"
 	"net/http"
 	"strconv"
 
 	"github.com/faebut/prozessor_gostack/internal/forms"
+	"github.com/faebut/prozessor_gostack/internal/logger"
 	"github.com/faebut/prozessor_gostack/internal/models"
 	"github.com/faebut/prozessor_gostack/view/report"
 )
@@ -17,7 +18,7 @@ func (m *Repository) HandleReportIndex(w http.ResponseWriter, r *http.Request) e
 	// get machine to pass it to the template
 	machine, err := m.DB.MachineByID(id)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get machine: %w", err)
 	}
 
 	// render the template
@@ -28,7 +29,7 @@ func (m *Repository) HandleReportIndex(w http.ResponseWriter, r *http.Request) e
 func (m *Repository) HandleReportCreate(w http.ResponseWriter, r *http.Request) error {
 	err := r.ParseForm()
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to parse form: %w", err)
 	}
 
 	var reportForm models.Report
@@ -43,7 +44,7 @@ func (m *Repository) HandleReportCreate(w http.ResponseWriter, r *http.Request) 
 	// get machine to pass it to the template
 	machine, err := m.DB.MachineByID(reportForm.MachineID)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get machine: %w", err)
 	}
 
 	// assign machine to reportForm
@@ -68,18 +69,18 @@ func (m *Repository) HandleReportCreate(w http.ResponseWriter, r *http.Request) 
 	// post report to database
 	reportID, err := m.DB.CreateReport(reportForm)
 	if err != nil {
-		log.Println(err)
-		return nil
+		return fmt.Errorf("failed to create report: %w", err)
 	}
-	log.Println("new report with id: ", reportID)
-	log.Println(reportForm)
 
 	// post report to slack
 	err = m.App.Slack.SendSlackMessage(reportForm)
 	if err != nil {
-		log.Println(err)
-		return nil
+		return fmt.Errorf("failed to send report to slack: %w", err)
 	}
+
+	// log success
+	logger.Success(r, m.App.Session,
+		fmt.Sprintf("new report with id %d for machine %s successfully created", reportID, machine.MachineName))
 
 	fatalstring := strconv.FormatBool(reportForm.Fatal)
 	return hxRedirect(w, r, "/reportsuccess?fatal="+fatalstring)
