@@ -13,11 +13,11 @@ import (
 
 // parseDateUrl parses the request url for the min and max date
 func parseDateUrl(r *http.Request) (minDate time.Time, maxDate time.Time, err error) {
-	minString := r.Form.Get("min_date")
-	maxString := r.Form.Get("max_date")
+	startString := r.URL.Query().Get("min")
+	endString := r.URL.Query().Get("max")
 
-	minDate, err = time.Parse("2006-01-02", minString)
-	maxDate, err = time.Parse("2006-01-02", maxString)
+	minDate, err = time.Parse("2006-01-02", startString)
+	maxDate, err = time.Parse("2006-01-02", endString)
 
 	if err != nil {
 		return minDate, maxDate, fmt.Errorf("failed to parse date: %w", err)
@@ -55,10 +55,14 @@ func (m *Repository) HandleStatisticsIndex(w http.ResponseWriter, r *http.Reques
 
 // HandleStatisticsFilter handles the statistics filtering
 func (m *Repository) HandleStatisticsFilter(w http.ResponseWriter, r *http.Request) error {
-	// get date constraints
-	minDate, maxDate, err := parseDateUrl(r)
+	// get date constraints from the form
+	minString := r.Form.Get("min_date")
+	maxString := r.Form.Get("max_date")
+
+	minDate, err := time.Parse("2006-01-02", minString)
+	maxDate, err := time.Parse("2006-01-02", maxString)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to parse date: %w", err)
 	}
 
 	filter := statistics.Filter{
