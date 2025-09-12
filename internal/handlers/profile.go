@@ -1,8 +1,9 @@
 package handlers
 
 import (
+	"fmt"
 	"io"
-	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -11,6 +12,7 @@ import (
 	"time"
 
 	"github.com/faebut/prozessor_gostack/internal/forms"
+	"github.com/faebut/prozessor_gostack/internal/logger"
 	"github.com/faebut/prozessor_gostack/internal/models"
 	"github.com/faebut/prozessor_gostack/view/profile"
 	"github.com/go-chi/chi/v5"
@@ -22,8 +24,9 @@ import (
 func (m *Repository) HandleProfileIndex(w http.ResponseWriter, r *http.Request) error {
 	visitor, ok := m.App.Session.Get(r.Context(), "visitor").(models.Visitor)
 	if !ok {
-		log.Println("could not get user from Session")
-		m.App.Session.Put(r.Context(), "error", "Can't get user from session")
+		slog.Error("could not get visitor from session", "path", r.URL.Path)
+		m.App.Session.Put(r.Context(), "error", "Can't get visitor from session")
+
 		return hxRedirect(w, r, "/admin/logout")
 	}
 
@@ -46,21 +49,19 @@ func (m *Repository) HandleProfileIndex(w http.ResponseWriter, r *http.Request) 
 	// get visitor to edit from DB
 	profileToEdit, err := m.DB.VisitorByID(profID)
 	if err != nil {
-		log.Println("could not get visitor from DB: ", err)
-		m.App.Session.Put(r.Context(), "error", "Can't get visitors from database")
+		return fmt.Errorf("failed to get visitor: %w", err)
 	}
 
 	// get ressorts from DB
 	ressorts, err := m.DB.AllRessorts()
 	if err != nil {
-		log.Println("could not get ressorts from DB: ", err)
-		m.App.Session.Put(r.Context(), "error", "Can't get ressorts from database")
+		return fmt.Errorf("failed to get ressorts: %w", err)
 	}
 
 	// get roles from DB
 	roles, err := m.DB.AllRoles()
 	if err != nil {
-		log.Println("could not get roles from DB: ", err)
+		return fmt.Errorf("failed to get roles: %w", err)
 	}
 
 	// get route from request url
@@ -81,8 +82,9 @@ func (m *Repository) HandleProfileIndex(w http.ResponseWriter, r *http.Request) 
 func (m *Repository) HandleProfileEdit(w http.ResponseWriter, r *http.Request) error {
 	visitor, ok := m.App.Session.Get(r.Context(), "visitor").(models.Visitor)
 	if !ok {
-		log.Println("could not get user from Session")
-		m.App.Session.Put(r.Context(), "error", "Can't get user from session")
+		slog.Error("could not get visitor from session", "path", r.URL.Path)
+		m.App.Session.Put(r.Context(), "error", "Can't get visitor from session")
+
 		return hxRedirect(w, r, "/admin/logout")
 	}
 
@@ -100,14 +102,13 @@ func (m *Repository) HandleProfileEdit(w http.ResponseWriter, r *http.Request) e
 	// get visitor to edit from DB
 	profileToEdit, err := m.DB.VisitorByID(profID)
 	if err != nil {
-		log.Println("could not get visitor from DB: ", err)
+		return fmt.Errorf("failed to get visitor: %w", err)
 	}
 
 	// parse form and check for size of picture
 	err = r.ParseMultipartForm(2 << 20)
 	if err != nil {
-		log.Println("Error parsing multipart form: ", err)
-		return nil
+		return fmt.Errorf("failed to parse multipart form: %w", err)
 	}
 
 	// parse birthdate to work with formfield and convert to string in visitor struct
@@ -115,22 +116,20 @@ func (m *Repository) HandleProfileEdit(w http.ResponseWriter, r *http.Request) e
 	if len(bdate) > 0 {
 		profileToEdit.Birthdate, err = time.Parse("2006-01-02", bdate)
 		if err != nil {
-			log.Println("error parsing birthdate")
-			return nil
+			return fmt.Errorf("failed to parse birthdate: %w", err)
 		}
 	}
 
 	// get ressorts from DB
 	ressorts, err := m.DB.AllRessorts()
 	if err != nil {
-		log.Println("could not get ressorts from DB: ", err)
-		m.App.Session.Put(r.Context(), "error", "Can't get ressorts from database")
+		return fmt.Errorf("failed to get ressorts: %w", err)
 	}
 
 	// get roles from DB
 	roles, err := m.DB.AllRoles()
 	if err != nil {
-		log.Println("could not get roles from DB: ", err)
+		return fmt.Errorf("failed to get roles: %w", err)
 	}
 
 	// get default fields
@@ -149,13 +148,13 @@ func (m *Repository) HandleProfileEdit(w http.ResponseWriter, r *http.Request) e
 
 	ressort, err := strconv.Atoi(r.Form.Get("ressort"))
 	if err != nil {
-		log.Println("error converting string to int", err)
+		return fmt.Errorf("failed to convert string to int: %w", err)
 	}
 	profileToEdit.Ressort.ID = ressort
 
 	roleID, err := strconv.Atoi(r.Form.Get("role"))
 	if err != nil {
-		log.Println("Could not convert roleID to int")
+		return fmt.Errorf("failed to convert string to int: %w", err)
 	}
 	profileToEdit.RoleID = roleID
 
@@ -187,7 +186,7 @@ func (m *Repository) HandleProfileEdit(w http.ResponseWriter, r *http.Request) e
 	file, handler, err := r.FormFile("avatar")
 	if err != nil {
 		if err != http.ErrMissingFile {
-			log.Println("Error retrieving file")
+			slog.Error(fmt.Errorf("failed to retrieve file: %w", err).Error())
 			formErrors.AppError = "Error retrieving file"
 			return rendering(w, r, profile.ProfileForm(
 				visitor,
@@ -205,7 +204,7 @@ func (m *Repository) HandleProfileEdit(w http.ResponseWriter, r *http.Request) e
 		// Generate a unique filename to prevent overwriting and conflicts
 		uuid, err := uuid.NewRandom()
 		if err != nil {
-			log.Println("Error generating uuid")
+			slog.Error(fmt.Errorf("failed to generate uuid: %w", err).Error())
 			formErrors.AppError = "Error generating uuid"
 			return rendering(w, r, profile.ProfileForm(
 				visitor,
@@ -230,8 +229,8 @@ func (m *Repository) HandleProfileEdit(w http.ResponseWriter, r *http.Request) e
 		// Save the file to the server
 		dst, err := os.Create(filePath)
 		if err != nil {
-			log.Println("error saving file", err)
-			formErrors.AppError = "Error saving file"
+			slog.Error(fmt.Errorf("failed to create file: %w", err).Error())
+			formErrors.AppError = "Error create file"
 			return rendering(w, r, profile.ProfileForm(
 				visitor,
 				profileToEdit,
@@ -244,8 +243,8 @@ func (m *Repository) HandleProfileEdit(w http.ResponseWriter, r *http.Request) e
 		}
 		defer dst.Close()
 		if _, err = io.Copy(dst, file); err != nil {
-			log.Println("error saving copyfile")
-			formErrors.AppError = "Error saving copyfile"
+			slog.Error(fmt.Errorf("failed to write to file: %w", err).Error())
+			formErrors.AppError = "Error writing to file"
 			return rendering(w, r, profile.ProfileForm(
 				visitor,
 				profileToEdit,
@@ -264,7 +263,7 @@ func (m *Repository) HandleProfileEdit(w http.ResponseWriter, r *http.Request) e
 			//Check if the oldPath is not the same as the new path
 			if oldAvatarPath != filePath {
 				if err := os.Remove(oldAvatarPath); err != nil {
-					log.Println("Warning: failed to delete old avatar file: ", err)
+					return fmt.Errorf("failed to delete old file: %w", err)
 				}
 			}
 		}
@@ -277,7 +276,7 @@ func (m *Repository) HandleProfileEdit(w http.ResponseWriter, r *http.Request) e
 	if form.BoxValue("delete_avatar") {
 		AvatarPath := filepath.Join("static/uploads", profileToEdit.Avatar)
 		if err := os.Remove(AvatarPath); err != nil {
-			log.Printf("Warning: failed to delete avatar file: %s\n", err)
+			return fmt.Errorf("failed to delete old file: %w", err)
 		}
 		profileToEdit.Avatar = ""
 	}
@@ -318,6 +317,7 @@ func (m *Repository) HandleProfileEdit(w http.ResponseWriter, r *http.Request) e
 		)
 		if err != nil {
 			formErrors.AppError = "Error creating password hash"
+			slog.Error(fmt.Errorf("failed to create password hash: %w", err).Error())
 			// send the data to the template
 			return rendering(w, r, profile.ProfileForm(
 				visitor,
@@ -336,6 +336,7 @@ func (m *Repository) HandleProfileEdit(w http.ResponseWriter, r *http.Request) e
 	err = m.DB.UpdateVisitor(profileToEdit)
 	if err != nil {
 		formErrors.AppError = err.Error()
+		slog.Error(fmt.Errorf("failed to update profile: %w", err).Error())
 		// send the data to the template
 		return rendering(w, r, profile.ProfileForm(
 			visitor,
@@ -358,6 +359,10 @@ func (m *Repository) HandleProfileEdit(w http.ResponseWriter, r *http.Request) e
 	if route == "profile" {
 		m.App.Session.Put(r.Context(), "visitor", profileToEdit)
 	}
+
+	// log success
+	logger.Success(r, m.App.Session,
+		fmt.Sprintf("profile for %s %s successfully updated", profileToEdit.FirstName, profileToEdit.FamilyName))
 
 	// on success redirect
 	return hxRedirect(w, r, redirectPath)
