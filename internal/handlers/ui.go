@@ -2,7 +2,7 @@ package handlers
 
 import (
 	"fmt"
-	"log"
+	"log/slog"
 	"net/http"
 	"strconv"
 
@@ -35,8 +35,7 @@ func (m *Repository) HandleVisitorsSelectBox(w http.ResponseWriter, r *http.Requ
 	// get filtered visitors from DB
 	visitors, _, err := m.DB.AllVisitors(1, 0, filter)
 	if err != nil {
-		log.Println("could not get visitors from DB: ", err)
-		return err
+		return fmt.Errorf("failed to get visitors: %w", err)
 	}
 
 	return rendering(w, r, ui.MemberSelectBox(visID, visitors, pricing, member, logistics))
@@ -48,7 +47,7 @@ func (m *Repository) HandleSelectMembership(w http.ResponseWriter, r *http.Reque
 
 	visitor, err := m.DB.VisitorByID(id)
 	if err != nil {
-		log.Println("could not get visitor from DB: ", err)
+		slog.Error(fmt.Errorf("failed to get visitor: %w", err).Error())
 	}
 
 	returnString := fmt.Sprintf("<input type=\"hidden\" id=\"membership\" name=\"membership\" value=\"%s\" />", strconv.FormatBool(visitor.Ressort.ID > 0))

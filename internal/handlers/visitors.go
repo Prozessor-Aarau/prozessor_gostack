@@ -2,7 +2,7 @@ package handlers
 
 import (
 	"fmt"
-	"log"
+	"log/slog"
 	"math"
 	"net/http"
 	"strconv"
@@ -17,7 +17,7 @@ import (
 func (m *Repository) HandleVisitorsIndex(w http.ResponseWriter, r *http.Request) error {
 	visitor, ok := m.App.Session.Get(r.Context(), "visitor").(models.Visitor)
 	if !ok {
-		log.Println("could not get visitor from Session")
+		slog.Error("could not get visitor from session", "path", r.URL.Path)
 		m.App.Session.Put(r.Context(), "error", "Can't get visitor from session")
 
 		return hxRedirect(w, r, "/admin/logout")
@@ -67,8 +67,7 @@ func (m *Repository) HandleVisitorList(w http.ResponseWriter, r *http.Request) e
 
 	visitorList, count, err := m.DB.AllVisitors(page, limit, filter)
 	if err != nil {
-		log.Println("could not get visitors from DB: ", err)
-		return err
+		return fmt.Errorf("failed to get visitors: %w", err)
 	}
 
 	urlSearchString := fmt.Sprintf(
@@ -123,9 +122,7 @@ func (m *Repository) HandleVisitorListFilter(w http.ResponseWriter, r *http.Requ
 
 	visitorList, count, err := m.DB.AllVisitors(page, limit, filter)
 	if err != nil {
-		log.Println("could not get visitors from DB: ", err)
-		m.App.Session.Put(r.Context(), "error", "Can't get visitors from database")
-		return err
+		return fmt.Errorf("failed to get visitors: %w", err)
 	}
 
 	urlSearchString := fmt.Sprintf(
