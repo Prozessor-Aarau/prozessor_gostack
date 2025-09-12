@@ -9,7 +9,7 @@ import (
 	"image"
 	"image/jpeg"
 	"image/png"
-	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -21,6 +21,7 @@ import (
 	"github.com/a-h/templ"
 	"github.com/faebut/prozessor_gostack/internal/events"
 	"github.com/faebut/prozessor_gostack/internal/forms"
+	"github.com/faebut/prozessor_gostack/internal/logger"
 	"github.com/faebut/prozessor_gostack/internal/mailtemplates"
 	"github.com/faebut/prozessor_gostack/internal/models"
 	"github.com/faebut/prozessor_gostack/view/newsletter"
@@ -30,12 +31,16 @@ import (
 	"golang.org/x/net/html"
 )
 
+// TODO: there is a lot of code repetition in here, needs refactoring
+
 // HandleNewsletterIndex is the newsletter page handler
 func (m *Repository) HandleNewsletterIndex(w http.ResponseWriter, r *http.Request) error {
 	// get visitor
 	visitor, ok := m.App.Session.Get(r.Context(), "visitor").(models.Visitor)
 	if !ok {
-		log.Println("could not get visitor from Session")
+		slog.Error("could not get visitor from session", "path", r.URL.Path)
+		m.App.Session.Put(r.Context(), "error", "Can't get visitor from session")
+
 		return hxRedirect(w, r, "/admin/logout")
 	}
 	return rendering(w, r, newsletter.Newsletters(visitor))
@@ -46,9 +51,7 @@ func (m *Repository) HandleNewsletterList(w http.ResponseWriter, r *http.Request
 
 	newsletterList, _, err := m.DB.GetAllNewsletters()
 	if err != nil {
-		log.Println("could not get newsletters from DB: ", err)
-
-		m.App.Session.Put(r.Context(), "error", "Can't get badges from database")
+		return fmt.Errorf("failed to get newsletters: %w", err)
 	}
 
 	return rendering(w, r, newsletter.NewsletterList(newsletterList))
@@ -62,7 +65,7 @@ func (m *Repository) HandleNewsletterCreateIndex(w http.ResponseWriter, r *http.
 
 	templates, err := m.DB.GetNewsletterTemplates()
 	if err != nil {
-		log.Println("could not get templates from DB: ", err)
+		return fmt.Errorf("failed to get templates: %w", err)
 	}
 
 	var elements []models.NewsletterElement
@@ -84,7 +87,7 @@ func (m *Repository) HandleNewsletterElementCreate(w http.ResponseWriter, r *htt
 	// create a new uuid for the element
 	uuid, err := uuid.NewUUID()
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to create uuid: %w", err)
 	}
 	element.ID = uuid.String()
 	element.Type = elType
@@ -96,13 +99,13 @@ func (m *Repository) HandleNewsletterEventsLoad(w http.ResponseWriter, r *http.R
 	// get events
 	events, err := events.GetEvents()
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get events: %w", err)
 	}
 
 	// put events into string
 	eventString, err := json.Marshal(events)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed marshal events to string: %w", err)
 	}
 
 	return rendering(w, r, newsletter.EventList(events, string(eventString)))
@@ -121,8 +124,7 @@ func (m *Repository) HandleNewsletterCreateEdit(w http.ResponseWriter, r *http.R
 	if exploded[3] == "edit" {
 		id, err := strconv.Atoi(chi.URLParam(r, "id"))
 		if err != nil {
-			log.Println("Error converting string to int:", err)
-			return err
+			return fmt.Errorf("failed to convert string to int: %w", err)
 		}
 		nl.ID = id
 		edit = true
@@ -130,14 +132,13 @@ func (m *Repository) HandleNewsletterCreateEdit(w http.ResponseWriter, r *http.R
 
 	templates, err := m.DB.GetNewsletterTemplates()
 	if err != nil {
-		log.Println("could not get templates from DB: ", err)
+		return fmt.Errorf("failed to get templates: %w", err)
 	}
 
 	// parse form
 	err = r.ParseMultipartForm(5 << 20)
 	if err != nil {
-		log.Println("Error parsing multipart form: ", err)
-		return nil
+		return fmt.Errorf("failed to parse multipart form: %w", err)
 	}
 
 	// handle elements
@@ -160,7 +161,7 @@ func (m *Repository) HandleNewsletterCreateEdit(w http.ResponseWriter, r *http.R
 			for _, val := range values {
 				position, err := strconv.Atoi(val)
 				if err != nil {
-					return err
+					return fmt.Errorf("failed to convert string to int: %w", err)
 				}
 				element_position = append(element_position, position)
 			}
@@ -334,21 +335,19 @@ func (m *Repository) HandleNewsletterCreateEdit(w http.ResponseWriter, r *http.R
 		if len(e.AltText) > 0 && len(e.Upload) == 0 {
 			file, fileHeader, err := r.FormFile(e.ID + "_fileupload")
 			if err != nil {
-				log.Println("error handling file")
-				// TODO: how to else handle error
+				return fmt.Errorf("failed handle file: %w", err)
 			} else {
 				defer file.Close()
 
 				// Generate a unique filename to prevent overwriting and conflicts
 				uuid, err := uuid.NewRandom()
 				if err != nil {
-					log.Println("Error generating uuid")
-					// TODO: how to else handle error
+					return fmt.Errorf("failed to generate uuid: %w", err)
 				}
 				// Append the filetype extension to uuid to create filename
 				filename := uuid.String() + filepath.Ext(fileHeader.Filename)
 
-				// TODO: maybe don't save on db server but on webserver
+				// TODO: don't save on db server but on webserver. Use ftp implementation but needs login with more permission
 
 				// check if uploads directory exists, if not create it
 				if _, err := os.Stat("static/newsletter"); err != nil {
@@ -361,35 +360,34 @@ func (m *Repository) HandleNewsletterCreateEdit(w http.ResponseWriter, r *http.R
 				// Save the file to the server
 				dst, err := os.Create(filePath)
 				if err != nil {
-					log.Println("error saving file", err)
-
-					// TODO: how to else handle error
-
+					return fmt.Errorf("failed to save file: %w", err)
 				}
 				defer dst.Close()
 
 				// convert to image
 				var imgFile image.Image
-				if filetype == "jpeg" {
+				switch filetype {
+				case "jpeg":
 					imgFile, err = jpeg.Decode(file)
-					if err != nil {
-						log.Println(err)
-					}
-				} else if filetype == "png" {
+				case "png":
 					imgFile, err = png.Decode(file)
-					if err != nil {
-						log.Println(err)
-					}
+				}
+				if err != nil {
+					return fmt.Errorf("failed decode file: %w", err)
 				}
 
 				// resize image
 				resFile := resize.Resize(600, 0, imgFile, resize.Lanczos3)
 
 				// write image
-				if filetype == "jpeg" {
-					jpeg.Encode(dst, resFile, nil)
-				} else if filetype == "png" {
-					png.Encode(dst, resFile)
+				switch filetype {
+				case "jpeg":
+					err = jpeg.Encode(dst, resFile, nil)
+				case "png":
+					err = png.Encode(dst, resFile)
+				}
+				if err != nil {
+					return fmt.Errorf("failed encode file: %w", err)
 				}
 
 				// Update the element with the update. Need to use index
@@ -400,20 +398,27 @@ func (m *Repository) HandleNewsletterCreateEdit(w http.ResponseWriter, r *http.R
 	}
 
 	// what to do if form valid
+	var action string
 	if formErrors.Edit {
 		err = m.DB.UpdateNewsletter(nl)
+		action = "updated"
 		if err != nil {
-			log.Println("ERROR:", err)
+			return fmt.Errorf("failed to update newsletter: %w", err)
 		}
 	} else {
 		err = m.DB.CreateNewsletter(nl)
+		action = "created"
 		if err != nil {
-			log.Println("ERROR:", err)
+			return fmt.Errorf("failed to create newsletter: %w", err)
 		}
 	}
 
 	// TODO: do a better workflow
-	// if all is well, send to the newsletter overview page
+
+	// log success
+	logger.Success(r, m.App.Session,
+		fmt.Sprintf("Newsletter %s successfully %s", nl.Title, action))
+
 	redirectURL := "/admin/newsletter"
 
 	return hxRedirect(w, r, redirectURL)
@@ -423,27 +428,26 @@ func (m *Repository) HandleNewsletterCreateEdit(w http.ResponseWriter, r *http.R
 func (m *Repository) HandleNewsletterEditIndex(w http.ResponseWriter, r *http.Request) error {
 	nlID, err := strconv.Atoi(chi.URLParam(r, "id"))
 	if err != nil {
-		log.Println("Error converting newsletter id to int", err)
-		return err
+		return fmt.Errorf("failed convert string to int: %w", err)
 	}
 
 	// get newsletter from database
 	nl, err := m.DB.GetNewsletterByID(nlID)
 	if err != nil {
-		log.Println("could not get newsletter from DB: ", err)
+		return fmt.Errorf("failed get newsletter: %w", err)
 	}
 
 	// get elements for newsletter
 	elements, err := m.DB.GetAllNewsletterElementsByID(nl.ID)
 	if err != nil {
-		log.Println("could not get newsletter elements from DB: ", err)
+		return fmt.Errorf("failed get newsletter elements: %w", err)
 	}
 
 	nl.Elements = elements
 
 	templates, err := m.DB.GetNewsletterTemplates()
 	if err != nil {
-		log.Println("could not get templates from DB: ", err)
+		return fmt.Errorf("failed get templates: %w", err)
 	}
 
 	// render template
@@ -464,16 +468,20 @@ func (m *Repository) HandleNewsletterImageDelete(w http.ResponseWriter, r *http.
 	// delete picture from disk
 	picPath := filepath.Join("static/newsletter/", picture)
 	if err := os.Remove(picPath); err != nil {
-		return err
+		return fmt.Errorf("failed get delete image from filesystem: %w", err)
 	}
 
 	// delete image in database and get element
 	el, err := m.DB.DeleteNewsletterImage(eID)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed get delete image from DB: %w", err)
 	}
 
 	el.Type = "picture"
+
+	// log success
+	logger.Success(r, m.App.Session,
+		fmt.Sprintf("newsletter picture in element %s successfully deleted", eID))
 
 	return rendering(w, r, newsletter.Element(el, []newsletter.ElementError{}))
 }
@@ -482,19 +490,19 @@ func (m *Repository) HandleNewsletterPreview(w http.ResponseWriter, r *http.Requ
 	// get newsletter id from request url
 	id, err := strconv.Atoi(chi.URLParam(r, "id"))
 	if err != nil {
-		return err
+		return fmt.Errorf("failed convert string to int: %w", err)
 	}
 
 	// get newsletter
 	nl, err := m.DB.GetNewsletterByID(id)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed get newsletter: %w", err)
 	}
 
 	// get elements for newsletter
 	elements, err := m.DB.GetAllNewsletterElementsByID(id)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed get elements: %w", err)
 	}
 
 	nl.Elements = elements
@@ -504,8 +512,7 @@ func (m *Repository) HandleNewsletterPreview(w http.ResponseWriter, r *http.Requ
 
 	node, err = html.Parse(bytes.NewBufferString("<html>"))
 	if err != nil {
-		log.Println("making bytes of template:", err)
-		return err
+		return fmt.Errorf("failed making bytes of template: %w", err)
 	}
 
 	// create template
@@ -513,8 +520,7 @@ func (m *Repository) HandleNewsletterPreview(w http.ResponseWriter, r *http.Requ
 
 	b = *bytes.NewBuffer([]byte(template))
 	if err != nil {
-		log.Println("error creating buffer from template:", err)
-		return err
+		return fmt.Errorf("failed creating buffer from template: %w", err)
 	}
 
 	html.Render(&b, node)
@@ -526,19 +532,19 @@ func (m *Repository) HandleNewsletterSendList(w http.ResponseWriter, r *http.Req
 	// get newsletter id from request url
 	id, err := strconv.Atoi(chi.URLParam(r, "id"))
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to convert string to int: %w", err)
 	}
 
 	// get newsletter so we know if its internal or not
 	nl, err := m.DB.GetNewsletterByID(id)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get newsletter: %w", err)
 	}
 
 	// get recipients
 	recipients, err := m.DB.NewsletterRecipients(nl.RecipientGroup)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get recipients: %w", err)
 	}
 
 	return rendering(w, r, newsletter.NewsletterPreSend(len(recipients), nl))
@@ -549,7 +555,7 @@ func (m *Repository) HandleNewsletterSend(w http.ResponseWriter, r *http.Request
 	// get newsletter id from request url
 	id, err := strconv.Atoi(chi.URLParam(r, "id"))
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to convert string to int: %w", err)
 	}
 
 	// send newsletters in seperate goroutine
@@ -563,15 +569,15 @@ func (m *Repository) sendNewsletters(id int) {
 	// get newsletter so we know if its internal or not
 	nl, err := m.DB.GetNewsletterByID(id)
 	if err != nil {
-		// TODO: error handling
-		log.Println(err)
+		slog.Error(fmt.Errorf("failed to get newsletter: %w", err).Error())
+		return
 	}
 
 	// get elements for newsletter
 	elements, err := m.DB.GetAllNewsletterElementsByID(id)
 	if err != nil {
-		// TODO: error handling
-		log.Println(err)
+		slog.Error(fmt.Errorf("failed to get newsletter elements: %w", err).Error())
+		return
 	}
 
 	nl.Elements = elements
@@ -579,19 +585,19 @@ func (m *Repository) sendNewsletters(id int) {
 	// get recipients
 	recipients, err := m.DB.NewsletterRecipients(nl.RecipientGroup)
 	if err != nil {
-		// TODO: error handling
-		log.Println(err)
+		slog.Error(fmt.Errorf("failed to get recipients: %w", err).Error())
+		return
 	}
 
 	// Open new Channel to send data to the template.
-	log.Println("open new channel")
+	slog.Info(fmt.Sprintf("open new channel for newsletter: %s", nl.Title))
 	m.App.Newsletter.WaitList = make(chan models.MailData, len(recipients))
 	m.App.Newsletter.Active = true
 
 	// create template
 	template, err := mailtemplates.Newsletter(nl)
 	if err != nil {
-		log.Println("error creating template:", err)
+		slog.Error(fmt.Errorf("failed to create template: %w", err).Error())
 		return
 	}
 
@@ -630,7 +636,7 @@ func (m *Repository) sendNewsletters(id int) {
 		time.Sleep(time.Millisecond * 500)
 	}
 
-	log.Println("closing channel")
+	slog.Info(fmt.Sprintf("close channel for newsletter: %s", nl.Title))
 	m.App.Newsletter.Active = false
 	close(m.App.Newsletter.WaitList)
 }
@@ -655,7 +661,7 @@ func (m *Repository) HandleNewsletterProgressBar(w http.ResponseWriter, r *http.
 		default:
 			template, err := templ.ToGoHTML(ctx, newsletter.NewsletterProgressBar(data))
 			if err != nil {
-				log.Println(err)
+				slog.Error(fmt.Errorf("failed to render template: %w", err).Error())
 			}
 
 			fmt.Fprintf(w, "data: %s\n\n", template)
@@ -677,14 +683,18 @@ func (m *Repository) HandleNewsletterUnsubscribe(w http.ResponseWriter, r *http.
 	memberParam := r.URL.Query().Get("registered")
 	mem, err := strconv.ParseBool(memberParam)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to parse bool: %w", err)
 	}
 
 	// remove recipient from db or set false for newsletter
 	recipient, err := m.DB.NewsletterUnsubscribe(id, mem)
 	if err != nil {
-		return err
+		return fmt.Errorf("to unsubscribe recipient with id %s from newsletter: %w", id, err)
 	}
+
+	// log success
+	logger.Success(r, m.App.Session,
+		fmt.Sprintf("Recipient with id %s successfully unsubscribed from newsletter", id))
 
 	return rendering(w, r, newsletter.Unsubscribe(recipient))
 }
@@ -734,7 +744,9 @@ func (m *Repository) HandleNewsletterSubscribe(w http.ResponseWriter, r *http.Re
 		return err
 	}
 
-	log.Println("subscribing", recipient.FirstName)
+	// log success
+	logger.Success(r, m.App.Session,
+		fmt.Sprintf("%s %s successfully subscribed to newsletter", recipient.FirstName, recipient.FamilyName))
 
 	// send back success message
 	return rendering(w, r, newsletter.SubscriptionSuccess(recipient))
