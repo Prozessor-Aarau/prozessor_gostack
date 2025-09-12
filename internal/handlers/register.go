@@ -1,12 +1,13 @@
 package handlers
 
 import (
-	"log"
+	"fmt"
 	"net/http"
 	"strings"
 	"time"
 
 	"github.com/faebut/prozessor_gostack/internal/forms"
+	"github.com/faebut/prozessor_gostack/internal/logger"
 	"github.com/faebut/prozessor_gostack/internal/models"
 	"github.com/faebut/prozessor_gostack/view/register"
 )
@@ -21,9 +22,7 @@ func (m *Repository) HandleRegisterIndex(w http.ResponseWriter, r *http.Request)
 func (m *Repository) HandleRegisterCreate(w http.ResponseWriter, r *http.Request) error {
 	err := r.ParseForm()
 	if err != nil {
-		log.Println(err)
-		// TODO better error handling
-		return nil
+		return fmt.Errorf("failed to parse form: %w", err)
 	}
 
 	var visitor register.RegisterParams
@@ -32,9 +31,7 @@ func (m *Repository) HandleRegisterCreate(w http.ResponseWriter, r *http.Request
 	if len(bdate) > 0 {
 		visitor.Birthdate, err = time.Parse("2006-01-02", bdate)
 		if err != nil {
-			log.Println("Error parsing birthdate: ", err)
-			// TODO better error handling
-			return nil
+			return fmt.Errorf("failed to parse date: %w", err)
 		}
 	}
 
@@ -109,14 +106,12 @@ func (m *Repository) HandleRegisterCreate(w http.ResponseWriter, r *http.Request
 		Newsletter: visitor.Newsletter,
 	})
 	if err != nil {
-		log.Println(err)
-		// TODO better error handling
-		http.Redirect(w, r, "/", http.StatusSeeOther)
-		return nil
+		return fmt.Errorf("failed to create visitor: %w", err)
 	}
 
-	log.Println("Visitor inserted, new ID: ", newVisitorID)
-	// send the data to the template
+	// log success
+	logger.Success(r, m.App.Session,
+		fmt.Sprintf("new visitor %s %s successfully created with id: %s", visitor.FirstName, visitor.FamilyName, newVisitorID))
 
 	return hxRedirect(w, r, "/registersuccess?name="+visitor.FirstName)
 }
