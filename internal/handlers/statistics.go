@@ -1,7 +1,8 @@
 package handlers
 
 import (
-	"log"
+	"fmt"
+	"log/slog"
 	"net/http"
 	"time"
 
@@ -10,12 +11,40 @@ import (
 	"github.com/faebut/prozessor_gostack/view/statistics"
 )
 
+// parseDateUrl parses the request url for the min and max date
+func parseDateUrl(r *http.Request) (minDate time.Time, maxDate time.Time, err error) {
+	minString := r.Form.Get("min_date")
+	maxString := r.Form.Get("max_date")
+
+	minDate, err = time.Parse("2006-01-02", minString)
+	maxDate, err = time.Parse("2006-01-02", maxString)
+
+	if err != nil {
+		return minDate, maxDate, fmt.Errorf("failed to parse date: %w", err)
+	}
+
+	return minDate, maxDate, nil
+}
+
+// parseDarkModeUrl parses the url to get dark or light mode
+func parseDarkModeUrl(r *http.Request) (darkMode bool) {
+	mode := r.URL.Query().Get("mode")
+
+	if mode == "dark" {
+		darkMode = true
+	} else {
+		darkMode = false
+	}
+
+	return darkMode
+}
+
 // HandleStatisticsIndex is the statistics page handler
 func (m *Repository) HandleStatisticsIndex(w http.ResponseWriter, r *http.Request) error {
 	// send the data to the template
 	visitor, ok := m.App.Session.Get(r.Context(), "visitor").(models.Visitor)
 	if !ok {
-		log.Println("could not get visitor from Session")
+		slog.Error("could not get visitor from session", "path", r.URL.Path)
 		m.App.Session.Put(r.Context(), "error", "Can't get visitor from session")
 
 		return hxRedirect(w, r, "/admin/logout")
@@ -26,13 +55,8 @@ func (m *Repository) HandleStatisticsIndex(w http.ResponseWriter, r *http.Reques
 
 // HandleStatisticsFilter handles the statistics filtering
 func (m *Repository) HandleStatisticsFilter(w http.ResponseWriter, r *http.Request) error {
-
-	minString := r.Form.Get("min_date")
-	maxString := r.Form.Get("max_date")
-
-	minDate, err := time.Parse("2006-01-02", minString)
-	maxDate, err := time.Parse("2006-01-02", maxString)
-
+	// get date constraints
+	minDate, maxDate, err := parseDateUrl(r)
 	if err != nil {
 		return err
 	}
@@ -47,29 +71,19 @@ func (m *Repository) HandleStatisticsFilter(w http.ResponseWriter, r *http.Reque
 
 // HandleVisitorChart is the visitor chart handler
 func (m *Repository) HandleVisitorChart(w http.ResponseWriter, r *http.Request) error {
-
-	var darkMode bool
-
-	startString := r.URL.Query().Get("min")
-	endString := r.URL.Query().Get("max")
-	mode := r.URL.Query().Get("mode")
-
-	startDate, err := time.Parse("2006-01-02", startString)
-	endDate, err := time.Parse("2006-01-02", endString)
+	// get date constraints
+	minDate, maxDate, err := parseDateUrl(r)
 	if err != nil {
 		return err
 	}
 
-	if mode == "dark" {
-		darkMode = true
-	} else {
-		darkMode = false
-	}
+	// get dark mode
+	darkMode := parseDarkModeUrl(r)
 
-	visitCounts, err := m.DB.GetStatisticsVisitsByType(startDate, endDate)
+	visitCounts, err := m.DB.GetStatisticsVisitsByType(minDate, maxDate)
 
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get statistics for visits by type: %w", err)
 	}
 
 	bar := chart.Bar(visitCounts, true, darkMode)
@@ -79,29 +93,19 @@ func (m *Repository) HandleVisitorChart(w http.ResponseWriter, r *http.Request) 
 
 // HandleWeekdayChart is the weekday chart handler
 func (m *Repository) HandleWeekdayChart(w http.ResponseWriter, r *http.Request) error {
-
-	var darkMode bool
-
-	startString := r.URL.Query().Get("min")
-	endString := r.URL.Query().Get("max")
-	mode := r.URL.Query().Get("mode")
-
-	startDate, err := time.Parse("2006-01-02", startString)
-	endDate, err := time.Parse("2006-01-02", endString)
+	// get date constraints
+	minDate, maxDate, err := parseDateUrl(r)
 	if err != nil {
 		return err
 	}
 
-	if mode == "dark" {
-		darkMode = true
-	} else {
-		darkMode = false
-	}
+	// get dark mode
+	darkMode := parseDarkModeUrl(r)
 
-	visitCounts, err := m.DB.GetStatisticsAverageWeekday(startDate, endDate)
+	visitCounts, err := m.DB.GetStatisticsAverageWeekday(minDate, maxDate)
 
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get statistics for visits by weekday: %w", err)
 	}
 
 	bar := chart.Bar(visitCounts, true, darkMode)
@@ -111,29 +115,19 @@ func (m *Repository) HandleWeekdayChart(w http.ResponseWriter, r *http.Request) 
 
 // HandleAtelierChart is the atelier chart handler
 func (m *Repository) HandleAtelierChart(w http.ResponseWriter, r *http.Request) error {
-
-	var darkMode bool
-
-	startString := r.URL.Query().Get("min")
-	endString := r.URL.Query().Get("max")
-	mode := r.URL.Query().Get("mode")
-
-	startDate, err := time.Parse("2006-01-02", startString)
-	endDate, err := time.Parse("2006-01-02", endString)
+	// get date constraints
+	minDate, maxDate, err := parseDateUrl(r)
 	if err != nil {
 		return err
 	}
 
-	if mode == "dark" {
-		darkMode = true
-	} else {
-		darkMode = false
-	}
+	// get dark mode
+	darkMode := parseDarkModeUrl(r)
 
-	atelierCounts, err := m.DB.GetStatisticsAteliers(startDate, endDate)
+	atelierCounts, err := m.DB.GetStatisticsAteliers(minDate, maxDate)
 
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get statistics for visits by ateliers: %w", err)
 	}
 
 	pie := chart.Pie(atelierCounts, darkMode)
@@ -143,29 +137,19 @@ func (m *Repository) HandleAtelierChart(w http.ResponseWriter, r *http.Request) 
 
 // HandleAgesChart is the ages chart handler
 func (m *Repository) HandleAgesChart(w http.ResponseWriter, r *http.Request) error {
-
-	var darkMode bool
-
-	startString := r.URL.Query().Get("min")
-	endString := r.URL.Query().Get("max")
-	mode := r.URL.Query().Get("mode")
-
-	startDate, err := time.Parse("2006-01-02", startString)
-	endDate, err := time.Parse("2006-01-02", endString)
+	// get date constraints
+	minDate, maxDate, err := parseDateUrl(r)
 	if err != nil {
 		return err
 	}
 
-	if mode == "dark" {
-		darkMode = true
-	} else {
-		darkMode = false
-	}
+	// get dark mode
+	darkMode := parseDarkModeUrl(r)
 
-	agesCounts, err := m.DB.GetStatisticsAges(startDate, endDate)
+	agesCounts, err := m.DB.GetStatisticsAges(minDate, maxDate)
 
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get statistics for visits by age group: %w", err)
 	}
 
 	pie := chart.Pie(agesCounts, darkMode)
@@ -175,20 +159,16 @@ func (m *Repository) HandleAgesChart(w http.ResponseWriter, r *http.Request) err
 
 // HandleKeyFigures is the key figures handler
 func (m *Repository) HandleKeyFigures(w http.ResponseWriter, r *http.Request) error {
-
-	startString := r.URL.Query().Get("min")
-	endString := r.URL.Query().Get("max")
-
-	startDate, err := time.Parse("2006-01-02", startString)
-	endDate, err := time.Parse("2006-01-02", endString)
+	// get date constraints
+	minDate, maxDate, err := parseDateUrl(r)
 	if err != nil {
 		return err
 	}
 
-	figures, err := m.DB.GetStatisticsKeyFigures(startDate, endDate)
+	figures, err := m.DB.GetStatisticsKeyFigures(minDate, maxDate)
 
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get statistics key figures for visits: %w", err)
 	}
 
 	return rendering(w, r, statistics.FigureCard(figures, "Kennzahlen"))
