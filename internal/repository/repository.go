@@ -101,6 +101,8 @@ type DatabaseRepo interface {
 	GetStatisticsAteliers(startDate, endDate time.Time) (models.ChartData, error)
 	GetStatisticsAges(startDate, endDate time.Time) (models.ChartData, error)
 	GetStatisticsKeyFigures(startDate, endDate time.Time) (models.ChartData, error)
+	// logs
+	AllLogs(page int, limit int) ([]models.Log, int, error)
 }
 
 type postgresDBRepo struct {

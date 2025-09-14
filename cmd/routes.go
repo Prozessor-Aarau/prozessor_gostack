@@ -279,6 +279,14 @@ func routes(app *config.AppConfig) http.Handler {
 				mux.Post("/billing/edit/{id}", handlers.Make(handlers.Repo.HandleBillCreateEditPost))
 			})
 		})
+
+		// logs
+		mux.Group(func(mux chi.Router) {
+			mux.Use(CheckPermission("ViewLogs"))
+			mux.Get("/logs", handlers.Make(handlers.Repo.HandleLogIndex))
+			mux.Get("/logs/list", handlers.Make(handlers.Repo.HandleLogList))
+		})
+
 	})
 
 	return mux

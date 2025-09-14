@@ -4,9 +4,9 @@ import "time"
 
 type Log struct {
 	ID        int
-	Typ       string
-	Module    string
+	Level     string
+	Location  string
 	Message   string
-	VisitorID string
+	Visitor   Visitor
 	CreatedOn time.Time
 }
