@@ -29,12 +29,14 @@ case "WARN":
 }
 			}}
 			<li class="grid grid-cols-subgrid col-span-4 border-dashed border-b border-base-content/50 py-3 my-0 gap-4 mb-6">
-				<div class="opacity-60 whitespace-nowrap">{ l.CreatedOn.Format("2006-01-02 15:04:05") }</div>
-				<div class={ "uppercase font-semibold opacity-60" + " " + levelColor }>[{ l.Level }]</div>
-				<div>{ l.Message }</div>
+				<div class="opacity-60 whitespace-nowrap col-span-2 md:col-span-1">
+					{ l.CreatedOn.Format("2006-01-02 15:04:05") }
+				</div>
+				<div class={ "uppercase font-semibold opacity-60 col-span-2 md:col-span-1" + " " + levelColor }>[{ l.Level }]</div>
+				<div class="col-span-full md:col-span-1">{ l.Message }</div>
 				<div class="opacity-60 whitespace-nowrap">{ l.Visitor.FirstName } { l.Visitor.FamilyName }</div>
-				<div class="col-span-2"></div>
-				<div class="col-span-2 text-xs opacity-60">{ l.Location }</div>
+				<div class="md:col-span-2"></div>
+				<div class="col-span-full md:col-span-2 text-xs opacity-60">{ l.Location }</div>
 			</li>
 		}
 	</ul>
