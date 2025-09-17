@@ -285,6 +285,7 @@ func routes(app *config.AppConfig) http.Handler {
 			mux.Use(CheckPermission("ViewLogs"))
 			mux.Get("/logs", handlers.Make(handlers.Repo.HandleLogIndex))
 			mux.Get("/logs/list", handlers.Make(handlers.Repo.HandleLogList))
+			mux.Post("/logs/filter", handlers.Make(handlers.Repo.HandleLogsFilter))
 		})
 
 	})

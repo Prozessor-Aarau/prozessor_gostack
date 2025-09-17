@@ -11,7 +11,7 @@ import (
 )
 
 templ Statistics(visitor models.Visitor) {
-	{{ mindate, _ := time.Parse("2006-01-02", "2020-03-01") }}
+	{{ mindate := time.Now().AddDate(-1, 0, 0) }}
 	@layout.App(true, visitor) {
 		<script src="https://go-echarts.github.io/go-echarts-assets/assets/echarts.min.js"></script>
 		<div class="prose">
@@ -24,6 +24,7 @@ templ Statistics(visitor models.Visitor) {
 
 templ filterField() {
 	{{
+minDate := time.Now().AddDate(-1, 0, 0).Format("2006-01-02")
 today := time.Now().Format("2006-01-02")
 	}}
 	<div class="border-base-content/20 border rounded-md dark:rounded-lg bg-base-100 my-4 p-4">
@@ -38,7 +39,7 @@ today := time.Now().Format("2006-01-02")
 						id="min_date"
 						name="min_date"
 						class="grow"
-						value="2020-03-01"
+						value={ minDate }
 						min="2020-03-01"
 						max={ today }
 					/>
