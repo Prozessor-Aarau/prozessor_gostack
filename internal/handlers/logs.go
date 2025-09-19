@@ -59,11 +59,15 @@ func (m *Repository) HandleLogList(w http.ResponseWriter, r *http.Request) error
 		return fmt.Errorf("failed to get logs: %w", err)
 	}
 
+	// build filter
+	filter := "&limit=" + strconv.Itoa(limit) + "&min=" + minDate.Format("2006-01-02") + "&max=" + maxDate.Format("2006-01-02")
+
 	// render the template
 	return rendering(w, r, logs.LogsList(
 		logList,
 		page,
 		int(math.Ceil(float64(count)/float64(limit))),
+		filter,
 	))
 }
 
@@ -87,10 +91,14 @@ func (m *Repository) HandleLogsFilter(w http.ResponseWriter, r *http.Request) er
 
 	logList, count, err := m.DB.AllLogs(minDate, maxDate, 1, limit)
 
+	// build filter
+	filter := "&limit=" + limitString + "&min=" + minString + "&max=" + maxString
+
 	// render the template
 	return rendering(w, r, logs.LogsList(
 		logList,
 		1,
 		int(math.Ceil(float64(count)/float64(limit))),
+		filter,
 	))
 }

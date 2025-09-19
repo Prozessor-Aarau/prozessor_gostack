@@ -22,7 +22,7 @@ max := time.Now().Format("2006-01-02")
 	}
 }
 
-templ LogsList(logs []models.Log, onpage int, pages int) {
+templ LogsList(logs []models.Log, onpage int, pages int, filter string) {
 	<ul class="grid grid-cols-[min-content_min-content_1fr_min-content] my-6">
 		for _, l := range logs {
 			{{var levelColor string
@@ -47,7 +47,7 @@ case "WARN":
 			</li>
 		}
 	</ul>
-	@pagination(pages, onpage)
+	@pagination(pages, onpage, filter)
 }
 
 templ filterField() {
@@ -101,14 +101,14 @@ today := time.Now().Format("2006-01-02")
 	</div>
 }
 
-templ pagination(pages int, onpage int) {
+templ pagination(pages int, onpage int, filter string) {
 	{{ pagesslice := helpers.Iterate(pages) }}
 	<div class="grid justify-items-center">
 		<div class="join pt-6">
 			<button
 				class={ "join-item btn" , templ.KV("btn-disabled", onpage==1) }
 				hx-target="#logsList"
-				hx-get={ "/admin/logs/list?page=" + strconv.Itoa(onpage-1) + "&limit=25" }
+				hx-get={ "/admin/logs/list?page=" + strconv.Itoa(onpage-1) + filter }
 			>«</button>
 			for _, p := range pagesslice {
 				switch p {
@@ -116,7 +116,7 @@ templ pagination(pages int, onpage int) {
 						<button
 							class={ "join-item btn" , templ.KV("btn-primary", onpage==p) }
 							hx-target="#logsList"
-							hx-get={ "/admin/logs/list?page=" + strconv.Itoa(p) + "&limit=25" }
+							hx-get={ "/admin/logs/list?page=" + strconv.Itoa(p) + filter }
 						>{ strconv.Itoa(p) }</button>
 					case onpage+2, onpage-2:
 						<button class="join-item btn btn-disabled">.</button>
@@ -125,7 +125,7 @@ templ pagination(pages int, onpage int) {
 			<button
 				class={ "join-item btn" , templ.KV("btn-disabled", onpage==pages) }
 				hx-target="#logsList"
-				hx-get={ "/admin/logs/list?page=" + strconv.Itoa(onpage+1) + "&limit=25" }
+				hx-get={ "/admin/logs/list?page=" + strconv.Itoa(onpage+1) + filter }
 			>»</button>
 		</div>
 	</div>
