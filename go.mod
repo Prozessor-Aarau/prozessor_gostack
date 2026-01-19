@@ -23,7 +23,7 @@ require (
 	github.com/justinas/nosurf v1.2.0
 	github.com/lib/pq v1.10.9
 	github.com/nfnt/resize v0.0.0-20180221191011-83c6a9932646
-	github.com/signintech/gopdf v0.33.0
+	github.com/signintech/gopdf v0.35.0
 	github.com/skip2/go-qrcode v0.0.0-20200617195104-da1b6568686e
 	github.com/slack-go/slack v0.17.3
 	github.com/xhit/go-simple-mail/v2 v2.16.0
