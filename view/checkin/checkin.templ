@@ -59,13 +59,15 @@ templ searchField() {
 		</label>
 	</form>
 	<script>
-  searchField = document.querySelector("#search_term")
+		searchField = document.querySelector("#search_term");
 
-  document.getElementById("fieldreset").addEventListener("click", function (event) {
-    event.preventDefault();
-    searchField.value = "";
-  });
-</script>
+		document
+			.getElementById("fieldreset")
+			.addEventListener("click", function (event) {
+				event.preventDefault();
+				searchField.value = "";
+			});
+	</script>
 }
 
 templ VisitorList(visitors []models.Visitor, count int, pages int, onpage int, filter string) {
@@ -424,10 +426,11 @@ templ CheckinForm(
 	<!-- this script is needed for the delete button to send the CSRF-Token -->
 	if edit {
 		<script type="text/javascript">
-  button = document.getElementById("deleteButton")
-  button.addEventListener('htmx:configRequest', (event) => {
-    event.detail.headers['X-CSRF-Token'] = document.getElementById('csrf_token').value
-  })
-</script>
+			button = document.getElementById("deleteButton");
+			button.addEventListener("htmx:configRequest", (event) => {
+				event.detail.headers["X-CSRF-Token"] =
+					document.getElementById("csrf_token").value;
+			});
+		</script>
 	}
 }

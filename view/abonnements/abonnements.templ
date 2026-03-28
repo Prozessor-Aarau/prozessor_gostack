@@ -97,13 +97,15 @@ templ abonnementsFilter() {
 	</div>
 	<!-- For the switches -->
 	<script>
-  searchField = document.querySelector("#search_term")
+		searchField = document.querySelector("#search_term");
 
-  document.getElementById("fieldreset").addEventListener("click", function (event) {
-    event.preventDefault();
-    searchField.value = "";
-  });
-</script>
+		document
+			.getElementById("fieldreset")
+			.addEventListener("click", function (event) {
+				event.preventDefault();
+				searchField.value = "";
+			});
+	</script>
 }
 
 templ AbonnementsList(abonnements []models.Abonnement, count int, pages int, onpage int, filter string) {

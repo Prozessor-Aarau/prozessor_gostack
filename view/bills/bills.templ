@@ -83,13 +83,15 @@ templ billFilter(categories []string) {
 	</div>
 	<!-- For the switches -->
 	<script>
-  searchField = document.querySelector("#filter_string")
+		searchField = document.querySelector("#filter_string");
 
-  document.getElementById("fieldreset").addEventListener("click", function (event) {
-    event.preventDefault();
-    searchField.value = "";
-  });
-</script>
+		document
+			.getElementById("fieldreset")
+			.addEventListener("click", function (event) {
+				event.preventDefault();
+				searchField.value = "";
+			});
+	</script>
 }
 
 templ BillsList(bills []models.BillData, pages int, onpage int, filter string) {
@@ -162,12 +164,13 @@ templ BillsList(bills []models.BillData, pages int, onpage int, filter string) {
 	<!-- this script is needed for the delete button to send the CSRF-Token -->
 	if len(bills) > 0 {
 		<script type="text/javascript">
-  document.getElementsByName("deleteButton").forEach((button) => {
-    button.addEventListener('htmx:configRequest', (event) => {
-      event.detail.headers['X-CSRF-Token'] = document.getElementById('csrf_token').value
-    })
-  })
-</script>
+			document.getElementsByName("deleteButton").forEach((button) => {
+				button.addEventListener("htmx:configRequest", (event) => {
+					event.detail.headers["X-CSRF-Token"] =
+						document.getElementById("csrf_token").value;
+				});
+			});
+		</script>
 	}
 }
 

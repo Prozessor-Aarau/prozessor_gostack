@@ -41,5 +41,8 @@ go.work.sum
 # env file
 .env
 
+# sqls config
+config.yml
+
 # crush directory
 .crush

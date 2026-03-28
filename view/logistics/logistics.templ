@@ -92,13 +92,15 @@ templ logisticsFilter(categories []models.LogisticCategory) {
 	</div>
 	<!-- For the switches -->
 	<script>
-  searchField = document.querySelector("#filter_string")
+		searchField = document.querySelector("#filter_string");
 
-  document.getElementById("fieldreset").addEventListener("click", function (event) {
-    event.preventDefault();
-    searchField.value = "";
-  });
-</script>
+		document
+			.getElementById("fieldreset")
+			.addEventListener("click", function (event) {
+				event.preventDefault();
+				searchField.value = "";
+			});
+	</script>
 }
 
 templ LogisticsList(logistics []models.Logistic, pages int, onpage int, filter string) {
@@ -106,12 +108,12 @@ templ LogisticsList(logistics []models.Logistic, pages int, onpage int, filter s
 	if len(logistics) > 0 {
 		for _, l := range logistics {
 			{{
-var contact string
-if len(l.Visitor.Phone) > 0 {
-	contact = l.Visitor.Phone
-} else if len(l.Visitor.Email) > 0 {
-	contact = l.Visitor.Email
-}
+				var contact string
+				if len(l.Visitor.Phone) > 0 {
+					contact = l.Visitor.Phone
+				} else if len(l.Visitor.Email) > 0 {
+					contact = l.Visitor.Email
+				}
 			}}
 			<div
 				class="hover:bg-base-200 cursor-pointer grid grid-cols-9 text-sm p-3 py-4 items-center gap-3 border-dashed border-b border-base-content/50"
@@ -222,23 +224,23 @@ templ LogisticsForm(
 	assigned bool,
 ) {
 	{{
-var postUrl string
-if l.CreatedOn.IsZero() {
-	postUrl = "/admin/logistics/create"
-} else {
-	postUrl = "/admin/logistics/" + strconv.Itoa(l.ID)
-}
+		var postUrl string
+		if l.CreatedOn.IsZero() {
+			postUrl = "/admin/logistics/create"
+		} else {
+			postUrl = "/admin/logistics/" + strconv.Itoa(l.ID)
+		}
 
-var fixCat []models.LogisticCategory
-var freeCat []models.LogisticCategory
+		var fixCat []models.LogisticCategory
+		var freeCat []models.LogisticCategory
 
-for _, cat := range categories {
-	if cat.ID < 4 {
-		fixCat = append(fixCat, cat)
-	} else {
-		freeCat = append(freeCat, cat)
-	}
-}
+		for _, cat := range categories {
+			if cat.ID < 4 {
+				fixCat = append(fixCat, cat)
+			} else {
+				freeCat = append(freeCat, cat)
+			}
+		}
 	}}
 	<form
 		class="grid grid-cols-2 items-center gap-3 "
@@ -518,213 +520,214 @@ for _, cat := range categories {
 	</form>
 	<!-- script for ui changes -->
 	<script>
-    var toggle = document.getElementById("toggleFree")
-    var assign = document.getElementById("toggleAssign")
-    var assignDiv = document.getElementById("assignDiv")
-    var assignForm = document.getElementById("assignForm")
-    var freeForm = document.getElementById("freeForm")
-    var fixForm = document.getElementById("fixForm")
-    var fixCatSelect = document.getElementById("fixCatSelect")
-    var fixPrice = document.getElementById("fix_price")
-    var freeCatSelect = document.getElementById("freeCatSelect")
-    var freePrice = document.getElementById("free_price")
-    var freeNumber = document.getElementById("freeNumber")
-    var startDate = document.getElementById("startdate")
-    var endDate = document.getElementById("enddate")
-    var resultPrice = document.getElementById("result_price")
-    var updateButton = document.getElementById("updateButton")
-    var categories = JSON.parse(document.getElementById('categories').textContent);
-    var logistics = JSON.parse(document.getElementById('logistics').textContent);
+		var toggle = document.getElementById("toggleFree");
+		var assign = document.getElementById("toggleAssign");
+		var assignDiv = document.getElementById("assignDiv");
+		var assignForm = document.getElementById("assignForm");
+		var freeForm = document.getElementById("freeForm");
+		var fixForm = document.getElementById("fixForm");
+		var fixCatSelect = document.getElementById("fixCatSelect");
+		var fixPrice = document.getElementById("fix_price");
+		var freeCatSelect = document.getElementById("freeCatSelect");
+		var freePrice = document.getElementById("free_price");
+		var freeNumber = document.getElementById("freeNumber");
+		var startDate = document.getElementById("startdate");
+		var endDate = document.getElementById("enddate");
+		var resultPrice = document.getElementById("result_price");
+		var updateButton = document.getElementById("updateButton");
+		var categories = JSON.parse(
+			document.getElementById("categories").textContent,
+		);
+		var logistics = JSON.parse(
+			document.getElementById("logistics").textContent,
+		);
 
-    // init alpine store
-    Alpine.store('updateState', {
-      newMember: false,
-      laterDate: false,
-      assigned: false
-    })
+		// init alpine store
+		Alpine.store("updateState", {
+			newMember: false,
+			laterDate: false,
+			assigned: false,
+		});
 
-    // initialize
-    selectChange()
-    setNumber()
-    calcPrice()
-    assignChecker()
+		// initialize
+		selectChange();
+		setNumber();
+		calcPrice();
+		assignChecker();
 
-    function assignChecker() {
-      if (assign.checked) {
-        Alpine.store('updateState').assigned = true
-        assignForm.classList.remove("hidden")
-      } else {
-        Alpine.store('updateState').assigned = false
-        assignForm.classList.add("hidden")
-      }
+		function assignChecker() {
+			if (assign.checked) {
+				Alpine.store("updateState").assigned = true;
+				assignForm.classList.remove("hidden");
+			} else {
+				Alpine.store("updateState").assigned = false;
+				assignForm.classList.add("hidden");
+			}
 
-      console.log("assigned", Alpine.store('updateState').assigned)
-    }
+			console.log("assigned", Alpine.store("updateState").assigned);
+		}
 
-    assign.onchange = () => {
-      assignChecker();
-    }
+		assign.onchange = () => {
+			assignChecker();
+		};
 
+		// toggle behaviour on changing category
+		function selectChange() {
+			var membership = document.getElementById("membership");
+			var id = fixCatSelect.value;
 
-    // toggle behaviour on changing category
-    function selectChange() {
-      var membership = document.getElementById("membership")
-      var id = fixCatSelect.value
+			var price = 0;
 
-      var price = 0
+			// need to check for member here
+			if (membership.value == "true") {
+				price = categories.find((x) => x.ID == id).PriceMember;
+			} else {
+				price = categories.find((x) => x.ID == id).Price;
+			}
 
-      // need to check for member here
-      if (membership.value == "true") {
-        price = categories.find(x => x.ID == id).PriceMember;
-      } else {
-        price = categories.find(x => x.ID == id).Price;
-      }
+			fixPrice.innerText = price;
 
-      fixPrice.innerText = price
+			let memberSelect = document.getElementById("member");
 
-      let memberSelect = document.getElementById("member")
+			// check if the member has changed
+			if (memberSelect !== null) {
+				if (logistics.Visitor.ID == memberSelect.value) {
+					Alpine.store("updateState").newMember = false;
+				} else {
+					Alpine.store("updateState").newMember = true;
+				}
+			}
 
-      // check if the member has changed 
-      if (memberSelect !== null) {
-        if (logistics.Visitor.ID == memberSelect.value) {
-          Alpine.store('updateState').newMember = false
-        } else {
-          Alpine.store('updateState').newMember = true
-        }
-      }
+			console.log("newMember:", Alpine.store("updateState").newMember);
+		}
 
-      console.log("newMember:", Alpine.store('updateState').newMember)
-    }
+		function calcPrice() {
+			let price = 0;
+			let start = new Date(startDate.value);
+			let end = new Date(endDate.value);
+			var timeDiff = Math.abs(end.getTime() - start.getTime());
+			var Daydiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
 
-    function calcPrice() {
-      let price = 0
-      let start = new Date(startDate.value)
-      let end = new Date(endDate.value)
-      var timeDiff = Math.abs(end.getTime() - start.getTime());
-      var Daydiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
+			// get factor of time from days
+			var timeFactor = 0;
+			var timeDiff = Math.abs(end.getTime() - start.getTime());
+			var Daydiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
+			var Mondiff = Daydiff / 30;
 
-      // get factor of time from days
-      var timeFactor = 0
-      var timeDiff = Math.abs(end.getTime() - start.getTime());
-      var Daydiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
-      var Mondiff = Daydiff / 30
+			if (Mondiff <= 0.5) {
+				timeFactor = 0.5;
+			} else {
+				timeFactor = Math.round(Mondiff);
+			}
 
-      if (Mondiff <= 0.5) {
-        timeFactor = 0.5
-      } else {
-        timeFactor = Math.round(Mondiff)
-      }
+			var basePrice = 0;
 
-      var basePrice = 0
+			if (toggle.checked) {
+				basePrice = freePrice.value;
+			} else {
+				basePrice = fixPrice.innerText;
+			}
 
-      if (toggle.checked) {
-        basePrice = freePrice.value
-      } else {
-        basePrice = fixPrice.innerText
-      }
+			price = basePrice * timeFactor;
+			if (isNaN(price)) {
+				resultPrice.innerHTML = "Bitte Start- und Enddatum setzen";
+			} else {
+				resultPrice.innerHTML = price;
+			}
+		}
 
-      price = basePrice * timeFactor
-      if (isNaN(price)) {
-        resultPrice.innerHTML = "Bitte Start- und Enddatum setzen"
-      } else {
-        resultPrice.innerHTML = price
-      }
-    }
+		function setNumber() {
+			if (freeCatSelect.value == 4) {
+				freeNumber.innerText = "200";
+			} else {
+				freeNumber.innerText = "300";
+			}
+		}
 
-    function setNumber() {
-      if (freeCatSelect.value == 4) {
-        freeNumber.innerText = "200"
-      } else {
-        freeNumber.innerText = "300"
-      }
-    }
+		// handle change events
+		fixCatSelect.addEventListener("change", () => {
+			selectChange();
+			calcPrice();
+		});
 
-    // handle change events
-    fixCatSelect.addEventListener("change", () => {
-      selectChange();
-      calcPrice();
-    })
+		startDate.addEventListener("change", () => {
+			calcPrice();
+			checkUpdateable();
+		});
 
-    startDate.addEventListener("change", () => {
-      calcPrice();
-      checkUpdateable();
-    })
+		endDate.addEventListener("change", () => {
+			calcPrice();
+			checkUpdateable();
+		});
 
-    endDate.addEventListener("change", () => {
-      calcPrice();
-      checkUpdateable();
-    })
+		freePrice.addEventListener("change", () => {
+			calcPrice();
+		});
 
-    freePrice.addEventListener("change", () => {
-      calcPrice();
-    })
+		if (toggle !== null) {
+			toggle.onchange = function () {
+				freeForm.classList.toggle("hidden");
+				fixForm.classList.toggle("hidden");
+				calcPrice();
 
-    if (toggle !== null) {
-      toggle.onchange = function () {
-        freeForm.classList.toggle("hidden")
-        fixForm.classList.toggle("hidden")
-        calcPrice()
+				if (toggle.checked) {
+					assignDiv.classList.add("hidden");
+					assignForm.classList.remove("hidden");
+				} else {
+					assignDiv.classList.remove("hidden");
+					if (assign.checked) {
+						Alpine.store("updateState").assigned = true;
+						assignForm.classList.remove("hidden");
+					} else {
+						Alpine.store("updateState").assigned = false;
+						assignForm.classList.add("hidden");
+					}
+				}
+			};
+		}
 
-        if (toggle.checked) {
-          assignDiv.classList.add("hidden")
-          assignForm.classList.remove("hidden")
-        } else {
-          assignDiv.classList.remove("hidden")
-          if (assign.checked) {
-            Alpine.store('updateState').assigned = true
-            assignForm.classList.remove("hidden")
-          } else {
-            Alpine.store('updateState').assigned = false
-            assignForm.classList.add("hidden")
-          }
-        }
-      }
-    }
+		freeCatSelect.addEventListener("change", () => {
+			setNumber();
+		});
 
-    freeCatSelect.addEventListener("change", () => {
-      setNumber();
-    })
+		// for updating check if everything is okay and change content of modal
+		function checkUpdateable() {
+			let newStartDate = new Date(startDate.value);
+			let newEndDate = new Date(endDate.value);
+			let oldStartDate = new Date(logistics.StartDate);
+			let oldEndDate = new Date(logistics.EndDate);
 
-    // for updating check if everything is okay and change content of modal
-    function checkUpdateable() {
-      let newStartDate = new Date(startDate.value)
-      let newEndDate = new Date(endDate.value)
-      let oldStartDate = new Date(logistics.StartDate)
-      let oldEndDate = new Date(logistics.EndDate)
+			// check if new start date is after old end date
+			if (newStartDate < oldEndDate) {
+				Alpine.store("updateState").laterDate = false;
+			} else {
+				Alpine.store("updateState").laterDate = true;
+			}
+			console.log("laterDate:", Alpine.store("updateState").laterDate);
+		}
 
-      // check if new start date is after old end date
-      if (newStartDate < oldEndDate) {
-        Alpine.store('updateState').laterDate = false
-      } else {
-        Alpine.store('updateState').laterDate = true
-      }
-      console.log("laterDate:", Alpine.store('updateState').laterDate)
-    }
-
-    checkUpdateable()
-
-
-
-  </script>
+		checkUpdateable();
+	</script>
 	<!-- this script is needed for the delete button to send the CSRF-Token -->
 	if !l.CreatedOn.IsZero() {
 		<script>
-    button = document.getElementById("deleteButton")
-    button.addEventListener('htmx:configRequest', (event) => {
-      event.detail.headers['X-CSRF-Token'] = document.getElementById('csrf_token').value
-    })
-  </script>
+			button = document.getElementById("deleteButton");
+			button.addEventListener("htmx:configRequest", (event) => {
+				event.detail.headers["X-CSRF-Token"] =
+					document.getElementById("csrf_token").value;
+			});
+		</script>
 	}
 }
 
 templ Label(l models.Logistic) {
 	{{
-	var contact string
-	if len(l.Visitor.Phone) > 0 {
-		contact = l.Visitor.Phone
-	} else if len(l.Visitor.Email) > 0 {
-		contact = l.Visitor.Email
-	}
+		var contact string
+		if len(l.Visitor.Phone) > 0 {
+			contact = l.Visitor.Phone
+		} else if len(l.Visitor.Email) > 0 {
+			contact = l.Visitor.Email
+		}
 	}}
 	<div id="label" class="col-span-full">
 		<input type="hidden" name="label" value={ l.Label }/>
@@ -957,60 +960,62 @@ templ BillList(logistics []models.Logistic, vID string) {
 		</form>
 		<!-- script for list -->
 		<script>
-    var masterCheckBox = document.getElementById("masterCheckBox")
-    var allCheckBoxes = document.getElementsByClassName("slavecheckbox")
-    var sendButtons = document.getElementsByClassName("sendbutton")
-    var totalCell = document.getElementById("total")
+			var masterCheckBox = document.getElementById("masterCheckBox");
+			var allCheckBoxes = document.getElementsByClassName("slavecheckbox");
+			var sendButtons = document.getElementsByClassName("sendbutton");
+			var totalCell = document.getElementById("total");
 
-    masterCheckBox.addEventListener("change", () => {
-      if (masterCheckBox.checked) {
-        for (let i = 0; i < allCheckBoxes.length; i++) {
-          allCheckBoxes[i].checked = true
-        }
-      } else {
-        for (let i = 0; i < allCheckBoxes.length; i++) {
-          allCheckBoxes[i].checked = false
-        }
-      }
-      handleButtons()
-    });
+			masterCheckBox.addEventListener("change", () => {
+				if (masterCheckBox.checked) {
+					for (let i = 0; i < allCheckBoxes.length; i++) {
+						allCheckBoxes[i].checked = true;
+					}
+				} else {
+					for (let i = 0; i < allCheckBoxes.length; i++) {
+						allCheckBoxes[i].checked = false;
+					}
+				}
+				handleButtons();
+			});
 
-    for (let i = 0; i < allCheckBoxes.length; i++) {
-      allCheckBoxes[i].addEventListener("change", () => {
-        handleButtons()
-      })
-    }
+			for (let i = 0; i < allCheckBoxes.length; i++) {
+				allCheckBoxes[i].addEventListener("change", () => {
+					handleButtons();
+				});
+			}
 
-    // disable buttons or not, if something is selected
-    function handleButtons() {
-      var anyChecked = false
-      var total = 0.00
+			// disable buttons or not, if something is selected
+			function handleButtons() {
+				var anyChecked = false;
+				var total = 0.0;
 
-      for (let i = 0; i < allCheckBoxes.length; i++) {
-        if (allCheckBoxes[i].checked) {
-          // set anyChecked to true if any checkbox is checked
-          anyChecked = true
+				for (let i = 0; i < allCheckBoxes.length; i++) {
+					if (allCheckBoxes[i].checked) {
+						// set anyChecked to true if any checkbox is checked
+						anyChecked = true;
 
-          // get price of checked bill and add it to total
-          var price = document.getElementById("price-" + allCheckBoxes[i].name)
+						// get price of checked bill and add it to total
+						var price = document.getElementById(
+							"price-" + allCheckBoxes[i].name,
+						);
 
-          total += parseFloat(price.innerText)
-        }
-      }
+						total += parseFloat(price.innerText);
+					}
+				}
 
-      // set total field to calculated total
-      totalCell.innerHTML = total.toFixed(2)
+				// set total field to calculated total
+				totalCell.innerHTML = total.toFixed(2);
 
-      // enable/disable buttons if a checkbox is checked
-      for (let i = 0; i < sendButtons.length; i++) {
-        if (anyChecked) {
-          sendButtons[i].disabled = false
-        } else {
-          sendButtons[i].disabled = true
-        }
-      }
-    }
-  </script>
+				// enable/disable buttons if a checkbox is checked
+				for (let i = 0; i < sendButtons.length; i++) {
+					if (anyChecked) {
+						sendButtons[i].disabled = false;
+					} else {
+						sendButtons[i].disabled = true;
+					}
+				}
+			}
+		</script>
 	} else {
 		@layout.Warning("Keine verrechenbare Plätze für Auswahl")
 	}

@@ -315,94 +315,99 @@ templ CustomBillForm(bill models.BillData, errors FormErrors, categories []strin
 	</form>
 	@templ.JSONScript("memErr", errors.Member)
 	<script>
-  var finaltotal = document.getElementById("finaltotal");
+		var finaltotal = document.getElementById("finaltotal");
 
-  // get sum of all totals and write it to final total
-  function getFinalTotal() {
-    let totals = document.getElementsByClassName("subtotal");
-    let total = 0;
+		// get sum of all totals and write it to final total
+		function getFinalTotal() {
+			let totals = document.getElementsByClassName("subtotal");
+			let total = 0;
 
-    for (let i = 0; i < totals.length; i++) {
-      if (totals[i].innerText.length > 0) {
-        total += parseFloat(totals[i].innerText)
-      }
-    }
+			for (let i = 0; i < totals.length; i++) {
+				if (totals[i].innerText.length > 0) {
+					total += parseFloat(totals[i].innerText);
+				}
+			}
 
-    finaltotal.innerText = (Math.round(total * 100) / 100).toFixed(2)
-  }
+			finaltotal.innerText = (Math.round(total * 100) / 100).toFixed(2);
+		}
 
-  function removeItem(eid) {
-    document.getElementById(eid).remove();
-    getFinalTotal();
-    hideArrows();
-  }
+		function removeItem(eid) {
+			document.getElementById(eid).remove();
+			getFinalTotal();
+			hideArrows();
+		}
 
-  function moveItemUp(eid) {
-    document.getElementById(eid).previousSibling.before(document.getElementById(eid))
-    hideArrows()
-  }
+		function moveItemUp(eid) {
+			document
+				.getElementById(eid)
+				.previousSibling.before(document.getElementById(eid));
+			hideArrows();
+		}
 
-  function moveItemDown(eid) {
-    document.getElementById(eid).nextSibling.after(document.getElementById(eid))
-    hideArrows()
-  }
+		function moveItemDown(eid) {
+			document
+				.getElementById(eid)
+				.nextSibling.after(document.getElementById(eid));
+			hideArrows();
+		}
 
-  function memberError() {
-    var memberSelect = document.getElementById("memberSelect");
-    var memberBox = document.getElementById("member");
-    var memError = JSON.parse(document.getElementById('memErr').textContent);
-    var errDiv = document.createElement("div")
-    errDiv.className = "label"
-    errDiv.innerHTML = `<span class="label-text text-error">` + memError + "</span"
+		function memberError() {
+			var memberSelect = document.getElementById("memberSelect");
+			var memberBox = document.getElementById("member");
+			var memError = JSON.parse(document.getElementById("memErr").textContent);
+			var errDiv = document.createElement("div");
+			errDiv.className = "label";
+			errDiv.innerHTML =
+				`<span class="label-text text-error">` + memError + "</span";
 
-    if (memError.length > 0) {
-      memberBox.classList.add("select-error")
-      memberSelect.appendChild(errDiv)
-    }
-  }
+			if (memError.length > 0) {
+				memberBox.classList.add("select-error");
+				memberSelect.appendChild(errDiv);
+			}
+		}
 
-  function hideArrows() {
-    let children = document.getElementById("rowbody").children
+		function hideArrows() {
+			let children = document.getElementById("rowbody").children;
 
-    for (let i = 0; i < children.length - 1; i++) {
-      let uArrow = children[i].getElementsByClassName("uarrow")[0]
-      let dArrow = children[i].getElementsByClassName("darrow")[0]
-      let position = children[i].getElementsByClassName("pfield")[0]
+			for (let i = 0; i < children.length - 1; i++) {
+				let uArrow = children[i].getElementsByClassName("uarrow")[0];
+				let dArrow = children[i].getElementsByClassName("darrow")[0];
+				let position = children[i].getElementsByClassName("pfield")[0];
 
-      uArrow.classList.remove("invisible")
-      dArrow.classList.remove("invisible")
-      position.value = i + 1
+				uArrow.classList.remove("invisible");
+				dArrow.classList.remove("invisible");
+				position.value = i + 1;
 
-      if (i === 0) {
-        uArrow.classList.add("invisible")
-        if (children.length === 2) {
-          dArrow.classList.add("invisible")
-        }
-      } else if (i === children.length - 2) {
-        dArrow.classList.add("invisible")
-      }
-    }
-  }
+				if (i === 0) {
+					uArrow.classList.add("invisible");
+					if (children.length === 2) {
+						dArrow.classList.add("invisible");
+					}
+				} else if (i === children.length - 2) {
+					dArrow.classList.add("invisible");
+				}
+			}
+		}
 
-  // fire once page is loaded
-  document.body.addEventListener('htmx:afterSettle', function (evt) {
-    evt.preventDefault();
-    getFinalTotal();
-    hideArrows();
-  });
-</script>
+		// fire once page is loaded
+		document.body.addEventListener("htmx:afterSettle", function (evt) {
+			evt.preventDefault();
+			getFinalTotal();
+			hideArrows();
+		});
+	</script>
 }
 
 templ BillItem(item models.BillItem, errors []ItemError) {
 	{{
-var iError ItemError
+		var iError ItemError
 
-for _, e := range errors {
-	if e.ID == item.ID {
-		iError = e
-		break
-	}
-}
+		for _, e := range errors {
+			if e.ID == item.ID {
+				iError = e
+				break
+			}
+		}
 	}}
 	<tr id={ item.ID } x-data={ templ.JSONString(item) }>
 		<th>
