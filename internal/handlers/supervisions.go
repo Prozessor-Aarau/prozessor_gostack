@@ -179,7 +179,7 @@ func (m *Repository) HandleSuperVisionsPost(w http.ResponseWriter, r *http.Reque
 		return fmt.Errorf("adding supervision: %w", err)
 	}
 
-	logger.Success(r, m.App.Session, fmt.Sprintf("supervision added for opening hour %d by visitor %s", dateID, visitorId))
+	logger.Success(r, m.App.Session, fmt.Sprintf("supervision added for opening hour %d for visitor %s", dateID, visitorId))
 
 	supervisors, err := m.DB.GetSupervisionsByDateId(dateID)
 	if err != nil {
@@ -209,7 +209,7 @@ func (m *Repository) HandleSuperVisionsDelete(w http.ResponseWriter, r *http.Req
 		return fmt.Errorf("deleting supervision: %w", err)
 	}
 
-	logger.Success(r, m.App.Session, fmt.Sprintf("supervision removed for opening hour %d by visitor %s", dateID, visitorID))
+	logger.Success(r, m.App.Session, fmt.Sprintf("supervision removed for opening hour %d for visitor %s", dateID, visitorID))
 
 	supervisors, err := m.DB.GetSupervisionsByDateId(dateID)
 	if err != nil {
