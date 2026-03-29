@@ -105,6 +105,7 @@ type DatabaseRepo interface {
 	AllLogs(minDate time.Time, maxDate time.Time, page int, limit int) ([]models.Log, int, error)
 	// supervisions
 	CreateOpeningHours(openingHours []models.OpeningHour) error
+	AllOpeningHours() ([]models.OpeningHour, error)
 }
 
 type postgresDBRepo struct {

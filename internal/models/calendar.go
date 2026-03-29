@@ -3,11 +3,10 @@ package models
 import "time"
 
 type OpeningHour struct {
-	ID             int
-	StartTime      time.Time
-	EndTime        time.Time
-	Supervisors    []Visitor
-	MaxSupervisors int
+	ID          int
+	StartTime   time.Time
+	EndTime     time.Time
+	Supervisors []Visitor
 }
 
 type CalEvent struct {
