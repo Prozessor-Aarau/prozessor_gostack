@@ -108,6 +108,7 @@ type DatabaseRepo interface {
 	AllOpeningHours(startDate time.Time, dayCount int) ([]models.OpeningHour, error)
 	CreateSupervision(dateId int, visitorId string) error
 	GetSupervisionsByDateId(dateId int) ([]models.Visitor, error)
+	DeleteSupervision(dateId int, visitorId string) error
 }
 
 type postgresDBRepo struct {

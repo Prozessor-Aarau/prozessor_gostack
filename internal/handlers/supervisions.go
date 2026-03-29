@@ -169,15 +169,47 @@ func (m *Repository) HandleSuperVisionsPost(w http.ResponseWriter, r *http.Reque
 		return fmt.Errorf("parsing date id: %w", err)
 	}
 
-	visitorId := r.Form.Get("visitor_id")
+	visitorId := r.FormValue("visitor_id")
 	if visitorId == "" {
-		visitorId = r.Form.Get("member")
+		visitorId = r.FormValue("member")
 	}
 
 	err = m.DB.CreateSupervision(dateID, visitorId)
 	if err != nil {
 		return fmt.Errorf("adding supervision: %w", err)
 	}
+
+	logger.Success(r, m.App.Session, fmt.Sprintf("supervision added for opening hour %d by visitor %s", dateID, visitorId))
+
+	supervisors, err := m.DB.GetSupervisionsByDateId(dateID)
+	if err != nil {
+		return fmt.Errorf("getting supervisors: %w", err)
+	}
+
+	currentVisitor, ok := m.App.Session.Get(r.Context(), "visitor").(models.Visitor)
+	if !ok {
+		return hxRedirect(w, r, "/admin/logout")
+	}
+
+	role, _ := m.App.Session.Get(r.Context(), "permission").(models.Role)
+
+	w.Header().Set("HX-Trigger", "supervisionUpdated")
+	return rendering(w, r, supervisions.SupervisionModalContent(supervisors, dateID, currentVisitor.ID, role.EditVisitorRole))
+}
+
+func (m *Repository) HandleSuperVisionsDelete(w http.ResponseWriter, r *http.Request) error {
+	visitorID := chi.URLParam(r, "visitor_id")
+	dateID, err := strconv.Atoi(chi.URLParam(r, "date_id"))
+	if err != nil {
+		return fmt.Errorf("parsing date id: %w", err)
+	}
+
+	err = m.DB.DeleteSupervision(dateID, visitorID)
+	if err != nil {
+		return fmt.Errorf("deleting supervision: %w", err)
+	}
+
+	logger.Success(r, m.App.Session, fmt.Sprintf("supervision removed for opening hour %d by visitor %s", dateID, visitorID))
 
 	supervisors, err := m.DB.GetSupervisionsByDateId(dateID)
 	if err != nil {

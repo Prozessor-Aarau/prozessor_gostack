@@ -167,3 +167,15 @@ func (m *postgresDBRepo) GetSupervisionsByDateId(dateId int) ([]models.Visitor, 
 
 	return supervisors, nil
 }
+
+func (m *postgresDBRepo) DeleteSupervision(dateId int, visitorId string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	_, err := m.DB.ExecContext(ctx, "DELETE from opening_hours_supervision WHERE opening_hour_id = $1 AND visitor_id = $2", dateId, visitorId)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

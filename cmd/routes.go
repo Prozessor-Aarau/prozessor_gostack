@@ -137,7 +137,7 @@ func routes(app *config.AppConfig) http.Handler {
 			mux.Get("/supervisions/opening_hours/{id}/supervision", handlers.Make(handlers.Repo.HandleSupervisionsSupervisionModal))
 			// supervisions creation and deletion
 			mux.Post("/supervisions/{date_id}", handlers.Make(handlers.Repo.HandleSuperVisionsPost))
-			// mux.Delete("/supervisions/{date_id}/{visitor_id}", handlers.Make(handlers.Repo.HandleSuperVisionsDelete))
+			mux.Delete("/supervisions/{date_id}/{visitor_id}", handlers.Make(handlers.Repo.HandleSuperVisionsDelete))
 		})
 
 		// logistics

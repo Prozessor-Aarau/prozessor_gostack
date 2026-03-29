@@ -290,6 +290,12 @@ templ supervisionModal() {
 			if (url)
 				htmx.ajax("GET", url, { target: "#opening_hours", swap: "innerHTML" });
 		});
+		document.body.addEventListener("htmx:configRequest", function (event) {
+			if (event.detail.verb === "delete") {
+				const token = document.getElementById("csrf_token");
+				if (token) event.detail.headers["X-CSRF-Token"] = token.value;
+			}
+		});
 	</script>
 }
 
@@ -311,6 +317,9 @@ func supervisorIDList(supervisors []models.Visitor) string {
 }
 
 templ SupervisionModalContent(supervisors []models.Visitor, dateId int, currentVisitorID string, canAssignOthers bool) {
+	<div id="supervision-csrf-store" class="hidden">
+		@ui.CSRF()
+	</div>
 	if len(supervisors) > 0 {
 		<ul class="mb-4">
 			for _, v := range supervisors {
@@ -318,6 +327,7 @@ templ SupervisionModalContent(supervisors []models.Visitor, dateId int, currentV
 					<span>{ v.FirstName } { v.FamilyName }</span>
 					<button
 						type="button"
+						name="deleteButton"
 						class="btn btn-xs btn-error"
 						hx-delete={ fmt.Sprintf("/admin/supervisions/%d/%s", dateId, v.ID) }
 						hx-target="#supervision-modal-content"
