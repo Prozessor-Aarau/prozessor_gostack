@@ -111,12 +111,15 @@ func (m *Repository) HandleSupervisionsOpeningHours(w http.ResponseWriter, r *ht
 		return fmt.Errorf("failed to parse daycount: %s", err)
 	}
 
-	log.Println(startDate, dayCount)
+	// calculate the urls for next and prev requests
+	baseUrl := "/admin/supervisions/opening_hours/"
+	prev := baseUrl + startDate.AddDate(0, 0, -dayCount).Format("2006-01-02") + "/" + strconv.Itoa(dayCount)
+	next := baseUrl + startDate.AddDate(0, 0, dayCount).Format("2006-01-02") + "/" + strconv.Itoa(dayCount)
 
 	openingHours, err := m.DB.AllOpeningHours(startDate, dayCount)
 	if err != nil {
 		return fmt.Errorf("failed to get opening hours: %w", err)
 	}
 
-	return rendering(w, r, supervisions.SupervisionsCalendar(openingHours))
+	return rendering(w, r, supervisions.SupervisionsCalendar(openingHours, prev, next))
 }
