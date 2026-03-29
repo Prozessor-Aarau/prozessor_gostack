@@ -1,6 +1,7 @@
 package supervisions
 
 import "fmt"
+import "strings"
 import "github.com/faebut/prozessor_gostack/view/layout"
 import "github.com/faebut/prozessor_gostack/internal/models"
 import "github.com/faebut/prozessor_gostack/view/ui"
@@ -278,9 +279,6 @@ templ supervisionModal() {
 		<div class="modal-box">
 			<div class="flex items-center justify-between mb-3">
 				<div class="prose"><h2>Aufsicht erfassen</h2></div>
-				<button type="button" class="btn btn-sm btn-ghost btn-circle" onclick="supervision_modal.close()">
-					<span class="i-mdi-close"></span>
-				</button>
 			</div>
 			<div id="supervision-modal-content"></div>
 		</div>
@@ -302,6 +300,14 @@ func isAlreadySupervisor(supervisors []models.Visitor, visitorID string) bool {
 		}
 	}
 	return false
+}
+
+func supervisorIDList(supervisors []models.Visitor) string {
+	ids := make([]string, len(supervisors))
+	for i, s := range supervisors {
+		ids[i] = s.ID
+	}
+	return strings.Join(ids, ",")
 }
 
 templ SupervisionModalContent(supervisors []models.Visitor, dateId int, currentVisitorID string, canAssignOthers bool) {
@@ -359,6 +365,8 @@ templ SupervisionModalContent(supervisors []models.Visitor, dateId int, currentV
 			hx-get="/admin/visitors/selectbox/"
 			hx-trigger="load"
 			class="mb-3"
+			data-supervisors={ supervisorIDList(supervisors) }
+			hx-on::after-swap="this.querySelectorAll('option').forEach(o => { if (this.dataset.supervisors.split(',').includes(o.value)) o.disabled = true })"
 		></div>
 		<form
 			hx-post={ fmt.Sprintf("/admin/supervisions/%d", dateId) }
@@ -370,6 +378,12 @@ templ SupervisionModalContent(supervisors []models.Visitor, dateId int, currentV
 			<button type="submit" class="btn btn-secondary w-full">Aufsicht zuweisen</button>
 		</form>
 	}
+	<button
+		type="button"
+		onclick="supervision_modal.close()"
+		class="btn btn-error w-full mt-3"
+		on
+	>schliessen</button>
 }
 
 templ calEventBlock(e *models.CalEvent) {
