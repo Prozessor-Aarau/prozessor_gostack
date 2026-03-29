@@ -126,13 +126,18 @@ func routes(app *config.AppConfig) http.Handler {
 			mux.Delete("/machines/{id}/reports/{reportid}", handlers.Make(handlers.Repo.HandleMachineDeleteReport))
 		})
 
-		// supervisions
+		// supervisions calendar
 		mux.Group(func(mux chi.Router) {
 			// mux.Use(CheckPermission("ViewSupervisions"))
 			mux.Get("/supervisions", handlers.Make(handlers.Repo.HandleSupervisionsIndex))
 			mux.Get("/supervisions/opening_hours/new", handlers.Make(handlers.Repo.HandleSupervisionsOpeningHoursNew))
 			mux.Get("/supervisions/opening_hours/{startdate}/{daycount}", handlers.Make(handlers.Repo.HandleSupervisionsOpeningHours))
 			mux.Post("/supervisions/opening_hours", handlers.Make(handlers.Repo.HandleSupervisionsOpeningHoursCreate))
+			// supervision modal
+			mux.Get("/supervisions/opening_hours/{id}/supervision", handlers.Make(handlers.Repo.HandleSupervisionsSupervisionModal))
+			// supervisions creation and deletion
+			mux.Post("/supervisions/{date_id}", handlers.Make(handlers.Repo.HandleSuperVisionsPost))
+			// mux.Delete("/supervisions/{date_id}/{visitor_id}", handlers.Make(handlers.Repo.HandleSuperVisionsDelete))
 		})
 
 		// logistics

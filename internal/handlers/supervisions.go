@@ -140,3 +140,73 @@ func (m *Repository) HandleSupervisionsOpeningHours(w http.ResponseWriter, r *ht
 
 	return rendering(w, r, supervisions.SupervisionsCalendar(calData))
 }
+
+// HandleSuperVisionsPost handles the supervision post request
+func (m *Repository) HandleSupervisionsSupervisionModal(w http.ResponseWriter, r *http.Request) error {
+	dateID, err := strconv.Atoi(chi.URLParam(r, "id"))
+	if err != nil {
+		return fmt.Errorf("parsing opening hour id: %w", err)
+	}
+
+	currentVisitor, ok := m.App.Session.Get(r.Context(), "visitor").(models.Visitor)
+	if !ok {
+		return hxRedirect(w, r, "/admin/logout")
+	}
+
+	supervisors, err := m.DB.GetSupervisionsByDateId(dateID)
+	if err != nil {
+		return fmt.Errorf("getting supervisors: %w", err)
+	}
+
+	role, _ := m.App.Session.Get(r.Context(), "permission").(models.Role)
+
+	var allVisitors []models.Visitor
+	if role.EditVisitorRole {
+		allVisitors, _, err = m.DB.AllVisitors(1, 999, models.NewVisitorSearch(""))
+		if err != nil {
+			return fmt.Errorf("getting visitors: %w", err)
+		}
+	}
+
+	return rendering(w, r, supervisions.SupervisionModalContent(supervisors, allVisitors, dateID, currentVisitor.ID, role.EditVisitorRole))
+}
+
+func (m *Repository) HandleSuperVisionsPost(w http.ResponseWriter, r *http.Request) error {
+	// get date id from url
+	dateID, err := strconv.Atoi(chi.URLParam(r, "date_id"))
+	if err != nil {
+		return fmt.Errorf("parsing date id: %w", err)
+	}
+
+	// get id for supervisor from form
+	visitorId := r.Form.Get("visitor_id")
+
+	// creating supervision entry
+	err = m.DB.CreateSupervision(dateID, visitorId)
+	if err != nil {
+		return fmt.Errorf("adding supervision: %w", err)
+	}
+
+	// get all supervisors for this date
+	supervisors, err := m.DB.GetSupervisionsByDateId(dateID)
+	if err != nil {
+		return fmt.Errorf("getting supervisors: %w", err)
+	}
+
+	currentVisitor, ok := m.App.Session.Get(r.Context(), "visitor").(models.Visitor)
+	if !ok {
+		return hxRedirect(w, r, "/admin/logout")
+	}
+
+	role, _ := m.App.Session.Get(r.Context(), "permission").(models.Role)
+
+	var allVisitors []models.Visitor
+	if role.EditVisitorRole {
+		allVisitors, _, err = m.DB.AllVisitors(1, 999, models.NewVisitorSearch(""))
+		if err != nil {
+			return fmt.Errorf("getting visitors: %w", err)
+		}
+	}
+
+	return rendering(w, r, supervisions.SupervisionModalContent(supervisors, allVisitors, dateID, currentVisitor.ID, role.EditVisitorRole))
+}

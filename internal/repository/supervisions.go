@@ -108,3 +108,62 @@ func (m *postgresDBRepo) AllOpeningHours(startDate time.Time, dayCount int) ([]m
 
 	return openingHours, nil
 }
+
+// CreateSupervision creates a supervision for a given date id
+func (m *postgresDBRepo) CreateSupervision(dateId int, visitorId string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	_, err := m.DB.ExecContext(ctx, "INSERT into opening_hours_supervision (opening_hour_id, visitor_id) VALUES($1, $2)", dateId, visitorId)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// GetSupervisionsByDateId gets all supervisors by date id
+func (m *postgresDBRepo) GetSupervisionsByDateId(dateId int) ([]models.Visitor, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	var supervisors []models.Visitor
+
+	rows, err := m.DB.QueryContext(ctx,
+		`SELECT
+		vis.id,
+		vis.first_name,
+		vis.family_name
+	FROM
+		opening_hours_supervision sup
+		LEFT JOIN visitors vis ON sup.visitor_id = vis.id
+	WHERE
+		sup.opening_hour_id = $1`,
+		dateId)
+	if err != nil {
+		return supervisors, err
+	}
+
+	defer rows.Close()
+
+	for rows.Next() {
+		var v models.Visitor
+
+		err := rows.Scan(
+			&v.ID,
+			&v.FirstName,
+			&v.FamilyName,
+		)
+		if err != nil {
+			return supervisors, err
+		}
+
+		supervisors = append(supervisors, v)
+	}
+
+	if err = rows.Err(); err != nil {
+		return supervisors, err
+	}
+
+	return supervisors, nil
+}

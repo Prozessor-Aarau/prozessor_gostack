@@ -13,6 +13,7 @@ templ Supervisions(visitor models.Visitor) {
 		</div>
 		<div id="content">
 			<div id="opening_hours" data-baseurl={ fmt.Sprintf("/admin/supervisions/opening_hours/%s/", time.Now().Format("2006-01-02")) }></div>
+			@supervisionModal()
 			<div>
 				<button
 					type="button"
@@ -234,7 +235,14 @@ templ SupervisionsCalendar(data SupervisionCalendarData) {
 						for _, entry := range calEntriesForDay(data.Entries, day) {
 							switch e := entry.(type) {
 								case *models.OpeningHour:
-									<div class={ "cal-event ", templ.KV("bg-primary/30 border-primary", len(e.Supervisors) > 0),templ.KV("bg-error/40 border-error", len(e.Supervisors) == 0 ) } style={ calEventStyle(entry, 8, 15) }>
+									<div
+										class={ "cal-event cursor-pointer", templ.KV("bg-primary/30 border-primary", len(e.Supervisors) > 0), templ.KV("bg-error/40 border-error", len(e.Supervisors) == 0) }
+										style={ calEventStyle(entry, 8, 15) }
+										hx-get={ fmt.Sprintf("/admin/supervisions/opening_hours/%d/supervision", e.ID) }
+										hx-target="#supervision-modal-content"
+										hx-swap="innerHTML"
+										hx-on::after-request="supervision_modal.showModal()"
+									>
 										@calOpeningHour(e)
 									</div>
 								case *models.CalEvent:
@@ -263,6 +271,68 @@ templ calOpeningHour(e *models.OpeningHour) {
 			<div>keine Aufsicht</div>
 		}
 	</div>
+}
+
+templ supervisionModal() {
+	<dialog id="supervision_modal" class="modal modal-bottom sm:modal-middle" x-data x-on:close-modal.window="$el.close()">
+		<div class="modal-box">
+			<div class="prose">
+				<h2>Aufsicht erfassen</h2>
+			</div>
+			<div id="supervision-modal-content"></div>
+		</div>
+	</dialog>
+}
+
+func isAlreadySupervisor(supervisors []models.Visitor, visitorID string) bool {
+	for _, s := range supervisors {
+		if s.ID == visitorID {
+			return true
+		}
+	}
+	return false
+}
+
+templ SupervisionModalContent(supervisors []models.Visitor, allVisitors []models.Visitor, dateId int, currentVisitorID string, canAssignOthers bool) {
+	if len(supervisors) > 0 {
+		<ul class="mb-4">
+			for _, v := range supervisors {
+				<li class="flex items-center justify-between py-1">
+					<span>{ v.FirstName } { v.FamilyName }</span>
+					<button
+						type="button"
+						class="btn btn-xs btn-error"
+						hx-delete={ fmt.Sprintf("/admin/supervisions/%d/%s", dateId, v.ID) }
+						hx-target="#supervision-modal-content"
+						hx-swap="innerHTML"
+					>
+						<span class="i-mdi-delete"></span>
+					</button>
+				</li>
+			}
+		</ul>
+	}
+	if !isAlreadySupervisor(supervisors, currentVisitorID) {
+		<form
+			hx-post={ fmt.Sprintf("/admin/supervisions/%d", dateId) }
+			hx-target="#supervision-modal-content"
+			hx-swap="innerHTML"
+		>
+			@ui.CSRF()
+			if canAssignOthers {
+				<select name="visitor_id" class="select select-bordered w-full mb-3">
+					for _, v := range allVisitors {
+						<option value={ v.ID } selected?={ v.ID == currentVisitorID }>{ v.FirstName } { v.FamilyName }</option>
+					}
+				</select>
+			} else {
+				<input type="hidden" name="visitor_id" value={ currentVisitorID }/>
+			}
+			<button type="submit" class="btn btn-primary w-full">Aufsicht übernehmen</button>
+		</form>
+	} else {
+		<p class="text-success text-sm mt-2">Du bist bereits als Aufsicht eingetragen.</p>
+	}
 }
 
 templ calEventBlock(e *models.CalEvent) {
