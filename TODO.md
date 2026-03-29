@@ -74,6 +74,28 @@
 }
 ```
 
+> **TODO (optimization):** Current `layoutEvents` assigns columns first-come-first-served within a simple overlap group. A smarter algorithm tracks per-column occupancy and reuses freed columns, avoiding unnecessarily wide splits when earlier events end before later ones start:
+> ```go
+> colEnds := []time.Time{}
+> for _, e := range events {
+>     assigned := -1
+>     for col, end := range colEnds {
+>         if !e.GetStartTime().Before(end) {
+>             assigned = col
+>             colEnds[col] = e.GetEndTime()
+>             break
+>         }
+>     }
+>     if assigned == -1 {
+>         assigned = len(colEnds)
+>         colEnds = append(colEnds, e.GetEndTime())
+>     }
+>     e.SetColumn(assigned)
+> }
+> // second pass to set TotalCols per overlap group
+> ```
+```
+
 ### Layout math in Go (before rendering — keeps templ dumb)
 
 Handler pre-calculates prev/next URLs — no date math in JS:
