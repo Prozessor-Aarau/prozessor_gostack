@@ -4,6 +4,7 @@ import "fmt"
 import "github.com/faebut/prozessor_gostack/view/layout"
 import "github.com/faebut/prozessor_gostack/internal/models"
 import "github.com/faebut/prozessor_gostack/view/ui"
+import "github.com/faebut/prozessor_gostack/internal/helpers"
 
 templ Supervisions(visitor models.Visitor) {
 	@layout.App(true, visitor) {
@@ -24,6 +25,7 @@ templ Supervisions(visitor models.Visitor) {
 				</button>
 				@createModal()
 			</div>
+			<div id="opening_hours" hx-get="/admin/supervisions/opening_hours" hx-trigger="load"></div>
 		</div>
 	}
 }
@@ -133,4 +135,12 @@ templ CreateForm(data OpeningHoursForm, errors OpeningHoursFormErrors) {
 			<button type="button" class="btn btn-warning" onclick="create_modal.close()">abbrechen</button><button class="btn btn-success" type="submit">speichern</button>
 		</div>
 	</form>
+}
+
+templ SupervisionsCalendar(oh []models.OpeningHour) {
+	<ul>
+		for _, v := range oh {
+			<li>{ helpers.HumanDate(v.StartTime) } { helpers.HumanDate(v.EndTime) }</li>
+		}
+	</ul>
 }

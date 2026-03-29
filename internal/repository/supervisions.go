@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"database/sql"
 	"time"
 
 	"github.com/faebut/prozessor_gostack/internal/models"
@@ -66,9 +67,9 @@ func (m *postgresDBRepo) AllOpeningHours() ([]models.OpeningHour, error) {
 	for rows.Next() {
 		var oh models.OpeningHour
 
-		var supId []string
-		var supFirstName []string
-		var supFamilyName []string
+		var supId []sql.NullString
+		var supFirstName []sql.NullString
+		var supFamilyName []sql.NullString
 
 		err := rows.Scan(
 			&oh.ID,
@@ -82,12 +83,14 @@ func (m *postgresDBRepo) AllOpeningHours() ([]models.OpeningHour, error) {
 			return openingHours, err
 		}
 
-		for i := range supId {
-			oh.Supervisors = append(oh.Supervisors, models.Visitor{
-				ID:         supId[i],
-				FirstName:  supFirstName[i],
-				FamilyName: supFamilyName[i],
-			})
+		if supId[0].Valid {
+			for i := range supId {
+				oh.Supervisors = append(oh.Supervisors, models.Visitor{
+					ID:         supId[i].String,
+					FirstName:  supFirstName[i].String,
+					FamilyName: supFamilyName[i].String,
+				})
+			}
 		}
 
 		openingHours = append(openingHours, oh)

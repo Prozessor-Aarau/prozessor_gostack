@@ -28,10 +28,12 @@ func (m *Repository) HandleSupervisionsIndex(w http.ResponseWriter, r *http.Requ
 	return rendering(w, r, supervisions.Supervisions(visitor))
 }
 
+// HandleSupervisionsOpeningHoursNew gets a new opening hours creation form
 func (m *Repository) HandleSupervisionsOpeningHoursNew(w http.ResponseWriter, r *http.Request) error {
 	return rendering(w, r, supervisions.CreateForm(supervisions.OpeningHoursForm{}, supervisions.OpeningHoursFormErrors{}))
 }
 
+// HandleSupervisionsOpeningHoursCreate handles the opening hours creation form
 func (m *Repository) HandleSupervisionsOpeningHoursCreate(w http.ResponseWriter, r *http.Request) error {
 	var formData supervisions.OpeningHoursForm
 	var formErrors supervisions.OpeningHoursFormErrors
@@ -93,4 +95,14 @@ func (m *Repository) HandleSupervisionsOpeningHoursCreate(w http.ResponseWriter,
 	w.Header().Set("HX-Trigger", "closeModal")
 
 	return nil
+}
+
+// HandleSupervisionsOpeningHours gets all opening hours and returns the supervisions calendar with all dates and supervisions
+func (m *Repository) HandleSupervisionsOpeningHours(w http.ResponseWriter, r *http.Request) error {
+	openingHours, err := m.DB.AllOpeningHours()
+	if err != nil {
+		return fmt.Errorf("failed to get opening hours: %w", err)
+	}
+
+	return rendering(w, r, supervisions.SupervisionsCalendar(openingHours))
 }
