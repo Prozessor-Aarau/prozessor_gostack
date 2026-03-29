@@ -126,3 +126,19 @@ func ToToday(s string) int {
 
 	return int(diffDays)
 }
+
+// DateRepetition returns a slice of weekly repeating dates until the end of repetition
+func DateRepetition(start time.Time, end time.Time) []time.Time {
+	var dates []time.Time
+
+	for current := start; !dateOnly(current).After(dateOnly(end)); current = current.AddDate(0, 0, 7) {
+		dates = append(dates, current)
+	}
+
+	return dates
+}
+
+func dateOnly(t time.Time) time.Time {
+	y, m, d := t.Date()
+	return time.Date(y, m, d, 0, 0, 0, 0, t.Location())
+}

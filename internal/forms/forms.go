@@ -3,9 +3,11 @@ package forms
 import (
 	"fmt"
 	"net/url"
+	"reflect"
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 	"unicode"
 )
 
@@ -192,6 +194,59 @@ func (f *Form) IsPostcode(field string) {
 				field,
 				"Gültige CH Postleitzahl angeben",
 			)
+		}
+	}
+}
+
+// IsDate checks if the field is a valid date in YYYY-MM-DD format
+func (f *Form) IsDate(field string) {
+	if !f.IsEmpty(field) {
+		if _, err := time.Parse("2006-01-02", f.Get(field)); err != nil {
+			f.Errors.Add(field, "Gültiges Datum angeben (JJJJ-MM-TT)")
+		}
+	}
+}
+
+// IsTime checks if the field is a valid time in HH:MM format
+func (f *Form) IsTime(field string) {
+	if !f.IsEmpty(field) {
+		if _, err := time.Parse("15:04", f.Get(field)); err != nil {
+			f.Errors.Add(field, "Gültige Zeit angeben (HH:MM)")
+		}
+	}
+}
+
+// MapErrors populates a struct's string fields using `form:"field_name"` tags
+// from the form's error map. Fields without a tag are skipped.
+func (f *Form) MapErrors(dst any) {
+	v := reflect.ValueOf(dst).Elem()
+	t := v.Type()
+	for i := range t.NumField() {
+		field := t.Field(i)
+		tag := field.Tag.Get("form")
+		if tag == "" || field.Type.Kind() != reflect.String {
+			continue
+		}
+		v.Field(i).SetString(f.Errors.Get(tag))
+	}
+}
+
+// MapForm populates a struct's fields using `form:"field_name"` tags
+// from the form's submitted values. Supports string and bool fields.
+func (f *Form) MapForm(dst any) {
+	v := reflect.ValueOf(dst).Elem()
+	t := v.Type()
+	for i := range t.NumField() {
+		field := t.Field(i)
+		tag := field.Tag.Get("form")
+		if tag == "" {
+			continue
+		}
+		switch field.Type.Kind() {
+		case reflect.String:
+			v.Field(i).SetString(f.Get(tag))
+		case reflect.Bool:
+			v.Field(i).SetBool(f.BoxValue(tag))
 		}
 	}
 }

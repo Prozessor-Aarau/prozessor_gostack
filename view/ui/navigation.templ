@@ -52,6 +52,9 @@ templ Navigation(visitor models.Visitor) {
 					<li>
 						<a href="/admin/checkin">Check-In</a>
 					</li>
+					<li>
+						<a href="/admin/supervisions">Aufsichten</a>
+					</li>
 					if prm.ViewMachines {
 						<li>
 							<a href="/admin/machines">Maschinen</a>
@@ -137,15 +140,15 @@ templ Navigation(visitor models.Visitor) {
 			</div>
 		</div>
 		<script>
-    // using classList.toggle() method
-    const para = document.querySelector('.hidden');
-    const menubutton = document.querySelector('#menubutton');
+			// using classList.toggle() method
+			const para = document.querySelector(".hidden");
+			const menubutton = document.querySelector("#menubutton");
 
-    function menuToggle() {
-      // toggle class
-      para.classList.toggle('hidden');
-      menubutton.classList.toggle('rotate-45');
-    }
-  </script>
+			function menuToggle() {
+				// toggle class
+				para.classList.toggle("hidden");
+				menubutton.classList.toggle("rotate-45");
+			}
+		</script>
 	</nav>
 }

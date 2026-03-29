@@ -15,6 +15,16 @@
 
 ---
 
+## Calendar iCal Feed
+
+- [ ] Add public route `GET /calendar/feed.ics` — no auth, no CSRF
+- [ ] Return `Content-Type: text/calendar; charset=utf-8` with all opening hours and events serialized in iCal format
+- [ ] Each entry needs a stable `UID` (e.g. `opening-hour-{id}@prozessor-aarau.ch`) so calendar apps can sync updates without duplicating
+- [ ] Consider `github.com/arran4/golang-ical` library or write the format directly (it's simple enough)
+- [ ] Users subscribe by pasting the URL into Google Calendar → "Add calendar → From URL" — Google re-fetches periodically, no push needed
+
+---
+
 ## Calendar View (frontend)
 
 ### Grid layout

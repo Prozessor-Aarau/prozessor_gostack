@@ -103,6 +103,8 @@ type DatabaseRepo interface {
 	GetStatisticsKeyFigures(startDate, endDate time.Time) (models.ChartData, error)
 	// logs
 	AllLogs(minDate time.Time, maxDate time.Time, page int, limit int) ([]models.Log, int, error)
+	// supervisions
+	CreateOpeningHours(openingHours []models.OpeningHour) error
 }
 
 type postgresDBRepo struct {
@@ -190,7 +192,6 @@ func (m *postgresDBRepo) GetAllAteliers() ([]models.Atelier, error) {
 			&a.CreatedOn,
 			&a.UpdatedOn,
 		)
-
 		if err != nil {
 			return ateliers, err
 		}
@@ -243,7 +244,6 @@ func (m *postgresDBRepo) GetAllPartners() ([]models.Partner, error) {
 			&p.CreatedOn,
 			&p.UpdatedOn,
 		)
-
 		if err != nil {
 			return partners, err
 		}
