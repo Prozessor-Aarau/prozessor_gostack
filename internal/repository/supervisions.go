@@ -34,9 +34,12 @@ func (m *postgresDBRepo) CreateOpeningHours(openingHours []models.OpeningHour) e
 }
 
 // AllOpeningHours returns all opening hours and their supervisors
-func (m *postgresDBRepo) AllOpeningHours() ([]models.OpeningHour, error) {
+func (m *postgresDBRepo) AllOpeningHours(startDate time.Time, dayCount int) ([]models.OpeningHour, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
+
+	// calculate EndDate
+	endDate := startDate.AddDate(0, 0, dayCount)
 
 	var openingHours []models.OpeningHour
 
@@ -52,12 +55,15 @@ func (m *postgresDBRepo) AllOpeningHours() ([]models.OpeningHour, error) {
 			opening_hours oh
 			LEFT JOIN opening_hours_supervision sup ON oh.id = sup.opening_hour_id
 			LEFT JOIN visitors vis ON sup.visitor_id = vis.id
+		WHERE
+			DATE(oh.start_date) >= DATE ($1)
+			AND DATE(oh.start_date) <= DATE($2)
 		GROUP BY
 			oh.id
 		ORDER BY
 			oh.start_date ASC
 	`
-	rows, err := m.DB.QueryContext(ctx, query)
+	rows, err := m.DB.QueryContext(ctx, query, startDate.Format("2006-01-02"), endDate.Format("2006-01-02"))
 	if err != nil {
 		return openingHours, err
 	}

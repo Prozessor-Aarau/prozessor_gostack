@@ -5,6 +5,7 @@ import (
 	"log"
 	"log/slog"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/faebut/prozessor_gostack/internal/forms"
@@ -12,6 +13,7 @@ import (
 	"github.com/faebut/prozessor_gostack/internal/logger"
 	"github.com/faebut/prozessor_gostack/internal/models"
 	"github.com/faebut/prozessor_gostack/view/supervisions"
+	"github.com/go-chi/chi/v5"
 )
 
 // HandleSupervisionsIndex is the supervisions page handler
@@ -99,7 +101,19 @@ func (m *Repository) HandleSupervisionsOpeningHoursCreate(w http.ResponseWriter,
 
 // HandleSupervisionsOpeningHours gets all opening hours and returns the supervisions calendar with all dates and supervisions
 func (m *Repository) HandleSupervisionsOpeningHours(w http.ResponseWriter, r *http.Request) error {
-	openingHours, err := m.DB.AllOpeningHours()
+	// get startDate and dayCount from url
+	startDate, err := time.Parse("2006-01-02", chi.URLParam(r, "startdate"))
+	if err != nil {
+		return fmt.Errorf("failed to parse startdate: %s", err)
+	}
+	dayCount, err := strconv.Atoi(chi.URLParam(r, "daycount"))
+	if err != nil {
+		return fmt.Errorf("failed to parse daycount: %s", err)
+	}
+
+	log.Println(startDate, dayCount)
+
+	openingHours, err := m.DB.AllOpeningHours(startDate, dayCount)
 	if err != nil {
 		return fmt.Errorf("failed to get opening hours: %w", err)
 	}
