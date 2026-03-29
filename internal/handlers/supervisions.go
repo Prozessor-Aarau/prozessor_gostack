@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/faebut/prozessor_gostack/internal/events"
 	"github.com/faebut/prozessor_gostack/internal/forms"
 	"github.com/faebut/prozessor_gostack/internal/helpers"
 	"github.com/faebut/prozessor_gostack/internal/logger"
@@ -113,13 +114,29 @@ func (m *Repository) HandleSupervisionsOpeningHours(w http.ResponseWriter, r *ht
 
 	// calculate the urls for next and prev requests
 	baseUrl := "/admin/supervisions/opening_hours/"
-	prev := baseUrl + startDate.AddDate(0, 0, -dayCount).Format("2006-01-02") + "/" + strconv.Itoa(dayCount)
-	next := baseUrl + startDate.AddDate(0, 0, dayCount).Format("2006-01-02") + "/" + strconv.Itoa(dayCount)
+	prevURL := baseUrl + startDate.AddDate(0, 0, -dayCount).Format("2006-01-02") + "/" + strconv.Itoa(dayCount)
+	nextURL := baseUrl + startDate.AddDate(0, 0, dayCount).Format("2006-01-02") + "/" + strconv.Itoa(dayCount)
 
 	openingHours, err := m.DB.AllOpeningHours(startDate, dayCount)
 	if err != nil {
 		return fmt.Errorf("failed to get opening hours: %w", err)
 	}
 
-	return rendering(w, r, supervisions.SupervisionsCalendar(openingHours, prev, next))
+	// calculate calendar entries
+	entries := make([]models.CalendarEntry, 0, len(openingHours))
+	for i := range openingHours {
+		entries = append(entries, &openingHours[i])
+	}
+	calEntries := events.LayoutEvents(entries)
+
+	// create calendar data
+	calData := supervisions.SupervisionCalendarData{
+		Entries:   calEntries,
+		StartDate: startDate,
+		Daycount:  dayCount,
+		PrevUrl:   prevURL,
+		NextUrl:   nextURL,
+	}
+
+	return rendering(w, r, supervisions.SupervisionsCalendar(calData))
 }

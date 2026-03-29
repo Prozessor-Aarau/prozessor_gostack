@@ -148,12 +148,20 @@ templ CreateForm(data OpeningHoursForm, errors OpeningHoursFormErrors) {
 	</form>
 }
 
-templ SupervisionsCalendar(oh []models.OpeningHour, prev, next string) {
-	<button type="button" hx-swap="innerHTML" hx-target="#opening_hours" hx-get={ prev }>Previous</button>
-	<button type="button" hx-swap="innerHTML" hx-target="#opening_hours" hx-get={ next }>Next</button>
+type SupervisionCalendarData struct {
+	Entries   []models.CalendarEntry
+	StartDate time.Time
+	Daycount  int
+	PrevUrl   string
+	NextUrl   string
+}
+
+templ SupervisionsCalendar(data SupervisionCalendarData) {
+	<button type="button" hx-swap="innerHTML" hx-target="#opening_hours" hx-get={ data.PrevUrl }>Previous</button>
+	<button type="button" hx-swap="innerHTML" hx-target="#opening_hours" hx-get={ data.NextUrl }>Next</button>
 	<ul>
-		for _, v := range oh {
-			<li>{ helpers.HumanDate(v.StartTime) } { helpers.HumanDate(v.EndTime) }</li>
+		for _, v := range data.Entries {
+			<li>{ helpers.HumanDate(v.GetStartTime()) } { helpers.HumanDate(v.GetEndTime()) }</li>
 		}
 	</ul>
 }
