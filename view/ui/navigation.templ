@@ -140,14 +140,9 @@ templ Navigation(visitor models.Visitor) {
 			</div>
 		</div>
 		<script>
-			// using classList.toggle() method
-			const para = document.querySelector(".hidden");
-			const menubutton = document.querySelector("#menubutton");
-
 			function menuToggle() {
-				// toggle class
-				para.classList.toggle("hidden");
-				menubutton.classList.toggle("rotate-45");
+				document.querySelector(".transition.p-0").classList.toggle("hidden");
+				document.querySelector("#menubutton").classList.toggle("rotate-45");
 			}
 		</script>
 	</nav>

@@ -207,7 +207,7 @@ func calEventStyle(entry models.CalendarEntry, startHour, slotMinutes int) strin
 }
 
 templ SupervisionsCalendar(data SupervisionCalendarData) {
-	<div class="cal-wrapper" data-prev={ data.PrevUrl } data-next={ data.NextUrl }>
+	<div class="cal-wrapper" data-prev={ data.PrevUrl } data-next={ data.NextUrl } data-current={ fmt.Sprintf("/admin/supervisions/opening_hours/%s/%d", data.StartDate.Format("2006-01-02"), data.Daycount) }>
 		<div class="flex gap-2 mb-2">
 			<button type="button" class="btn btn-sm btn-ghost" hx-get={ data.PrevUrl } hx-target="#opening_hours" hx-swap="innerHTML">
 				<span class="i-mdi-chevron-left"></span>
@@ -236,7 +236,7 @@ templ SupervisionsCalendar(data SupervisionCalendarData) {
 							switch e := entry.(type) {
 								case *models.OpeningHour:
 									<div
-										class={ "cal-event cursor-pointer", templ.KV("bg-primary/30 border-primary", len(e.Supervisors) > 0), templ.KV("bg-error/40 border-error", len(e.Supervisors) == 0) }
+										class={ "cal-event cursor-pointer", templ.KV("bg-success/30 border-success", len(e.Supervisors) > 1), templ.KV("bg-warning/30 border-warning", len(e.Supervisors) == 1) , templ.KV("bg-error/40 border-error", len(e.Supervisors) == 0) }
 										style={ calEventStyle(entry, 8, 15) }
 										hx-get={ fmt.Sprintf("/admin/supervisions/opening_hours/%d/supervision", e.ID) }
 										hx-target="#supervision-modal-content"
@@ -246,7 +246,7 @@ templ SupervisionsCalendar(data SupervisionCalendarData) {
 										@calOpeningHour(e)
 									</div>
 								case *models.CalEvent:
-									<div class="cal-event bg-secondary/20 border-secondary" style={ calEventStyle(entry, 8, 15) }>
+									<div class="cal-event bg-info/30 border-info" style={ calEventStyle(entry, 8, 15) }>
 										@calEventBlock(e)
 									</div>
 							}
@@ -276,12 +276,23 @@ templ calOpeningHour(e *models.OpeningHour) {
 templ supervisionModal() {
 	<dialog id="supervision_modal" class="modal modal-bottom sm:modal-middle" x-data x-on:close-modal.window="$el.close()">
 		<div class="modal-box">
-			<div class="prose">
-				<h2>Aufsicht erfassen</h2>
+			<div class="flex items-center justify-between mb-3">
+				<div class="prose"><h2>Aufsicht erfassen</h2></div>
+				<button type="button" class="btn btn-sm btn-ghost btn-circle" onclick="supervision_modal.close()">
+					<span class="i-mdi-close"></span>
+				</button>
 			</div>
 			<div id="supervision-modal-content"></div>
 		</div>
 	</dialog>
+	<script>
+		document.body.addEventListener("supervisionUpdated", function () {
+			const wrapper = document.querySelector(".cal-wrapper");
+			const url = wrapper?.dataset.current;
+			if (url)
+				htmx.ajax("GET", url, { target: "#opening_hours", swap: "innerHTML" });
+		});
+	</script>
 }
 
 func isAlreadySupervisor(supervisors []models.Visitor, visitorID string) bool {
@@ -293,7 +304,7 @@ func isAlreadySupervisor(supervisors []models.Visitor, visitorID string) bool {
 	return false
 }
 
-templ SupervisionModalContent(supervisors []models.Visitor, allVisitors []models.Visitor, dateId int, currentVisitorID string, canAssignOthers bool) {
+templ SupervisionModalContent(supervisors []models.Visitor, dateId int, currentVisitorID string, canAssignOthers bool) {
 	if len(supervisors) > 0 {
 		<ul class="mb-4">
 			for _, v := range supervisors {
@@ -317,21 +328,47 @@ templ SupervisionModalContent(supervisors []models.Visitor, allVisitors []models
 			hx-post={ fmt.Sprintf("/admin/supervisions/%d", dateId) }
 			hx-target="#supervision-modal-content"
 			hx-swap="innerHTML"
+			class="mb-3"
 		>
 			@ui.CSRF()
-			if canAssignOthers {
-				<select name="visitor_id" class="select select-bordered w-full mb-3">
-					for _, v := range allVisitors {
-						<option value={ v.ID } selected?={ v.ID == currentVisitorID }>{ v.FirstName } { v.FamilyName }</option>
-					}
-				</select>
-			} else {
-				<input type="hidden" name="visitor_id" value={ currentVisitorID }/>
-			}
+			<input type="hidden" name="visitor_id" value={ currentVisitorID }/>
 			<button type="submit" class="btn btn-primary w-full">Aufsicht übernehmen</button>
 		</form>
 	} else {
-		<p class="text-success text-sm mt-2">Du bist bereits als Aufsicht eingetragen.</p>
+		<p class="text-success text-sm mb-3">Du bist bereits als Aufsicht eingetragen.</p>
+	}
+	if canAssignOthers {
+		<div class="divider text-xs">Andere Person zuweisen</div>
+		<form novalidate class="mb-3">
+			@ui.CSRF()
+			<label class="input w-full flex items-center gap-2">
+				<span class="i-mdi-magnify text-xl"></span>
+				<input
+					type="search"
+					name="search_term"
+					class="grow"
+					placeholder="Suche nach Name oder Ort..."
+					hx-post="/admin/visitors/selectbox/"
+					hx-trigger="input changed delay:500ms, search"
+					hx-target="#supervisionMemberSelect"
+				/>
+			</label>
+		</form>
+		<div
+			id="supervisionMemberSelect"
+			hx-get="/admin/visitors/selectbox/"
+			hx-trigger="load"
+			class="mb-3"
+		></div>
+		<form
+			hx-post={ fmt.Sprintf("/admin/supervisions/%d", dateId) }
+			hx-target="#supervision-modal-content"
+			hx-swap="innerHTML"
+			hx-include="#supervisionMemberSelect #member"
+		>
+			@ui.CSRF()
+			<button type="submit" class="btn btn-secondary w-full">Aufsicht zuweisen</button>
+		</form>
 	}
 }
 

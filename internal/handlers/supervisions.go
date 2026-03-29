@@ -160,34 +160,25 @@ func (m *Repository) HandleSupervisionsSupervisionModal(w http.ResponseWriter, r
 
 	role, _ := m.App.Session.Get(r.Context(), "permission").(models.Role)
 
-	var allVisitors []models.Visitor
-	if role.EditVisitorRole {
-		allVisitors, _, err = m.DB.AllVisitors(1, 999, models.NewVisitorSearch(""))
-		if err != nil {
-			return fmt.Errorf("getting visitors: %w", err)
-		}
-	}
-
-	return rendering(w, r, supervisions.SupervisionModalContent(supervisors, allVisitors, dateID, currentVisitor.ID, role.EditVisitorRole))
+	return rendering(w, r, supervisions.SupervisionModalContent(supervisors, dateID, currentVisitor.ID, role.EditVisitorRole))
 }
 
 func (m *Repository) HandleSuperVisionsPost(w http.ResponseWriter, r *http.Request) error {
-	// get date id from url
 	dateID, err := strconv.Atoi(chi.URLParam(r, "date_id"))
 	if err != nil {
 		return fmt.Errorf("parsing date id: %w", err)
 	}
 
-	// get id for supervisor from form
 	visitorId := r.Form.Get("visitor_id")
+	if visitorId == "" {
+		visitorId = r.Form.Get("member")
+	}
 
-	// creating supervision entry
 	err = m.DB.CreateSupervision(dateID, visitorId)
 	if err != nil {
 		return fmt.Errorf("adding supervision: %w", err)
 	}
 
-	// get all supervisors for this date
 	supervisors, err := m.DB.GetSupervisionsByDateId(dateID)
 	if err != nil {
 		return fmt.Errorf("getting supervisors: %w", err)
@@ -200,13 +191,6 @@ func (m *Repository) HandleSuperVisionsPost(w http.ResponseWriter, r *http.Reque
 
 	role, _ := m.App.Session.Get(r.Context(), "permission").(models.Role)
 
-	var allVisitors []models.Visitor
-	if role.EditVisitorRole {
-		allVisitors, _, err = m.DB.AllVisitors(1, 999, models.NewVisitorSearch(""))
-		if err != nil {
-			return fmt.Errorf("getting visitors: %w", err)
-		}
-	}
-
-	return rendering(w, r, supervisions.SupervisionModalContent(supervisors, allVisitors, dateID, currentVisitor.ID, role.EditVisitorRole))
+	w.Header().Set("HX-Trigger", "supervisionUpdated")
+	return rendering(w, r, supervisions.SupervisionModalContent(supervisors, dateID, currentVisitor.ID, role.EditVisitorRole))
 }
