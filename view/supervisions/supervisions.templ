@@ -8,10 +8,6 @@ import "github.com/faebut/prozessor_gostack/internal/helpers"
 import "time"
 
 templ Supervisions(visitor models.Visitor) {
-	{{
-		todayString := time.Now().Format("2006-01-02")
-		dayCount := 7
-	}}
 	@layout.App(true, visitor) {
 		<div class="prose mb-10">
 			<h1>Aufsichten</h1>
@@ -30,7 +26,17 @@ templ Supervisions(visitor models.Visitor) {
 				</button>
 				@createModal()
 			</div>
-			<div id="opening_hours" hx-get={ templ.URL(fmt.Sprintf("/admin/supervisions/opening_hours/%s/%d", todayString, dayCount)) } hx-trigger="load"></div>
+			<div id="opening_hours" data-baseurl={ fmt.Sprintf("/admin/supervisions/opening_hours/%s/", time.Now().Format("2006-01-02")) }></div>
+			<script>
+				(function () {
+					const el = document.getElementById("opening_hours");
+					const dayCount = window.innerWidth < 480 ? 3 : 7;
+					htmx.ajax("GET", el.dataset.baseurl + dayCount, {
+						target: "#opening_hours",
+						swap: "innerHTML",
+					});
+				})();
+			</script>
 		</div>
 	}
 }
