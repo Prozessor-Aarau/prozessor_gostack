@@ -4,7 +4,6 @@ import "fmt"
 import "github.com/faebut/prozessor_gostack/view/layout"
 import "github.com/faebut/prozessor_gostack/internal/models"
 import "github.com/faebut/prozessor_gostack/view/ui"
-import "github.com/faebut/prozessor_gostack/internal/helpers"
 import "time"
 
 templ Supervisions(visitor models.Visitor) {
@@ -13,6 +12,7 @@ templ Supervisions(visitor models.Visitor) {
 			<h1>Aufsichten</h1>
 		</div>
 		<div id="content">
+			<div id="opening_hours" data-baseurl={ fmt.Sprintf("/admin/supervisions/opening_hours/%s/", time.Now().Format("2006-01-02")) }></div>
 			<div>
 				<button
 					type="button"
@@ -26,18 +26,17 @@ templ Supervisions(visitor models.Visitor) {
 				</button>
 				@createModal()
 			</div>
-			<div id="opening_hours" data-baseurl={ fmt.Sprintf("/admin/supervisions/opening_hours/%s/", time.Now().Format("2006-01-02")) }></div>
-			<script>
-				(function () {
-					const el = document.getElementById("opening_hours");
-					const dayCount = window.innerWidth < 480 ? 3 : 7;
-					htmx.ajax("GET", el.dataset.baseurl + dayCount, {
-						target: "#opening_hours",
-						swap: "innerHTML",
-					});
-				})();
-			</script>
 		</div>
+		<script>
+			(function () {
+				const el = document.getElementById("opening_hours");
+				const dayCount = window.innerWidth < 480 ? 3 : 7;
+				htmx.ajax("GET", el.dataset.baseurl + dayCount, {
+					target: "#opening_hours",
+					swap: "innerHTML",
+				});
+			})();
+		</script>
 	}
 }
 
@@ -156,12 +155,118 @@ type SupervisionCalendarData struct {
 	NextUrl   string
 }
 
-templ SupervisionsCalendar(data SupervisionCalendarData) {
-	<button type="button" hx-swap="innerHTML" hx-target="#opening_hours" hx-get={ data.PrevUrl }>Previous</button>
-	<button type="button" hx-swap="innerHTML" hx-target="#opening_hours" hx-get={ data.NextUrl }>Next</button>
-	<ul>
-		for _, v := range data.Entries {
-			<li>{ helpers.HumanDate(v.GetStartTime()) } { helpers.HumanDate(v.GetEndTime()) }</li>
+var weekdayDE = map[time.Weekday]string{
+	time.Monday:    "Mo",
+	time.Tuesday:   "Di",
+	time.Wednesday: "Mi",
+	time.Thursday:  "Do",
+	time.Friday:    "Fr",
+	time.Saturday:  "Sa",
+	time.Sunday:    "So",
+}
+
+func calDayHeader(t time.Time) string {
+	return fmt.Sprintf("%s %s", weekdayDE[t.Weekday()], t.Format("02.01"))
+}
+
+func calSlotLabel(slot, startHour, slotMinutes int) string {
+	totalMinutes := startHour*60 + slot*slotMinutes
+	return fmt.Sprintf("%02d:%02d", totalMinutes/60, totalMinutes%60)
+}
+
+func calStartSlot(t time.Time, startHour, slotMinutes int) int {
+	return ((t.Hour()-startHour)*60 + t.Minute()) / slotMinutes
+}
+
+func calDurationSlots(start, end time.Time, slotMinutes int) int {
+	slots := int(end.Sub(start).Minutes()) / slotMinutes
+	if slots < 1 {
+		return 1
+	}
+	return slots
+}
+
+func calEntriesForDay(entries []models.CalendarEntry, day time.Time) []models.CalendarEntry {
+	y, m, d := day.Date()
+	var result []models.CalendarEntry
+	for _, e := range entries {
+		ey, em, ed := e.GetStartTime().Date()
+		if ey == y && em == m && ed == d {
+			result = append(result, e)
 		}
-	</ul>
+	}
+	return result
+}
+
+func calEventStyle(entry models.CalendarEntry, startHour, slotMinutes int) string {
+	startSlot := calStartSlot(entry.GetStartTime(), startHour, slotMinutes)
+	durationSlots := calDurationSlots(entry.GetStartTime(), entry.GetEndTime(), slotMinutes)
+	return fmt.Sprintf("--start-slot:%d;--duration-slots:%d;--col:%d;--total-cols:%d",
+		startSlot, durationSlots, entry.GetColumn(), entry.GetTotalCols())
+}
+
+templ SupervisionsCalendar(data SupervisionCalendarData) {
+	<div class="cal-wrapper" data-prev={ data.PrevUrl } data-next={ data.NextUrl }>
+		<div class="flex gap-2 mb-2">
+			<button type="button" class="btn btn-sm btn-ghost" hx-get={ data.PrevUrl } hx-target="#opening_hours" hx-swap="innerHTML">
+				<span class="i-mdi-chevron-left"></span>
+			</button>
+			<button type="button" class="btn btn-sm btn-ghost" hx-get={ data.NextUrl } hx-target="#opening_hours" hx-swap="innerHTML">
+				<span class="i-mdi-chevron-right"></span>
+			</button>
+		</div>
+		<div class="cal-grid">
+			<div class="cal-time-col">
+				<div class="cal-header-cell"></div>
+				for i := range 56 {
+					<div class="cal-time-label">
+						if i % 4 == 0 {
+							{ calSlotLabel(i, 8, 15) }
+						}
+					</div>
+				}
+			</div>
+			for d := range data.Daycount {
+				{{ day := data.StartDate.AddDate(0, 0, d) }}
+				<div class="cal-day-col">
+					<div class="cal-day-header">{ calDayHeader(day) }</div>
+					<div class="cal-day-body">
+						for _, entry := range calEntriesForDay(data.Entries, day) {
+							switch e := entry.(type) {
+								case *models.OpeningHour:
+									<div class={ "cal-event ", templ.KV("bg-primary/30 border-primary", len(e.Supervisors) > 0),templ.KV("bg-error/40 border-error", len(e.Supervisors) == 0 ) } style={ calEventStyle(entry, 8, 15) }>
+										@calOpeningHour(e)
+									</div>
+								case *models.CalEvent:
+									<div class="cal-event bg-secondary/20 border-secondary" style={ calEventStyle(entry, 8, 15) }>
+										@calEventBlock(e)
+									</div>
+							}
+						}
+					</div>
+				</div>
+			}
+		</div>
+	</div>
+}
+
+templ calOpeningHour(e *models.OpeningHour) {
+	<div class="text-xs font-semibold leading-tight">
+		{ e.StartTime.Format("15:04") } – { e.EndTime.Format("15:04") }
+	</div>
+	<div class="text-xs opacity-75 mt-1">
+		if len(e.Supervisors) > 0 {
+			for _, s := range e.Supervisors {
+				<div>{ s.FirstName } { s.FamilyName }</div>
+			}
+		} else {
+			<div>keine Aufsicht</div>
+		}
+	</div>
+}
+
+templ calEventBlock(e *models.CalEvent) {
+	<a href={ templ.URL(e.URL) } class="block text-xs font-semibold leading-tight">
+		{ e.Title }
+	</a>
 }
