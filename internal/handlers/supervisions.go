@@ -97,7 +97,7 @@ func (m *Repository) HandleSupervisionsOpeningHoursCreate(w http.ResponseWriter,
 		fmt.Sprintf("%d opening hour(s) starting from %s successfully added", len(openingHours), startTime.Format("2006-01-02")))
 
 	// close dialog
-	w.Header().Set("HX-Trigger", "closeModal")
+	w.Header().Set("HX-Trigger", `{"closeModal": null, "supervisionUpdated": null}`)
 
 	return nil
 }
