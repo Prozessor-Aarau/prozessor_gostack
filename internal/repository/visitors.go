@@ -18,12 +18,11 @@ func (m *postgresDBRepo) CreateVisitor(v models.Visitor) (string, error) {
 	defer cancel()
 
 	id, err := uuid.NewUUID()
-
 	if err != nil {
 		return "", err
 	}
 
-	//Convert id to string and set it on the user
+	// Convert id to string and set it on the user
 	v.ID = id.String()
 
 	stmt := `INSERT INTO visitors (id, first_name, family_name, birthdate, phone, email, address, postcode, city, infos, newsletter, created_on, updated_on)
@@ -44,7 +43,6 @@ func (m *postgresDBRepo) CreateVisitor(v models.Visitor) (string, error) {
 		time.Now(),
 		time.Now(),
 	)
-
 	if err != nil {
 		return "", err
 	}
@@ -127,7 +125,6 @@ func (m *postgresDBRepo) AllVisitors(
 	row := m.DB.QueryRowContext(ctx, countQuery, search)
 
 	err := row.Scan(&count)
-
 	if err != nil {
 		return visitors, count, err
 	}
@@ -271,7 +268,7 @@ func (m *postgresDBRepo) VisitorByID(id string) (models.Visitor, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	query := `SELECT v.id, first_name, family_name, birthdate, v.phone, v.email, v.address, v.postcode, v.city, infos, newsletter, ressort_id, role_id, t.ressort_name, v.created_on, v.updated_on, a.id, a.buydate, b.number, b.id, password, avatar, array_agg(p.id) AS partners, array_agg(p.partner_name) AS partner_names
+	query := `SELECT v.id, first_name, family_name, birthdate, v.phone, v.email, v.address, v.postcode, v.city, infos, newsletter, ressort_id, role_id, t.ressort_name, v.created_on, v.updated_on, a.id, a.buydate, b.number, b.id, password, avatar, array_agg(p.id) AS partners, array_agg(p.partner_name) AS partner_names, array_agg(ve.atelier_id) AS expertise
   FROM visitors v
   LEFT JOIN LATERAL 
     (SELECT * FROM abonnements 
@@ -282,6 +279,7 @@ func (m *postgresDBRepo) VisitorByID(id string) (models.Visitor, error) {
   LEFT OUTER JOIN ressorts t ON t.id = v.ressort_id
   LEFT OUTER JOIN visitor_partners vp ON vp.visitor_id = v.id 
   LEFT OUTER JOIN partners p ON p.id = vp.partner_id
+  LEFT OUTER JOIN visitor_experts ve ON ve.visitor_id = v.id
   WHERE v.id = $1
   GROUP BY v.id, t.ressort_name, a.id, a.buydate, b.number, b.id`
 
@@ -306,6 +304,7 @@ func (m *postgresDBRepo) VisitorByID(id string) (models.Visitor, error) {
 	// create empty array for partners and partner_name
 	var partners []sql.NullInt64
 	var partnerNames []sql.NullString
+	var expertise []sql.NullInt64
 
 	err := row.Scan(
 		&v.ID,
@@ -332,8 +331,8 @@ func (m *postgresDBRepo) VisitorByID(id string) (models.Visitor, error) {
 		&avatar,
 		pq.Array(&partners),
 		pq.Array(&partnerNames),
+		pq.Array(&expertise),
 	)
-
 	if err != nil {
 		return v, err
 	}
@@ -405,6 +404,13 @@ func (m *postgresDBRepo) VisitorByID(id string) (models.Visitor, error) {
 		v.Partner = pSlice
 	}
 
+	// add expertise
+	for _, e := range expertise {
+		if e.Valid {
+			v.Expertise = append(v.Expertise, int(e.Int64))
+		}
+	}
+
 	return v, nil
 }
 
@@ -449,7 +455,6 @@ func (m *postgresDBRepo) UpdateVisitor(v models.Visitor) error {
 		time.Now(),
 		v.ID,
 	)
-
 	if err != nil {
 		return err
 	}
@@ -504,7 +509,6 @@ func (m *postgresDBRepo) CheckinAllVisitors(
 `, search)
 
 	err := row.Scan(&count)
-
 	if err != nil {
 		return visitors, count, err
 	}
@@ -541,7 +545,6 @@ func (m *postgresDBRepo) CheckinAllVisitors(
 			&v.FamilyName,
 			&v.City,
 		)
-
 		if err != nil {
 			return visitors, 0, err
 		}

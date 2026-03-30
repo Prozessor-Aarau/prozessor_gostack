@@ -61,6 +61,7 @@ func routes(app *config.AppConfig) http.Handler {
 		// routes for the profile page
 		mux.Get("/profile", handlers.Make(handlers.Repo.HandleProfileIndex))
 		mux.Post("/profile", handlers.Make(handlers.Repo.HandleProfileEdit))
+		mux.Post("/expertise", handlers.Make(handlers.Repo.HandleExpertiseUpdate))
 
 		// routes for the checkin page
 		mux.Get("/checkin", handlers.Make(handlers.Repo.HandleCheckinIndex))

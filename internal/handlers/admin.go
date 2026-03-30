@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"log/slog"
 	"net/http"
 
@@ -19,5 +20,10 @@ func (m *Repository) HandleAdminIndex(w http.ResponseWriter, r *http.Request) er
 		return hxRedirect(w, r, "/admin/logout")
 	}
 
-	return rendering(w, r, admin.Admin(visitor))
+	ateliers, err := m.DB.GetAllAteliers()
+	if err != nil {
+		return fmt.Errorf("retrieving ateliers: %w", err)
+	}
+
+	return rendering(w, r, admin.Admin(visitor, ateliers))
 }

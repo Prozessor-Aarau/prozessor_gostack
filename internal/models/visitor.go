@@ -17,6 +17,7 @@ type Visitor struct {
 	Infos        string
 	Password     string
 	Ressort      Ressort
+	Expertise    []int
 	RoleID       int
 	Newsletter   bool
 	Avatar       string
