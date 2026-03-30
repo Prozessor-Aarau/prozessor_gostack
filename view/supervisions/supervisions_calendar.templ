@@ -86,16 +86,19 @@ templ calOpeningHour(e *models.OpeningHour) {
 	</div>
 }
 
+templ calendarNavigation(data SupervisionCalendarData) {
+	<div class="grid justify-items-center mb-2">
+		<div class="join">
+			<button class="join-item btn btn-secondary" hx-get={ data.PrevUrl } hx-target="#opening_hours" hx-swap="innerHTML">«</button>
+			<span class="join-item btn">{ data.StartDate.Format("02.01.2006") } - { data.StartDate.AddDate(0,0,data.Daycount-1).Format("02.01.2006") }</span>
+			<button class="join-item btn btn-secondary" hx-get={ data.NextUrl } hx-target="#opening_hours" hx-swap="innerHTML">»</button>
+		</div>
+	</div>
+}
+
 templ SupervisionsCalendar(data SupervisionCalendarData) {
 	<div class="cal-wrapper" data-prev={ data.PrevUrl } data-next={ data.NextUrl } data-current={ fmt.Sprintf("/admin/supervisions/opening_hours/%s/%d", data.StartDate.Format("2006-01-02"), data.Daycount) }>
-		<div class="flex gap-2 mb-2">
-			<button type="button" class="btn btn-sm btn-ghost" hx-get={ data.PrevUrl } hx-target="#opening_hours" hx-swap="innerHTML">
-				<span class="i-mdi-chevron-left"></span>
-			</button>
-			<button type="button" class="btn btn-sm btn-ghost" hx-get={ data.NextUrl } hx-target="#opening_hours" hx-swap="innerHTML">
-				<span class="i-mdi-chevron-right"></span>
-			</button>
-		</div>
+		@calendarNavigation(data)
 		<div class="cal-grid">
 			<div class="cal-time-col">
 				<div class="cal-header-cell"></div>
