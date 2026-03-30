@@ -31,7 +31,6 @@ func (m *postgresDBRepo) AllRoles() ([]models.Role, error) {
 			&r.CreatedOn,
 			&r.UpdatedOn,
 		)
-
 		if err != nil {
 			return roles, err
 		}
@@ -77,7 +76,12 @@ func (m *postgresDBRepo) RoleByID(id int) (models.Role, error) {
             view_logs,
             view_finances,
             add_finances,
-            edit_finances
+            edit_finances,
+						edit_opening_hours,
+						delete_opening_hours,
+						view_supervisions,
+						edit_own_supervisions,
+						edit_all_supervisions
             FROM roles
             WHERE id = $1`
 
@@ -110,8 +114,12 @@ func (m *postgresDBRepo) RoleByID(id int) (models.Role, error) {
 		&role.ViewFinances,
 		&role.AddFinances,
 		&role.EditFinances,
+		&role.EditOpeningHours,
+		&role.DeleteOpeningHours,
+		&role.ViewSupervisions,
+		&role.EditOwnSupervisions,
+		&role.EditAllSupervisions,
 	)
-
 	if err != nil {
 		return role, err
 	}

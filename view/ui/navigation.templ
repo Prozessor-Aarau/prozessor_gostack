@@ -52,9 +52,11 @@ templ Navigation(visitor models.Visitor) {
 					<li>
 						<a href="/admin/checkin">Check-In</a>
 					</li>
-					<li>
-						<a href="/admin/supervisions">Aufsichten</a>
-					</li>
+					if prm.ViewSupervisions {
+						<li>
+							<a href="/admin/supervisions">Aufsichten</a>
+						</li>
+					}
 					if prm.ViewMachines {
 						<li>
 							<a href="/admin/machines">Maschinen</a>

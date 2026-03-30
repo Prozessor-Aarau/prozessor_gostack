@@ -30,4 +30,9 @@ type Role struct {
 	ViewFinances          bool
 	AddFinances           bool
 	EditFinances          bool
+	EditOpeningHours      bool
+	DeleteOpeningHours    bool
+	ViewSupervisions      bool
+	EditOwnSupervisions   bool
+	EditAllSupervisions   bool
 }

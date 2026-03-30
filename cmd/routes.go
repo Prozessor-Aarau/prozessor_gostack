@@ -128,16 +128,26 @@ func routes(app *config.AppConfig) http.Handler {
 
 		// supervisions calendar
 		mux.Group(func(mux chi.Router) {
-			// mux.Use(CheckPermission("ViewSupervisions"))
+			mux.Use(CheckPermission("ViewSupervisions"))
 			mux.Get("/supervisions", handlers.Make(handlers.Repo.HandleSupervisionsIndex))
-			mux.Get("/supervisions/opening_hours/new", handlers.Make(handlers.Repo.HandleSupervisionsOpeningHoursNew))
 			mux.Get("/supervisions/opening_hours/{startdate}/{daycount}", handlers.Make(handlers.Repo.HandleSupervisionsOpeningHours))
-			mux.Post("/supervisions/opening_hours", handlers.Make(handlers.Repo.HandleSupervisionsOpeningHoursCreate))
+
+			// add opening hours
+			mux.Group(func(mux chi.Router) {
+				mux.Use(CheckPermission("EditOpeningHours"))
+				mux.Get("/supervisions/opening_hours/new", handlers.Make(handlers.Repo.HandleSupervisionsOpeningHoursNew))
+				mux.Post("/supervisions/opening_hours", handlers.Make(handlers.Repo.HandleSupervisionsOpeningHoursCreate))
+			})
+
 			// supervision modal
-			mux.Get("/supervisions/opening_hours/{id}/supervision", handlers.Make(handlers.Repo.HandleSupervisionsSupervisionModal))
-			// supervisions creation and deletion
-			mux.Post("/supervisions/{date_id}", handlers.Make(handlers.Repo.HandleSuperVisionsPost))
-			mux.Delete("/supervisions/{date_id}/{visitor_id}", handlers.Make(handlers.Repo.HandleSuperVisionsDelete))
+			mux.Group(func(mux chi.Router) {
+				// mux.Use(CheckPermission("EditOwnSupervisions", "EditAllSupervisions"))
+				mux.Use(CheckPermission("EditOwnSupervisions"))
+				mux.Get("/supervisions/opening_hours/{id}/supervision", handlers.Make(handlers.Repo.HandleSupervisionsSupervisionModal))
+				// supervisions creation and deletion
+				mux.Post("/supervisions/{date_id}", handlers.Make(handlers.Repo.HandleSuperVisionsPost))
+				mux.Delete("/supervisions/{date_id}/{visitor_id}", handlers.Make(handlers.Repo.HandleSuperVisionsDelete))
+			})
 		})
 
 		// logistics

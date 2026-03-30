@@ -169,6 +169,31 @@ func CheckPermission(permission string) func(http.Handler) http.Handler {
 					redirect()
 					return
 				}
+			case "EditOpeningHours":
+				if !permissions.EditOpeningHours {
+					redirect()
+					return
+				}
+			case "DeleteOpeningHours":
+				if !permissions.DeleteOpeningHours {
+					redirect()
+					return
+				}
+			case "ViewSupervisions":
+				if !permissions.ViewSupervisions {
+					redirect()
+					return
+				}
+			case "EditOwnSupervisions":
+				if !permissions.EditOwnSupervisions {
+					redirect()
+					return
+				}
+			case "EditAllSupervisions":
+				if !permissions.EditAllSupervisions {
+					redirect()
+					return
+				}
 			}
 
 			next.ServeHTTP(w, r)
