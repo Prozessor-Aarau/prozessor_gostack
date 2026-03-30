@@ -332,6 +332,7 @@ templ SupervisionModalContent(supervisors []models.Visitor, dateId int, currentV
 						hx-delete={ fmt.Sprintf("/admin/supervisions/%d/%s", dateId, v.ID) }
 						hx-target="#supervision-modal-content"
 						hx-swap="innerHTML"
+						hx-confirm={ "Möchtest du die Aufsicht von " + v.FirstName + " wirklich löschen?" }
 					>
 						<span class="i-mdi-delete"></span>
 					</button>
@@ -392,6 +393,7 @@ templ SupervisionModalContent(supervisors []models.Visitor, dateId int, currentV
 		type="button"
 		onclick="supervision_modal.close()"
 		class="btn btn-error w-full mt-3"
+		autofocus
 		on
 	>schliessen</button>
 }
