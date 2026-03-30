@@ -63,14 +63,15 @@ func (m *Repository) HandleSupervisionsOpeningHoursCreate(w http.ResponseWriter,
 	}
 
 	// if everything is good lets build our opening hours slice
-	startTime, _ := time.Parse("2006-01-02 15:04", formData.StartDate+" "+formData.StartTime)
-	endTime, _ := time.Parse("2006-01-02 15:04", formData.StartDate+" "+formData.EndTime)
+	loc, _ := time.LoadLocation("Europe/Zurich")
+	startTime, _ := time.ParseInLocation("2006-01-02 15:04", formData.StartDate+" "+formData.StartTime, loc)
+	endTime, _ := time.ParseInLocation("2006-01-02 15:04", formData.StartDate+" "+formData.EndTime, loc)
 
 	var openingHours []models.OpeningHour
 
 	if formData.Repetition {
 		log.Println("repetition")
-		repetitionEnd, _ := time.Parse("2006-01-02", formData.RepetitionEnd)
+		repetitionEnd, _ := time.ParseInLocation("2006-01-02", formData.RepetitionEnd, loc)
 		for _, d := range helpers.DateRepetition(startTime, repetitionEnd) {
 			openingHours = append(openingHours, models.OpeningHour{
 				StartTime: d,

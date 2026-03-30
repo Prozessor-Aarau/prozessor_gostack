@@ -8,6 +8,7 @@ import "github.com/faebut/prozessor_gostack/view/ui"
 import "time"
 
 templ Supervisions(visitor models.Visitor) {
+	{{ prm := ctx.Value("permission").(models.Role) }}
 	@layout.App(true, visitor) {
 		<div class="prose mb-10">
 			<h1>Aufsichten</h1>
@@ -15,19 +16,21 @@ templ Supervisions(visitor models.Visitor) {
 		<div id="content">
 			<div id="opening_hours" data-baseurl={ fmt.Sprintf("/admin/supervisions/opening_hours/%s/", time.Now().Format("2006-01-02")) }></div>
 			@supervisionModal()
-			<div>
-				<button
-					type="button"
-					class="mt-3 btn btn-primary"
-					hx-get="/admin/supervisions/opening_hours/new"
-					hx-target="#create-form-content"
-					hx-swap="innerHTML"
-					onclick="create_modal.showModal()"
-				>
-					<span class="i-mdi-calendar-plus"></span> Öffnungszeiten erstellen
-				</button>
-				@createModal()
-			</div>
+			if prm.EditOpeningHours {
+				<div>
+					<button
+						type="button"
+						class="mt-3 btn btn-primary"
+						hx-get="/admin/supervisions/opening_hours/new"
+						hx-target="#create-form-content"
+						hx-swap="innerHTML"
+						onclick="create_modal.showModal()"
+					>
+						<span class="i-mdi-calendar-plus"></span> Öffnungszeiten erstellen
+					</button>
+					@createModal()
+				</div>
+			}
 		</div>
 		<script>
 			(function () {
@@ -167,6 +170,14 @@ var weekdayDE = map[time.Weekday]string{
 	time.Sunday:    "So",
 }
 
+var swissLoc = func() *time.Location {
+	loc, err := time.LoadLocation("Europe/Zurich")
+	if err != nil {
+		return time.UTC
+	}
+	return loc
+}()
+
 func calDayHeader(t time.Time) string {
 	return fmt.Sprintf("%s %s", weekdayDE[t.Weekday()], t.Format("02.01"))
 }
@@ -177,7 +188,8 @@ func calSlotLabel(slot, startHour, slotMinutes int) string {
 }
 
 func calStartSlot(t time.Time, startHour, slotMinutes int) int {
-	return ((t.Hour()-startHour)*60 + t.Minute()) / slotMinutes
+	local := t.In(swissLoc)
+	return ((local.Hour()-startHour)*60 + local.Minute()) / slotMinutes
 }
 
 func calDurationSlots(start, end time.Time, slotMinutes int) int {
@@ -189,10 +201,10 @@ func calDurationSlots(start, end time.Time, slotMinutes int) int {
 }
 
 func calEntriesForDay(entries []models.CalendarEntry, day time.Time) []models.CalendarEntry {
-	y, m, d := day.Date()
+	y, m, d := day.In(swissLoc).Date()
 	var result []models.CalendarEntry
 	for _, e := range entries {
-		ey, em, ed := e.GetStartTime().Date()
+		ey, em, ed := e.GetStartTime().In(swissLoc).Date()
 		if ey == y && em == m && ed == d {
 			result = append(result, e)
 		}
@@ -261,7 +273,7 @@ templ SupervisionsCalendar(data SupervisionCalendarData) {
 
 templ calOpeningHour(e *models.OpeningHour) {
 	<div class="text-xs font-semibold leading-tight">
-		{ e.StartTime.Format("15:04") } – { e.EndTime.Format("15:04") }
+		{ e.StartTime.In(swissLoc).Format("15:04") } – { e.EndTime.In(swissLoc).Format("15:04") }
 	</div>
 	<div class="text-xs opacity-75 mt-1">
 		if len(e.Supervisors) > 0 {
