@@ -49,11 +49,10 @@ func Auth(next http.Handler) http.Handler {
 	})
 }
 
-// CheckPermission checks if someone has the right permission for a route
-func CheckPermission(permission string) func(http.Handler) http.Handler {
+// CheckPermission checks if someone has at least one of the provided permissions
+func CheckPermission(permissions ...string) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			// function to run if the permission is not valid
 			redirect := func() {
 				to := "/admin"
 				log.Println("No permission for this route")
@@ -65,138 +64,72 @@ func CheckPermission(permission string) func(http.Handler) http.Handler {
 				http.Redirect(w, r, to, http.StatusSeeOther)
 			}
 
-			// get permissions
-			permissions := session.Get(r.Context(), "permission").(models.Role)
+			role := session.Get(r.Context(), "permission").(models.Role)
 
-			switch permission {
-			case "ViewVisitors":
-				if !permissions.ViewVisitors {
-					redirect()
-					return
-				}
-			case "EditVisitor":
-				if !permissions.EditVisitor {
-					redirect()
-					return
-				}
-			case "EditVisitorMembership":
-				if !permissions.EditVisitorMembership {
-					redirect()
-					return
-				}
-			case "EditVisitorRole":
-				if !permissions.EditVisitorRole {
-					redirect()
-					return
-				}
-			case "ViewMachines":
-				if !permissions.ViewMachines {
-					redirect()
-					return
-				}
-			case "ViewBadges":
-				if !permissions.ViewBadges {
-					redirect()
-					return
-				}
-			case "AssignBadge":
-				if !permissions.AssignBadge {
-					redirect()
-					return
-				}
-			case "EditBadge":
-				if !permissions.EditBadge {
-					redirect()
-					return
-				}
-			case "ViewAbonnements":
-				if !permissions.EditBadge {
-					redirect()
-					return
-				}
-			case "EditAbonnement":
-				if !permissions.EditBadge {
-					redirect()
-					return
-				}
-			case "ViewReminders":
-				if !permissions.ViewReminders {
-					redirect()
-					return
-				}
-			case "AddReminder":
-				if !permissions.AddReminder {
-					redirect()
-					return
-				}
-			case "ViewNewsletters":
-				if !permissions.ViewNewsletters {
-					redirect()
-					return
-				}
-			case "AddNewsletter":
-				if !permissions.AddNewsletter {
-					redirect()
-					return
-				}
-			case "ViewLogistics":
-				if !permissions.ViewLogistics {
-					redirect()
-					return
-				}
-			case "ViewStatistics":
-				if !permissions.ViewStatistics {
-					redirect()
-					return
-				}
-			case "ViewLogs":
-				if !permissions.ViewLogs {
-					redirect()
-					return
-				}
-			case "ViewFinances":
-				if !permissions.ViewFinances {
-					redirect()
-					return
-				}
-			case "AddFinances":
-				if !permissions.AddFinances {
-					redirect()
-					return
-				}
-			case "EditFinances":
-				if !permissions.EditFinances {
-					redirect()
-					return
-				}
-			case "EditOpeningHours":
-				if !permissions.EditOpeningHours {
-					redirect()
-					return
-				}
-			case "DeleteOpeningHours":
-				if !permissions.DeleteOpeningHours {
-					redirect()
-					return
-				}
-			case "ViewSupervisions":
-				if !permissions.ViewSupervisions {
-					redirect()
-					return
-				}
-			case "EditOwnSupervisions":
-				if !permissions.EditOwnSupervisions {
-					redirect()
-					return
-				}
-			case "EditAllSupervisions":
-				if !permissions.EditAllSupervisions {
-					redirect()
+			for _, permission := range permissions {
+				if hasPermission(role, permission) {
+					next.ServeHTTP(w, r)
 					return
 				}
 			}
 
-			next.ServeHTTP(w, r)
+			redirect()
 		})
 	}
+}
+
+func hasPermission(p models.Role, permission string) bool {
+	switch permission {
+	case "ViewVisitors":
+		return p.ViewVisitors
+	case "EditVisitor":
+		return p.EditVisitor
+	case "EditVisitorMembership":
+		return p.EditVisitorMembership
+	case "EditVisitorRole":
+		return p.EditVisitorRole
+	case "ViewMachines":
+		return p.ViewMachines
+	case "ViewBadges":
+		return p.ViewBadges
+	case "AssignBadge":
+		return p.AssignBadge
+	case "EditBadge":
+		return p.EditBadge
+	case "ViewAbonnements":
+		return p.ViewAbonnements
+	case "EditAbonnement":
+		return p.EditAbonnement
+	case "ViewReminders":
+		return p.ViewReminders
+	case "AddReminder":
+		return p.AddReminder
+	case "ViewNewsletters":
+		return p.ViewNewsletters
+	case "AddNewsletter":
+		return p.AddNewsletter
+	case "ViewLogistics":
+		return p.ViewLogistics
+	case "ViewStatistics":
+		return p.ViewStatistics
+	case "ViewLogs":
+		return p.ViewLogs
+	case "ViewFinances":
+		return p.ViewFinances
+	case "AddFinances":
+		return p.AddFinances
+	case "EditFinances":
+		return p.EditFinances
+	case "EditOpeningHours":
+		return p.EditOpeningHours
+	case "DeleteOpeningHours":
+		return p.DeleteOpeningHours
+	case "ViewSupervisions":
+		return p.ViewSupervisions
+	case "EditOwnSupervisions":
+		return p.EditOwnSupervisions
+	case "EditAllSupervisions":
+		return p.EditAllSupervisions
+	}
+	return false
 }
