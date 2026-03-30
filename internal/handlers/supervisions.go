@@ -13,6 +13,7 @@ import (
 	"github.com/faebut/prozessor_gostack/internal/helpers"
 	"github.com/faebut/prozessor_gostack/internal/logger"
 	"github.com/faebut/prozessor_gostack/internal/models"
+	"github.com/faebut/prozessor_gostack/view/layout"
 	"github.com/faebut/prozessor_gostack/view/supervisions"
 	"github.com/go-chi/chi/v5"
 )
@@ -160,7 +161,15 @@ func (m *Repository) HandleSupervisionsSupervisionModal(w http.ResponseWriter, r
 
 	role, _ := m.App.Session.Get(r.Context(), "permission").(models.Role)
 
-	return rendering(w, r, supervisions.SupervisionModalContent(supervisors, dateID, currentVisitor.ID, role.EditVisitorRole))
+	data := supervisions.SupervisionModalData{
+		Supervisors:         supervisors,
+		DateID:              dateID,
+		CurrentVisitorID:    currentVisitor.ID,
+		EditAllSupervisions: role.EditAllSupervisions,
+		EditOwnSupervisions: role.EditOwnSupervisions,
+	}
+
+	return rendering(w, r, supervisions.SupervisionModalContent(data))
 }
 
 func (m *Repository) HandleSuperVisionsPost(w http.ResponseWriter, r *http.Request) error {
@@ -194,7 +203,16 @@ func (m *Repository) HandleSuperVisionsPost(w http.ResponseWriter, r *http.Reque
 	role, _ := m.App.Session.Get(r.Context(), "permission").(models.Role)
 
 	w.Header().Set("HX-Trigger", "supervisionUpdated")
-	return rendering(w, r, supervisions.SupervisionModalContent(supervisors, dateID, currentVisitor.ID, role.EditVisitorRole))
+
+	data := supervisions.SupervisionModalData{
+		Supervisors:         supervisors,
+		DateID:              dateID,
+		CurrentVisitorID:    currentVisitor.ID,
+		EditAllSupervisions: role.EditAllSupervisions,
+		EditOwnSupervisions: role.EditOwnSupervisions,
+	}
+
+	return rendering(w, r, supervisions.SupervisionModalContent(data))
 }
 
 func (m *Repository) HandleSuperVisionsDelete(w http.ResponseWriter, r *http.Request) error {
@@ -202,6 +220,17 @@ func (m *Repository) HandleSuperVisionsDelete(w http.ResponseWriter, r *http.Req
 	dateID, err := strconv.Atoi(chi.URLParam(r, "date_id"))
 	if err != nil {
 		return fmt.Errorf("parsing date id: %w", err)
+	}
+
+	currentVisitor, ok := m.App.Session.Get(r.Context(), "visitor").(models.Visitor)
+	if !ok {
+		return hxRedirect(w, r, "/admin/logout")
+	}
+
+	role, _ := m.App.Session.Get(r.Context(), "permission").(models.Role)
+
+	if !(role.EditAllSupervisions || (role.EditOwnSupervisions && currentVisitor.ID == visitorID)) {
+		return rendering(w, r, layout.Error("Keine Berechtigung für diese Aktion"))
 	}
 
 	err = m.DB.DeleteSupervision(dateID, visitorID)
@@ -216,13 +245,15 @@ func (m *Repository) HandleSuperVisionsDelete(w http.ResponseWriter, r *http.Req
 		return fmt.Errorf("getting supervisors: %w", err)
 	}
 
-	currentVisitor, ok := m.App.Session.Get(r.Context(), "visitor").(models.Visitor)
-	if !ok {
-		return hxRedirect(w, r, "/admin/logout")
+	w.Header().Set("HX-Trigger", "supervisionUpdated")
+
+	data := supervisions.SupervisionModalData{
+		Supervisors:         supervisors,
+		DateID:              dateID,
+		CurrentVisitorID:    currentVisitor.ID,
+		EditAllSupervisions: role.EditAllSupervisions,
+		EditOwnSupervisions: role.EditOwnSupervisions,
 	}
 
-	role, _ := m.App.Session.Get(r.Context(), "permission").(models.Role)
-
-	w.Header().Set("HX-Trigger", "supervisionUpdated")
-	return rendering(w, r, supervisions.SupervisionModalContent(supervisors, dateID, currentVisitor.ID, role.EditVisitorRole))
+	return rendering(w, r, supervisions.SupervisionModalContent(data))
 }

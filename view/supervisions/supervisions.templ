@@ -316,45 +316,55 @@ func supervisorIDList(supervisors []models.Visitor) string {
 	return strings.Join(ids, ",")
 }
 
-templ SupervisionModalContent(supervisors []models.Visitor, dateId int, currentVisitorID string, canAssignOthers bool) {
+type SupervisionModalData struct {
+	Supervisors         []models.Visitor
+	DateID              int
+	CurrentVisitorID    string
+	EditAllSupervisions bool
+	EditOwnSupervisions bool
+}
+
+templ SupervisionModalContent(data SupervisionModalData) {
 	<div id="supervision-csrf-store" class="hidden">
 		@ui.CSRF()
 	</div>
-	if len(supervisors) > 0 {
+	if len(data.Supervisors) > 0 {
 		<ul class="mb-4">
-			for _, v := range supervisors {
+			for _, v := range data.Supervisors {
 				<li class="flex items-center justify-between py-1">
 					<span>{ v.FirstName } { v.FamilyName }</span>
-					<button
-						type="button"
-						name="deleteButton"
-						class="btn btn-xs btn-error"
-						hx-delete={ fmt.Sprintf("/admin/supervisions/%d/%s", dateId, v.ID) }
-						hx-target="#supervision-modal-content"
-						hx-swap="innerHTML"
-						hx-confirm={ "Möchtest du die Aufsicht von " + v.FirstName + " wirklich löschen?" }
-					>
-						<span class="i-mdi-delete"></span>
-					</button>
+					if data.EditAllSupervisions || data.EditOwnSupervisions && data.CurrentVisitorID == v.ID {
+						<button
+							type="button"
+							name="deleteButton"
+							class="btn btn-xs btn-error"
+							hx-delete={ fmt.Sprintf("/admin/supervisions/%d/%s", data.DateID, v.ID) }
+							hx-target="#supervision-modal-content"
+							hx-swap="innerHTML"
+							hx-confirm={ "Möchtest du die Aufsicht von " + v.FirstName + " wirklich löschen?" }
+						>
+							<span class="i-mdi-delete"></span>
+						</button>
+					}
 				</li>
 			}
 		</ul>
 	}
-	if !isAlreadySupervisor(supervisors, currentVisitorID) {
+	if !isAlreadySupervisor(data.Supervisors, data.CurrentVisitorID) {
 		<form
-			hx-post={ fmt.Sprintf("/admin/supervisions/%d", dateId) }
+			hx-post={ fmt.Sprintf("/admin/supervisions/%d", data.DateID) }
 			hx-target="#supervision-modal-content"
 			hx-swap="innerHTML"
 			class="mb-3"
 		>
 			@ui.CSRF()
-			<input type="hidden" name="visitor_id" value={ currentVisitorID }/>
+			<input type="hidden" name="visitor_id" value={ data.CurrentVisitorID }/>
 			<button type="submit" class="btn btn-primary w-full">Aufsicht übernehmen</button>
 		</form>
 	} else {
 		<p class="text-success text-sm mb-3">Du bist bereits als Aufsicht eingetragen.</p>
 	}
-	if canAssignOthers {
+	if data.EditAllSupervisions {
 		<div class="divider text-xs">Andere Person zuweisen</div>
 		<form novalidate class="mb-3">
 			@ui.CSRF()
@@ -376,11 +386,11 @@ templ SupervisionModalContent(supervisors []models.Visitor, dateId int, currentV
 			hx-get="/admin/visitors/selectbox/"
 			hx-trigger="load"
 			class="mb-3"
-			data-supervisors={ supervisorIDList(supervisors) }
+			data-supervisors={ supervisorIDList(data.Supervisors) }
 			hx-on::after-swap="this.querySelectorAll('option').forEach(o => { if (this.dataset.supervisors.split(',').includes(o.value)) o.disabled = true })"
 		></div>
 		<form
-			hx-post={ fmt.Sprintf("/admin/supervisions/%d", dateId) }
+			hx-post={ fmt.Sprintf("/admin/supervisions/%d", data.DateID) }
 			hx-target="#supervision-modal-content"
 			hx-swap="innerHTML"
 			hx-include="#supervisionMemberSelect #member"
