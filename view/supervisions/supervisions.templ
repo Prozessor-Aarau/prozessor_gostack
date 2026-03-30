@@ -284,9 +284,3 @@ templ SupervisionModalContent(data SupervisionModalData) {
 		on
 	>schliessen</button>
 }
-
-templ calEventBlock(e *models.CalEvent) {
-	<a href={ templ.URL(e.URL) } class="block text-xs font-semibold leading-tight">
-		{ e.Title }
-	</a>
-}

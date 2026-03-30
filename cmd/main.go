@@ -12,6 +12,7 @@ import (
 	"github.com/alexedwards/scs/v2"
 	"github.com/faebut/prozessor_gostack/internal/config"
 	"github.com/faebut/prozessor_gostack/internal/driver"
+	"github.com/faebut/prozessor_gostack/internal/events"
 	"github.com/faebut/prozessor_gostack/internal/handlers"
 	"github.com/faebut/prozessor_gostack/internal/helpers"
 	"github.com/faebut/prozessor_gostack/internal/logger"
@@ -20,8 +21,10 @@ import (
 	"github.com/joho/godotenv"
 )
 
-var app config.AppConfig
-var session *scs.SessionManager
+var (
+	app     config.AppConfig
+	session *scs.SessionManager
+)
 
 // var infoLog *log.Logger
 // var errorLog *log.Logger
@@ -33,6 +36,13 @@ func main() {
 	}
 
 	defer db.SQL.Close()
+
+	slog.Info("Warming up events cache...")
+	go func() {
+		if _, err := events.GetCalendarEvents(); err != nil {
+			slog.Error("warming event cache", "error", err)
+		}
+	}()
 
 	defer close(app.MailChan)
 

@@ -86,6 +86,15 @@ templ calOpeningHour(e *models.OpeningHour) {
 	</div>
 }
 
+templ calEventBlock(e *models.Event) {
+	<div class="text-xs font-semibold leading-tight">
+		{ e.StartTime.In(swissLoc).Format("15:04") } – { e.EndTime.In(swissLoc).Format("15:04") }
+	</div>
+	<div class="text-xs opacity-75 mt-1">
+		{ e.Title }
+	</div>
+}
+
 templ calendarNavigation(data SupervisionCalendarData) {
 	<div class="grid justify-items-center mb-2">
 		<div class="join">
@@ -128,10 +137,12 @@ templ SupervisionsCalendar(data SupervisionCalendarData) {
 									>
 										@calOpeningHour(e)
 									</div>
-								case *models.CalEvent:
-									<div class="cal-event bg-info/30 border-info" style={ calEventStyle(entry, 8, 15) }>
-										@calEventBlock(e)
-									</div>
+								case *models.Event:
+									<a href={ templ.URL(e.URL) } target="_blank">
+										<div class="cal-event bg-info/30 border-info" style={ calEventStyle(entry, 8, 15) }>
+											@calEventBlock(e)
+										</div>
+									</a>
 							}
 						}
 					</div>

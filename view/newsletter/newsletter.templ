@@ -103,35 +103,35 @@ templ NewsletterCreate(
 	errors NewsletterErrors,
 ) {
 	{{
-// set default colors
-var baseColor = "#BD00FF"
-var accentColor = "#D7FF00"
-if len(n.ColorBase) > 0 {
-	baseColor = n.ColorBase
-}
-if len(n.ColorAccent) > 0 {
-	accentColor = n.ColorAccent
-}
-
-// where to post the form to
-var postUrl string
-if errors.Edit {
-	postUrl = "/admin/newsletter/edit/" + strconv.Itoa(n.ID)
-} else {
-	postUrl = "/admin/newsletter/create"
-}
-
-// check if three are images in the elements
-var hasImages bool
-
-if len(elements) > 0 {
-	for _, e := range elements {
-		if e.Type == "picture" {
-			hasImages = true
-			break
+		// set default colors
+		var baseColor = "#BD00FF"
+		var accentColor = "#D7FF00"
+		if len(n.ColorBase) > 0 {
+			baseColor = n.ColorBase
 		}
-	}
-}
+		if len(n.ColorAccent) > 0 {
+			accentColor = n.ColorAccent
+		}
+
+		// where to post the form to
+		var postUrl string
+		if errors.Edit {
+			postUrl = "/admin/newsletter/edit/" + strconv.Itoa(n.ID)
+		} else {
+			postUrl = "/admin/newsletter/create"
+		}
+
+		// check if three are images in the elements
+		var hasImages bool
+
+		if len(elements) > 0 {
+			for _, e := range elements {
+				if e.Type == "picture" {
+					hasImages = true
+					break
+				}
+			}
+		}
 	}}
 	<form
 		id="newsletterForm"
@@ -315,84 +315,88 @@ if len(elements) > 0 {
 	</form>
 	<!-- script starts herea -->
 	<script>
-  // handle elements movement and deletion
-  function removeItem(eid) {
-    document.getElementById(eid).remove();
-    hideArrows();
-  }
+		// handle elements movement and deletion
+		function removeItem(eid) {
+			document.getElementById(eid).remove();
+			hideArrows();
+		}
 
-  function moveItemUp(eid) {
-    document.getElementById(eid).previousSibling.before(document.getElementById(eid))
-    hideArrows();
-  }
+		function moveItemUp(eid) {
+			document
+				.getElementById(eid)
+				.previousSibling.before(document.getElementById(eid));
+			hideArrows();
+		}
 
-  function moveItemDown(eid) {
-    document.getElementById(eid).nextSibling.after(document.getElementById(eid))
-    hideArrows();
-  }
+		function moveItemDown(eid) {
+			document
+				.getElementById(eid)
+				.nextSibling.after(document.getElementById(eid));
+			hideArrows();
+		}
 
-  // handle elements position
-  function hideArrows() {
-    let children = document.getElementById("elements").children
+		// handle elements position
+		function hideArrows() {
+			let children = document.getElementById("elements").children;
 
-    for (let i = 0; i < children.length; i++) {
-      let uArrow = children[i].getElementsByClassName("uarrow")[0]
-      let dArrow = children[i].getElementsByClassName("darrow")[0]
-      let position = children[i].getElementsByClassName("pfield")[0]
+			for (let i = 0; i < children.length; i++) {
+				let uArrow = children[i].getElementsByClassName("uarrow")[0];
+				let dArrow = children[i].getElementsByClassName("darrow")[0];
+				let position = children[i].getElementsByClassName("pfield")[0];
 
-      uArrow.classList.remove("invisible")
-      dArrow.classList.remove("invisible")
-      position.value = i + 1
+				uArrow.classList.remove("invisible");
+				dArrow.classList.remove("invisible");
+				position.value = i + 1;
 
-      if (i === 0) {
-        uArrow.classList.add("invisible")
-        if (children.length === 1) {
-          dArrow.classList.add("invisible")
-        }
-      } else if (i === children.length - 1) {
-        dArrow.classList.add("invisible")
-      }
-    }
-  }
+				if (i === 0) {
+					uArrow.classList.add("invisible");
+					if (children.length === 1) {
+						dArrow.classList.add("invisible");
+					}
+				} else if (i === children.length - 1) {
+					dArrow.classList.add("invisible");
+				}
+			}
+		}
 
+		// fire once page is loaded
+		document.body.addEventListener("htmx:afterSettle", function (evt) {
+			evt.preventDefault();
+			hideArrows();
+		});
 
-  // fire once page is loaded
-  document.body.addEventListener('htmx:afterSettle', function (evt) {
-    evt.preventDefault();
-    hideArrows();
-  });
+		// check if events are loaded
+		nlForm = document.getElementById("newsletterForm");
+		nlForm.addEventListener("htmx:beforeRequest", function (evt) {
+			var noevents = document.getElementById("noevents");
+			var sendbutton = evt.explicitOriginalTarget.id;
+			// if there is an 'noevents' element and the sendbutton is used
+			if (noevents && sendbutton === "sendbutton") {
+				var card = document.getElementById("elementcard");
+				var warning = document.createElement("div");
+				warning.classList.add("text-error", "mb-4");
+				warning.innerText = "Events laden oder Element entfernen";
 
-  // check if events are loaded
-  nlForm = document.getElementById('newsletterForm')
-  nlForm.addEventListener('htmx:beforeRequest', function (evt) {
-    var noevents = document.getElementById("noevents");
-    var sendbutton = evt.explicitOriginalTarget.id
-    // if there is an 'noevents' element and the sendbutton is used
-    if (noevents && sendbutton === "sendbutton") {
-      var card = document.getElementById("elementcard")
-      var warning = document.createElement("div")
-      warning.classList.add("text-error", "mb-4")
-      warning.innerText = "Events laden oder Element entfernen"
+				// prevent sending the form
+				evt.preventDefault();
 
-      // prevent sending the form
-      evt.preventDefault()
+				// decorate card
+				card.classList.add("border", "border-error");
 
-      // decorate card
-      card.classList.add("border", "border-error")
-
-      // add warning element after 
-      noevents.insertAdjacentElement("afterend", warning);
-    }
-  });
-</script>
+				// add warning element after
+				noevents.insertAdjacentElement("afterend", warning);
+			}
+		});
+	</script>
 	if hasImages {
 		<script type="text/javascript">
-  document.getElementsByName("deleteButton").forEach((button) => {
-    button.addEventListener('htmx:configRequest', (event) => {
-      event.detail.headers['X-CSRF-Token'] = document.getElementById('csrf_token').value
-    })
-  })
-</script>
+			document.getElementsByName("deleteButton").forEach((button) => {
+				button.addEventListener("htmx:configRequest", (event) => {
+					event.detail.headers["X-CSRF-Token"] =
+						document.getElementById("csrf_token").value;
+				});
+			});
+		</script>
 	}
 }
 
@@ -406,14 +410,14 @@ type ElementError struct {
 
 templ Element(element models.NewsletterElement, errors []ElementError) {
 	{{
-var eError ElementError
+		var eError ElementError
 
-for _, e := range errors {
-	if e.ID == element.ID {
-		eError = e
-		break
-	}
-}
+		for _, e := range errors {
+			if e.ID == element.ID {
+				eError = e
+				break
+			}
+		}
 	}}
 	<div
 		id={ "el_" + element.ID }
@@ -509,12 +513,12 @@ templ elementEvents(element models.NewsletterElement, errors ElementError) {
 	<div id="eventsList" class="col-span-full text-center">
 		if len(element.Content) > 0 {
 			{{
-	var events []models.Event
+				var events []models.Event
 
-	err := json.Unmarshal([]byte(element.Content), &events)
-	if err != nil {
-		panic(err)
-	}
+				err := json.Unmarshal([]byte(element.Content), &events)
+				if err != nil {
+					panic(err)
+				}
 			}}
 			@EventList(events, element.Content)
 		} else {
@@ -559,7 +563,7 @@ templ EventList(events []models.Event, eventString string) {
 				<!-- rows -->
 				for _, e := range events {
 					<tr>
-						<td>{ e.EventTime.Time.Format("02.01.2006 15:04") }</td>
+						<td>{ e.StartTime.Time.Format("02.01.2006 15:04") }</td>
 						<td>{ e.Title }</td>
 						<td><a href={ templ.URL(e.URL) } target="_blank">{ e.URL }</a></td>
 					</tr>

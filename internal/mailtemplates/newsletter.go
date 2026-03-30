@@ -17,7 +17,6 @@ import (
 
 // Newsletter creates the template for a newsletter
 func Newsletter(newsletter models.Newsletter) (string, error) {
-
 	byteTemplate, err := os.ReadFile("./email-templates/newsletters/" + newsletter.Template.Template)
 	if err != nil {
 		return "", err
@@ -28,7 +27,6 @@ func Newsletter(newsletter models.Newsletter) (string, error) {
 	// model html from the elements
 	var content string
 	for _, e := range newsletter.Elements {
-
 		switch e.Type {
 
 		case "text":
@@ -85,8 +83,8 @@ func Newsletter(newsletter models.Newsletter) (string, error) {
 						`
 			for _, e := range events {
 
-				if monday.Format(e.EventTime.Time, "January", monday.LocaleDeDE) != month {
-					month = monday.Format(e.EventTime.Time, "January", monday.LocaleDeDE)
+				if monday.Format(e.StartTime.Time, "January", monday.LocaleDeDE) != month {
+					month = monday.Format(e.StartTime.Time, "January", monday.LocaleDeDE)
 					eventHTML += fmt.Sprintf(`
                 <tr>
                   <td colspan="2" style="font-size: 20px; padding: 6px 6px 6px 25px; background-color: [%%accentcolor%%]; color: [%%basecolor%%];">
@@ -117,8 +115,8 @@ func Newsletter(newsletter models.Newsletter) (string, error) {
 						</td>
 					</tr>
 					`,
-					strings.ToUpper(monday.Format(e.EventTime.Time, "Monday", monday.LocaleDeDE)[:2]),
-					e.EventTime.Format("02"),
+					strings.ToUpper(monday.Format(e.StartTime.Time, "Monday", monday.LocaleDeDE)[:2]),
+					e.StartTime.Time.Format("02"),
 					e.URL,
 					e.Title,
 				)
@@ -133,7 +131,6 @@ func Newsletter(newsletter models.Newsletter) (string, error) {
 
 			content += eventHTML
 		}
-
 	}
 
 	// replace placeholders with generated strings

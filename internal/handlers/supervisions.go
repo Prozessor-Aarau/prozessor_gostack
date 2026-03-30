@@ -119,16 +119,27 @@ func (m *Repository) HandleSupervisionsOpeningHours(w http.ResponseWriter, r *ht
 	prevURL := baseUrl + startDate.AddDate(0, 0, -dayCount).Format("2006-01-02") + "/" + strconv.Itoa(dayCount)
 	nextURL := baseUrl + startDate.AddDate(0, 0, dayCount).Format("2006-01-02") + "/" + strconv.Itoa(dayCount)
 
+	// get opening hours from database
 	openingHours, err := m.DB.AllOpeningHours(startDate, dayCount)
 	if err != nil {
 		return fmt.Errorf("failed to get opening hours: %w", err)
 	}
 
+	// get events from events cache
+	calEvents, err := events.GetCalendarEvents()
+	if err != nil {
+		return fmt.Errorf("failed to get events: %w", err)
+	}
+
 	// calculate calendar entries
-	entries := make([]models.CalendarEntry, 0, len(openingHours))
+	entries := make([]models.CalendarEntry, 0, len(openingHours)+len(calEvents))
 	for i := range openingHours {
 		entries = append(entries, &openingHours[i])
 	}
+	for i := range calEvents {
+		entries = append(entries, &calEvents[i])
+	}
+
 	calEntries := events.LayoutEvents(entries)
 
 	// create calendar data
