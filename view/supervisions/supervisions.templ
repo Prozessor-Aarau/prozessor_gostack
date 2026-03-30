@@ -329,14 +329,13 @@ func supervisorIDList(supervisors []models.Visitor) string {
 }
 
 type SupervisionModalData struct {
-	Supervisors         []models.Visitor
-	DateID              int
-	CurrentVisitorID    string
-	EditAllSupervisions bool
-	EditOwnSupervisions bool
+	Supervisors      []models.Visitor
+	DateID           int
+	CurrentVisitorID string
 }
 
 templ SupervisionModalContent(data SupervisionModalData) {
+	{{ prm := ctx.Value("permission").(models.Role) }}
 	<div id="supervision-csrf-store" class="hidden">
 		@ui.CSRF()
 	</div>
@@ -345,7 +344,7 @@ templ SupervisionModalContent(data SupervisionModalData) {
 			for _, v := range data.Supervisors {
 				<li class="flex items-center justify-between py-1">
 					<span>{ v.FirstName } { v.FamilyName }</span>
-					if data.EditAllSupervisions || data.EditOwnSupervisions && data.CurrentVisitorID == v.ID {
+					if prm.EditAllSupervisions || prm.EditOwnSupervisions && data.CurrentVisitorID == v.ID {
 						<button
 							type="button"
 							name="deleteButton"
@@ -376,7 +375,7 @@ templ SupervisionModalContent(data SupervisionModalData) {
 	} else {
 		<p class="text-success text-sm mb-3">Du bist bereits als Aufsicht eingetragen.</p>
 	}
-	if data.EditAllSupervisions {
+	if prm.EditAllSupervisions {
 		<div class="divider text-xs">Andere Person zuweisen</div>
 		<form novalidate class="mb-3">
 			@ui.CSRF()

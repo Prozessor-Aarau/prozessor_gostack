@@ -160,14 +160,10 @@ func (m *Repository) HandleSupervisionsSupervisionModal(w http.ResponseWriter, r
 		return fmt.Errorf("getting supervisors: %w", err)
 	}
 
-	role, _ := m.App.Session.Get(r.Context(), "permission").(models.Role)
-
 	data := supervisions.SupervisionModalData{
-		Supervisors:         supervisors,
-		DateID:              dateID,
-		CurrentVisitorID:    currentVisitor.ID,
-		EditAllSupervisions: role.EditAllSupervisions,
-		EditOwnSupervisions: role.EditOwnSupervisions,
+		Supervisors:      supervisors,
+		DateID:           dateID,
+		CurrentVisitorID: currentVisitor.ID,
 	}
 
 	return rendering(w, r, supervisions.SupervisionModalContent(data))
@@ -201,16 +197,12 @@ func (m *Repository) HandleSuperVisionsPost(w http.ResponseWriter, r *http.Reque
 		return hxRedirect(w, r, "/admin/logout")
 	}
 
-	role, _ := m.App.Session.Get(r.Context(), "permission").(models.Role)
-
 	w.Header().Set("HX-Trigger", "supervisionUpdated")
 
 	data := supervisions.SupervisionModalData{
-		Supervisors:         supervisors,
-		DateID:              dateID,
-		CurrentVisitorID:    currentVisitor.ID,
-		EditAllSupervisions: role.EditAllSupervisions,
-		EditOwnSupervisions: role.EditOwnSupervisions,
+		Supervisors:      supervisors,
+		DateID:           dateID,
+		CurrentVisitorID: currentVisitor.ID,
 	}
 
 	return rendering(w, r, supervisions.SupervisionModalContent(data))
@@ -249,11 +241,9 @@ func (m *Repository) HandleSuperVisionsDelete(w http.ResponseWriter, r *http.Req
 	w.Header().Set("HX-Trigger", "supervisionUpdated")
 
 	data := supervisions.SupervisionModalData{
-		Supervisors:         supervisors,
-		DateID:              dateID,
-		CurrentVisitorID:    currentVisitor.ID,
-		EditAllSupervisions: role.EditAllSupervisions,
-		EditOwnSupervisions: role.EditOwnSupervisions,
+		Supervisors:      supervisors,
+		DateID:           dateID,
+		CurrentVisitorID: currentVisitor.ID,
 	}
 
 	return rendering(w, r, supervisions.SupervisionModalContent(data))
