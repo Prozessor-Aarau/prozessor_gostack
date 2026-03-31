@@ -91,6 +91,11 @@ templ calOpeningHour(e *models.OpeningHour) {
 			<div>keine Aufsicht</div>
 		}
 	</div>
+	<div class="self-end">
+		<button className="btn btn-circle">
+			<span class="i-mdi-trash"></span>
+		</button>
+	</div>
 }
 
 templ calEventBlock(e *models.Event) {
@@ -135,7 +140,7 @@ templ SupervisionsCalendar(data SupervisionCalendarData) {
 							switch e := entry.(type) {
 								case *models.OpeningHour:
 									<div
-										class={ "cal-event cursor-pointer", templ.KV("bg-success/30 border-success", len(e.Supervisors) > 1), templ.KV("bg-warning/30 border-warning", len(e.Supervisors) == 1) , templ.KV("bg-error/40 border-error", len(e.Supervisors) == 0) }
+										class={ "cal-event cursor-pointer grid content-start", templ.KV("bg-success/30 border-success", len(e.Supervisors) > 1), templ.KV("bg-warning/30 border-warning", len(e.Supervisors) == 1) , templ.KV("bg-error/40 border-error", len(e.Supervisors) == 0) }
 										style={ calEventStyle(entry, 8, 15) }
 										hx-get={ fmt.Sprintf("/admin/supervisions/opening_hours/%d/supervision", e.ID) }
 										hx-target="#supervision-modal-content"
