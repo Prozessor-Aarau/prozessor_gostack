@@ -114,6 +114,15 @@ func (m *Repository) HandleSupervisionsOpeningHours(w http.ResponseWriter, r *ht
 		return fmt.Errorf("failed to parse daycount: %s", err)
 	}
 
+	if dayCount == 7 {
+		weekday := startDate.Weekday()
+		if weekday == time.Sunday {
+			startDate = startDate.AddDate(0, 0, -6)
+		} else if weekday != time.Monday {
+			startDate = startDate.AddDate(0, 0, -int(weekday-time.Monday))
+		}
+	}
+
 	// calculate the urls for next and prev requests
 	baseUrl := "/admin/supervisions/opening_hours/"
 	prevURL := baseUrl + startDate.AddDate(0, 0, -dayCount).Format("2006-01-02") + "/" + strconv.Itoa(dayCount)
