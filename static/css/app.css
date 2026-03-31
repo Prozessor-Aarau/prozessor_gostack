@@ -86,6 +86,10 @@ h2 {
     color-mix(in oklch, var(--color-base-content) 15%, transparent);
 }
 
+.cal-day-today {
+  background-color: color-mix(in oklch, var(--color-primary) 7%, transparent);
+}
+
 .cal-day-header {
   height: 2.5rem;
   display: flex;
