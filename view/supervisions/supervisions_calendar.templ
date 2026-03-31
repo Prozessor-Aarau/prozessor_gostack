@@ -88,7 +88,7 @@ templ calOpeningHour(e *models.OpeningHour) {
 
 templ calEventBlock(e *models.Event) {
 	<div class="text-xs font-semibold leading-tight">
-		{ e.StartTime.In(swissLoc).Format("15:04") } – { e.EndTime.In(swissLoc).Format("15:04") }
+		{ e.StartTime.Format("15:04") } – { e.EndTime.Format("15:04") }
 	</div>
 	<div class="text-xs opacity-75 mt-1">
 		{ e.Title }
