@@ -35,5 +35,9 @@ func (m *Repository) HandleExpertiseUpdate(w http.ResponseWriter, r *http.Reques
 		return fmt.Errorf("updating expertise: %w", err)
 	}
 
+	// update the visitor the session cookie
+	visitor.Expertise = checkedAteliers
+	m.App.Session.Put(r.Context(), "visitor", visitor)
+
 	return rendering(w, r, admin.ExpertUpdateButton(true))
 }
