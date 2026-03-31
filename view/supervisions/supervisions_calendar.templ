@@ -78,7 +78,7 @@ func calEventStyle(entry models.CalendarEntry, startHour, slotMinutes int) strin
 		startSlot, durationSlots, entry.GetColumn(), entry.GetTotalCols())
 }
 
-templ calOpeningHour(e *models.OpeningHour) {
+templ calOpeningHour(e *models.OpeningHour, permission models.Role) {
 	<div class="text-xs font-semibold leading-tight">
 		{ e.StartTime.In(swissLoc).Format("15:04") } – { e.EndTime.In(swissLoc).Format("15:04") }
 	</div>
@@ -91,11 +91,13 @@ templ calOpeningHour(e *models.OpeningHour) {
 			<div>keine Aufsicht</div>
 		}
 	</div>
-	<div class="self-end">
-		<button className="btn btn-circle">
-			<span class="i-mdi-trash"></span>
-		</button>
-	</div>
+	if permission.DeleteOpeningHours {
+		<div class="flex content-end items-end h-full justify-end">
+			<button className="btn btn-circle btn-lg">
+				<span class="text-lg i-mdi-trash"></span>
+			</button>
+		</div>
+	}
 }
 
 templ calEventBlock(e *models.Event) {
@@ -118,6 +120,7 @@ templ calendarNavigation(data SupervisionCalendarData) {
 }
 
 templ SupervisionsCalendar(data SupervisionCalendarData) {
+	{{ prm := ctx.Value("permission").(models.Role) }}
 	<div class="cal-wrapper" data-prev={ data.PrevUrl } data-next={ data.NextUrl } data-current={ fmt.Sprintf("/admin/supervisions/opening_hours/%s/%d", data.StartDate.Format("2006-01-02"), data.Daycount) }>
 		@calendarNavigation(data)
 		<div class="cal-grid">
@@ -140,14 +143,14 @@ templ SupervisionsCalendar(data SupervisionCalendarData) {
 							switch e := entry.(type) {
 								case *models.OpeningHour:
 									<div
-										class={ "cal-event cursor-pointer grid content-start", templ.KV("bg-success/30 border-success", len(e.Supervisors) > 1), templ.KV("bg-warning/30 border-warning", len(e.Supervisors) == 1) , templ.KV("bg-error/40 border-error", len(e.Supervisors) == 0) }
+										class={ "cal-event cursor-pointer flex flex-col", templ.KV("bg-success/30 border-success", len(e.Supervisors) > 1), templ.KV("bg-warning/30 border-warning", len(e.Supervisors) == 1) , templ.KV("bg-error/40 border-error", len(e.Supervisors) == 0) }
 										style={ calEventStyle(entry, 8, 15) }
 										hx-get={ fmt.Sprintf("/admin/supervisions/opening_hours/%d/supervision", e.ID) }
 										hx-target="#supervision-modal-content"
 										hx-swap="innerHTML"
 										hx-on::after-request="supervision_modal.showModal()"
 									>
-										@calOpeningHour(e)
+										@calOpeningHour(e, prm)
 									</div>
 								case *models.Event:
 									<a href={ templ.URL(e.URL) } target="_blank">
