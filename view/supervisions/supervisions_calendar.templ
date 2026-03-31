@@ -105,9 +105,9 @@ templ calEventBlock(e *models.Event) {
 templ calendarNavigation(data SupervisionCalendarData) {
 	<div class="grid justify-items-center mb-2">
 		<div class="join">
-			<button class="join-item btn btn-secondary" hx-get={ data.PrevUrl } hx-target="#opening_hours" hx-swap="innerHTML">«</button>
-			<span class="join-item btn">{ data.StartDate.Format("02.01.2006") } - { data.StartDate.AddDate(0,0,data.Daycount-1).Format("02.01.2006") }</span>
-			<button class="join-item btn btn-secondary" hx-get={ data.NextUrl } hx-target="#opening_hours" hx-swap="innerHTML">»</button>
+			<button type="button" class="join-item btn btn-secondary" hx-get={ data.PrevUrl } hx-target="#opening_hours" hx-swap="innerHTML">«</button>
+			<button type="button" class="join-item btn" hx-get={ fmt.Sprintf("/admin/supervisions/opening_hours/%s/%d", time.Now().Format("2006-01-02"), data.Daycount) } hx-target="#opening_hours" hx-swap="innerHTML">{ data.StartDate.Format("02.01.2006") } - { data.StartDate.AddDate(0,0,data.Daycount-1).Format("02.01.2006") }</button>
+			<button type="button" class="join-item btn btn-secondary" hx-get={ data.NextUrl } hx-target="#opening_hours" hx-swap="innerHTML">»</button>
 		</div>
 	</div>
 }
