@@ -109,6 +109,7 @@ type DatabaseRepo interface {
 	CreateSupervision(dateId int, visitorId string) error
 	GetSupervisionsByDateId(dateId int) ([]models.Visitor, error)
 	DeleteSupervision(dateId int, visitorId string) error
+	DeleteOpeningHour(ohId int) error
 	// expertise
 	UpdateExpertise(userID string, expertises []int) error
 }

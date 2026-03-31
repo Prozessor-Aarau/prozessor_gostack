@@ -2,6 +2,7 @@ package supervisions
 
 import "fmt"
 import "github.com/faebut/prozessor_gostack/internal/models"
+import "github.com/faebut/prozessor_gostack/view/ui"
 import "time"
 
 type SupervisionCalendarData struct {
@@ -79,21 +80,36 @@ func calEventStyle(entry models.CalendarEntry, startHour, slotMinutes int) strin
 }
 
 templ calOpeningHour(e *models.OpeningHour, permission models.Role) {
-	<div class="text-xs font-semibold leading-tight">
-		{ e.StartTime.In(swissLoc).Format("15:04") } – { e.EndTime.In(swissLoc).Format("15:04") }
-	</div>
-	<div class="text-xs opacity-75 mt-1">
-		if len(e.Supervisors) > 0 {
-			for _, s := range e.Supervisors {
-				<div>{ s.FirstName } { s.FamilyName }</div>
+	<div
+		class="grow cursor-pointer"
+		hx-get={ fmt.Sprintf("/admin/supervisions/opening_hours/%d/supervision", e.ID) }
+		hx-target="#supervision-modal-content"
+		hx-swap="innerHTML"
+		hx-on::after-request="supervision_modal.showModal()"
+	>
+		<div class="text-xs font-semibold leading-tight">
+			{ e.StartTime.In(swissLoc).Format("15:04") } – { e.EndTime.In(swissLoc).Format("15:04") }
+		</div>
+		<div class="text-xs opacity-75 mt-1">
+			if len(e.Supervisors) > 0 {
+				for _, s := range e.Supervisors {
+					<div>{ s.FirstName } { s.FamilyName }</div>
+				}
+			} else {
+				<div>keine Aufsicht</div>
 			}
-		} else {
-			<div>keine Aufsicht</div>
-		}
+		</div>
 	</div>
 	if permission.DeleteOpeningHours {
-		<div class="flex content-end items-end h-full justify-end">
-			<button className="btn btn-circle btn-lg">
+		<div class="flex content-end items-end justify-end">
+			<button
+				type="button"
+				name="deleteButton"
+				class="cursor-pointer"
+				hx-delete={ fmt.Sprintf("/admin/supervisions/opening_hours/%d", e.ID) }
+				hx-confirm={ "Möchtest du die Öffnungszeit vom " + e.StartTime.Format("02.01.2006 15:04") + " bis " + e.EndTime.Format("15:04") + " wirklich löschen?" }
+				hx-on:click="event.stopPropagation()"
+			>
 				<span class="text-lg i-mdi-trash"></span>
 			</button>
 		</div>
@@ -121,6 +137,9 @@ templ calendarNavigation(data SupervisionCalendarData) {
 
 templ SupervisionsCalendar(data SupervisionCalendarData) {
 	{{ prm := ctx.Value("permission").(models.Role) }}
+	<div class="hidden">
+		@ui.CSRF()
+	</div>
 	<div class="cal-wrapper" data-prev={ data.PrevUrl } data-next={ data.NextUrl } data-current={ fmt.Sprintf("/admin/supervisions/opening_hours/%s/%d", data.StartDate.Format("2006-01-02"), data.Daycount) }>
 		@calendarNavigation(data)
 		<div class="cal-grid">
@@ -143,12 +162,8 @@ templ SupervisionsCalendar(data SupervisionCalendarData) {
 							switch e := entry.(type) {
 								case *models.OpeningHour:
 									<div
-										class={ "cal-event cursor-pointer flex flex-col", templ.KV("bg-success/30 border-success", len(e.Supervisors) > 1), templ.KV("bg-warning/30 border-warning", len(e.Supervisors) == 1) , templ.KV("bg-error/40 border-error", len(e.Supervisors) == 0) }
+										class={ "cal-event flex flex-col", templ.KV("bg-success/30 border-success", len(e.Supervisors) > 1), templ.KV("bg-warning/30 border-warning", len(e.Supervisors) == 1) , templ.KV("bg-error/40 border-error", len(e.Supervisors) == 0) }
 										style={ calEventStyle(entry, 8, 15) }
-										hx-get={ fmt.Sprintf("/admin/supervisions/opening_hours/%d/supervision", e.ID) }
-										hx-target="#supervision-modal-content"
-										hx-swap="innerHTML"
-										hx-on::after-request="supervision_modal.showModal()"
 									>
 										@calOpeningHour(e, prm)
 									</div>

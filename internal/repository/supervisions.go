@@ -179,3 +179,16 @@ func (m *postgresDBRepo) DeleteSupervision(dateId int, visitorId string) error {
 
 	return nil
 }
+
+// DeleteOpeningHour deletes an opening hour in the db
+func (m *postgresDBRepo) DeleteOpeningHour(ohId int) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	_, err := m.DB.ExecContext(ctx, "DELETE from opening_hours WHERE id = $1", ohId)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

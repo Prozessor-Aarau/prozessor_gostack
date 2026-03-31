@@ -138,6 +138,9 @@ func routes(app *config.AppConfig) http.Handler {
 				mux.Use(CheckPermission("EditOpeningHours"))
 				mux.Get("/supervisions/opening_hours/new", handlers.Make(handlers.Repo.HandleSupervisionsOpeningHoursNew))
 				mux.Post("/supervisions/opening_hours", handlers.Make(handlers.Repo.HandleSupervisionsOpeningHoursCreate))
+				mux.Group(func(mux chi.Router) {
+					mux.Delete("/supervisions/opening_hours/{oh_id}", handlers.Make(handlers.Repo.HandleSuperVisionsOpeningHoursDelete))
+				})
 			})
 
 			// supervision modal

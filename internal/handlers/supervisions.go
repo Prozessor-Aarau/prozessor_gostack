@@ -268,3 +268,22 @@ func (m *Repository) HandleSuperVisionsDelete(w http.ResponseWriter, r *http.Req
 
 	return rendering(w, r, supervisions.SupervisionModalContent(data))
 }
+
+// HandleSuperVisionsOpeningHoursDelete handles the deletion of an opening hour
+func (m *Repository) HandleSuperVisionsOpeningHoursDelete(w http.ResponseWriter, r *http.Request) error {
+	ohID, err := strconv.Atoi(chi.URLParam(r, "oh_id"))
+	if err != nil {
+		return fmt.Errorf("parsing date id: %w", err)
+	}
+
+	err = m.DB.DeleteOpeningHour(ohID)
+	if err != nil {
+		return fmt.Errorf("deleting opening hour: %w", err)
+	}
+
+	logger.Success(r, m.App.Session, fmt.Sprintf("removed opening hour %d", ohID))
+
+	w.Header().Set("HX-Trigger", "supervisionUpdated")
+
+	return nil
+}
