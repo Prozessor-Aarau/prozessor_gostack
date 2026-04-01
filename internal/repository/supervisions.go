@@ -56,8 +56,8 @@ func (m *postgresDBRepo) AllOpeningHours(startDate time.Time, dayCount int) ([]m
 			LEFT JOIN opening_hours_supervision sup ON oh.id = sup.opening_hour_id
 			LEFT JOIN visitors vis ON sup.visitor_id = vis.id
 		WHERE
-			DATE(oh.start_date) >= DATE ($1)
-			AND DATE(oh.start_date) <= DATE($2)
+		  oh.start_date >= $1::timestamptz
+		AND oh.start_date <= $2::timestamptz
 		GROUP BY
 			oh.id
 		ORDER BY

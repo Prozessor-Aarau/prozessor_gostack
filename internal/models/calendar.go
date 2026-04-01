@@ -17,6 +17,7 @@ type OpeningHour struct {
 	StartTime   time.Time
 	EndTime     time.Time
 	Supervisors []Visitor
+	Expertise   []string
 	Column      int
 	TotalCols   int
 }
@@ -65,10 +66,10 @@ func (e *Event) GetEndTime() time.Time {
 	t := e.EndTime.Time
 	return time.Date(t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second(), 0, swissLoc)
 }
-func (e *Event) SetColumn(c int)         { e.Column = c }
-func (e *Event) SetTotalCols(t int)      { e.TotalCols = t }
-func (e *Event) GetColumn() int          { return e.Column }
-func (e *Event) GetTotalCols() int       { return e.TotalCols }
+func (e *Event) SetColumn(c int)    { e.Column = c }
+func (e *Event) SetTotalCols(t int) { e.TotalCols = t }
+func (e *Event) GetColumn() int     { return e.Column }
+func (e *Event) GetTotalCols() int  { return e.TotalCols }
 
 type CalendarEntry interface {
 	GetStartTime() time.Time
