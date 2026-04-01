@@ -4,6 +4,7 @@ import "fmt"
 import "github.com/faebut/prozessor_gostack/internal/models"
 import "github.com/faebut/prozessor_gostack/view/ui"
 import "time"
+import "github.com/faebut/prozessor_gostack/internal/calendar"
 
 type SupervisionCalendarData struct {
 	Entries   []models.CalendarEntry
@@ -11,72 +12,6 @@ type SupervisionCalendarData struct {
 	Daycount  int
 	PrevUrl   string
 	NextUrl   string
-}
-
-var weekdayDE = map[time.Weekday]string{
-	time.Monday:    "Mo",
-	time.Tuesday:   "Di",
-	time.Wednesday: "Mi",
-	time.Thursday:  "Do",
-	time.Friday:    "Fr",
-	time.Saturday:  "Sa",
-	time.Sunday:    "So",
-}
-
-var swissLoc = func() *time.Location {
-	loc, err := time.LoadLocation("Europe/Zurich")
-	if err != nil {
-		return time.UTC
-	}
-	return loc
-}()
-
-func calDayHeader(t time.Time) string {
-	return fmt.Sprintf("%s %s", weekdayDE[t.Weekday()], t.Format("02.01"))
-}
-
-func isToday(t time.Time) bool {
-	now := time.Now().In(swissLoc)
-	y1, m1, d1 := now.Date()
-	y2, m2, d2 := t.In(swissLoc).Date()
-	return y1 == y2 && m1 == m2 && d1 == d2
-}
-
-func calSlotLabel(slot, startHour, slotMinutes int) string {
-	totalMinutes := startHour*60 + slot*slotMinutes
-	return fmt.Sprintf("%02d:%02d", totalMinutes/60, totalMinutes%60)
-}
-
-func calStartSlot(t time.Time, startHour, slotMinutes int) int {
-	local := t.In(swissLoc)
-	return ((local.Hour()-startHour)*60 + local.Minute()) / slotMinutes
-}
-
-func calDurationSlots(start, end time.Time, slotMinutes int) int {
-	slots := int(end.Sub(start).Minutes()) / slotMinutes
-	if slots < 1 {
-		return 1
-	}
-	return slots
-}
-
-func calEntriesForDay(entries []models.CalendarEntry, day time.Time) []models.CalendarEntry {
-	y, m, d := day.In(swissLoc).Date()
-	var result []models.CalendarEntry
-	for _, e := range entries {
-		ey, em, ed := e.GetStartTime().In(swissLoc).Date()
-		if ey == y && em == m && ed == d {
-			result = append(result, e)
-		}
-	}
-	return result
-}
-
-func calEventStyle(entry models.CalendarEntry, startHour, slotMinutes int) string {
-	startSlot := calStartSlot(entry.GetStartTime(), startHour, slotMinutes)
-	durationSlots := calDurationSlots(entry.GetStartTime(), entry.GetEndTime(), slotMinutes)
-	return fmt.Sprintf("--start-slot:%d;--duration-slots:%d;--col:%d;--total-cols:%d",
-		startSlot, durationSlots, entry.GetColumn(), entry.GetTotalCols())
 }
 
 templ calOpeningHour(e *models.OpeningHour, permission models.Role) {
@@ -88,7 +23,7 @@ templ calOpeningHour(e *models.OpeningHour, permission models.Role) {
 		hx-on::after-request="supervision_modal.showModal()"
 	>
 		<div class="text-xs font-semibold leading-tight">
-			{ e.StartTime.In(swissLoc).Format("15:04") } – { e.EndTime.In(swissLoc).Format("15:04") }
+			{ e.StartTime.In(calendar.SwissLoc).Format("15:04") } – { e.EndTime.In(calendar.SwissLoc).Format("15:04") }
 		</div>
 		<div class="text-xs opacity-75 mt-1">
 			if len(e.Supervisors) > 0 {
@@ -148,28 +83,28 @@ templ SupervisionsCalendar(data SupervisionCalendarData) {
 				for i := range 56 {
 					<div class="cal-time-label">
 						if i % 4 == 0 {
-							{ calSlotLabel(i, 8, 15) }
+							{ calendar.CalSlotLabel(i, 8, 15) }
 						}
 					</div>
 				}
 			</div>
 			for d := range data.Daycount {
 				{{ day := data.StartDate.AddDate(0, 0, d) }}
-				<div class={ "cal-day-col", templ.KV("cal-day-today", isToday(day)) }>
-					<div class="cal-day-header">{ calDayHeader(day) }</div>
+				<div class={ "cal-day-col", templ.KV("cal-day-today", calendar.IsToday(day)) }>
+					<div class="cal-day-header">{ calendar.CalDayHeader(day) }</div>
 					<div class="cal-day-body">
-						for _, entry := range calEntriesForDay(data.Entries, day) {
+						for _, entry := range calendar.CalEntriesForDay(data.Entries, day) {
 							switch e := entry.(type) {
 								case *models.OpeningHour:
 									<div
 										class={ "cal-event flex flex-col", templ.KV("bg-success/30 border-success", len(e.Supervisors) > 1), templ.KV("bg-warning/30 border-warning", len(e.Supervisors) == 1) , templ.KV("bg-error/40 border-error", len(e.Supervisors) == 0) }
-										style={ calEventStyle(entry, 8, 15) }
+										style={ calendar.CalEventStyle(entry, 8, 15) }
 									>
 										@calOpeningHour(e, prm)
 									</div>
 								case *models.Event:
 									<a href={ templ.URL(e.URL) } target="_blank">
-										<div class="cal-event bg-info/30 border-info" style={ calEventStyle(entry, 8, 15) }>
+										<div class="cal-event bg-info/30 border-info" style={ calendar.CalEventStyle(entry, 8, 15) }>
 											@calEventBlock(e)
 										</div>
 									</a>
