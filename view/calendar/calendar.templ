@@ -1,0 +1,136 @@
+package calendar
+
+import "github.com/faebut/prozessor_gostack/internal/models"
+
+import "time"
+import "github.com/faebut/prozessor_gostack/view/layout"
+import "github.com/faebut/prozessor_gostack/internal/calendar"
+import "fmt"
+
+type CalendarData struct {
+	Entries   []models.CalendarEntry
+	StartDate time.Time
+	Daycount  int
+	PrevUrl   string
+	NextUrl   string
+}
+
+templ calOpeningHour(e *models.OpeningHour) {
+	<div class="text-xs font-semibold leading-tight">
+		{ e.StartTime.In(calendar.SwissLoc).Format("15:04") } – { e.EndTime.In(calendar.SwissLoc).Format("15:04") }
+	</div>
+	<div class="text-xs opacity-75 mt-1">
+		if len(e.Expertise) > 0 {
+			Fachperson:
+			for _, ex := range e.Expertise {
+				<div>{ ex }</div>
+			}
+		} else {
+			geöffnet
+		}
+	</div>
+}
+
+templ calEventBlock(e *models.Event) {
+	<div class="text-xs font-semibold leading-tight">
+		{ e.StartTime.Format("15:04") } – { e.EndTime.Format("15:04") }
+	</div>
+	<div class="text-xs opacity-75 mt-1">
+		{ e.Title }
+	</div>
+}
+
+templ calendarNavigation(data CalendarData) {
+	<div class="grid justify-items-center mb-2">
+		<div class="join">
+			<button type="button" class="join-item btn btn-secondary" hx-get={ data.PrevUrl } hx-target="#opening_hours" hx-swap="innerHTML">«</button>
+			<button type="button" class="join-item btn" hx-get={ fmt.Sprintf("/calendar/%s/%d", time.Now().Format("2006-01-02"), data.Daycount) } hx-target="#opening_hours" hx-swap="innerHTML">{ data.StartDate.Format("02.01.2006") } - { data.StartDate.AddDate(0,0,data.Daycount-1).Format("02.01.2006") }</button>
+			<button type="button" class="join-item btn btn-secondary" hx-get={ data.NextUrl } hx-target="#opening_hours" hx-swap="innerHTML">»</button>
+		</div>
+	</div>
+}
+
+templ Calendar(baseUrl string) {
+	@layout.App(false, models.Visitor{}) {
+		<div id="opening_hours" data-baseurl={ fmt.Sprintf("%s/%s/", baseUrl, time.Now().Format("2006-01-02")) }></div>
+		<script>
+			(function () {
+				const el = document.getElementById("opening_hours");
+				const dayCount = window.innerWidth < 480 ? 3 : 7;
+				htmx.ajax("GET", el.dataset.baseurl + dayCount, {
+					target: "#opening_hours",
+					swap: "innerHTML",
+				});
+			})();
+		</script>
+	}
+}
+
+templ CalendarView(data CalendarData) {
+	@calendarNavigation(data)
+	<div class="cal-grid">
+		<div class="cal-time-col">
+			<div class="cal-header-cell"></div>
+			for i := range 56 {
+				<div class="cal-time-label">
+					if i % 4 == 0 {
+						{ calendar.CalSlotLabel(i, 8, 15) }
+					}
+				</div>
+			}
+		</div>
+		for d := range data.Daycount {
+			{{ day := data.StartDate.AddDate(0, 0, d) }}
+			<div class={ "cal-day-col", templ.KV("cal-day-today", calendar.IsToday(day)) }>
+				<div class="cal-day-header">{ calendar.CalDayHeader(day) }</div>
+				<div class="cal-day-body">
+					for _, entry := range calendar.CalEntriesForDay(data.Entries, day) {
+						switch e := entry.(type) {
+							case *models.OpeningHour:
+								<div
+									class="cal-event flex flex-col bg-primary/30 border-primary"
+									style={ calendar.CalEventStyle(entry, 8, 15) }
+								>
+									@calOpeningHour(e)
+								</div>
+							case *models.Event:
+								<a href={ templ.URL(e.URL) }>
+									<div class="cal-event bg-info/30 border-info" style={ calendar.CalEventStyle(entry, 8, 15) }>
+										@calEventBlock(e)
+									</div>
+								</a>
+						}
+					}
+				</div>
+			</div>
+		}
+	</div>
+	<script>
+		(function () {
+			const wrapper = document.querySelector(".cal-wrapper");
+			if (!wrapper) return;
+			let startX = 0;
+			wrapper.addEventListener(
+				"touchstart",
+				function (e) {
+					startX = e.touches[0].clientX;
+				},
+				{ passive: true },
+			);
+			wrapper.addEventListener(
+				"touchend",
+				function (e) {
+					const diff = startX - e.changedTouches[0].clientX;
+					if (Math.abs(diff) < 50) return;
+					const url = diff > 0 ? wrapper.dataset.next : wrapper.dataset.prev;
+					if (url)
+						htmx.ajax("GET", url, {
+							target: "#opening_hours",
+							swap: "innerHTML",
+						});
+				},
+				{ passive: true },
+			);
+		})();
+	</script>
+}

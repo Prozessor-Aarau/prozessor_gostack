@@ -40,6 +40,9 @@ func routes(app *config.AppConfig) http.Handler {
 	mux.Get("/unsubscribe/{id}", handlers.Make(handlers.Repo.HandleNewsletterUnsubscribe))
 	mux.Get("/subscribe", handlers.Make(handlers.Repo.HandleNewsletterSubscribeIndex))
 	mux.Post("/subscribe", handlers.Make(handlers.Repo.HandleNewsletterSubscribe))
+	// calendar
+	mux.Get("/calendar", handlers.Make(handlers.Repo.HandleCalendarIndex))
+	mux.Get("/calendar/{startdate}/{daycount}", handlers.Make(handlers.Repo.HandleCalendar))
 
 	// for creating logins
 	mux.Get("/createlogin", handlers.Make(handlers.Repo.HandleCreateLoginIndex))

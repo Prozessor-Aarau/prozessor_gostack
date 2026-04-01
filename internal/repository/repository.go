@@ -106,6 +106,7 @@ type DatabaseRepo interface {
 	// supervisions
 	CreateOpeningHours(openingHours []models.OpeningHour) error
 	AllOpeningHours(startDate time.Time, dayCount int) ([]models.OpeningHour, error)
+	CalendarOpeningHours(startDate time.Time, dayCount int) ([]models.OpeningHour, error)
 	CreateSupervision(dateId int, visitorId string) error
 	GetSupervisionsByDateId(dateId int) ([]models.Visitor, error)
 	DeleteSupervision(dateId int, visitorId string) error
