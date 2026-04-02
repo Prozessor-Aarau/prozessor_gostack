@@ -3,7 +3,7 @@ package calendar
 import "github.com/faebut/prozessor_gostack/internal/models"
 
 import "time"
-import "github.com/faebut/prozessor_gostack/view/layout"
+
 import "github.com/faebut/prozessor_gostack/internal/calendar"
 import "fmt"
 
@@ -16,10 +16,10 @@ type CalendarData struct {
 }
 
 templ calOpeningHour(e *models.OpeningHour) {
-	<div class="text-xs font-semibold leading-tight">
+	<div class="event-time">
 		{ e.StartTime.In(calendar.SwissLoc).Format("15:04") } – { e.EndTime.In(calendar.SwissLoc).Format("15:04") }
 	</div>
-	<div class="text-xs opacity-75 mt-1">
+	<div class="event-content">
 		if len(e.Expertise) > 0 {
 			Fachperson:
 			for _, ex := range e.Expertise {
@@ -32,16 +32,16 @@ templ calOpeningHour(e *models.OpeningHour) {
 }
 
 templ calEventBlock(e *models.Event) {
-	<div class="text-xs font-semibold leading-tight">
+	<div class="event-time">
 		{ e.StartTime.Format("15:04") } – { e.EndTime.Format("15:04") }
 	</div>
-	<div class="text-xs opacity-75 mt-1">
+	<div class="event-content">
 		{ e.Title }
 	</div>
 }
 
 templ calendarNavigation(data CalendarData) {
-	<div class="grid justify-items-center mb-2">
+	<div class="cal-navigation">
 		<div class="join">
 			<button type="button" class="join-item btn btn-secondary" hx-get={ data.PrevUrl } hx-target="#opening_hours" hx-swap="innerHTML">«</button>
 			<button type="button" class="join-item btn" hx-get={ fmt.Sprintf("/calendar/%s/%d", time.Now().Format("2006-01-02"), data.Daycount) } hx-target="#opening_hours" hx-swap="innerHTML">{ data.StartDate.Format("02.01.2006") } - { data.StartDate.AddDate(0,0,data.Daycount-1).Format("02.01.2006") }</button>
@@ -51,19 +51,154 @@ templ calendarNavigation(data CalendarData) {
 }
 
 templ Calendar(baseUrl string) {
-	@layout.App(false, models.Visitor{}) {
-		<div id="opening_hours" data-baseurl={ fmt.Sprintf("%s/%s/", baseUrl, time.Now().Format("2006-01-02")) }></div>
-		<script>
-			(function () {
-				const el = document.getElementById("opening_hours");
-				const dayCount = window.innerWidth < 480 ? 3 : 7;
-				htmx.ajax("GET", el.dataset.baseurl + dayCount, {
-					target: "#opening_hours",
-					swap: "innerHTML",
-				});
-			})();
-		</script>
-	}
+	<script src="https://unpkg.com/htmx.org@2.0.4"></script>
+	<style>
+		:root {
+			--primary-color: #00fbff;
+			--secondary-color: #7cff00;
+			--tertiary-color: #ff00e6;
+			--tertiary-text: black;
+			--font-serif: "PT Serif", serif;
+			--font-nonserif: "Mosk";
+		}
+
+		.event-entry {
+			padding: 8px 10px;
+			/* border-radius: 6px; */
+			border-left-width: 3px;
+			border-left-style: solid;
+			font-size: 0.75rem;
+			line-height: 1.4;
+		}
+
+		.event-time {
+			font-size: 0.75rem;
+			font-weight: 600;
+		}
+
+		.event-content {
+			margin-top: 0.2rem;
+			font-size: 0.75rem;
+		}
+
+		.cal-link {
+			text-decoration: none;
+			color: var(--tertiary-text);
+		}
+
+		.cal-navigation {
+			display: grid;
+			justify-items: center;
+			margin-bottom: 0.4rem;
+		}
+
+		.cal-grid {
+			display: flex;
+			overflow-x: auto;
+			-webkit-overflow-scrolling: touch;
+			--slot-height: max(8px, calc((100vh - 320px) / 56));
+		}
+
+		.cal-time-col {
+			width: 3.5rem;
+			flex-shrink: 0;
+		}
+
+		.cal-header-cell {
+			height: 2.5rem;
+		}
+
+		.cal-time-label {
+			height: var(--slot-height);
+			display: flex;
+			align-items: flex-start;
+			justify-content: flex-end;
+			padding-right: 0.5rem;
+			font-size: 0.7rem;
+			opacity: 0.6;
+		}
+
+		.cal-day-col {
+			flex: 1;
+			min-width: 80px;
+			border-left: 1px solid color-mix(in oklch, black 15%, transparent);
+		}
+
+		.cal-day-today {
+			background-color: color-mix(
+				in oklch,
+				var(--tertiary-color) 15%,
+				transparent
+			);
+		}
+
+		.cal-day-header {
+			height: 2.5rem;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			font-size: 0.8rem;
+			font-weight: 600;
+			border-bottom: 1px solid color-mix(in oklch, black 15%, transparent);
+		}
+
+		.cal-day-body {
+			position: relative;
+			height: calc(56 * var(--slot-height));
+			background-image: repeating-linear-gradient(
+				to bottom,
+				transparent,
+				transparent calc(4 * var(--slot-height) - 1px),
+				color-mix(in oklch, black 15%, transparent)
+					calc(4 * var(--slot-height) - 1px),
+				color-mix(in oklch, black 15%, transparent) calc(4 * var(--slot-height))
+			);
+		}
+
+		.cal-event {
+			position: absolute;
+			top: calc(var(--start-slot) * var(--slot-height));
+			height: calc(var(--duration-slots) * var(--slot-height));
+			left: calc(var(--col) / var(--total-cols) * 100%);
+			width: calc(100% / var(--total-cols));
+			box-sizing: border-box;
+			padding: 8px 10px;
+			border-left-width: 3px;
+			border-left-style: solid;
+			font-size: 0.75rem;
+			line-height: 1.4;
+			overflow: clip;
+			overflow-clip-margin: content-box;
+		}
+
+		.type-event {
+			background: var(--primary-color);
+			color: var(--tertiary-color);
+			border-color: var(--tertiary-color);
+		}
+
+		.type-event:hover {
+			background: var(--tertiary-color);
+			color: var(--tertiary-text);
+		}
+
+		.type-openinghour {
+			background: var(--secondary-color);
+			color: var(--tertiary-color);
+			border-color: var(--tertiary-color);
+		}
+	</style>
+	<div id="opening_hours" data-baseurl={ fmt.Sprintf("%s/%s/", baseUrl, time.Now().Format("2006-01-02")) }></div>
+	<script>
+		(function () {
+			const el = document.getElementById("opening_hours");
+			const dayCount = window.innerWidth < 480 ? 3 : 7;
+			htmx.ajax("GET", el.dataset.baseurl + dayCount, {
+				target: "#opening_hours",
+				swap: "innerHTML",
+			});
+		})();
+	</script>
 }
 
 templ calDetailStyles() {
@@ -77,17 +212,15 @@ templ calDetailStyles() {
 			bottom: 0;
 			left: 0;
 			right: 0;
-			padding: 1px 4px;
+			padding: 6px 10px;
 			font-size: 0.65rem;
 			font-style: italic;
-			opacity: 0.8;
 			pointer-events: none;
 		}
 		.cal-popover {
 			position: fixed;
 			z-index: 100;
 			padding: 8px 10px;
-			border-radius: 6px;
 			border-left-width: 3px;
 			border-left-style: solid;
 			font-size: 0.75rem;
@@ -138,9 +271,10 @@ templ calDetailStyles() {
 				document.body.appendChild(pop);
 
 				var colW = colRect.width;
-				var maxW = colW * 2;
-				pop.style.minWidth = colW + "px";
-				pop.style.maxWidth = maxW + "px";
+				var evtW = rect.width;
+				pop.style.minWidth = evtW + "px";
+				pop.style.minHeight = rect.height + "px";
+				pop.style.maxWidth = (colW * 2) + "px";
 				pop.style.width = "auto";
 				pop.style.height = "auto";
 				var popH = pop.offsetHeight;
@@ -155,14 +289,14 @@ templ calDetailStyles() {
 				var isFirst = dayIndex <= 0;
 				var isLast = dayIndex === dayCols.length - 1;
 
-				var colCenterX = colRect.left + colRect.width / 2;
+				var evtCenterX = rect.left + rect.width / 2;
 				var x;
 				if (isFirst) {
 					x = rect.left;
 				} else if (isLast) {
 					x = rect.right - popW;
 				} else {
-					x = colCenterX - popW / 2;
+					x = evtCenterX - popW / 2;
 				}
 				x = Math.max(gridRect.left, Math.min(x, gridRect.right - popW));
 
@@ -210,7 +344,7 @@ templ calDetailStyles() {
 				if (!overflows) return;
 				var hint = document.createElement("div");
 				hint.className = "cal-more-hint";
-				hint.textContent = "weitere\u2026";
+				hint.textContent = "\u23F5\u23F5 weitere\u2026";
 				var cs = getComputedStyle(el);
 				hint.style.backgroundColor = cs.backgroundColor;
 				el.appendChild(hint);
@@ -265,7 +399,7 @@ templ CalendarView(data CalendarData) {
 						switch e := entry.(type) {
 							case *models.OpeningHour:
 								<div
-									class={ "cal-event flex flex-col bg-primary/30 border-primary", templ.KV("cal-event-expandable", len(e.Expertise) > 0) }
+									class={ "cal-event type-openinghour", templ.KV("cal-event-expandable", len(e.Expertise) > 0) }
 									style={ calendar.CalEventStyle(entry, 8, 15) }
 									if len(e.Expertise) > 0 {
 										tabindex="0"
@@ -274,8 +408,8 @@ templ CalendarView(data CalendarData) {
 									@calOpeningHour(e)
 								</div>
 							case *models.Event:
-								<a href={ templ.URL(e.URL) }>
-									<div class="cal-event bg-info/30 border-info" style={ calendar.CalEventStyle(entry, 8, 15) }>
+								<a class="cal-link" href={ templ.URL(e.URL) }>
+									<div class="cal-event type-event" style={ calendar.CalEventStyle(entry, 8, 15) }>
 										@calEventBlock(e)
 									</div>
 								</a>
