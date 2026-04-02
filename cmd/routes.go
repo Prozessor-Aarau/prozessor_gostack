@@ -256,7 +256,7 @@ func routes(app *config.AppConfig) http.Handler {
 			)
 			// add abonnements
 			mux.Group(func(mux chi.Router) {
-				mux.Use(CheckPermission("AddAbonnements"))
+				mux.Use(CheckPermission("AddAbonnement"))
 				mux.Get(
 					"/abonnements/create",
 					handlers.Make(handlers.Repo.HandleAbonnementCreateIndex),

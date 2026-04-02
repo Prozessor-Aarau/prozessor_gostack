@@ -98,6 +98,8 @@ func hasPermission(p models.Role, permission string) bool {
 		return p.EditBadge
 	case "ViewAbonnements":
 		return p.ViewAbonnements
+	case "AddAbonnement":
+		return p.AddAbonnement
 	case "EditAbonnement":
 		return p.EditAbonnement
 	case "ViewReminders":
