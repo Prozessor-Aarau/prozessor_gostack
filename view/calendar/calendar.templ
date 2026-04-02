@@ -72,6 +72,17 @@ templ calDetailStyles() {
 			cursor: default;
 			-webkit-tap-highlight-color: transparent;
 		}
+		.cal-more-hint {
+			position: absolute;
+			bottom: 0;
+			left: 0;
+			right: 0;
+			padding: 1px 4px;
+			font-size: 0.65rem;
+			font-style: italic;
+			opacity: 0.8;
+			pointer-events: none;
+		}
 		.cal-popover {
 			position: fixed;
 			z-index: 100;
@@ -102,6 +113,8 @@ templ calDetailStyles() {
 				pop = document.createElement('div');
 				pop.className = 'cal-popover';
 				pop.innerHTML = el.innerHTML;
+				var hint = pop.querySelector('.cal-more-hint');
+				if (hint) hint.remove();
 
 				var cs = getComputedStyle(el);
 				pop.style.backgroundColor = cs.backgroundColor;
@@ -187,9 +200,22 @@ templ calDetailStyles() {
 				activeEl = null;
 			}
 
+			function addHint(el) {
+				if (el.querySelector('.cal-more-hint')) return;
+				var overflows = el.scrollHeight > el.clientHeight + 2 || el.scrollWidth > el.clientWidth + 2;
+				if (!overflows) return;
+				var hint = document.createElement('div');
+				hint.className = 'cal-more-hint';
+				hint.textContent = 'weitere\u2026';
+				var cs = getComputedStyle(el);
+				hint.style.backgroundColor = cs.backgroundColor;
+				el.appendChild(hint);
+			}
+
 			function bind(el) {
 				if (el.dataset.calBound) return;
 				el.dataset.calBound = '1';
+				addHint(el);
 				el.addEventListener('mouseenter', function() { show(el); });
 				el.addEventListener('mouseleave', hide);
 				el.addEventListener('focus', function() { show(el); });
