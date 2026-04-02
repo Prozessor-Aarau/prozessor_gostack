@@ -69,7 +69,7 @@ templ Calendar(baseUrl string) {
 templ calDetailStyles() {
 	<style>
 		.cal-event-expandable {
-			cursor: pointer;
+			cursor: default;
 			-webkit-tap-highlight-color: transparent;
 		}
 		.cal-popover {
@@ -97,7 +97,7 @@ templ calDetailStyles() {
 				activeEl = el;
 				var scrollH = el.scrollHeight;
 				var clientH = el.clientHeight;
-				if (scrollH <= clientH + 2) return;
+				if (scrollH <= clientH + 2 && el.scrollWidth <= el.clientWidth + 2) return;
 
 				pop = document.createElement('div');
 				pop.className = 'cal-popover';
