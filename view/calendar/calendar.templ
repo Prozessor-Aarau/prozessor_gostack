@@ -64,12 +64,12 @@ templ Calendar(baseUrl string) {
 	<script src="https://unpkg.com/htmx.org@2.0.4"></script>
 	<style>
 		:root {
-			/* --primary-color: #00fbff; */
-			/* --secondary-color: #7cff00; */
-			/* --tertiary-color: #ff00e6; */
-			/* --tertiary-text: black; */
-			/* --font-serif: "PT Serif", serif; */
-			/* --font-nonserif: "Mosk"; */
+			--primary-color: #00ffa8;
+			--secondary-color: #d7ff00;
+			--tertiary-color: #bd00ff;
+			--tertiary-text: white;
+			--font-serif: "PT Serif", serif;
+			--font-nonserif: "Mosk";
 		}
 
 		.event-entry {
@@ -82,13 +82,13 @@ templ Calendar(baseUrl string) {
 		}
 
 		.event-time {
-			font-size: 0.75rem;
+			font-size: 0.9rem;
 			font-weight: 600;
 		}
 
 		.event-content {
 			margin-top: 0.2rem;
-			font-size: 0.75rem;
+			font-size: 0.9rem;
 		}
 
 		.cal-link {
@@ -115,6 +115,11 @@ templ Calendar(baseUrl string) {
 			padding: 0.3rem 0.5rem;
 			border: none;
 			cursor: pointer;
+
+			&:hover {
+				background-color: var(--tertiary-color);
+				color: var(--secondary-color);
+			}
 		}
 
 		.cal-nav-button-arrow {
@@ -127,11 +132,6 @@ templ Calendar(baseUrl string) {
 			height: 1em;
 			fill: currentColor;
 			display: block;
-		}
-
-		.cal-nav-button:hover {
-			background-color: var(--tertiary-color);
-			color: var(--secondary-color);
 		}
 
 		.cal-grid {
@@ -156,21 +156,24 @@ templ Calendar(baseUrl string) {
 			align-items: flex-start;
 			justify-content: flex-end;
 			padding-right: 0.5rem;
-			font-size: 0.7rem;
+			font-size: 0.8rem;
 			opacity: 0.6;
 		}
 
 		.cal-day-col {
 			flex: 1;
 			min-width: 80px;
-			border-left: 1px solid color-mix(in oklch, black 15%, transparent);
+			border-left: 1px solid
+				color-mix(in oklch, var(--tertiary-color) 20%, transparent);
 		}
 
 		.cal-day-today {
-			background-color: color-mix(
-				in oklch,
-				var(--tertiary-color) 15%,
-				transparent
+			background: repeating-linear-gradient(
+				63.435deg,
+				white,
+				white 9px,
+				color-mix(in oklch, var(--tertiary-color) 20%, transparent) 9px,
+				color-mix(in oklch, var(--tertiary-color) 20%, transparent) 10px
 			);
 		}
 
@@ -179,9 +182,10 @@ templ Calendar(baseUrl string) {
 			display: flex;
 			align-items: center;
 			justify-content: center;
-			font-size: 0.8rem;
+			font-size: 1rem;
 			font-weight: 600;
-			border-bottom: 1px solid color-mix(in oklch, black 15%, transparent);
+			border-bottom: 1px solid
+				color-mix(in oklch, var(--tertiary-color) 20%, transparent);
 		}
 
 		.cal-day-body {
@@ -191,9 +195,9 @@ templ Calendar(baseUrl string) {
 				to bottom,
 				transparent,
 				transparent calc(4 * var(--slot-height) - 1px),
-				color-mix(in oklch, black 15%, transparent)
+				color-mix(in oklch, black 20%, transparent)
 					calc(4 * var(--slot-height) - 1px),
-				color-mix(in oklch, black 15%, transparent) calc(4 * var(--slot-height))
+				color-mix(in oklch, black 20%, transparent) calc(4 * var(--slot-height))
 			);
 		}
 
@@ -217,11 +221,15 @@ templ Calendar(baseUrl string) {
 			background: var(--primary-color);
 			color: var(--tertiary-color);
 			border-color: var(--tertiary-color);
-		}
 
-		.type-event:hover {
-			background: var(--tertiary-color);
-			color: var(--tertiary-text);
+			&:hover {
+				background: var(--tertiary-color);
+				color: var(--tertiary-text);
+			}
+			.event-content {
+				/* overflow-wrap: break-word; */
+				word-break: break-all;
+			}
 		}
 
 		.type-openinghour {
@@ -255,7 +263,7 @@ templ calDetailStyles() {
 			left: 0;
 			right: 0;
 			padding: 6px 10px;
-			font-size: 0.65rem;
+			font-size: 0.8rem;
 			font-style: italic;
 			pointer-events: none;
 		}
