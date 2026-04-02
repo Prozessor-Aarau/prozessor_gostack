@@ -124,7 +124,8 @@ h2 {
   box-sizing: border-box;
   padding: 2px 4px;
   border-radius: 4px;
-  overflow: hidden;
+  overflow: clip;
+  overflow-clip-margin: content-box;
   border-left-width: 3px;
   border-left-style: solid;
 }
