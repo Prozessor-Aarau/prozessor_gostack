@@ -66,7 +66,128 @@ templ Calendar(baseUrl string) {
 	}
 }
 
+templ calDetailStyles() {
+	<style>
+		.cal-event-expandable {
+			cursor: pointer;
+			-webkit-tap-highlight-color: transparent;
+		}
+		.cal-popover {
+			position: fixed;
+			z-index: 100;
+			padding: 8px 10px;
+			border-radius: 6px;
+			border-left-width: 3px;
+			border-left-style: solid;
+			box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+			font-size: 0.75rem;
+			line-height: 1.4;
+			pointer-events: none;
+			box-sizing: border-box;
+			width: max-content;
+		}
+	</style>
+	<script>
+		(function() {
+			var pop = null;
+			var activeEl = null;
+
+			function show(el) {
+				if (activeEl === el) return;
+				hide();
+				activeEl = el;
+				var scrollH = el.scrollHeight;
+				var clientH = el.clientHeight;
+				if (scrollH <= clientH + 2) return;
+
+				pop = document.createElement('div');
+				pop.className = 'cal-popover';
+				pop.innerHTML = el.innerHTML;
+
+				var cs = getComputedStyle(el);
+				pop.style.backgroundColor = cs.backgroundColor;
+				pop.style.borderLeftColor = cs.borderLeftColor;
+				pop.style.color = cs.color;
+
+				var rect = el.getBoundingClientRect();
+				var body = el.closest('.cal-day-body');
+				var bodyRect = body ? body.getBoundingClientRect() : rect;
+				var dayCol = el.closest('.cal-day-col');
+				var colRect = dayCol ? dayCol.getBoundingClientRect() : rect;
+				var grid = el.closest('.cal-grid');
+				var gridRect = grid ? grid.getBoundingClientRect() : bodyRect;
+
+				document.body.appendChild(pop);
+
+				var colW = colRect.width;
+				pop.style.minWidth = colW + 'px';
+				pop.style.maxWidth = (colW * 2) + 'px';
+
+				var popH = pop.offsetHeight;
+				var popW = pop.offsetWidth;
+
+				var dayCols = grid ? grid.querySelectorAll('.cal-day-col') : [];
+				var dayIndex = Array.prototype.indexOf.call(dayCols, dayCol);
+				var isFirst = dayIndex <= 0;
+				var isLast = dayIndex === dayCols.length - 1;
+
+				var colCenterX = colRect.left + colRect.width / 2;
+				var x;
+				if (isFirst) {
+					x = rect.left;
+				} else if (isLast) {
+					x = rect.right - popW;
+				} else {
+					x = colCenterX - popW / 2;
+				}
+				x = Math.max(gridRect.left, Math.min(x, gridRect.right - popW));
+
+				var centerY = rect.top + rect.height / 2;
+				var nearTop = (centerY - bodyRect.top) < popH / 2 + 8;
+				var nearBottom = (bodyRect.bottom - centerY) < popH / 2 + 8;
+
+				var y;
+				if (nearTop) {
+					y = rect.top;
+				} else if (nearBottom) {
+					y = rect.bottom - popH;
+				} else {
+					y = centerY - popH / 2;
+				}
+				y = Math.max(bodyRect.top, Math.min(y, bodyRect.bottom - popH));
+
+				pop.style.left = x + 'px';
+				pop.style.top = y + 'px';
+			}
+
+			function hide() {
+				if (pop) {
+					pop.remove();
+					pop = null;
+				}
+				activeEl = null;
+			}
+
+			function bind(el) {
+				if (el.dataset.calBound) return;
+				el.dataset.calBound = '1';
+				el.addEventListener('mouseenter', function() { show(el); });
+				el.addEventListener('mouseleave', hide);
+				el.addEventListener('focus', function() { show(el); });
+				el.addEventListener('blur', hide);
+			}
+
+			function init() {
+				document.querySelectorAll('.cal-event-expandable').forEach(bind);
+			}
+			init();
+			new MutationObserver(init).observe(document.body, { childList: true, subtree: true });
+		})();
+	</script>
+}
+
 templ CalendarView(data CalendarData) {
+	@calDetailStyles()
 	@calendarNavigation(data)
 	<div class="cal-grid">
 		<div class="cal-time-col">
@@ -88,8 +209,11 @@ templ CalendarView(data CalendarData) {
 						switch e := entry.(type) {
 							case *models.OpeningHour:
 								<div
-									class="cal-event flex flex-col bg-primary/30 border-primary"
+									class={ "cal-event flex flex-col bg-primary/30 border-primary", templ.KV("cal-event-expandable", len(e.Expertise) > 0) }
 									style={ calendar.CalEventStyle(entry, 8, 15) }
+									if len(e.Expertise) > 0 {
+										tabindex="0"
+									}
 								>
 									@calOpeningHour(e)
 								</div>
