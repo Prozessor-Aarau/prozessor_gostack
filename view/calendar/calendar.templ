@@ -98,7 +98,7 @@ templ calDetailStyles() {
 		}
 	</style>
 	<script>
-		(function() {
+		(function () {
 			var pop = null;
 			var activeEl = null;
 
@@ -108,12 +108,13 @@ templ calDetailStyles() {
 				activeEl = el;
 				var scrollH = el.scrollHeight;
 				var clientH = el.clientHeight;
-				if (scrollH <= clientH + 2 && el.scrollWidth <= el.clientWidth + 2) return;
+				if (scrollH <= clientH + 2 && el.scrollWidth <= el.clientWidth + 2)
+					return;
 
-				pop = document.createElement('div');
-				pop.className = 'cal-popover';
+				pop = document.createElement("div");
+				pop.className = "cal-popover";
 				pop.innerHTML = el.innerHTML;
-				var hint = pop.querySelector('.cal-more-hint');
+				var hint = pop.querySelector(".cal-more-hint");
 				if (hint) hint.remove();
 
 				var cs = getComputedStyle(el);
@@ -122,34 +123,34 @@ templ calDetailStyles() {
 				pop.style.color = cs.color;
 
 				var rect = el.getBoundingClientRect();
-				var body = el.closest('.cal-day-body');
+				var body = el.closest(".cal-day-body");
 				var bodyRect = body ? body.getBoundingClientRect() : rect;
-				var dayCol = el.closest('.cal-day-col');
+				var dayCol = el.closest(".cal-day-col");
 				var colRect = dayCol ? dayCol.getBoundingClientRect() : rect;
-				var grid = el.closest('.cal-grid');
+				var grid = el.closest(".cal-grid");
 				var gridRect = grid ? grid.getBoundingClientRect() : bodyRect;
 
-				pop.style.left = rect.left + 'px';
-				pop.style.top = rect.top + 'px';
-				pop.style.width = rect.width + 'px';
-				pop.style.height = rect.height + 'px';
+				pop.style.left = rect.left + "px";
+				pop.style.top = rect.top + "px";
+				pop.style.width = rect.width + "px";
+				pop.style.height = rect.height + "px";
 
 				document.body.appendChild(pop);
 
 				var colW = colRect.width;
 				var maxW = colW * 2;
-				pop.style.minWidth = colW + 'px';
-				pop.style.maxWidth = maxW + 'px';
-				pop.style.width = 'auto';
-				pop.style.height = 'auto';
+				pop.style.minWidth = colW + "px";
+				pop.style.maxWidth = maxW + "px";
+				pop.style.width = "auto";
+				pop.style.height = "auto";
 				var popH = pop.offsetHeight;
 				var popW = pop.offsetWidth;
 
-				pop.style.width = rect.width + 'px';
-				pop.style.height = rect.height + 'px';
+				pop.style.width = rect.width + "px";
+				pop.style.height = rect.height + "px";
 				pop.offsetHeight;
 
-				var dayCols = grid ? grid.querySelectorAll('.cal-day-col') : [];
+				var dayCols = grid ? grid.querySelectorAll(".cal-day-col") : [];
 				var dayIndex = Array.prototype.indexOf.call(dayCols, dayCol);
 				var isFirst = dayIndex <= 0;
 				var isLast = dayIndex === dayCols.length - 1;
@@ -166,8 +167,8 @@ templ calDetailStyles() {
 				x = Math.max(gridRect.left, Math.min(x, gridRect.right - popW));
 
 				var centerY = rect.top + rect.height / 2;
-				var nearTop = (centerY - bodyRect.top) < popH / 2 + 8;
-				var nearBottom = (bodyRect.bottom - centerY) < popH / 2 + 8;
+				var nearTop = centerY - bodyRect.top < popH / 2 + 8;
+				var nearBottom = bodyRect.bottom - centerY < popH / 2 + 8;
 
 				var y;
 				if (nearTop) {
@@ -179,16 +180,17 @@ templ calDetailStyles() {
 				}
 				y = Math.max(bodyRect.top, Math.min(y, bodyRect.bottom - popH));
 
-				pop.style.transition = 'left 0.2s ease, top 0.2s ease, width 0.2s ease, height 0.2s ease, box-shadow 0.2s ease';
+				pop.style.transition =
+					"left 0.2s ease, top 0.2s ease, width 0.2s ease, height 0.2s ease, box-shadow 0.2s ease";
 				pop.offsetHeight;
 
-				requestAnimationFrame(function() {
+				requestAnimationFrame(function () {
 					if (!pop) return;
-					pop.style.left = x + 'px';
-					pop.style.top = y + 'px';
-					pop.style.width = popW + 'px';
-					pop.style.height = popH + 'px';
-					pop.style.boxShadow = '0 6px 20px rgba(0,0,0,0.2)';
+					pop.style.left = x + "px";
+					pop.style.top = y + "px";
+					pop.style.width = popW + "px";
+					pop.style.height = popH + "px";
+					pop.style.boxShadow = "0 6px 20px rgba(0,0,0,0.2)";
 				});
 			}
 
@@ -201,12 +203,14 @@ templ calDetailStyles() {
 			}
 
 			function addHint(el) {
-				if (el.querySelector('.cal-more-hint')) return;
-				var overflows = el.scrollHeight > el.clientHeight + 2 || el.scrollWidth > el.clientWidth + 2;
+				if (el.querySelector(".cal-more-hint")) return;
+				var overflows =
+					el.scrollHeight > el.clientHeight + 2 ||
+					el.scrollWidth > el.clientWidth + 2;
 				if (!overflows) return;
-				var hint = document.createElement('div');
-				hint.className = 'cal-more-hint';
-				hint.textContent = 'weitere\u2026';
+				var hint = document.createElement("div");
+				hint.className = "cal-more-hint";
+				hint.textContent = "weitere\u2026";
 				var cs = getComputedStyle(el);
 				hint.style.backgroundColor = cs.backgroundColor;
 				el.appendChild(hint);
@@ -214,19 +218,26 @@ templ calDetailStyles() {
 
 			function bind(el) {
 				if (el.dataset.calBound) return;
-				el.dataset.calBound = '1';
+				el.dataset.calBound = "1";
 				addHint(el);
-				el.addEventListener('mouseenter', function() { show(el); });
-				el.addEventListener('mouseleave', hide);
-				el.addEventListener('focus', function() { show(el); });
-				el.addEventListener('blur', hide);
+				el.addEventListener("mouseenter", function () {
+					show(el);
+				});
+				el.addEventListener("mouseleave", hide);
+				el.addEventListener("focus", function () {
+					show(el);
+				});
+				el.addEventListener("blur", hide);
 			}
 
 			function init() {
-				document.querySelectorAll('.cal-event-expandable').forEach(bind);
+				document.querySelectorAll(".cal-event-expandable").forEach(bind);
 			}
 			init();
-			new MutationObserver(init).observe(document.body, { childList: true, subtree: true });
+			new MutationObserver(init).observe(document.body, {
+				childList: true,
+				subtree: true,
+			});
 		})();
 	</script>
 }
