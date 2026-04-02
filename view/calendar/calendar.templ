@@ -79,12 +79,11 @@ templ calDetailStyles() {
 			border-radius: 6px;
 			border-left-width: 3px;
 			border-left-style: solid;
-			box-shadow: 0 6px 20px rgba(0,0,0,0.2);
 			font-size: 0.75rem;
 			line-height: 1.4;
 			pointer-events: none;
 			box-sizing: border-box;
-			width: max-content;
+			overflow: hidden;
 		}
 	</style>
 	<script>
@@ -117,14 +116,25 @@ templ calDetailStyles() {
 				var grid = el.closest('.cal-grid');
 				var gridRect = grid ? grid.getBoundingClientRect() : bodyRect;
 
+				pop.style.left = rect.left + 'px';
+				pop.style.top = rect.top + 'px';
+				pop.style.width = rect.width + 'px';
+				pop.style.height = rect.height + 'px';
+
 				document.body.appendChild(pop);
 
 				var colW = colRect.width;
+				var maxW = colW * 2;
 				pop.style.minWidth = colW + 'px';
-				pop.style.maxWidth = (colW * 2) + 'px';
-
+				pop.style.maxWidth = maxW + 'px';
+				pop.style.width = 'auto';
+				pop.style.height = 'auto';
 				var popH = pop.offsetHeight;
 				var popW = pop.offsetWidth;
+
+				pop.style.width = rect.width + 'px';
+				pop.style.height = rect.height + 'px';
+				pop.offsetHeight;
 
 				var dayCols = grid ? grid.querySelectorAll('.cal-day-col') : [];
 				var dayIndex = Array.prototype.indexOf.call(dayCols, dayCol);
@@ -156,8 +166,17 @@ templ calDetailStyles() {
 				}
 				y = Math.max(bodyRect.top, Math.min(y, bodyRect.bottom - popH));
 
-				pop.style.left = x + 'px';
-				pop.style.top = y + 'px';
+				pop.style.transition = 'left 0.2s ease, top 0.2s ease, width 0.2s ease, height 0.2s ease, box-shadow 0.2s ease';
+				pop.offsetHeight;
+
+				requestAnimationFrame(function() {
+					if (!pop) return;
+					pop.style.left = x + 'px';
+					pop.style.top = y + 'px';
+					pop.style.width = popW + 'px';
+					pop.style.height = popH + 'px';
+					pop.style.boxShadow = '0 6px 20px rgba(0,0,0,0.2)';
+				});
 			}
 
 			function hide() {
