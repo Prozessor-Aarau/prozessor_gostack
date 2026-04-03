@@ -187,7 +187,7 @@ templ Calendar(baseUrl string) {
 			display: flex;
 			align-items: center;
 			justify-content: center;
-			font-size: 1rem;
+			font-size: clamp(0.7rem, 3vw, 1rem);
 			border-bottom: 1px solid
 				color-mix(in oklch, var(--tertiary-color) 20%, transparent);
 		}
@@ -215,7 +215,7 @@ templ Calendar(baseUrl string) {
 			padding: 8px 10px;
 			border-left-width: 3px;
 			border-left-style: solid;
-			font-size: 0.75rem;
+			font-size: clamp(0.7rem, 3vw, 0.9rem);
 			line-height: 1.4;
 			overflow: clip;
 			overflow-clip-margin: content-box;
@@ -462,74 +462,74 @@ templ CalendarView(data CalendarData) {
 	<span id="cal-current-date" data-date={ data.StartDate.Format("2006-01-02") } hidden></span>
 	@calDetailStyles()
 	<div class="cal-wrapper" data-prev={ data.PrevUrl } data-next={ data.NextUrl }>
-	@calendarNavigation(data)
-	<div class="cal-grid">
-		<div class="cal-time-col">
-			<div class="cal-header-cell"></div>
-			for i := range 56 {
-				<div class="cal-time-label">
-					if i % 4 == 0 {
-						{ calendar.CalSlotLabel(i, 8, 15) }
-					}
+		@calendarNavigation(data)
+		<div class="cal-grid">
+			<div class="cal-time-col">
+				<div class="cal-header-cell"></div>
+				for i := range 56 {
+					<div class="cal-time-label">
+						if i % 4 == 0 {
+							{ calendar.CalSlotLabel(i, 8, 15) }
+						}
+					</div>
+				}
+			</div>
+			for d := range data.Daycount {
+				{{ day := data.StartDate.AddDate(0, 0, d) }}
+				<div class={ "cal-day-col", templ.KV("cal-day-today", calendar.IsToday(day)) }>
+					<div class="cal-day-header">{ calendar.CalDayHeader(day) }</div>
+					<div class="cal-day-body">
+						for _, entry := range calendar.CalEntriesForDay(data.Entries, day) {
+							switch e := entry.(type) {
+								case *models.OpeningHour:
+									<div
+										class={ "cal-event type-openinghour", templ.KV("cal-event-expandable", len(e.Expertise) > 0) }
+										style={ calendar.CalEventStyle(entry, 8, 15) }
+										if len(e.Expertise) > 0 {
+											tabindex="0"
+										}
+									>
+										@calOpeningHour(e)
+									</div>
+								case *models.Event:
+									<a class="cal-link" href={ templ.URL(e.URL) }>
+										<div class="cal-event type-event" style={ calendar.CalEventStyle(entry, 8, 15) }>
+											@calEventBlock(e)
+										</div>
+									</a>
+							}
+						}
+					</div>
 				</div>
 			}
 		</div>
-		for d := range data.Daycount {
-			{{ day := data.StartDate.AddDate(0, 0, d) }}
-			<div class={ "cal-day-col", templ.KV("cal-day-today", calendar.IsToday(day)) }>
-				<div class="cal-day-header">{ calendar.CalDayHeader(day) }</div>
-				<div class="cal-day-body">
-					for _, entry := range calendar.CalEntriesForDay(data.Entries, day) {
-						switch e := entry.(type) {
-							case *models.OpeningHour:
-								<div
-									class={ "cal-event type-openinghour", templ.KV("cal-event-expandable", len(e.Expertise) > 0) }
-									style={ calendar.CalEventStyle(entry, 8, 15) }
-									if len(e.Expertise) > 0 {
-										tabindex="0"
-									}
-								>
-									@calOpeningHour(e)
-								</div>
-							case *models.Event:
-								<a class="cal-link" href={ templ.URL(e.URL) }>
-									<div class="cal-event type-event" style={ calendar.CalEventStyle(entry, 8, 15) }>
-										@calEventBlock(e)
-									</div>
-								</a>
-						}
-					}
-				</div>
-			</div>
-		}
-	</div>
-	<script>
-		(function () {
-			const wrapper = document.querySelector(".cal-wrapper");
-			if (!wrapper) return;
-			let startX = 0;
-			wrapper.addEventListener(
-				"touchstart",
-				function (e) {
-					startX = e.touches[0].clientX;
-				},
-				{ passive: true },
-			);
-			wrapper.addEventListener(
-				"touchend",
-				function (e) {
-					const diff = startX - e.changedTouches[0].clientX;
-					if (Math.abs(diff) < 50) return;
-					const url = diff > 0 ? wrapper.dataset.next : wrapper.dataset.prev;
-					if (url)
-						htmx.ajax("GET", url, {
-							target: "#opening_hours",
-							swap: "innerHTML",
-						});
-				},
-				{ passive: true },
-			);
-		})();
-	</script>
+		<script>
+			(function () {
+				const wrapper = document.querySelector(".cal-wrapper");
+				if (!wrapper) return;
+				let startX = 0;
+				wrapper.addEventListener(
+					"touchstart",
+					function (e) {
+						startX = e.touches[0].clientX;
+					},
+					{ passive: true },
+				);
+				wrapper.addEventListener(
+					"touchend",
+					function (e) {
+						const diff = startX - e.changedTouches[0].clientX;
+						if (Math.abs(diff) < 50) return;
+						const url = diff > 0 ? wrapper.dataset.next : wrapper.dataset.prev;
+						if (url)
+							htmx.ajax("GET", url, {
+								target: "#opening_hours",
+								swap: "innerHTML",
+							});
+					},
+					{ passive: true },
+				);
+			})();
+		</script>
 	</div>
 }
