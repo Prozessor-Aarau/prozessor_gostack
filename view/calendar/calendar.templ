@@ -111,7 +111,7 @@ templ Calendar(baseUrl string) {
 			background-color: var(--primary-color);
 			color: var(--tertiary-color);
 			font-size: 1.2rem;
-			font-weight: 700;
+			font-weight: 900;
 			padding: 0.3rem 0.5rem;
 			border: none;
 			cursor: pointer;
@@ -246,7 +246,7 @@ templ Calendar(baseUrl string) {
 	<script>
 		(function () {
 			const el = document.getElementById("opening_hours");
-			const calBaseUrl = "calendar";
+			const calBaseUrl = "https://db.prozessor-aarau.ch/calendar";
 
 			function calcDayCount() {
 				return window.innerWidth < 480 ? 3 : 7;
@@ -422,7 +422,7 @@ templ calDetailStyles() {
 				if (!overflows) return;
 				var hint = document.createElement("div");
 				hint.className = "cal-more-hint";
-				hint.textContent = "\u23F5\u23F5 weitere\u2026";
+				hint.textContent = "» weitere\u2026";
 				var cs = getComputedStyle(el);
 				hint.style.backgroundColor = cs.backgroundColor;
 				el.appendChild(hint);
