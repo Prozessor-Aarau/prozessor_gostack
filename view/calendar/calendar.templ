@@ -165,7 +165,7 @@ templ Calendar(baseUrl string) {
 
 		.cal-day-col {
 			flex: 1;
-			min-width: 80px;
+			min-width: 55px;
 			border-left: 1px solid
 				color-mix(in oklch, var(--tertiary-color) 20%, transparent);
 		}
@@ -246,7 +246,10 @@ templ Calendar(baseUrl string) {
 	<script>
 		(function () {
 			const el = document.getElementById("opening_hours");
-			const calBaseUrl = el.dataset.baseurl.replace(/\/\d{4}-\d{2}-\d{2}\/$/, "");
+			const calBaseUrl = el.dataset.baseurl.replace(
+				/\/\d{4}-\d{2}-\d{2}\/$/,
+				"",
+			);
 
 			function calcDayCount() {
 				return window.innerWidth < 480 ? 3 : 7;
@@ -267,7 +270,8 @@ templ Calendar(baseUrl string) {
 					if (newDayCount === currentDayCount) return;
 					currentDayCount = newDayCount;
 					const dateEl = document.getElementById("cal-current-date");
-					const currentDate = (dateEl && dateEl.dataset.date) ||
+					const currentDate =
+						(dateEl && dateEl.dataset.date) ||
 						el.dataset.baseurl.replace(/\/$/, "").split("/").pop();
 					htmx.ajax("GET", calBaseUrl + "/" + currentDate + "/" + newDayCount, {
 						target: "#opening_hours",

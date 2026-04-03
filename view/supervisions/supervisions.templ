@@ -35,10 +35,34 @@ templ Supervisions(visitor models.Visitor) {
 		<script>
 			(function () {
 				const el = document.getElementById("opening_hours");
-				const dayCount = window.innerWidth < 480 ? 3 : 7;
-				htmx.ajax("GET", el.dataset.baseurl + dayCount, {
+				const calBaseUrl = el.dataset.baseurl.replace(/\/\d{4}-\d{2}-\d{2}\/$/, "");
+
+				function calcDayCount() {
+					return window.innerWidth < 480 ? 3 : 7;
+				}
+
+				let currentDayCount = calcDayCount();
+
+				htmx.ajax("GET", el.dataset.baseurl + currentDayCount, {
 					target: "#opening_hours",
 					swap: "innerHTML",
+				});
+
+				let resizeTimer;
+				window.addEventListener("resize", function () {
+					clearTimeout(resizeTimer);
+					resizeTimer = setTimeout(function () {
+						const newDayCount = calcDayCount();
+						if (newDayCount === currentDayCount) return;
+						currentDayCount = newDayCount;
+						const dateEl = document.getElementById("cal-current-date");
+						const currentDate = (dateEl && dateEl.dataset.date) ||
+							el.dataset.baseurl.replace(/\/$/, "").split("/").pop();
+						htmx.ajax("GET", calBaseUrl + "/" + currentDate + "/" + newDayCount, {
+							target: "#opening_hours",
+							swap: "innerHTML",
+						});
+					}, 150);
 				});
 			})();
 		</script>

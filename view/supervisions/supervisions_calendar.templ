@@ -72,6 +72,7 @@ templ calendarNavigation(data SupervisionCalendarData) {
 
 templ SupervisionsCalendar(data SupervisionCalendarData) {
 	{{ prm := ctx.Value("permission").(models.Role) }}
+	<span id="cal-current-date" data-date={ data.StartDate.Format("2006-01-02") } hidden></span>
 	<div class="hidden">
 		@ui.CSRF()
 	</div>
