@@ -246,7 +246,7 @@ templ Calendar(baseUrl string) {
 	<script>
 		(function () {
 			const el = document.getElementById("opening_hours");
-			const calBaseUrl = "https://db.prozessor-aarau.ch/calendar";
+			const calBaseUrl = el.dataset.baseurl.replace(/\/\d{4}-\d{2}-\d{2}\/$/, "");
 
 			function calcDayCount() {
 				return window.innerWidth < 480 ? 3 : 7;
@@ -266,8 +266,8 @@ templ Calendar(baseUrl string) {
 					const newDayCount = calcDayCount();
 					if (newDayCount === currentDayCount) return;
 					currentDayCount = newDayCount;
-					const currentDate =
-						el.dataset.currentdate ||
+					const dateEl = document.getElementById("cal-current-date");
+					const currentDate = (dateEl && dateEl.dataset.date) ||
 						el.dataset.baseurl.replace(/\/$/, "").split("/").pop();
 					htmx.ajax("GET", calBaseUrl + "/" + currentDate + "/" + newDayCount, {
 						target: "#opening_hours",
@@ -455,12 +455,7 @@ templ calDetailStyles() {
 }
 
 templ CalendarView(data CalendarData) {
-	<script>
-		(function () {
-			const el = document.getElementById("opening_hours");
-			if (el) el.dataset.currentdate = "{ data.StartDate.Format("2006-01-02") }";
-		})();
-	</script>
+	<span id="cal-current-date" data-date={ data.StartDate.Format("2006-01-02") } hidden></span>
 	@calDetailStyles()
 	@calendarNavigation(data)
 	<div class="cal-grid">
