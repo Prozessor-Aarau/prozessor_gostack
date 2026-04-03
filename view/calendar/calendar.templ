@@ -461,6 +461,7 @@ templ calDetailStyles() {
 templ CalendarView(data CalendarData) {
 	<span id="cal-current-date" data-date={ data.StartDate.Format("2006-01-02") } hidden></span>
 	@calDetailStyles()
+	<div class="cal-wrapper" data-prev={ data.PrevUrl } data-next={ data.NextUrl }>
 	@calendarNavigation(data)
 	<div class="cal-grid">
 		<div class="cal-time-col">
@@ -530,4 +531,5 @@ templ CalendarView(data CalendarData) {
 			);
 		})();
 	</script>
+	</div>
 }
