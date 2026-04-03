@@ -112,6 +112,8 @@ func hasPermission(p models.Role, permission string) bool {
 		return p.AddNewsletter
 	case "ViewLogistics":
 		return p.ViewLogistics
+	case "EditLogistics":
+		return p.EditLogistics
 	case "ViewStatistics":
 		return p.ViewStatistics
 	case "ViewLogs":
