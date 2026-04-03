@@ -81,8 +81,9 @@ templ Calendar(baseUrl string) {
 		}
 
 		.event-time {
-			font-size: 0.9rem;
-			font-weight: 600;
+			font-family: var(--font-nonserif);
+			font-weight: 700;
+			font-size: 1rem;
 		}
 
 		.event-content {
@@ -114,6 +115,7 @@ templ Calendar(baseUrl string) {
 			padding: 0.3rem 0.5rem;
 			border: none;
 			cursor: pointer;
+			font-family: var(--font-nonserif);
 
 			&:hover {
 				background-color: var(--tertiary-color);
@@ -151,6 +153,7 @@ templ Calendar(baseUrl string) {
 		}
 
 		.cal-time-label {
+			font-family: var(--font-nonserif);
 			height: var(--slot-height);
 			display: flex;
 			align-items: flex-start;
@@ -179,12 +182,12 @@ templ Calendar(baseUrl string) {
 
 		.cal-day-header {
 			font-family: var(--font-nonserif);
+			font-weight: 600;
 			height: 2.5rem;
 			display: flex;
 			align-items: center;
 			justify-content: center;
 			font-size: 1rem;
-			font-weight: 600;
 			border-bottom: 1px solid
 				color-mix(in oklch, var(--tertiary-color) 20%, transparent);
 		}
