@@ -63,12 +63,12 @@ templ calendarNavigation(data CalendarData) {
 templ Calendar(baseUrl string) {
 	<style>
 		:root {
-			--primary-color: #00ffa8;
-			--secondary-color: #d7ff00;
-			--tertiary-color: #bd00ff;
-			--tertiary-text: white;
-			--font-serif: "PT Serif", serif;
-			--font-nonserif: "Mosk";
+			/* --primary-color: #00ffa8; */
+			/* --secondary-color: #d7ff00; */
+			/* --tertiary-color: #bd00ff; */
+			/* --tertiary-text: white; */
+			/* --font-serif: "PT Serif", serif; */
+			/* --font-nonserif: "Mosk"; */
 		}
 
 		.event-entry {
@@ -134,6 +134,7 @@ templ Calendar(baseUrl string) {
 		}
 
 		.cal-grid {
+			font-family: var(--font-serif);
 			display: flex;
 			overflow-x: auto;
 			-webkit-overflow-scrolling: touch;
@@ -177,6 +178,7 @@ templ Calendar(baseUrl string) {
 		}
 
 		.cal-day-header {
+			font-family: var(--font-nonserif);
 			height: 2.5rem;
 			display: flex;
 			align-items: center;
