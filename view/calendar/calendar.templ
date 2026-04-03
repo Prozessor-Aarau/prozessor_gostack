@@ -61,7 +61,6 @@ templ calendarNavigation(data CalendarData) {
 }
 
 templ Calendar(baseUrl string) {
-	<script src="https://unpkg.com/htmx.org@2.0.4"></script>
 	<style>
 		:root {
 			--primary-color: #00ffa8;
@@ -242,10 +241,33 @@ templ Calendar(baseUrl string) {
 	<script>
 		(function () {
 			const el = document.getElementById("opening_hours");
-			const dayCount = window.innerWidth < 480 ? 3 : 7;
-			htmx.ajax("GET", el.dataset.baseurl + dayCount, {
+			const calBaseUrl = "{ baseUrl }";
+
+			function calcDayCount() {
+				return window.innerWidth < 480 ? 3 : 7;
+			}
+
+			let currentDayCount = calcDayCount();
+
+			htmx.ajax("GET", el.dataset.baseurl + currentDayCount, {
 				target: "#opening_hours",
 				swap: "innerHTML",
+			});
+
+			let resizeTimer;
+			window.addEventListener("resize", function () {
+				clearTimeout(resizeTimer);
+				resizeTimer = setTimeout(function () {
+					const newDayCount = calcDayCount();
+					if (newDayCount === currentDayCount) return;
+					currentDayCount = newDayCount;
+					const currentDate = el.dataset.currentdate ||
+						el.dataset.baseurl.replace(/\/$/, "").split("/").pop();
+					htmx.ajax("GET", calBaseUrl + "/" + currentDate + "/" + newDayCount, {
+						target: "#opening_hours",
+						swap: "innerHTML",
+					});
+				}, 150);
 			});
 		})();
 	</script>
@@ -427,6 +449,12 @@ templ calDetailStyles() {
 }
 
 templ CalendarView(data CalendarData) {
+	<script>
+		(function () {
+			const el = document.getElementById("opening_hours");
+			if (el) el.dataset.currentdate = "{ data.StartDate.Format("2006-01-02") }";
+		})();
+	</script>
 	@calDetailStyles()
 	@calendarNavigation(data)
 	<div class="cal-grid">
