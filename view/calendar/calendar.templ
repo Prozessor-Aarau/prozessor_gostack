@@ -241,7 +241,7 @@ templ Calendar(baseUrl string) {
 	<script>
 		(function () {
 			const el = document.getElementById("opening_hours");
-			const calBaseUrl = "{ baseUrl }";
+			const calBaseUrl = "calendar";
 
 			function calcDayCount() {
 				return window.innerWidth < 480 ? 3 : 7;
@@ -261,7 +261,8 @@ templ Calendar(baseUrl string) {
 					const newDayCount = calcDayCount();
 					if (newDayCount === currentDayCount) return;
 					currentDayCount = newDayCount;
-					const currentDate = el.dataset.currentdate ||
+					const currentDate =
+						el.dataset.currentdate ||
 						el.dataset.baseurl.replace(/\/$/, "").split("/").pop();
 					htmx.ajax("GET", calBaseUrl + "/" + currentDate + "/" + newDayCount, {
 						target: "#opening_hours",
