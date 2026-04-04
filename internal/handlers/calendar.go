@@ -94,6 +94,7 @@ func (m *Repository) HandleCalendar(w http.ResponseWriter, r *http.Request) erro
 		Daycount:  dayCount,
 		PrevUrl:   prevURL,
 		NextUrl:   nextURL,
+		BaseUrl:   baseUrl[:len(baseUrl)-1],
 	}
 
 	return rendering(w, r, calendar.CalendarView(calData))
