@@ -61,7 +61,7 @@ templ calendarNavigation(data CalendarData) {
 }
 
 templ Calendar(baseUrl string) {
-	<script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.8/dist/htmx.min.js"></script>
+	//	<script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.8/dist/htmx.min.js"></script>
 	<style>
 		:root {
 			/* --primary-color: #00ffa8; */
@@ -317,8 +317,18 @@ templ calDetailStyles() {
 		(function () {
 			var pop = null;
 			var activeEl = null;
+			var hideTimer = null;
+
+			function scheduleHide() {
+				hideTimer = setTimeout(hide, 60);
+			}
+
+			function cancelHide() {
+				clearTimeout(hideTimer);
+			}
 
 			function show(el) {
+				cancelHide();
 				if (activeEl === el) return;
 				hide();
 				activeEl = el;
@@ -352,6 +362,16 @@ templ calDetailStyles() {
 				pop.style.height = rect.height + "px";
 
 				document.body.appendChild(pop);
+
+				if (el.dataset.url) {
+					pop.style.pointerEvents = "auto";
+					pop.style.cursor = "pointer";
+					pop.addEventListener("mouseenter", cancelHide);
+					pop.addEventListener("mouseleave", scheduleHide);
+					pop.addEventListener("click", function () {
+						window.location.href = el.dataset.url;
+					});
+				}
 
 				var colW = colRect.width;
 				var evtW = rect.width;
@@ -412,6 +432,7 @@ templ calDetailStyles() {
 			}
 
 			function hide() {
+				clearTimeout(hideTimer);
 				if (pop) {
 					pop.remove();
 					pop = null;
@@ -438,13 +459,21 @@ templ calDetailStyles() {
 				el.dataset.calBound = "1";
 				addHint(el);
 				el.addEventListener("mouseenter", function () {
+					cancelHide();
 					show(el);
 				});
-				el.addEventListener("mouseleave", hide);
+				el.addEventListener("mouseleave", scheduleHide);
 				el.addEventListener("focus", function () {
 					show(el);
 				});
-				el.addEventListener("blur", hide);
+				el.addEventListener("blur", scheduleHide);
+				if (el.dataset.url) {
+					el.style.cursor = "pointer";
+					el.addEventListener("click", function () {
+						if (pop) return;
+						window.location.href = el.dataset.url;
+					});
+				}
 			}
 
 			function init() {
@@ -500,11 +529,14 @@ templ CalendarView(data CalendarData) {
 										@calOpeningHour(e)
 									</div>
 								case *models.Event:
-									<a class="cal-link" href={ templ.URL(e.URL) }>
-										<div class="cal-event type-event" style={ calendar.CalEventStyle(entry, 8, 15) }>
-											@calEventBlock(e)
-										</div>
-									</a>
+									<div
+										class="cal-event type-event cal-event-expandable"
+										style={ calendar.CalEventStyle(entry, 8, 15) }
+										data-url={ e.URL }
+										tabindex="0"
+									>
+										@calEventBlock(e)
+									</div>
 							}
 						}
 					</div>
