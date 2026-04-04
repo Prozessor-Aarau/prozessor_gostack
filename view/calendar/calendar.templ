@@ -318,7 +318,6 @@ templ calDetailStyles() {
 			var pop = null;
 			var activeEl = null;
 			var hideTimer = null;
-			var lastTouchTime = 0;
 
 			function scheduleHide() {
 				hideTimer = setTimeout(hide, 60);
@@ -470,16 +469,13 @@ templ calDetailStyles() {
 				el.addEventListener("blur", scheduleHide);
 				if (el.dataset.url) {
 					el.style.cursor = "pointer";
-					el.addEventListener("touchend", function () {
-						lastTouchTime = Date.now();
-					}, { passive: true });
-					el.addEventListener("click", function () {
-						var isTouch = Date.now() - lastTouchTime < 500;
-						if (isTouch) {
-							if (pop) return;
+					el.addEventListener("touchend", function (e) {
+						if (!pop) {
+							e.preventDefault();
 							show(el, true);
-							return;
 						}
+					}, { passive: false });
+					el.addEventListener("click", function () {
 						if (pop) return;
 						window.location.href = el.dataset.url;
 					});
