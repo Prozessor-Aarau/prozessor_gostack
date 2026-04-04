@@ -61,6 +61,7 @@ templ calendarNavigation(data CalendarData) {
 }
 
 templ Calendar(baseUrl string) {
+	<script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.8/dist/htmx.min.js"></script>
 	<style>
 		:root {
 			/* --primary-color: #00ffa8; */
@@ -454,6 +455,13 @@ templ calDetailStyles() {
 				childList: true,
 				subtree: true,
 			});
+			document.addEventListener(
+				"touchstart",
+				function (e) {
+					if (pop && !pop.contains(e.target)) hide();
+				},
+				{ passive: true },
+			);
 		})();
 	</script>
 }
