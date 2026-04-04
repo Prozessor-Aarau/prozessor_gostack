@@ -318,6 +318,7 @@ templ calDetailStyles() {
 			var pop = null;
 			var activeEl = null;
 			var hideTimer = null;
+			var lastTouchTime = 0;
 
 			function scheduleHide() {
 				hideTimer = setTimeout(hide, 60);
@@ -327,15 +328,15 @@ templ calDetailStyles() {
 				clearTimeout(hideTimer);
 			}
 
-			function show(el) {
+			function show(el, force) {
 				cancelHide();
-				if (activeEl === el) return;
+				if (pop && activeEl === el) return;
 				hide();
-				activeEl = el;
 				var scrollH = el.scrollHeight;
 				var clientH = el.clientHeight;
-				if (scrollH <= clientH + 2 && el.scrollWidth <= el.clientWidth + 2)
+				if (!force && scrollH <= clientH + 2 && el.scrollWidth <= el.clientWidth + 2)
 					return;
+				activeEl = el;
 
 				pop = document.createElement("div");
 				pop.className = "cal-popover";
@@ -469,7 +470,16 @@ templ calDetailStyles() {
 				el.addEventListener("blur", scheduleHide);
 				if (el.dataset.url) {
 					el.style.cursor = "pointer";
+					el.addEventListener("touchend", function () {
+						lastTouchTime = Date.now();
+					}, { passive: true });
 					el.addEventListener("click", function () {
+						var isTouch = Date.now() - lastTouchTime < 500;
+						if (isTouch) {
+							if (pop) return;
+							show(el, true);
+							return;
+						}
 						if (pop) return;
 						window.location.href = el.dataset.url;
 					});
