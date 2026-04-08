@@ -204,7 +204,7 @@ templ Calendar(baseUrl string) {
 			left: 0;
 			right: 0;
 			height: 1px;
-			background: color-mix(in oklch, black 20%, transparent);
+			background: color-mix(in oklch, var(--tertiary-color) 20%, transparent);
 			pointer-events: none;
 		}
 
@@ -335,7 +335,11 @@ templ calDetailStyles() {
 				hide();
 				var scrollH = el.scrollHeight;
 				var clientH = el.clientHeight;
-				if (!force && scrollH <= clientH + 2 && el.scrollWidth <= el.clientWidth + 2)
+				if (
+					!force &&
+					scrollH <= clientH + 2 &&
+					el.scrollWidth <= el.clientWidth + 2
+				)
 					return;
 				activeEl = el;
 
@@ -471,12 +475,16 @@ templ calDetailStyles() {
 				el.addEventListener("blur", scheduleHide);
 				if (el.dataset.url) {
 					el.style.cursor = "pointer";
-					el.addEventListener("touchend", function (e) {
-						if (!pop) {
-							e.preventDefault();
-							show(el, true);
-						}
-					}, { passive: false });
+					el.addEventListener(
+						"touchend",
+						function (e) {
+							if (!pop) {
+								e.preventDefault();
+								show(el, true);
+							}
+						},
+						{ passive: false },
+					);
 					el.addEventListener("click", function () {
 						if (pop) return;
 						window.location.href = el.dataset.url;
@@ -524,7 +532,7 @@ templ CalendarView(data CalendarData) {
 				<div class={ "cal-day-col", templ.KV("cal-day-today", calendar.IsToday(day)) }>
 					<div class="cal-day-header">{ calendar.CalDayHeader(day) }</div>
 					<div class="cal-day-body">
-						for i := range 14 {
+						for i := range 13 {
 							<div class="cal-hour-line" style={ templ.SafeCSS(fmt.Sprintf("top: calc(%d * 4 * var(--slot-height))", i+1)) }></div>
 						}
 						for _, entry := range calendar.CalEntriesForDay(data.Entries, day) {
