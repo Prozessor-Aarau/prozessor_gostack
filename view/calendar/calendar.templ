@@ -197,14 +197,15 @@ templ Calendar(baseUrl string) {
 		.cal-day-body {
 			position: relative;
 			height: calc(56 * var(--slot-height));
-			background-image: repeating-linear-gradient(
-				to bottom,
-				transparent,
-				transparent calc(4 * var(--slot-height) - 1px),
-				color-mix(in oklch, black 20%, transparent)
-					calc(4 * var(--slot-height) - 1px),
-				color-mix(in oklch, black 20%, transparent) calc(4 * var(--slot-height))
-			);
+		}
+
+		.cal-hour-line {
+			position: absolute;
+			left: 0;
+			right: 0;
+			height: 1px;
+			background: color-mix(in oklch, black 20%, transparent);
+			pointer-events: none;
 		}
 
 		.cal-event {
@@ -523,6 +524,9 @@ templ CalendarView(data CalendarData) {
 				<div class={ "cal-day-col", templ.KV("cal-day-today", calendar.IsToday(day)) }>
 					<div class="cal-day-header">{ calendar.CalDayHeader(day) }</div>
 					<div class="cal-day-body">
+						for i := range 14 {
+							<div class="cal-hour-line" style={ templ.SafeCSS(fmt.Sprintf("top: calc(%d * 4 * var(--slot-height))", i+1)) }></div>
+						}
 						for _, entry := range calendar.CalEntriesForDay(data.Entries, day) {
 							switch e := entry.(type) {
 								case *models.OpeningHour:
