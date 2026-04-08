@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-APP_DIR="/home/user/Projects/prozessor_gostack"
+APP_DIR="/root/Projects/prozessor_gostack"
 BIN="/usr/local/bin/prozessor"
 SERVICE="prozessor"
 
