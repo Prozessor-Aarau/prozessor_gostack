@@ -1,0 +1,15 @@
+[Unit]
+Description=Prozessor GoStack
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/prozessor
+WorkingDirectory=/home/user/Projects/prozessor_gostack
+EnvironmentFile=/home/user/Projects/prozessor_gostack/.env
+Restart=always
+RestartSec=3
+User=user
+
+[Install]
+WantedBy=multi-user.target
