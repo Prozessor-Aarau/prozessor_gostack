@@ -192,3 +192,57 @@ func (m *postgresDBRepo) DeleteOpeningHour(ohId int) error {
 
 	return nil
 }
+
+// UnsupervisedOpeningHours returns all unsupervised opening hours for the next two months
+func (m *postgresDBRepo) UnsupervisedOpeningHours() ([]models.OpeningHour, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	// calculate EndDate
+	endDate := time.Now().AddDate(0, 2, 0)
+
+	var openingHours []models.OpeningHour
+
+	query := `
+		SELECT
+			oh.id,
+			oh.start_date,
+			oh.end_date		
+		FROM
+			opening_hours oh
+			LEFT JOIN opening_hours_supervision sup ON oh.id = sup.opening_hour_id
+		WHERE
+		  oh.start_date >= $1::timestamptz
+		AND oh.start_date <= $2::timestamptz
+		AND sup.opening_hour_id IS NULL
+		ORDER BY
+			oh.start_date ASC
+	`
+	rows, err := m.DB.QueryContext(ctx, query, time.Now().Format("2006-01-02"), endDate.Format("2006-01-02"))
+	if err != nil {
+		return openingHours, err
+	}
+
+	defer rows.Close()
+
+	for rows.Next() {
+		var oh models.OpeningHour
+
+		err := rows.Scan(
+			&oh.ID,
+			&oh.StartTime,
+			&oh.EndTime,
+		)
+		if err != nil {
+			return openingHours, err
+		}
+
+		openingHours = append(openingHours, oh)
+	}
+
+	if err = rows.Err(); err != nil {
+		return openingHours, err
+	}
+
+	return openingHours, nil
+}

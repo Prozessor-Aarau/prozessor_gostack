@@ -287,3 +287,14 @@ func (m *Repository) HandleSuperVisionsOpeningHoursDelete(w http.ResponseWriter,
 
 	return nil
 }
+
+// HandleUnsupervisedOpeningHours gets all unsupervised opening hours for the next two months and returns the list for the dates to add supervisions to it
+func (m *Repository) HandleUnsupervisedOpeningHours(w http.ResponseWriter, r *http.Request) error {
+	// get opening hours from database
+	openingHours, err := m.DB.UnsupervisedOpeningHours()
+	if err != nil {
+		return fmt.Errorf("failed to get unsupervised opening hours: %w", err)
+	}
+
+	return rendering(w, r, supervisions.UnsupervisedList(openingHours))
+}

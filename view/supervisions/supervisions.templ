@@ -6,11 +6,12 @@ import "github.com/faebut/prozessor_gostack/view/layout"
 import "github.com/faebut/prozessor_gostack/internal/models"
 import "github.com/faebut/prozessor_gostack/view/ui"
 import "time"
+import "github.com/faebut/prozessor_gostack/internal/calendar"
 
 templ Supervisions(visitor models.Visitor) {
 	{{ prm := ctx.Value("permission").(models.Role) }}
 	@layout.App(true, visitor) {
-		<div class="prose mb-10">
+		<div class="prose mb-3">
 			<h1>Aufsichten</h1>
 		</div>
 		<div id="content">
@@ -31,11 +32,15 @@ templ Supervisions(visitor models.Visitor) {
 					@createModal()
 				</div>
 			}
+			@unsupervised()
 		</div>
 		<script>
 			(function () {
 				const el = document.getElementById("opening_hours");
-				const calBaseUrl = el.dataset.baseurl.replace(/\/\d{4}-\d{2}-\d{2}\/$/, "");
+				const calBaseUrl = el.dataset.baseurl.replace(
+					/\/\d{4}-\d{2}-\d{2}\/$/,
+					"",
+				);
 
 				function calcDayCount() {
 					return window.innerWidth < 480 ? 3 : 7;
@@ -56,17 +61,52 @@ templ Supervisions(visitor models.Visitor) {
 						if (newDayCount === currentDayCount) return;
 						currentDayCount = newDayCount;
 						const dateEl = document.getElementById("cal-current-date");
-						const currentDate = (dateEl && dateEl.dataset.date) ||
+						const currentDate =
+							(dateEl && dateEl.dataset.date) ||
 							el.dataset.baseurl.replace(/\/$/, "").split("/").pop();
-						htmx.ajax("GET", calBaseUrl + "/" + currentDate + "/" + newDayCount, {
-							target: "#opening_hours",
-							swap: "innerHTML",
-						});
+						htmx.ajax(
+							"GET",
+							calBaseUrl + "/" + currentDate + "/" + newDayCount,
+							{
+								target: "#opening_hours",
+								swap: "innerHTML",
+							},
+						);
 					}, 150);
 				});
 			})();
 		</script>
 	}
+}
+
+templ unsupervised() {
+	<div class="prose mt-6">
+		<h2>Offene Aufsichten bis { time.Now().AddDate(0, 2, 0).Format("02.01.2006") }</h2>
+	</div>
+	<div id="unsupervised" hx-get="/admin/supervisions/unsupervised" hx-trigger="load" hx-swap="innerHTML"></div>
+}
+
+templ UnsupervisedList(openingHours []models.OpeningHour) {
+	<div>
+		for _, e := range openingHours {
+			<div role="alert" class="alert alert-outline alert-info alert-vertical sm:alert-horizontal my-3">
+				<span class="text-xl i-mdi-info-circle"></span>
+				<div class="text-base-content">
+					<h3 class="font-bold">{ calendar.WeekdayDE(e.GetStartTime()) }, { e.GetStartTime().Format("02.01.2006") }</h3>
+					<div class="text-xs">{ e.StartTime.In(calendar.SwissLoc).Format("15:04") } – { e.EndTime.In(calendar.SwissLoc).Format("15:04") }</div>
+				</div>
+				<div>
+					<button
+						class="btn btn-sm btn-info"
+						hx-get={ fmt.Sprintf("/admin/supervisions/opening_hours/%d/supervision", e.ID) }
+						hx-target="#supervision-modal-content"
+						hx-swap="innerHTML"
+						hx-on::after-request="supervision_modal.showModal()"
+					>bearbeiten</button>
+				</div>
+			</div>
+		}
+	</div>
 }
 
 type OpeningHoursForm struct {
@@ -191,6 +231,10 @@ templ supervisionModal() {
 			const url = wrapper?.dataset.current;
 			if (url)
 				htmx.ajax("GET", url, { target: "#opening_hours", swap: "innerHTML" });
+			htmx.ajax("GET", "/admin/supervisions/unsupervised", {
+				target: "#unsupervised",
+				swap: "innerHTML",
+			});
 		});
 		document.body.addEventListener("htmx:configRequest", function (event) {
 			if (event.detail.verb === "delete") {

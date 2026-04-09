@@ -135,6 +135,7 @@ func routes(app *config.AppConfig) http.Handler {
 			mux.Use(CheckPermission("ViewSupervisions"))
 			mux.Get("/supervisions", handlers.Make(handlers.Repo.HandleSupervisionsIndex))
 			mux.Get("/supervisions/opening_hours/{startdate}/{daycount}", handlers.Make(handlers.Repo.HandleSupervisionsOpeningHours))
+			mux.Get("/supervisions/unsupervised", handlers.Make(handlers.Repo.HandleUnsupervisedOpeningHours))
 
 			// add opening hours
 			mux.Group(func(mux chi.Router) {

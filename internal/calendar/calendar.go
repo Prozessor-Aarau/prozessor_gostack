@@ -17,6 +17,20 @@ var weekdayDE = map[time.Weekday]string{
 	time.Sunday:    "So",
 }
 
+var weekdayDELong = map[time.Weekday]string{
+	time.Monday:    "Montag",
+	time.Tuesday:   "Dienstag",
+	time.Wednesday: "Mittwoch",
+	time.Thursday:  "Donnerstag",
+	time.Friday:    "Freitag",
+	time.Saturday:  "Samstag",
+	time.Sunday:    "Sonntag",
+}
+
+func WeekdayDE(t time.Time) string {
+	return weekdayDELong[t.In(SwissLoc).Weekday()]
+}
+
 var SwissLoc = func() *time.Location {
 	loc, err := time.LoadLocation("Europe/Zurich")
 	if err != nil {
