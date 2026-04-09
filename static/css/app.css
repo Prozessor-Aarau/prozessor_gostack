@@ -104,15 +104,15 @@ h2 {
 .cal-day-body {
   position: relative;
   height: calc(56 * var(--slot-height));
-  background-image: repeating-linear-gradient(
-    to bottom,
-    transparent,
-    transparent calc(4 * var(--slot-height) - 1px),
-    color-mix(in oklch, var(--color-base-content) 15%, transparent)
-      calc(4 * var(--slot-height) - 1px),
-    color-mix(in oklch, var(--color-base-content) 15%, transparent)
-      calc(4 * var(--slot-height))
-  );
+}
+
+.cal-hour-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: color-mix(in oklch, var(--color-base-content) 15%, transparent);
+  pointer-events: none;
 }
 
 .cal-event {
