@@ -62,32 +62,34 @@ templ MachinesFilter(ressorts []models.Ressort) {
 	</div>
 	<!-- reset fields with button -->
 	<script>
-  searchField = document.querySelector("#filter_string")
+		searchField = document.querySelector("#filter_string");
 
-  document.getElementById("fieldreset").addEventListener("click", function (event) {
-    event.preventDefault();
-    searchField.value = "";
-  });
-</script>
+		document
+			.getElementById("fieldreset")
+			.addEventListener("click", function (event) {
+				event.preventDefault();
+				searchField.value = "";
+			});
+	</script>
 }
 
 templ MachinesList(machines []models.Machine) {
 	if len(machines) > 0 {
 		for _, m := range machines {
 			{{
-// check if there are reports and count the fatal and non-fatal ones
-reportNorm := 0
-reportFatal := 0
+				// check if there are reports and count the fatal and non-fatal ones
+				reportNorm := 0
+				reportFatal := 0
 
-if len(m.Reports) > 0 {
-	for _, r := range m.Reports {
-		if r.Fatal && !r.Solved {
-			reportFatal++
-		} else if !r.Solved {
-			reportNorm++
-		}
-	}
-}
+				if len(m.Reports) > 0 {
+					for _, r := range m.Reports {
+						if r.Fatal && !r.Solved {
+							reportFatal++
+						} else if !r.Solved {
+							reportNorm++
+						}
+					}
+				}
 			}}
 			<div
 				class="hover:bg-base-200 cursor-pointer grid grid-cols-7 text-sm p-3 py-4 items-center gap-3 border-dashed border-b border-base-content/50"
@@ -192,6 +194,16 @@ templ MachinesForm(params models.Machine, ressorts []models.Ressort, errors Mach
 				<label class="fieldset-label text-error">{ errors.Ressort }</label>
 			}
 		</fieldset>
+		<fieldset class="fieldset col-span-full">
+			<legend class="fieldset-legend">Standort</legend>
+			<input
+				type="text"
+				name="location"
+				id="location"
+				class="input w-full"
+				value={ params.Location }
+			/>
+		</fieldset>
 		<div class="col-span-full w-full gap-3 flex mt-3 items-center justify-center flex-col md:flex-row">
 			if len(params.ID) > 0 {
 				<input type="submit" class="btn btn-success col-span-4" value="Änderungen speichern"/>
@@ -217,22 +229,23 @@ templ MachinesForm(params models.Machine, ressorts []models.Ressort, errors Mach
 	<!-- this script is needed for the delete button to send the CSRF-Token -->
 	if len(params.ID) > 0 {
 		<script type="text/javascript">
-  button = document.getElementById("deleteButton")
-  button.addEventListener('htmx:configRequest', (event) => {
-    event.detail.headers['X-CSRF-Token'] = document.getElementById('csrf_token').value
-  })
-</script>
+			button = document.getElementById("deleteButton");
+			button.addEventListener("htmx:configRequest", (event) => {
+				event.detail.headers["X-CSRF-Token"] =
+					document.getElementById("csrf_token").value;
+			});
+		</script>
 	}
 }
 
 templ ReportList(reports []models.Report) {
 	{{
-anySolved := false
-for _, r := range reports {
-	if r.Solved {
-		anySolved = true
-	}
-}
+		anySolved := false
+		for _, r := range reports {
+			if r.Solved {
+				anySolved = true
+			}
+		}
 	}}
 	<form id="reportList" class="mb-12">
 		@ui.CSRF()
@@ -343,13 +356,14 @@ for _, r := range reports {
 	<!-- this script is needed for the delete button to send the CSRF-Token -->
 	if len(reports) > 0 {
 		<script type="text/javascript">
-  deleteButtons = document.getElementsByClassName("delete-button")
-  for (let i = 0; i < deleteButtons.length; i++) {
-    deleteButtons[i].addEventListener('htmx:configRequest', (event) => {
-      event.detail.headers['X-CSRF-Token'] = document.getElementById('csrf_token').value
-    })
-  }
-</script>
+			deleteButtons = document.getElementsByClassName("delete-button");
+			for (let i = 0; i < deleteButtons.length; i++) {
+				deleteButtons[i].addEventListener("htmx:configRequest", (event) => {
+					event.detail.headers["X-CSRF-Token"] =
+						document.getElementById("csrf_token").value;
+				});
+			}
+		</script>
 	}
 }
 

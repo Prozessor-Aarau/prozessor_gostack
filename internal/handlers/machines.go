@@ -26,7 +26,6 @@ func (m *Repository) HandleMachinesIndex(w http.ResponseWriter, r *http.Request)
 	}
 
 	ressorts, err := m.DB.AllRessorts()
-
 	if err != nil {
 		// m.App.Session.Put(r.Context(), "error", "Can't get ressorts from database")
 		return fmt.Errorf("failed to get ressorts: %w", err)
@@ -41,12 +40,10 @@ func (m *Repository) HandleMachinesIndex(w http.ResponseWriter, r *http.Request)
 
 // HandleMachinesList handles the machines list
 func (m *Repository) HandleMachinesList(w http.ResponseWriter, r *http.Request) error {
-
 	machineList, _, err := m.DB.AllMachines(models.MachineFilter{
 		MachineName: "",
 		RessortID:   0,
 	})
-
 	if err != nil {
 		return fmt.Errorf("failed to get machines: %w", err)
 	}
@@ -57,7 +54,6 @@ func (m *Repository) HandleMachinesList(w http.ResponseWriter, r *http.Request) 
 
 // HandleMachinesListFilter handles the machines list search filters
 func (m *Repository) HandleMachinesListFilter(w http.ResponseWriter, r *http.Request) error {
-
 	// initial values
 	var mfilter models.MachineFilter
 	mfilter.MachineName = ""
@@ -75,7 +71,6 @@ func (m *Repository) HandleMachinesListFilter(w http.ResponseWriter, r *http.Req
 	}
 
 	machineList, _, err := m.DB.AllMachines(mfilter)
-
 	if err != nil {
 		return fmt.Errorf("failed to get machines: %w", err)
 	}
@@ -88,7 +83,6 @@ func (m *Repository) HandleMachinesListFilter(w http.ResponseWriter, r *http.Req
 func (m *Repository) HandleMachinesCreateIndex(w http.ResponseWriter, r *http.Request) error {
 	// send the data to the template
 	ressorts, err := m.DB.AllRessorts()
-
 	if err != nil {
 		return fmt.Errorf("failed to get ressorts: %w", err)
 	}
@@ -114,6 +108,7 @@ func (m *Repository) HandleMachinesCreate(w http.ResponseWriter, r *http.Request
 	if err == nil {
 		machine.RessortID = ressortID
 	}
+	machine.Location = r.Form.Get("location")
 
 	// validation
 	form := forms.New(r.PostForm)
@@ -159,7 +154,6 @@ func (m *Repository) HandleMachinesCreate(w http.ResponseWriter, r *http.Request
 func (m *Repository) HandleMachinesEditIndex(w http.ResponseWriter, r *http.Request) error {
 	// send the data to the template
 	ressorts, err := m.DB.AllRessorts()
-
 	if err != nil {
 		return fmt.Errorf("failed to get ressorts: %w", err)
 	}
@@ -195,6 +189,7 @@ func (m *Repository) HandleMachinesEdit(w http.ResponseWriter, r *http.Request) 
 	if err == nil {
 		machine.RessortID = ressortID
 	}
+	machine.Location = r.Form.Get("location")
 
 	// validation
 	form := forms.New(r.PostForm)
@@ -206,7 +201,6 @@ func (m *Repository) HandleMachinesEdit(w http.ResponseWriter, r *http.Request) 
 	// what to do if form not valid
 	if !form.Valid() {
 		ressorts, err := m.DB.AllRessorts()
-
 		if err != nil {
 			return fmt.Errorf("failed to get ressorts: %w", err)
 		}
@@ -248,7 +242,6 @@ func (m *Repository) HandleMachinesQRCreate(w http.ResponseWriter, r *http.Reque
 	}
 
 	err = qrcodes.GenerateQRCode(machine)
-
 	if err != nil {
 		return fmt.Errorf("failed to generate qr code: %w", err)
 	}
@@ -279,7 +272,6 @@ func (m *Repository) HandleMachinesQRDelete(w http.ResponseWriter, r *http.Reque
 	}
 
 	err = qrcodes.RemoveQRCode(machine)
-
 	if err != nil {
 		return fmt.Errorf("failed to remove qr code: %w", err)
 	}
@@ -332,7 +324,6 @@ func (m *Repository) HandleMachinesDelete(w http.ResponseWriter, r *http.Request
 
 	if len(machine.QR) > 0 {
 		err = qrcodes.RemoveQRCode(machine)
-
 		if err != nil {
 			return fmt.Errorf("failed to delete machine qr code: %w", err)
 		}

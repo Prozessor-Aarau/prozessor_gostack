@@ -17,26 +17,28 @@ func (m *postgresDBRepo) CreateMachine(machine models.Machine) (string, error) {
 	defer cancel()
 
 	id, err := uuid.NewUUID()
-
 	if err != nil {
 		return "", err
 	}
 
-	//Convert id to string and set it on the user
+	// Convert id to string and set it on the user
 	machine.ID = id.String()
 
-	stmt := `INSERT INTO machines (id, ressort_id, machine_name, created_on, updated_on)
-  VALUES($1, $2, $3, $4, $5)
+	stmt := `INSERT INTO machines (id, ressort_id, machine_name, location, created_on, updated_on)
+  VALUES($1, $2, $3, $4, $5, $6)
   RETURNING id`
 
-	_, err = m.DB.ExecContext(ctx, stmt,
+	location := sql.NullString{String: machine.Location, Valid: machine.Location != ""}
+
+	_, err = m.DB.ExecContext(
+		ctx, stmt,
 		machine.ID,
 		machine.RessortID,
 		machine.MachineName,
+		location,
 		time.Now(),
 		time.Now(),
 	)
-
 	if err != nil {
 		return "", err
 	}
@@ -52,15 +54,19 @@ func (m *postgresDBRepo) UpdateMachine(machine models.Machine) error {
 	query := `UPDATE machines 
   SET machine_name = $1,
   ressort_id = $2,
-  updated_on = $3 
-  WHERE id = $4
+  location = $3,
+  updated_on = $4 
+  WHERE id = $5
   `
+
+	location := sql.NullString{String: machine.Location, Valid: machine.Location != ""}
 
 	_, err := m.DB.ExecContext(
 		ctx,
 		query,
 		machine.MachineName,
 		machine.RessortID,
+		location,
 		time.Now(),
 		machine.ID,
 	)
@@ -79,6 +85,7 @@ func (m *postgresDBRepo) MachineByID(id string) (models.Machine, error) {
 	var machine models.Machine
 	query := `SELECT m.id, 
     m.machine_name, 
+    m.location, 
     m.created_on, 
     m.updated_on, 
     r.id, 
@@ -108,10 +115,12 @@ func (m *postgresDBRepo) MachineByID(id string) (models.Machine, error) {
 	var info []sql.NullString
 	var reporter []sql.NullString
 	var updated []sql.NullString
+	var location sql.NullString
 
 	err := row.Scan(
 		&machine.ID,
 		&machine.MachineName,
+		&location,
 		&machine.CreatedOn,
 		&machine.UpdatedOn,
 		&machine.RessortID,
@@ -125,9 +134,12 @@ func (m *postgresDBRepo) MachineByID(id string) (models.Machine, error) {
 		pq.Array(&reporter),
 		pq.Array(&updated),
 	)
-
 	if err != nil {
 		return machine, err
+	}
+
+	if location.Valid {
+		machine.Location = location.String
 	}
 
 	if qr.Valid {
@@ -156,7 +168,6 @@ func (m *postgresDBRepo) MachineByID(id string) (models.Machine, error) {
 				UpdatedOn:      updatedOn,
 			})
 		}
-
 	}
 
 	return machine, nil
@@ -180,7 +191,8 @@ func (m *postgresDBRepo) AllMachines(filter models.MachineFilter) ([]models.Mach
 		ressort = fmt.Sprintf("AND m.ressort_id = %d", filter.RessortID)
 	}
 
-	countQuery := fmt.Sprintf(`SELECT COUNT(*) FROM machines m
+	countQuery := fmt.Sprintf(
+		`SELECT COUNT(*) FROM machines m
 	WHERE m.machine_name LIKE $1
   %s
 `,
@@ -191,7 +203,6 @@ func (m *postgresDBRepo) AllMachines(filter models.MachineFilter) ([]models.Mach
 	row := m.DB.QueryRowContext(ctx, countQuery, search)
 
 	err := row.Scan(&count)
-
 	if err != nil {
 		return machines, 0, err
 	}
@@ -199,6 +210,7 @@ func (m *postgresDBRepo) AllMachines(filter models.MachineFilter) ([]models.Mach
 		`SELECT 
       m.id, 
       m.machine_name, 
+      m.location, 
       m.created_on, 
       m.updated_on, 
       r.id, 
@@ -238,10 +250,12 @@ func (m *postgresDBRepo) AllMachines(filter models.MachineFilter) ([]models.Mach
 		var fatal []sql.NullBool
 		var solved []sql.NullBool
 		var updated []sql.NullString
+		var location sql.NullString
 
 		err := rows.Scan(
 			&machine.ID,
 			&machine.MachineName,
+			&location,
 			&machine.CreatedOn,
 			&machine.UpdatedOn,
 			&machine.RessortID,
@@ -253,9 +267,12 @@ func (m *postgresDBRepo) AllMachines(filter models.MachineFilter) ([]models.Mach
 			pq.Array(&solved),
 			pq.Array(&updated),
 		)
-
 		if err != nil {
 			return machines, 0, err
+		}
+
+		if location.Valid {
+			machine.Location = location.String
 		}
 
 		if qr.Valid {

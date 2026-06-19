@@ -13,6 +13,9 @@ templ Report(m models.Machine) {
 				<h2 class="mx-auto pt-6">Problem/Defekt melden</h2>
 				<h3 class="col-span-4 mt-0">Maschine: { m.MachineName }</h3>
 				<h4 class="col-span-4">Ressort: { m.RessortName }</h4>
+				if len(m.Location) > 0 {
+					<h4 class="col-span-4">Standort: { m.Location }</h4>
+				}
 			</div>
 			@existingReports(m.Reports)
 			@ReportForm(models.Report{
@@ -25,12 +28,12 @@ templ Report(m models.Machine) {
 
 templ existingReports(reports []models.Report) {
 	{{
-unsolved := false
-for _, r := range reports {
-	if !r.Solved {
-		unsolved = true
-	}
-}
+		unsolved := false
+		for _, r := range reports {
+			if !r.Solved {
+				unsolved = true
+			}
+		}
 	}}
 	if len(reports) > 0 && unsolved {
 		<div class="bg-base-200 collapse mt-4">
@@ -84,7 +87,7 @@ type ReportParams struct {
 templ ReportForm(params models.Report, errors ReportErrors) {
 	<!-- start of Form -->
 	<form
-		class="grid grid-cols-4 gap-1 sm:gap-3 overflow-y-auto p-1 my-6"
+		class="grid grid-cols-4 gap-1 sm:gap-3 overflow-y-auto p-1 mb-6"
 		hx-post="/report"
 		hx-swap="outerHTML"
 		hx-indicator="#spinner"
@@ -92,54 +95,46 @@ templ ReportForm(params models.Report, errors ReportErrors) {
 	>
 		@ui.CSRF()
 		<input type="hidden" name="machine_id" value={ params.MachineID }/>
-		<label class="form-control col-span-4">
-			<div class="label">
-				<span class="label-text">Problem/Defekt <span class="text-error font-extrabold">*</span></span>
-			</div>
+		<fieldset class="fieldset col-span-full">
+			<legend class="fieldset-legend">Problem/Defekt <span class="text-error font-extrabold">*</span></legend>
 			<textarea
 				id="report_infos"
 				name="report_infos"
-				class={ "textarea h-24" ,
+				class={ "textarea h-24 w-full" ,
       templ.KV("textarea-error", len(errors.ReportInfo)> 0) }
 				placeholder="Beschreibe deine Beobachtung: Was funktioniert nicht, was ist dir aufgefallen..."
 				value={ params.ReportInfo }
 				required
 			></textarea>
 			if len(errors.ReportInfo) > 0 {
-				<div class="label">
-					<span class="label-text text-error">{ errors.ReportInfo }</span>
-				</div>
+				<label class="fieldset-label text-error">{ errors.ReportInfo }</label>
 			}
-		</label>
-		<div class="form-control col-span-4">
-			<label class="label cursor-pointer">
+		</fieldset>
+		<fieldset class="fieldset col-span-full">
+			<label class="fieldset-label gap-3">
 				<input
 					type="checkbox"
 					id="fatal"
 					name="fatal"
-					class="toggle toggle-primary mr-4"
+					class="toggle toggle-primary mr-2"
 					if params.Fatal {
 						checked="checked"
 					}
 				/>
-				<span class="label-text">
-					Maschine sollte in diesem Zustand nicht mehr genutzt werden.
-				</span>
+				<legend class="fieldset-legend">Maschine sollte in diesem Zustand nicht mehr genutzt werden.</legend>
 			</label>
-		</div>
-		<label class="form-control col-span-4">
-			<div class="label">
-				<span class="label-text">Kontaktmöglichkeit (freiwillig)</span>
-			</div>
+		</fieldset>
+		<fieldset class="fieldset col-span-full">
+			<legend class="fieldset-legend">Kontaktmöglichkeit (freiwillig)</legend>
 			<input
 				type="text"
 				id="report_reporter"
 				name="report_reporter"
-				class="input"
+				class="input w-full"
 				value={ params.ReportReporter }
 				placeholder="Name, E-Mail oder Tel-Nr. usw."
 			/>
-		</label>
+		</fieldset>
 		<div class="col-span-4 text-sm">
 			<span class="text-error font-extrabold">*</span> diese Felder sind zwingend
 			auszufüllen

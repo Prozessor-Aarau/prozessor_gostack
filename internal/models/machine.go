@@ -8,6 +8,7 @@ type Machine struct {
 	RessortName  string
 	SlackChannel string
 	MachineName  string
+	Location     string
 	FAQs         []FAQ
 	QR           string
 	Reports      []Report
