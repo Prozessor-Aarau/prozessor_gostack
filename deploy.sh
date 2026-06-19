@@ -19,6 +19,9 @@ templ generate
 echo "Building binary..."
 go build -C ./cmd -o "$BIN" .
 
+echo "Running database migrations..."
+goose up
+
 echo "Restarting service..."
 sudo systemctl restart "$SERVICE"
 
