@@ -44,7 +44,7 @@ templ RequestForm(params RequestParams, categories []models.LogisticCategory, er
 	>
 		@ui.CSRF()
 		<fieldset
-			class="fieldset w-full bg-base-200 border border-base-300 p-4 rounded-box grid-cols-2"
+			class="fieldset w-full bg-base-200 border border-base-300 p-4 rounded-box grid-cols-2 gap-3"
 		>
 			<legend class="fieldset-legend">Formular</legend>
 			<fieldset class="fieldset col-span-full">
@@ -62,7 +62,7 @@ templ RequestForm(params RequestParams, categories []models.LogisticCategory, er
 				}
 			</fieldset>
 			<fieldset class="fieldset col-span-full">
-				<label class="fieldset-label mt-4"><span class="i-mdi-idea"></span>Verwendungszweck</label>
+				<label class="fieldset-label"><span class="i-mdi-idea"></span>Verwendungszweck</label>
 				<textarea
 					class={ "textarea w-full h-32" , templ.KV("textarea-error", len(errors.Reason)> 0) }
 					name="password"
@@ -74,7 +74,7 @@ templ RequestForm(params RequestParams, categories []models.LogisticCategory, er
 				}
 			</fieldset>
 			<fieldset class="fieldset col-span-full md:col-span-1">
-				<legend class="fieldset-legend">Startdatum</legend>
+				<legend class="fieldset-label">Startdatum</legend>
 				<input
 					type="date"
 					id="startdate"
@@ -91,7 +91,7 @@ templ RequestForm(params RequestParams, categories []models.LogisticCategory, er
 				}
 			</fieldset>
 			<fieldset class="fieldset col-span-full md:col-span-1">
-				<legend class="fieldset-legend">Enddatum</legend>
+				<legend class="fieldset-label">Enddatum</legend>
 				<input
 					type="date"
 					id="enddate"
@@ -108,16 +108,16 @@ templ RequestForm(params RequestParams, categories []models.LogisticCategory, er
 				}
 			</fieldset>
 			<fieldset class="fieldset col-span-full md:col-span-1">
-				<legend class="fieldset-legend">Voraussichtliche Lagerplatzgrösse</legend>
+				<legend class="fieldset-label">Voraussichtliche Lagerplatzgrösse</legend>
 				<select id="fixCatSelect" name="fix_cat" class="select select-bordered w-full">
 					for _,c := range categories {
 						<option value={ strconv.Itoa(c.ID) } selected?={ c.ID==params.Category.ID }>{ c.CatName }</option>
 					}
 				</select>
-				<legend>Wir erlauben uns diesen Wert und entsprechend den Preis anzupassen, sofern diese Angabe nicht der effektiven Grösse entspricht.</legend>
+				<legend class="fieldset-label">Wir erlauben uns diesen Wert und entsprechend den Preis anzupassen, sofern diese Angabe nicht der effektiven Grösse entspricht.</legend>
 			</fieldset>
 			<p class="text-lg col-span-full md:col-span-1">Preis provisorisch: <span class="text-primary font-bold">0.-</span></p>
-			<button type="submit" class="btn btn-neutral mt-4 col-span-full">Anfrage absenden</button>
+			<button type="submit" class="btn btn-neutral col-span-full">Anfrage absenden</button>
 		</fieldset>
 	</form>
 }
