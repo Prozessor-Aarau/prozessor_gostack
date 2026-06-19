@@ -33,7 +33,6 @@ func (m *Repository) HandleLogisticsIndex(w http.ResponseWriter, r *http.Request
 
 	// get categories to pass on
 	categories, err := m.DB.AllLogisticCategories()
-
 	if err != nil {
 		return fmt.Errorf("failed to get categories: %w", err)
 	}
@@ -127,7 +126,6 @@ func (m *Repository) HandleLogisticsListFilter(w http.ResponseWriter, r *http.Re
 func (m *Repository) HandleLogisticsEditIndex(w http.ResponseWriter, r *http.Request) error {
 	// get categories to pass on
 	categories, err := m.DB.AllLogisticCategories()
-
 	if err != nil {
 		return err
 	}
@@ -153,7 +151,6 @@ func (m *Repository) HandleLogisticsEditIndex(w http.ResponseWriter, r *http.Req
 // HandleLogisticsCreateIndex is the handler for the logistic creation form
 func (m *Repository) HandleLogisticsCreateIndex(w http.ResponseWriter, r *http.Request) error {
 	categories, err := m.DB.AllLogisticCategories()
-
 	if err != nil {
 		return fmt.Errorf("failed to get categories: %w", err)
 	}
@@ -169,9 +166,7 @@ func (m *Repository) HandleLogisticsCreateIndex(w http.ResponseWriter, r *http.R
 // HandleLogisticsCreateAndEdit is the handler for posting the logistic creation and edit form
 func (m *Repository) HandleLogisticsCreateAndEdit(w http.ResponseWriter, r *http.Request) error {
 	categories, err := m.DB.AllLogisticCategories()
-
 	// TODO check if enddate is after startdate
-
 	if err != nil {
 		return fmt.Errorf("failed to get categories: %w", err)
 	}
@@ -348,7 +343,6 @@ func (m *Repository) HandleLogisticsCreateAndEdit(w http.ResponseWriter, r *http
 	// log success
 	visitor, err := m.DB.VisitorByID(newLogistic.Visitor.ID)
 	if err == nil {
-
 		logger.Success(r, m.App.Session,
 			fmt.Sprintf("logistic for visitor %s %s successfully %s", visitor.FirstName, visitor.FamilyName, action))
 	}
@@ -447,7 +441,6 @@ func (m *Repository) HandleLogisticsLabelDelete(w http.ResponseWriter, r *http.R
 	}
 
 	err = labels.DeleteLabel(l)
-
 	if err != nil {
 		return fmt.Errorf("failed to delete label: %w", err)
 	}
@@ -582,7 +575,6 @@ func (m *Repository) HandleLogisticsCreateBillPost(w http.ResponseWriter, r *htt
 		},
 		m.DB,
 	)
-
 	if err != nil {
 		return err
 	}
@@ -595,7 +587,6 @@ func (m *Repository) HandleLogisticsCreateBillPost(w http.ResponseWriter, r *htt
 
 	// write bill id to the logistics
 	err = m.DB.UpdateLogisticsBillID(billID, logSlice)
-
 	if err != nil {
 		return fmt.Errorf("failed to update logistics bill id: %w", err)
 	}
@@ -636,4 +627,21 @@ func (m *Repository) HandleLogisticsCreateBillPost(w http.ResponseWriter, r *htt
 		fmt.Sprintf("bill for %s %s successfully %s", visitor.FirstName, visitor.FamilyName, action))
 
 	return rendering(w, r, layout.Success(messageString))
+}
+
+// HandleLogisticsRequestIndex is the handler for the logistics request index page
+func (m *Repository) HandleLogisticsRequestIndex(w http.ResponseWriter, r *http.Request) error {
+	// get categories to pass on
+	categories, err := m.DB.AllLogisticCategories()
+	if err != nil {
+		return fmt.Errorf("failed to get categories: %w", err)
+	}
+
+	// return the request index page
+	return rendering(w, r, logistics.Request(categories))
+}
+
+// HandleLogisticsRequestForm handles the logistics request form
+func (m *Repository) HandleLogisticsRequestForm(w http.ResponseWriter, r *http.Request) error {
+	return nil
 }
