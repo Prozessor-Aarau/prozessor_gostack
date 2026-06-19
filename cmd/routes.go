@@ -42,6 +42,7 @@ func routes(app *config.AppConfig) http.Handler {
 	mux.Post("/subscribe", handlers.Make(handlers.Repo.HandleNewsletterSubscribe))
 	// logistics request
 	mux.Get("/logistics-request", handlers.Make(handlers.Repo.HandleLogisticsRequestIndex))
+	mux.Post("/logistics-request", handlers.Make(handlers.Repo.HandleLogisticsRequestForm))
 	// calendar
 	mux.Get("/calendar", handlers.Make(handlers.Repo.HandleCalendarIndex))
 	mux.Get("/calendar/{startdate}/{daycount}", handlers.Make(handlers.Repo.HandleCalendar))

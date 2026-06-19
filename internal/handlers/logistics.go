@@ -6,6 +6,7 @@ import (
 	"math"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/faebut/prozessor_gostack/internal/billing"
@@ -643,5 +644,48 @@ func (m *Repository) HandleLogisticsRequestIndex(w http.ResponseWriter, r *http.
 
 // HandleLogisticsRequestForm handles the logistics request form
 func (m *Repository) HandleLogisticsRequestForm(w http.ResponseWriter, r *http.Request) error {
+	err := r.ParseForm()
+	if err != nil {
+		return fmt.Errorf("failed to parse form: %w", err)
+	}
+
+	// build request params
+	var params logistics.RequestParams
+
+	params.Email = strings.TrimSpace(r.Form.Get("email"))
+
+	// validation
+	form := forms.New(r.PostForm)
+	form.Required("email")
+	form.IsEmail("email")
+
+	// UniqueMail checks if the mail address is already registered
+	if !form.IsEmpty("email") {
+		uniquemail, _ := m.DB.CheckEmailUnique(params.Email)
+		if uniquemail {
+			form.Errors.Add("email", "E-Mail Addresse ist nicht registriert. Verwende die gleiche Addresse wie bei der Registrierung.")
+		}
+	}
+
+	// what to do if form not valid
+	if !form.Valid() {
+
+		// get categories
+		categories, err := m.DB.AllLogisticCategories()
+		if err != nil {
+			return fmt.Errorf("failed to get categories: %w", err)
+		}
+
+		// return form with errors and allready filled fields
+		return rendering(w, r, logistics.RequestForm(
+			params,
+			categories,
+			logistics.RequestErrors{
+				Email: form.Errors.Get("email"),
+			},
+		))
+	}
+
+	// now what to do if we are okay?
 	return nil
 }
