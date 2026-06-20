@@ -690,6 +690,13 @@ func (m *Repository) HandleLogisticsRequestForm(w http.ResponseWriter, r *http.R
 		}
 	}
 
+	// check if duration is within allowed range
+	var response logistics.RequestResponseContent
+	response.Duration = calcPrice(params.StartDate, params.EndDate, 1)
+	if response.Duration > 12 {
+		form.Errors.Add("enddate", "Es sind maximal 12 Monate erlaubt.")
+	}
+
 	// get categories
 	categories, err := m.DB.AllLogisticCategories()
 	if err != nil {
@@ -723,7 +730,6 @@ func (m *Repository) HandleLogisticsRequestForm(w http.ResponseWriter, r *http.R
 	}
 
 	// build response
-	var response logistics.RequestResponseContent
 
 	response.FirstName = visitor.FirstName
 
@@ -738,9 +744,6 @@ func (m *Repository) HandleLogisticsRequestForm(w http.ResponseWriter, r *http.R
 
 	// get estimated price
 	response.EstPrice = calcPrice(params.StartDate, params.EndDate, unitPrice)
-
-	// get duration
-	response.Duration = calcPrice(params.StartDate, params.EndDate, 1)
 
 	// set price to true if it can be calculated
 	if params.Category.ID < 4 {

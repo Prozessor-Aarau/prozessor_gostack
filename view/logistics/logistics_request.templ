@@ -35,16 +35,16 @@ type RequestParams struct {
 }
 
 templ RequestForm(params RequestParams, categories []models.LogisticCategory, errors RequestErrors) {
-	<div class="prose px-5">
-		<h2 class="mx-auto pt-6">Lagerplatz anfragen</h2>
-		<p>Um einen Lagerplatz zu beantragen, fülle folgendes Formular aus. Es müssen alle Felder ausgefüllt werden. Verwende deine Angaben aus der Registrierung im Prozessor.</p>
-	</div>
 	<form
 		class="flex flex-col items-center gap-6 p-1 w-full"
 		hx-post="/logistics-request"
 		hx-swap="outerHTML"
 		novalidate
 	>
+		<div class="prose px-5">
+			<h2 class="pt-6">Lagerplatz anfragen</h2>
+			<p>Um einen Lagerplatz zu beantragen, fülle folgendes Formular aus. Es müssen alle Felder ausgefüllt werden. Verwende deine Angaben aus der Registrierung im Prozessor.</p>
+		</div>
 		@ui.CSRF()
 		<fieldset
 			class="fieldset w-full bg-base-200 border border-base-300 p-4 rounded-box grid-cols-2 gap-3"
@@ -185,11 +185,11 @@ type RequestResponseContent struct {
 
 templ RequestResponse(response RequestResponseContent, params RequestParams) {
 	<div class="prose px-5">
-		<h2>Danke { response.FirstName } für deine Anfrage</h2>
+		<h2 class="pt-6">Danke { response.FirstName } für deine Anfrage</h2>
 		<p>
 			Die Angaben sind an unser Lager-Team weitergeleitet worden und werden geprüft. Du erhältst innert 14 Tagen die Antwort sowie die allfällige Rechnung per E-Mail an { params.Email }.
 		</p>
-		<h2>Angaben</h2>
+		<h3>Angaben</h3>
 		<table class="table table-xs">
 			<tbody>
 				<tr>
@@ -221,6 +221,6 @@ templ RequestResponse(response RequestResponseContent, params RequestParams) {
 			</tbody>
 		</table>
 		<p class="text-xs opacity-60">* Wir erlauben uns diesen Wert und entsprechend den Preis anzupassen, sofern diese Angabe nicht der effektiven Grösse entspricht.</p>
-		<p class="mt-3 bold">Bitte stelle dein Lagerobjekt in den Wartebereich. Wir weisen dir nach der Prüfung einen Lagerplatz zu.</p>
+		<p class="mt-3 font-bold">Bitte stelle dein Lagerobjekt in den Wartebereich. Wir weisen dir nach der Prüfung einen Lagerplatz zu.</p>
 	</div>
 }
