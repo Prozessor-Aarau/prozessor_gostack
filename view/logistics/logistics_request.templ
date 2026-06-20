@@ -111,11 +111,14 @@ templ RequestForm(params RequestParams, categories []models.LogisticCategory, er
 			</fieldset>
 			<fieldset class="fieldset col-span-full md:col-span-1">
 				<legend class="fieldset-label">Voraussichtliche Lagerplatzgrösse</legend>
-				<select id="fixCatSelect" name="category" class="select select-bordered w-full">
+				<select id="fixCatSelect" name="category" class={ "select select-bordered w-full", templ.KV("select-error", len(errors.Category) > 0) }>
 					for _,c := range categories {
 						<option value={ strconv.Itoa(c.ID) } selected?={ c.ID==params.Category.ID }>{ c.CatName }</option>
 					}
 				</select>
+				if len(errors.Category) > 0 {
+					<label class="fieldset-label text-error">{ errors.Category }</label>
+				}
 				<legend class="fieldset-label">Wir erlauben uns diesen Wert und entsprechend den Preis anzupassen, sofern diese Angabe nicht der effektiven Grösse entspricht.</legend>
 			</fieldset>
 			<div class="drawer drawer-end">
@@ -212,15 +215,25 @@ templ RequestResponse(response RequestResponseContent, params RequestParams) {
 					<th>Dauer</th>
 					<td>{ helpers.FormatFloat(response.Duration, 1) } Monate</td>
 				</tr>
-				if response.Price {
-					<tr>
-						<th>Preis</th>
+				<tr>
+					<th>Preis</th>
+					if response.Price {
 						<td><span class="text-primary">{ helpers.FormatCurrency(response.EstPrice) }</span>*</td>
-					</tr>
-				}
+					} else if params.Category.CatName == "Sperrgut" {
+						<td>Wir berechnen den Preis für Sperrgut nach Grösse.</td>
+					} else {
+						<td>kostenlos</td>
+					}
+				</tr>
 			</tbody>
 		</table>
-		<p class="text-xs opacity-60">* Wir erlauben uns diesen Wert und entsprechend den Preis anzupassen, sofern diese Angabe nicht der effektiven Grösse entspricht.</p>
-		<p class="mt-3 font-bold">Bitte stelle dein Lagerobjekt in den Wartebereich. Wir weisen dir nach der Prüfung einen Lagerplatz zu.</p>
+		if response.Price {
+			<p class="text-xs opacity-60">* Wir erlauben uns diesen Wert und entsprechend den Preis anzupassen, sofern diese Angabe nicht der effektiven Grösse entspricht.</p>
+		}
+		if params.Category.CatName == "Kleingut" {
+			<p class="mt-3 font-bold">Bitte stell das Kleingut angeschrieben in einer Kiste ins Gestell für Kleingut.</p>
+		} else {
+			<p class="mt-3 font-bold">Bitte stelle dein Lagerobjekt in den Wartebereich. Wir weisen dir nach der Prüfung einen Lagerplatz zu.</p>
+		}
 	</div>
 }

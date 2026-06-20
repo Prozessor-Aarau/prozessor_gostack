@@ -710,6 +710,18 @@ func (m *Repository) HandleLogisticsRequestForm(w http.ResponseWriter, r *http.R
 		}
 	}
 
+	// check if visitor is member if selected "Kleingut"
+	visitor, err := m.DB.VisitorByEmail(params.Email)
+	if err != nil {
+		return fmt.Errorf("get visitor: %w", err)
+	}
+
+	if params.Category.CatName == "Kleingut" {
+		if !(visitor.Ressort.ID > 0) {
+			form.Errors.Add("category", "Kleingut ist für Vereinsmitglieder reserviert. Wähle Halbe Palette oder ein grösseres Format.")
+		}
+	}
+
 	// what to do if form not valid
 	if !form.Valid() {
 
@@ -723,14 +735,7 @@ func (m *Repository) HandleLogisticsRequestForm(w http.ResponseWriter, r *http.R
 		))
 	}
 
-	// use the inputs to get the needed data
-	visitor, err := m.DB.VisitorByEmail(params.Email)
-	if err != nil {
-		return fmt.Errorf("get visitor: %w", err)
-	}
-
 	// build response
-
 	response.FirstName = visitor.FirstName
 
 	// calculate unit price
