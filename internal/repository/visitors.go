@@ -423,7 +423,7 @@ func (m *postgresDBRepo) VisitorByEmail(email string) (models.Visitor, error) {
 
 	query := `SELECT id, first_name, family_name, email, ressort_id   
 	FROM visitors 
-  WHERE v.email = $1
+  WHERE email = $1
  `
 
 	row := m.DB.QueryRowContext(ctx, query, email)

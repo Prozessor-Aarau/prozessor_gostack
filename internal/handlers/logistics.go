@@ -690,14 +690,21 @@ func (m *Repository) HandleLogisticsRequestForm(w http.ResponseWriter, r *http.R
 		}
 	}
 
+	// get categories
+	categories, err := m.DB.AllLogisticCategories()
+	if err != nil {
+		return fmt.Errorf("failed to get categories: %w", err)
+	}
+
+	// set chosen category to the whole category
+	for _, cat := range categories {
+		if cat.ID == params.Category.ID {
+			params.Category = cat
+		}
+	}
+
 	// what to do if form not valid
 	if !form.Valid() {
-
-		// get categories
-		categories, err := m.DB.AllLogisticCategories()
-		if err != nil {
-			return fmt.Errorf("failed to get categories: %w", err)
-		}
 
 		// return form with errors and allready filled fields
 		var errs logistics.RequestErrors
@@ -710,10 +717,41 @@ func (m *Repository) HandleLogisticsRequestForm(w http.ResponseWriter, r *http.R
 	}
 
 	// use the inputs to get the needed data
-	visitor, err := m.DB.CheckEmailUnique(params.Email)
+	visitor, err := m.DB.VisitorByEmail(params.Email)
+	if err != nil {
+		return fmt.Errorf("get visitor: %w", err)
+	}
+
+	// build response
+	var response logistics.RequestResponseContent
+
+	response.FirstName = visitor.FirstName
+
+	// calculate unit price
+	var unitPrice float64
+
+	if visitor.Ressort.ID > 0 {
+		unitPrice = params.Category.PriceMember
+	} else {
+		unitPrice = params.Category.Price
+	}
+
+	// get estimated price
+	response.EstPrice = calcPrice(params.StartDate, params.EndDate, unitPrice)
+
+	// get duration
+	response.Duration = calcPrice(params.StartDate, params.EndDate, 1)
+
+	// set price to true if it can be calculated
+	if params.Category.ID < 4 {
+		response.Price = true
+	}
 
 	// TODO: write something permanent into the database
 
 	// Feedback to user
-	return nil
+	return rendering(w, r, logistics.RequestResponse(
+		response,
+		params,
+	))
 }

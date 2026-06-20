@@ -1,18 +1,17 @@
 package logistics
 
-import "github.com/faebut/prozessor_gostack/view/layout"
-import "github.com/faebut/prozessor_gostack/internal/models"
-import "github.com/faebut/prozessor_gostack/view/ui"
-import "time"
-import "strconv"
+import (
+	"github.com/faebut/prozessor_gostack/internal/helpers"
+	"github.com/faebut/prozessor_gostack/internal/models"
+	"github.com/faebut/prozessor_gostack/view/layout"
+	"github.com/faebut/prozessor_gostack/view/ui"
+	"strconv"
+	"time"
+)
 
 templ Request(categories []models.LogisticCategory) {
 	@layout.App(false, models.Visitor{}) {
 		<div class="container mx-auto flex flex-col gap-2 max-w-4xl">
-			<div class="prose px-5">
-				<h2 class="mx-auto pt-6">Lagerplatz anfragen</h2>
-				<p>Um einen Lagerplatz zu beantragen, fülle folgendes Formular aus. Es müssen alle Felder ausgefüllt werden. Verwende deine Angaben aus der Registrierung im Prozessor.</p>
-			</div>
 			@RequestForm(RequestParams{}, categories, RequestErrors{})
 		</div>
 	}
@@ -36,6 +35,10 @@ type RequestParams struct {
 }
 
 templ RequestForm(params RequestParams, categories []models.LogisticCategory, errors RequestErrors) {
+	<div class="prose px-5">
+		<h2 class="mx-auto pt-6">Lagerplatz anfragen</h2>
+		<p>Um einen Lagerplatz zu beantragen, fülle folgendes Formular aus. Es müssen alle Felder ausgefüllt werden. Verwende deine Angaben aus der Registrierung im Prozessor.</p>
+	</div>
 	<form
 		class="flex flex-col items-center gap-6 p-1 w-full"
 		hx-post="/logistics-request"
@@ -119,7 +122,7 @@ templ RequestForm(params RequestParams, categories []models.LogisticCategory, er
 				<input id="my-drawer-5" type="checkbox" class="drawer-toggle"/>
 				<div class="drawer-content">
 					<!-- Page content here -->
-					<label for="my-drawer-5" class="drawer-button btn btn-primary">Preisliste</label>
+					<label for="my-drawer-5" class="drawer-button btn btn-secondary">Preisliste</label>
 				</div>
 				<div class="drawer-side">
 					<label for="my-drawer-5" aria-label="close sidebar" class="drawer-overlay"></label>
@@ -171,4 +174,53 @@ templ RequestForm(params RequestParams, categories []models.LogisticCategory, er
 			<button type="submit" class="btn btn-neutral col-span-full">Anfrage absenden</button>
 		</fieldset>
 	</form>
+}
+
+type RequestResponseContent struct {
+	FirstName string
+	Price     bool
+	EstPrice  float64
+	Duration  float64
+}
+
+templ RequestResponse(response RequestResponseContent, params RequestParams) {
+	<div class="prose px-5">
+		<h2>Danke { response.FirstName } für deine Anfrage</h2>
+		<p>
+			Die Angaben sind an unser Lager-Team weitergeleitet worden und werden geprüft. Du erhältst innert 14 Tagen die Antwort sowie die allfällige Rechnung per E-Mail an { params.Email }.
+		</p>
+		<h2>Angaben</h2>
+		<table class="table table-xs">
+			<tbody>
+				<tr>
+					<th>Zweck</th>
+					<td>{ params.Reason }</td>
+				</tr>
+				<tr>
+					<th>Grösse</th>
+					<td>{ params.Category.CatName }</td>
+				</tr>
+				<tr>
+					<th>Von</th>
+					<td>{ params.StartDate.Format("02.01.2006") }</td>
+				</tr>
+				<tr>
+					<th>Bis</th>
+					<td>{ params.EndDate.Format("02.01.2006") }</td>
+				</tr>
+				<tr>
+					<th>Dauer</th>
+					<td>{ helpers.FormatFloat(response.Duration, 1) } Monate</td>
+				</tr>
+				if response.Price {
+					<tr>
+						<th>Preis</th>
+						<td><span class="text-primary">{ helpers.FormatCurrency(response.EstPrice) }</span>*</td>
+					</tr>
+				}
+			</tbody>
+		</table>
+		<p class="text-xs opacity-60">* Wir erlauben uns diesen Wert und entsprechend den Preis anzupassen, sofern diese Angabe nicht der effektiven Grösse entspricht.</p>
+		<p class="mt-3 bold">Bitte stelle dein Lagerobjekt in den Wartebereich. Wir weisen dir nach der Prüfung einen Lagerplatz zu.</p>
+	</div>
 }
