@@ -18,8 +18,10 @@ type Form struct {
 }
 
 // regex expressions
-var EmailRx = regexp.MustCompile(`[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,64}`)
-var PhoneRx = regexp.MustCompile(`^[+0-9 ]{10,18}$`)
+var (
+	EmailRx = regexp.MustCompile(`[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,64}`)
+	PhoneRx = regexp.MustCompile(`^[+0-9 ]{10,18}$`)
+)
 
 // Valid returns true if there are no errors, otherwise false
 func (f *Form) Valid() bool {
@@ -68,7 +70,6 @@ func (f *Form) IsEmpty(field string) bool {
 
 // IsEmail checks for valid email address
 func (f *Form) IsEmail(field string) {
-
 	if !f.IsEmpty(field) {
 		if !EmailRx.MatchString(f.Get(field)) {
 			f.Errors.Add(field, "korrekte E-Mailadresse angeben")
@@ -87,8 +88,7 @@ func (f *Form) IsPhone(field string) {
 
 // OneOf checks if at least one of the fields is filled
 func (f *Form) OneOf(fields ...string) {
-
-	var exists = func(check []string) bool {
+	exists := func(check []string) bool {
 		for _, field := range check {
 			value := f.Get(field)
 			if strings.TrimSpace(value) != "" {
@@ -122,7 +122,6 @@ func (f *Form) BoxValue(field string) bool {
 
 // IsPassword checks for valid password string
 func (f *Form) IsPassword(field string) {
-
 	pwcheck := func(s string) bool {
 		var (
 			hasMinLen  = false
@@ -161,7 +160,6 @@ func (f *Form) IsPassword(field string) {
 
 // matches checks for valid password string
 func (f *Form) IsMatch(field, comparison string) {
-
 	if !f.IsEmpty(field) || !f.IsEmpty(comparison) {
 		if f.Get(field) != f.Get(comparison) {
 			f.Errors.Add(
@@ -249,4 +247,24 @@ func (f *Form) MapForm(dst any) {
 			v.Field(i).SetBool(f.BoxValue(tag))
 		}
 	}
+}
+
+// IsAfter checks if one datestring is after the other
+func (f *Form) IsAfter(startDate, endDate string) (bool, error) {
+	a, err := time.Parse("2006-01-02", f.Get(startDate))
+	if err != nil {
+		return false, err
+	}
+	b, err := time.Parse("2006-01-02", f.Get(endDate))
+	if err != nil {
+		return false, err
+	}
+
+	if a.After(b) || a.Equal(b) {
+		f.Errors.Add(startDate, "Datum muss vor Enddatum sein")
+		f.Errors.Add(endDate, "Datum muss nach Startdatum sein")
+		return false, nil
+	}
+
+	return true, nil
 }

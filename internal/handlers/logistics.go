@@ -653,11 +653,34 @@ func (m *Repository) HandleLogisticsRequestForm(w http.ResponseWriter, r *http.R
 	var params logistics.RequestParams
 
 	params.Email = strings.TrimSpace(r.Form.Get("email"))
+	params.Reason = strings.TrimSpace(r.Form.Get("reason"))
+	params.Category.ID, err = strconv.Atoi(r.Form.Get("category"))
+	if err != nil {
+		return fmt.Errorf("parse category: %w", err)
+	}
+
+	// parse dates
+	startDate := r.Form.Get("startdate")
+	if len(startDate) > 0 {
+		params.StartDate, err = time.Parse("2006-01-02", startDate)
+		if err != nil {
+			return fmt.Errorf("parse startdate: %w", err)
+		}
+	}
+
+	endDate := r.Form.Get("enddate")
+	if len(endDate) > 0 {
+		params.EndDate, err = time.Parse("2006-01-02", endDate)
+		if err != nil {
+			return fmt.Errorf("parse startdate: %w", err)
+		}
+	}
 
 	// validation
 	form := forms.New(r.PostForm)
-	form.Required("email")
+	form.Required("email", "reason", "startdate", "enddate", "category")
 	form.IsEmail("email")
+	form.IsAfter("startdate", "enddate")
 
 	// UniqueMail checks if the mail address is already registered
 	if !form.IsEmpty("email") {
@@ -677,15 +700,20 @@ func (m *Repository) HandleLogisticsRequestForm(w http.ResponseWriter, r *http.R
 		}
 
 		// return form with errors and allready filled fields
+		var errs logistics.RequestErrors
+		form.MapErrors(&errs)
 		return rendering(w, r, logistics.RequestForm(
 			params,
 			categories,
-			logistics.RequestErrors{
-				Email: form.Errors.Get("email"),
-			},
+			errs,
 		))
 	}
 
-	// now what to do if we are okay?
+	// use the inputs to get the needed data
+	visitor, err := m.DB.CheckEmailUnique(params.Email)
+
+	// TODO: write something permanent into the database
+
+	// Feedback to user
 	return nil
 }

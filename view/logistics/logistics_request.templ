@@ -9,7 +9,7 @@ import "strconv"
 templ Request(categories []models.LogisticCategory) {
 	@layout.App(false, models.Visitor{}) {
 		<div class="container mx-auto flex flex-col gap-2 max-w-4xl">
-			<div class="prose">
+			<div class="prose px-5">
 				<h2 class="mx-auto pt-6">Lagerplatz anfragen</h2>
 				<p>Um einen Lagerplatz zu beantragen, fülle folgendes Formular aus. Es müssen alle Felder ausgefüllt werden. Verwende deine Angaben aus der Registrierung im Prozessor.</p>
 			</div>
@@ -19,11 +19,11 @@ templ Request(categories []models.LogisticCategory) {
 }
 
 type RequestErrors struct {
-	Email     string
-	Reason    string
-	StartDate string
-	EndDate   string
-	Category  string
+	Email     string `form:"email"`
+	Reason    string `form:"reason"`
+	StartDate string `form:"startdate"`
+	EndDate   string `form:"enddate"`
+	Category  string `form:"category"`
 	AppError  string
 }
 
@@ -65,10 +65,9 @@ templ RequestForm(params RequestParams, categories []models.LogisticCategory, er
 				<label class="fieldset-label"><span class="i-mdi-idea"></span>Verwendungszweck</label>
 				<textarea
 					class={ "textarea w-full h-32" , templ.KV("textarea-error", len(errors.Reason)> 0) }
-					name="password"
+					name="reason"
 					placeholder="Beschreibe, wofür der Platz benötigt wird."
-					value={ params.Reason }
-				></textarea>
+				>{ params.Reason }</textarea>
 				if len(errors.Reason) > 0 {
 					<p class="fieldset-label text-error">{ errors.Reason }</p>
 				}
@@ -109,14 +108,66 @@ templ RequestForm(params RequestParams, categories []models.LogisticCategory, er
 			</fieldset>
 			<fieldset class="fieldset col-span-full md:col-span-1">
 				<legend class="fieldset-label">Voraussichtliche Lagerplatzgrösse</legend>
-				<select id="fixCatSelect" name="fix_cat" class="select select-bordered w-full">
+				<select id="fixCatSelect" name="category" class="select select-bordered w-full">
 					for _,c := range categories {
 						<option value={ strconv.Itoa(c.ID) } selected?={ c.ID==params.Category.ID }>{ c.CatName }</option>
 					}
 				</select>
 				<legend class="fieldset-label">Wir erlauben uns diesen Wert und entsprechend den Preis anzupassen, sofern diese Angabe nicht der effektiven Grösse entspricht.</legend>
 			</fieldset>
-			<p class="text-lg col-span-full md:col-span-1">Preis provisorisch: <span class="text-primary font-bold">0.-</span></p>
+			<div class="drawer drawer-end">
+				<input id="my-drawer-5" type="checkbox" class="drawer-toggle"/>
+				<div class="drawer-content">
+					<!-- Page content here -->
+					<label for="my-drawer-5" class="drawer-button btn btn-primary">Preisliste</label>
+				</div>
+				<div class="drawer-side">
+					<label for="my-drawer-5" aria-label="close sidebar" class="drawer-overlay"></label>
+					<ul class="menu bg-base-200 min-h-full w-80 p-4">
+						<!-- Sidebar content here -->
+						<div class="overflow-x-auto">
+							<h2 class="text-lg font-bold px-2">Preisliste</h2>
+							<table class="table table-xs">
+								<thead>
+									<tr>
+										<th>Grösse</th>
+										<th>Normal</th>
+										<th>Mitglied*</th>
+									</tr>
+								</thead>
+								<tbody>
+									<tr>
+										<th>Sperrgut</th>
+										<td>nach Grösse</td>
+										<td>nach Grösse</td>
+									</tr>
+									<tr>
+										<th>Kleingut</th>
+										<td>nicht verfügbar</td>
+										<td>gratis</td>
+									</tr>
+									<tr>
+										<th>Halbe Palette</th>
+										<td>5.00 / Mt.</td>
+										<td>2.50 / Mt.</td>
+									</tr>
+									<tr>
+										<th>ganze Palette</th>
+										<td>10.00 / Mt.</td>
+										<td>5.00 / Mt.</td>
+									</tr>
+									<tr>
+										<th>doppelte Palette</th>
+										<td>20.00 / Mt.</td>
+										<td>10.00 / Mt.</td>
+									</tr>
+								</tbody>
+							</table>
+							<p class="text-xs opacity-60 px-2 pt-4">* Mitgliedspreise gelten für aktive Vereinsmitglieder. Für Abonnent:innen gelten die normalen Preise.</p>
+						</div>
+					</ul>
+				</div>
+			</div>
 			<button type="submit" class="btn btn-neutral col-span-full">Anfrage absenden</button>
 		</fieldset>
 	</form>
