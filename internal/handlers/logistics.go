@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"fmt"
+	"log"
 	"log/slog"
 	"math"
 	"net/http"
@@ -711,19 +712,24 @@ func (m *Repository) HandleLogisticsRequestForm(w http.ResponseWriter, r *http.R
 	}
 
 	// check if visitor is member if selected "Kleingut"
-	visitor, err := m.DB.VisitorByEmail(params.Email)
-	if err != nil {
-		return fmt.Errorf("get visitor: %w", err)
-	}
+	var visitor models.Visitor
+	if !(len(form.Errors.Get("email")) > 0) {
 
-	if params.Category.CatName == "Kleingut" {
-		if !(visitor.Ressort.ID > 0) {
-			form.Errors.Add("category", "Kleingut ist für Vereinsmitglieder reserviert. Wähle Halbe Palette oder ein grösseres Format.")
+		visitor, err = m.DB.VisitorByEmail(params.Email)
+		if err != nil {
+			return fmt.Errorf("get visitor: %w", err)
+		}
+
+		if params.Category.CatName == "Kleingut" {
+			if !(visitor.Ressort.ID > 0) {
+				form.Errors.Add("category", "Kleingut ist für Vereinsmitglieder reserviert. Wähle Halbe Palette oder ein grösseres Format.")
+			}
 		}
 	}
 
 	// what to do if form not valid
 	if !form.Valid() {
+		log.Println("not valid")
 
 		// return form with errors and allready filled fields
 		var errs logistics.RequestErrors
