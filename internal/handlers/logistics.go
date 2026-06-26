@@ -184,6 +184,16 @@ func (m *Repository) HandleLogisticsCreateAndEdit(w http.ResponseWriter, r *http
 	assigned := form.BoxValue("assign")
 	freePlace := form.BoxValue("free")
 
+	// get pending request
+	requestPending, err := strconv.ParseBool(r.Form.Get("request_pending"))
+	if err != nil {
+		return fmt.Errorf("failed to parse bool: %w", err)
+	}
+	newLogistic.RequestPending = requestPending
+
+	// get reason
+	newLogistic.Reason = r.Form.Get("reason")
+
 	// check needed values for both usecases
 	if freePlace {
 		catID, err := strconv.Atoi(r.Form.Get("free_cat"))
@@ -248,8 +258,8 @@ func (m *Repository) HandleLogisticsCreateAndEdit(w http.ResponseWriter, r *http
 		}
 		newLogistic.Number = number
 
-		if number < 1 || number > 199 {
-			form.Errors.Add("number", "Nummer muss zwischen 1 und 199 liegen")
+		if number < 1 || number > 99 {
+			form.Errors.Add("number", "Nummer muss zwischen 1 und 99 liegen")
 		}
 		catID, err := strconv.Atoi(r.Form.Get("fix_cat"))
 		if err != nil {
@@ -267,6 +277,9 @@ func (m *Repository) HandleLogisticsCreateAndEdit(w http.ResponseWriter, r *http
 			newLogistic.StartDate = start
 			end, _ := time.Parse("2006-01-02", r.Form.Get("enddate"))
 			newLogistic.EndDate = end
+
+			// parse reason
+			newLogistic.Reason = r.Form.Get("reason")
 
 			if !form.Valid() {
 				// get errors and then render form again

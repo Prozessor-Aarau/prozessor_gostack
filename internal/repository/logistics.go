@@ -53,7 +53,7 @@ func (m *postgresDBRepo) LogisticsByID(id int) (models.Logistic, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	query := `SELECT l.id, l.number, l.start_date, l.end_date, l.reminder, l.member, l.unit_price, l.bill_id, b.paid, l.price, l.label, c.id, c.cat_name, v.id, v.first_name, v.family_name, v.phone, v.email, l.created_on, l.updated_on 
+	query := `SELECT l.id, l.number, l.start_date, l.end_date, l.reminder, l.member, l.unit_price, l.bill_id, l.reason, l.request_pending, b.paid, l.price, l.label, c.id, c.cat_name, v.id, v.first_name, v.family_name, v.phone, v.email, l.created_on, l.updated_on 
     FROM logistics l
     LEFT OUTER JOIN visitors v ON v.id = l.visitor_id
     LEFT OUTER JOIN logistics_categories c ON c.id = l.category
@@ -71,6 +71,7 @@ func (m *postgresDBRepo) LogisticsByID(id int) (models.Logistic, error) {
 	var member sql.NullBool
 	var unitPrice sql.NullFloat64
 	var billID sql.NullInt32
+	var reason sql.NullString
 	var billPaid sql.NullBool
 	var price sql.NullFloat64
 	var label sql.NullString
@@ -89,6 +90,8 @@ func (m *postgresDBRepo) LogisticsByID(id int) (models.Logistic, error) {
 		&member,
 		&unitPrice,
 		&billID,
+		&reason,
+		&l.RequestPending,
 		&billPaid,
 		&price,
 		&label,
@@ -121,6 +124,9 @@ func (m *postgresDBRepo) LogisticsByID(id int) (models.Logistic, error) {
 	}
 	if billID.Valid {
 		l.BillID = int(billID.Int32)
+	}
+	if reason.Valid {
+		l.Reason = reason.String
 	}
 	if billPaid.Valid {
 		l.BillPaid = billPaid.Bool
@@ -213,7 +219,7 @@ func (m *postgresDBRepo) AllLogistics(page int, filter models.LogisticFilter) ([
 	offset := 10 * (page - 1)
 
 	query := fmt.Sprintf(
-		`SELECT l.id, l.number, l.start_date, l.end_date, l.reminder, l.member, l.bill_id, l.price, c.id, c.cat_name, v.id, v.first_name, v.family_name, v.phone, v.email, b.paid
+		`SELECT l.id, l.number, l.start_date, l.end_date, l.reminder, l.member, l.bill_id, l.price, l.request_pending, c.id, c.cat_name, v.id, v.first_name, v.family_name, v.phone, v.email, b.paid
     FROM logistics l
     LEFT OUTER JOIN visitors v ON v.id = l.visitor_id
     LEFT OUTER JOIN logistics_categories c ON c.id = l.category
@@ -267,6 +273,7 @@ func (m *postgresDBRepo) AllLogistics(page int, filter models.LogisticFilter) ([
 			&member,
 			&billID,
 			&price,
+			&l.RequestPending,
 			&l.Category.ID,
 			&l.Category.CatName,
 			&visID,
@@ -371,8 +378,10 @@ func (m *postgresDBRepo) UpdateLogistic(l models.Logistic) error {
   unit_price = $7, 
   bill_id = $8, 
   price = $9, 
-  updated_on = $10
-  WHERE id = $11`
+	request_pending = $10,
+	reason = $11,
+  updated_on = $12
+  WHERE id = $13`
 
 	_, err := m.DB.ExecContext(
 		ctx,
@@ -386,6 +395,8 @@ func (m *postgresDBRepo) UpdateLogistic(l models.Logistic) error {
 		l.UnitPrice,
 		NewNullInt(l.BillID),
 		NewNullFloat64(l.Price),
+		l.RequestPending,
+		NewNullString(l.Reason),
 		time.Now(),
 		l.ID,
 	)
