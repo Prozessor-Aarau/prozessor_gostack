@@ -35,7 +35,6 @@ func (m *postgresDBRepo) AllLogisticCategories() ([]models.LogisticCategory, err
 			&l.CreatedOn,
 			&l.UpdatedOn,
 		)
-
 		if err != nil {
 			return categories, err
 		}
@@ -188,7 +187,8 @@ func (m *postgresDBRepo) AllLogistics(page int, filter models.LogisticFilter) ([
 		lType = fmt.Sprintf("AND category = %d", filter.Type)
 	}
 
-	countQuery := fmt.Sprintf(`SELECT COUNT(*) FROM logistics l
+	countQuery := fmt.Sprintf(
+		`SELECT COUNT(*) FROM logistics l
   LEFT OUTER JOIN visitors v ON v.id = l.visitor_id
   WHERE (LOWER(v.first_name) LIKE LOWER($1)
   OR LOWER(v.family_name) LIKE LOWER($1) 
@@ -206,7 +206,6 @@ func (m *postgresDBRepo) AllLogistics(page int, filter models.LogisticFilter) ([
 	row := m.DB.QueryRowContext(ctx, countQuery, search)
 
 	err := row.Scan(&count)
-
 	if err != nil {
 		return logistics, count, err
 	}
@@ -330,8 +329,8 @@ func (m *postgresDBRepo) CreateLogistic(l models.Logistic) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	stmt := `INSERT INTO logistics (number, start_date, end_date, category, visitor_id, member, unit_price, bill_id, price, created_on, updated_on)
-  VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`
+	stmt := `INSERT INTO logistics (number, start_date, end_date, category, visitor_id, member, unit_price, bill_id, price, reason, request_pending, created_on, updated_on)
+  VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`
 
 	_, err := m.DB.ExecContext(
 		ctx,
@@ -345,10 +344,11 @@ func (m *postgresDBRepo) CreateLogistic(l models.Logistic) error {
 		l.UnitPrice,
 		NewNullInt(l.BillID),
 		NewNullFloat64(l.Price),
+		NewNullString(l.Reason),
+		l.RequestPending,
 		time.Now(),
 		time.Now(),
 	)
-
 	if err != nil {
 		return err
 	}
@@ -389,7 +389,6 @@ func (m *postgresDBRepo) UpdateLogistic(l models.Logistic) error {
 		time.Now(),
 		l.ID,
 	)
-
 	if err != nil {
 		return err
 	}
@@ -409,7 +408,6 @@ func (m *postgresDBRepo) DeleteLogistic(id int) error {
 		stmt,
 		id,
 	)
-
 	if err != nil {
 		return err
 	}
@@ -558,7 +556,6 @@ func (m *postgresDBRepo) UpdateLogisticsBillID(billID int, logistics []int) erro
    WHERE id = ANY($2)
   `
 	_, err := m.DB.ExecContext(ctx, query, billID, logistics)
-
 	if err != nil {
 		return err
 	}

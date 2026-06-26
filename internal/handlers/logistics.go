@@ -761,7 +761,42 @@ func (m *Repository) HandleLogisticsRequestForm(w http.ResponseWriter, r *http.R
 		response.Price = true
 	}
 
-	// TODO: write something permanent into the database
+	// build logistic item
+	newLogistic := models.Logistic{
+		Category:       params.Category,
+		StartDate:      params.StartDate,
+		EndDate:        params.EndDate,
+		Visitor:        visitor,
+		Member:         visitor.Ressort.ID > 0,
+		Reason:         params.Reason,
+		RequestPending: true,
+	}
+
+	// number
+	switch params.Category.CatName {
+	case "Kleingut":
+		newLogistic.Number = 200
+	case "Sperrgut":
+		newLogistic.Number = 300
+	default:
+		newLogistic.Number = 100
+		newLogistic.UnitPrice = unitPrice
+		newLogistic.Price = response.EstPrice
+	}
+
+	// create db entry
+	err = m.DB.CreateLogistic(newLogistic)
+	if err != nil {
+		return fmt.Errorf("failed to create logistic: %w", err)
+	}
+
+	// TODO: make slack request
+
+	// log success
+	if err == nil {
+		logger.Success(r, m.App.Session,
+			fmt.Sprintf("logistic for visitor %s %s successfully requested", visitor.FirstName, visitor.FamilyName))
+	}
 
 	// Feedback to user
 	return rendering(w, r, logistics.RequestResponse(

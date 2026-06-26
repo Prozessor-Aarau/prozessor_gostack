@@ -25,6 +25,7 @@ type Logistic struct {
 	BillID         int
 	BillPaid       bool
 	Label          string
+	Reason         string
 	RequestPending bool
 	UpdatedOn      time.Time
 	CreatedOn      time.Time
