@@ -186,54 +186,58 @@ type RequestResponseContent struct {
 	Duration  float64
 }
 
-templ RequestResponse(response RequestResponseContent, params RequestParams) {
-	<div class="prose px-5">
-		<h2 class="pt-6">Danke { response.FirstName } für deine Anfrage</h2>
-		<p>
-			Die Angaben sind an unser Lager-Team weitergeleitet worden und werden geprüft. Du erhältst innert 14 Tagen die Antwort sowie die allfällige Rechnung per E-Mail an { params.Email }.
-		</p>
-		<h3>Angaben</h3>
-		<table class="table table-xs">
-			<tbody>
-				<tr>
-					<th>Zweck</th>
-					<td>{ params.Reason }</td>
-				</tr>
-				<tr>
-					<th>Grösse</th>
-					<td>{ params.Category.CatName }</td>
-				</tr>
-				<tr>
-					<th>Von</th>
-					<td>{ params.StartDate.Format("02.01.2006") }</td>
-				</tr>
-				<tr>
-					<th>Bis</th>
-					<td>{ params.EndDate.Format("02.01.2006") }</td>
-				</tr>
-				<tr>
-					<th>Dauer</th>
-					<td>{ helpers.FormatFloat(response.Duration, 1) } Monate</td>
-				</tr>
-				<tr>
-					<th>Preis</th>
-					if response.Price {
-						<td><span class="text-primary">{ helpers.FormatCurrency(response.EstPrice) }</span>*</td>
-					} else if params.Category.CatName == "Sperrgut" {
-						<td>Wir berechnen den Preis für Sperrgut nach Grösse.</td>
-					} else {
-						<td>kostenlos</td>
-					}
-				</tr>
-			</tbody>
-		</table>
-		if response.Price {
-			<p class="text-xs opacity-60">* Wir erlauben uns diesen Wert und entsprechend den Preis anzupassen, sofern diese Angabe nicht der effektiven Grösse entspricht.</p>
-		}
-		if params.Category.CatName == "Kleingut" {
-			<p class="mt-3 font-bold">Bitte stell das Kleingut angeschrieben in einer Kiste ins Gestell für Kleingut.</p>
-		} else {
-			<p class="mt-3 font-bold">Bitte stelle dein Lagerobjekt in den Wartebereich und schreibe es gut sichtbar mit deinem Namen und deiner Telefonnummer an. Wir weisen dir nach der Prüfung einen Lagerplatz zu und versorgen das Objekt am entsprechenden Ort.</p>
-		}
-	</div>
+templ RequestConfirmationPage(response RequestResponseContent, params RequestParams) {
+	@layout.App(false, models.Visitor{}) {
+		<div class="container mx-auto flex flex-col gap-2 max-w-4xl">
+			<div class="prose px-5">
+				<h2 class="pt-6">Danke { response.FirstName } für deine Anfrage</h2>
+				<p>
+					Die Angaben sind an unser Lager-Team weitergeleitet worden und werden geprüft. Du erhältst innert 14 Tagen die Antwort sowie die allfällige Rechnung per E-Mail an { params.Email }.
+				</p>
+				<h3>Angaben</h3>
+				<table class="table table-xs">
+					<tbody>
+						<tr>
+							<th>Zweck</th>
+							<td>{ params.Reason }</td>
+						</tr>
+						<tr>
+							<th>Grösse</th>
+							<td>{ params.Category.CatName }</td>
+						</tr>
+						<tr>
+							<th>Von</th>
+							<td>{ params.StartDate.Format("02.01.2006") }</td>
+						</tr>
+						<tr>
+							<th>Bis</th>
+							<td>{ params.EndDate.Format("02.01.2006") }</td>
+						</tr>
+						<tr>
+							<th>Dauer</th>
+							<td>{ helpers.FormatFloat(response.Duration, 1) } Monate</td>
+						</tr>
+						<tr>
+							<th>Preis</th>
+							if response.Price {
+								<td><span class="text-primary">{ helpers.FormatCurrency(response.EstPrice) }</span>*</td>
+							} else if params.Category.CatName == "Sperrgut" {
+								<td>Wir berechnen den Preis für Sperrgut nach Grösse.</td>
+							} else {
+								<td>kostenlos</td>
+							}
+						</tr>
+					</tbody>
+				</table>
+				if response.Price {
+					<p class="text-xs opacity-60">* Wir erlauben uns diesen Wert und entsprechend den Preis anzupassen, sofern diese Angabe nicht der effektiven Grösse entspricht.</p>
+				}
+				if params.Category.CatName == "Kleingut" {
+					<p class="mt-3 font-bold">Bitte stell das Kleingut angeschrieben in einer Kiste ins Gestell für Kleingut.</p>
+				} else {
+					<p class="mt-3 font-bold">Bitte stelle dein Lagerobjekt in den Wartebereich und schreibe es gut sichtbar mit deinem Namen und deiner Telefonnummer an. Wir weisen dir nach der Prüfung einen Lagerplatz zu und versorgen das Objekt am entsprechenden Ort.</p>
+				}
+			</div>
+		</div>
+	}
 }

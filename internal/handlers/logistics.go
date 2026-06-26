@@ -826,9 +826,45 @@ func (m *Repository) HandleLogisticsRequestForm(w http.ResponseWriter, r *http.R
 		return fmt.Errorf("creating slack message: %w", err)
 	}
 
-	// Feedback to user
-	return rendering(w, r, logistics.RequestResponse(
-		response,
-		params,
-	))
+	// store confirmation data in session for PRG redirect
+	m.App.Session.Put(r.Context(), "logistic_request_confirmation", models.LogisticRequestSession{
+		FirstName:    response.FirstName,
+		Email:        params.Email,
+		Reason:       params.Reason,
+		CategoryName: params.Category.CatName,
+		StartDate:    params.StartDate,
+		EndDate:      params.EndDate,
+		Duration:     response.Duration,
+		Price:        response.Price,
+		EstPrice:     response.EstPrice,
+	})
+
+	return hxRedirect(w, r, "/logistics-request/confirmation")
+}
+
+// HandleLogisticsRequestConfirmation renders the confirmation page after a successful request
+func (m *Repository) HandleLogisticsRequestConfirmation(w http.ResponseWriter, r *http.Request) error {
+	session, ok := m.App.Session.Get(r.Context(), "logistic_request_confirmation").(models.LogisticRequestSession)
+	if !ok {
+		return hxRedirect(w, r, "/logistics-request")
+	}
+
+	m.App.Session.Remove(r.Context(), "logistic_request_confirmation")
+
+	response := logistics.RequestResponseContent{
+		FirstName: session.FirstName,
+		Price:     session.Price,
+		EstPrice:  session.EstPrice,
+		Duration:  session.Duration,
+	}
+
+	params := logistics.RequestParams{
+		Email:     session.Email,
+		Reason:    session.Reason,
+		StartDate: session.StartDate,
+		EndDate:   session.EndDate,
+	}
+	params.Category.CatName = session.CategoryName
+
+	return rendering(w, r, logistics.RequestConfirmationPage(response, params))
 }

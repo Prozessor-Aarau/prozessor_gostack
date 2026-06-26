@@ -72,6 +72,7 @@ func run() (*driver.DB, error) {
 	// what am I going to put in the session
 	gob.Register(models.Visitor{})
 	gob.Register(models.Role{})
+	gob.Register(models.LogisticRequestSession{})
 	// gob.Register(map[string]int{})
 
 	err := godotenv.Load()

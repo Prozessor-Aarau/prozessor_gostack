@@ -30,3 +30,15 @@ type Logistic struct {
 	UpdatedOn      time.Time
 	CreatedOn      time.Time
 }
+
+type LogisticRequestSession struct {
+	FirstName    string
+	Email        string
+	Reason       string
+	CategoryName string
+	StartDate    time.Time
+	EndDate      time.Time
+	Duration     float64
+	Price        bool
+	EstPrice     float64
+}
