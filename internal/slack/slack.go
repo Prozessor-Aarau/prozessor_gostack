@@ -29,7 +29,7 @@ func (s *Slack) SendSlackReport(report models.Report) error {
 	}
 
 	// get timestamp and format
-	timestamp := time.Now().Format("01.02.2006 15:04")
+	timestamp := time.Now().Format("02.01.2006 15:04")
 
 	// set contact info
 	contact := "keine Angaben"

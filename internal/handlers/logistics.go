@@ -807,7 +807,7 @@ func (m *Repository) HandleLogisticsRequestForm(w http.ResponseWriter, r *http.R
 	// construct message string out of all information
 	message := fmt.Sprintf(
 		"<!channel> *Neue Anfrage via QR-Code:*\n\n*Zeitpunkt*\n%s\n\n*Informationen*\n%s\n\n*Einheit*\n%s\n\n*Von*\n%s\n\n*Bis*\n%s\n\n*Dauer in Monaten*\n%s\n\n*Kontaktangaben*\n%s",
-		time.Now().Format("01.02.2006 15:04"),
+		time.Now().Format("02.01.2006 15:04"),
 		params.Reason,
 		params.Category.CatName,
 		params.StartDate.Format("02.01.2006"),
