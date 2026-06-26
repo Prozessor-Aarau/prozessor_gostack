@@ -442,7 +442,11 @@ templ LogisticsForm(
 		}
 		<div class="col-span-full w-full gap-3 flex mt-3 items-center justify-center flex-col md:flex-row">
 			if l.BillID == 0 {
-				<a hx-post={ postUrl } class="btn btn-success" hx-target="#content">
+				<a
+					hx-post={ postUrl }
+					class="btn btn-success"
+					hx-target="#content"
+				>
 					if l.RequestPending {
 						Anfrage genehmigen
 					} else {
