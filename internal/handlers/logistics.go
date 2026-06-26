@@ -6,12 +6,14 @@ import (
 	"log/slog"
 	"math"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/faebut/prozessor_gostack/internal/billing"
 	"github.com/faebut/prozessor_gostack/internal/forms"
+	"github.com/faebut/prozessor_gostack/internal/helpers"
 	"github.com/faebut/prozessor_gostack/internal/labels"
 	"github.com/faebut/prozessor_gostack/internal/logger"
 	"github.com/faebut/prozessor_gostack/internal/mailtemplates"
@@ -20,6 +22,7 @@ import (
 	"github.com/faebut/prozessor_gostack/view/logistics"
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
+	"github.com/joho/godotenv"
 )
 
 // HandleLogisticsIndex is the logistics page handler
@@ -793,7 +796,35 @@ func (m *Repository) HandleLogisticsRequestForm(w http.ResponseWriter, r *http.R
 			fmt.Sprintf("logistic for visitor %s %s successfully requested", visitor.FirstName, visitor.FamilyName))
 	}
 
-	// TODO: make slack request
+	// create slack message
+	err = godotenv.Load()
+	if err != nil {
+		logger.Fatal("loading .env file", slog.String("error", err.Error()))
+	}
+
+	channelID := os.Getenv("LOGISTIC_SLACK_CHANNEL")
+
+	// construct message string out of all information
+	message := fmt.Sprintf(
+		"<!channel> *Neue Anfrage via QR-Code:*\n\n*Zeitpunkt*\n%s\n\n*Informationen*\n%s\n\n*Einheit*\n%s\n\n*Von*\n%s\n\n*Bis*\n%s\n\n*Dauer in Monaten*\n%s\n\n*Kontaktangaben*\n%s",
+		time.Now().Format("01.02.2006 15:04"),
+		params.Reason,
+		params.Category.CatName,
+		params.StartDate.Format("02.01.2006"),
+		params.EndDate.Format("02.01.2006"),
+		helpers.FormatFloat(response.Duration, 1),
+		fmt.Sprintf(
+			"%s %s: %s",
+			visitor.FirstName,
+			visitor.FamilyName,
+			visitor.Email,
+		),
+	)
+
+	err = m.App.Slack.SendSlack(channelID, message)
+	if err != nil {
+		return fmt.Errorf("creating slack message: %w", err)
+	}
 
 	// Feedback to user
 	return rendering(w, r, logistics.RequestResponse(
