@@ -62,7 +62,8 @@ func (m *Repository) HandleReportCreate(w http.ResponseWriter, r *http.Request) 
 			reportForm,
 			report.ReportErrors{
 				ReportInfo: form.Errors.Get("report_infos"),
-			}))
+			},
+		))
 	}
 
 	// what to do if form valid
@@ -73,7 +74,7 @@ func (m *Repository) HandleReportCreate(w http.ResponseWriter, r *http.Request) 
 	}
 
 	// post report to slack
-	err = m.App.Slack.SendSlackMessage(reportForm)
+	err = m.App.Slack.SendSlackReport(reportForm)
 	if err != nil {
 		return fmt.Errorf("failed to send report to slack: %w", err)
 	}

@@ -788,15 +788,12 @@ func (m *Repository) HandleLogisticsRequestForm(w http.ResponseWriter, r *http.R
 	err = m.DB.CreateLogistic(newLogistic)
 	if err != nil {
 		return fmt.Errorf("failed to create logistic: %w", err)
-	}
-
-	// TODO: make slack request
-
-	// log success
-	if err == nil {
+	} else {
 		logger.Success(r, m.App.Session,
 			fmt.Sprintf("logistic for visitor %s %s successfully requested", visitor.FirstName, visitor.FamilyName))
 	}
+
+	// TODO: make slack request
 
 	// Feedback to user
 	return rendering(w, r, logistics.RequestResponse(

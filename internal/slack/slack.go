@@ -19,8 +19,7 @@ func NewSlack(token string) *Slack {
 	}
 }
 
-func (s *Slack) SendSlackMessage(report models.Report) error {
-
+func (s *Slack) SendSlackReport(report models.Report) error {
 	// deal with the fatality of the report
 	var fatality string
 	if report.Fatal {
@@ -41,8 +40,16 @@ func (s *Slack) SendSlackMessage(report models.Report) error {
 	// construct message string out of all information
 	message := fmt.Sprintf("<!channel> *Neue Fehlermeldung via QR-Code:*\n\n*Zeitpunkt*\n%s\n\n*Maschine/Gerät*\n%s\n\n*Schweregrad*\n%s\n\n*Informationen*\n%s\n\n*Kontaktangaben*\n%s", timestamp, report.MachineName, fatality, report.ReportInfo, contact)
 
-	cID, timestamp, err := s.SlackClient.PostMessage(report.SlackChannel, slack.MsgOptionText(message, false))
+	err := s.SendSlack(report.SlackChannel, message)
+	if err != nil {
+		return err
+	}
 
+	return nil
+}
+
+func (s *Slack) SendSlack(channelID, message string) error {
+	cID, timestamp, err := s.SlackClient.PostMessage(channelID, slack.MsgOptionText(message, false))
 	if err != nil {
 		return err
 	}
