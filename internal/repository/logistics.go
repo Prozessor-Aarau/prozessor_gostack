@@ -475,7 +475,7 @@ func (m *postgresDBRepo) DeleteLogisticLabel(l models.Logistic) error {
 	return nil
 }
 
-// LogisticsByVisitorID returns al Logistics belonging to one visitor that have a price higher than 0
+// LogisticsByVisitorID returns al Logistics belonging to one visitor that have a price higher than 0 and have no pending request
 func (m *postgresDBRepo) LogisticsByVisitorID(vID string) ([]models.Logistic, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
@@ -492,6 +492,7 @@ func (m *postgresDBRepo) LogisticsByVisitorID(vID string) ([]models.Logistic, er
     WHERE l.visitor_id = $1
     AND l.bill_id IS NULL
     AND l.price > 0
+    AND l.request_pending = false
     ORDER BY 
     l.number ASC`
 

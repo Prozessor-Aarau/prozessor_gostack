@@ -326,6 +326,10 @@ func (m *Repository) HandleLogisticsCreateAndEdit(w http.ResponseWriter, r *http
 
 	id := r.Form.Get("id")
 	newLogistic.ID, _ = strconv.Atoi(id)
+
+	// delete request for all actions
+	newLogistic.RequestPending = false
+
 	if newLogistic.ID > 0 {
 
 		// check if there is a label and if it is true, delete the old label
