@@ -208,4 +208,20 @@ grid.addEventListener('mouseup', e => {
 });
 ```
 
+---
+
+## Database — `updated_on` Trigger
+
+The `set_updated_on()` function and `BEFORE UPDATE` trigger are installed on all existing tables via migration `20260704104933`. The trigger automatically sets `updated_on = CURRENT_TIMESTAMP` on every `UPDATE`.
+
+**When creating a new table with an `updated_on` column**, add this to its migration:
+
+```sql
+CREATE TRIGGER trg_set_updated_on
+BEFORE UPDATE ON your_new_table
+FOR EACH ROW EXECUTE FUNCTION set_updated_on();
+```
+
+> Event triggers (which would attach this automatically on `CREATE TABLE`) require superuser privileges in Postgres and could not be used.
+
 - **Mobile:** drag-to-create doesn't work on touch — use an "add event" button that opens a time picker form instead
