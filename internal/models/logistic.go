@@ -12,19 +12,33 @@ type LogisticCategory struct {
 }
 
 type Logistic struct {
-	ID        int
-	Number    int
-	StartDate time.Time
-	EndDate   time.Time
-	Category  LogisticCategory
-	Visitor   Visitor
-	Reminder  time.Time
-	Member    bool
-	UnitPrice float64
-	Price     float64
-	BillID    int
-	BillPaid  bool
-	Label     string
-	UpdatedOn time.Time
-	CreatedOn time.Time
+	ID             int
+	Number         int
+	StartDate      time.Time
+	EndDate        time.Time
+	Category       LogisticCategory
+	Visitor        Visitor
+	Reminder       time.Time
+	Member         bool
+	UnitPrice      float64
+	Price          float64
+	BillID         int
+	BillPaid       bool
+	Label          string
+	Reason         string
+	RequestPending bool
+	UpdatedOn      time.Time
+	CreatedOn      time.Time
+}
+
+type LogisticRequestSession struct {
+	FirstName    string
+	Email        string
+	Reason       string
+	CategoryName string
+	StartDate    time.Time
+	EndDate      time.Time
+	Duration     float64
+	Price        bool
+	EstPrice     float64
 }

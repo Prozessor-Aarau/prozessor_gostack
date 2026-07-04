@@ -15,6 +15,7 @@ type DatabaseRepo interface {
 	UpdateVisitor(v models.Visitor) error
 	CheckEmailUnique(email string) (bool, error)
 	VisitorByID(id string) (models.Visitor, error)
+	VisitorByEmail(email string) (models.Visitor, error)
 	AllVisitors(page int, limit int, filter models.VisitorFilter) ([]models.Visitor, int, error)
 	CheckinAllVisitors(page int, filter models.VisitorFilter) ([]models.Visitor, int, error)
 	GetVisitsByDate(date time.Time) ([]models.Visit, int, error)

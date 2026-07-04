@@ -1,0 +1,243 @@
+package logistics
+
+import (
+	"github.com/faebut/prozessor_gostack/internal/helpers"
+	"github.com/faebut/prozessor_gostack/internal/models"
+	"github.com/faebut/prozessor_gostack/view/layout"
+	"github.com/faebut/prozessor_gostack/view/ui"
+	"strconv"
+	"time"
+)
+
+templ Request(categories []models.LogisticCategory) {
+	@layout.App(false, models.Visitor{}) {
+		<div class="container mx-auto flex flex-col gap-2 max-w-4xl">
+			@RequestForm(RequestParams{}, categories, RequestErrors{})
+		</div>
+	}
+}
+
+type RequestErrors struct {
+	Email     string `form:"email"`
+	Reason    string `form:"reason"`
+	StartDate string `form:"startdate"`
+	EndDate   string `form:"enddate"`
+	Category  string `form:"category"`
+	AppError  string
+}
+
+type RequestParams struct {
+	Email     string
+	Reason    string
+	StartDate time.Time
+	EndDate   time.Time
+	Category  models.LogisticCategory
+}
+
+templ RequestForm(params RequestParams, categories []models.LogisticCategory, errors RequestErrors) {
+	<form
+		class="flex flex-col items-center gap-6 p-1 w-full"
+		hx-post="/logistics-request"
+		hx-swap="outerHTML"
+		novalidate
+	>
+		<div class="prose px-5">
+			<h2 class="pt-6">Lagerplatz anfragen</h2>
+			<p>Um einen Lagerplatz zu beantragen, fülle folgendes Formular aus. Es müssen alle Felder ausgefüllt werden. Verwende deine Angaben aus der Registrierung im Prozessor.</p>
+		</div>
+		@ui.CSRF()
+		<fieldset
+			class="fieldset w-full bg-base-200 border border-base-300 p-4 rounded-box grid-cols-2 gap-3"
+		>
+			<legend class="fieldset-legend">Formular</legend>
+			<fieldset class="fieldset col-span-full">
+				<label class="fieldset-label"><span class="i-mdi-email"></span>Registrierte E-Mail</label>
+				<input
+					class={ "input w-full" , templ.KV("input-error",
+    len(errors.Email)> 0) }
+					type="email"
+					name="email"
+					placeholder="Email"
+					value={ params.Email }
+				/>
+				if len(errors.Email) > 0 {
+					<p class="fieldset-label text-error">{ errors.Email }</p>
+				}
+			</fieldset>
+			<fieldset class="fieldset col-span-full">
+				<label class="fieldset-label"><span class="i-mdi-idea"></span>Verwendungszweck</label>
+				<textarea
+					class={ "textarea w-full h-32" , templ.KV("textarea-error", len(errors.Reason)> 0) }
+					name="reason"
+					placeholder="Beschreibe, wofür der Platz benötigt wird."
+				>{ params.Reason }</textarea>
+				if len(errors.Reason) > 0 {
+					<p class="fieldset-label text-error">{ errors.Reason }</p>
+				}
+			</fieldset>
+			<fieldset class="fieldset col-span-full md:col-span-1">
+				<legend class="fieldset-label">Startdatum</legend>
+				<input
+					type="date"
+					id="startdate"
+					name="startdate"
+					class={ "input w-full" , templ.KV("input-error",
+        len(errors.StartDate)> 0) }
+					if !params.StartDate.IsZero() {
+						value={ params.StartDate.Format("2006-01-02") }
+					}
+					required
+				/>
+				if len(errors.StartDate) > 0 {
+					<label class="fieldset-label text-error">{ errors.StartDate }</label>
+				}
+			</fieldset>
+			<fieldset class="fieldset col-span-full md:col-span-1">
+				<legend class="fieldset-label">Enddatum</legend>
+				<input
+					type="date"
+					id="enddate"
+					name="enddate"
+					class={ "input w-full" , templ.KV("input-error",
+        len(errors.EndDate)> 0) }
+					if !params.EndDate.IsZero() {
+						value={ params.EndDate.Format("2006-01-02") }
+					}
+					required
+				/>
+				if len(errors.EndDate) > 0 {
+					<label class="fieldset-label text-error">{ errors.EndDate }</label>
+				}
+			</fieldset>
+			<fieldset class="fieldset col-span-full md:col-span-1">
+				<legend class="fieldset-label">Voraussichtliche Lagerplatzgrösse</legend>
+				<select id="fixCatSelect" name="category" class={ "select select-bordered w-full", templ.KV("select-error", len(errors.Category) > 0) }>
+					for _,c := range categories {
+						<option value={ strconv.Itoa(c.ID) } selected?={ c.ID==params.Category.ID }>{ c.CatName }</option>
+					}
+				</select>
+				if len(errors.Category) > 0 {
+					<label class="fieldset-label text-error">{ errors.Category }</label>
+				}
+				<legend class="fieldset-label">Wir erlauben uns diesen Wert und entsprechend den Preis anzupassen, sofern diese Angabe nicht der effektiven Grösse entspricht.</legend>
+			</fieldset>
+			<div class="drawer drawer-end">
+				<input id="my-drawer-5" type="checkbox" class="drawer-toggle"/>
+				<div class="drawer-content">
+					<!-- Page content here -->
+					<label for="my-drawer-5" class="drawer-button btn btn-secondary">Preisliste</label>
+				</div>
+				<div class="drawer-side">
+					<label for="my-drawer-5" aria-label="close sidebar" class="drawer-overlay"></label>
+					<ul class="menu bg-base-200 min-h-full w-80 p-4">
+						<!-- Sidebar content here -->
+						<div class="overflow-x-auto">
+							<h2 class="text-lg font-bold px-2">Preisliste</h2>
+							<table class="table table-xs">
+								<thead>
+									<tr>
+										<th>Grösse</th>
+										<th>Normal</th>
+										<th>Mitglied*</th>
+									</tr>
+								</thead>
+								<tbody>
+									<tr>
+										<th>Sperrgut</th>
+										<td>nach Grösse</td>
+										<td>nach Grösse</td>
+									</tr>
+									<tr>
+										<th>Kleingut</th>
+										<td>nicht verfügbar</td>
+										<td>gratis</td>
+									</tr>
+									<tr>
+										<th>Halbe Palette</th>
+										<td>5.00 / Mt.</td>
+										<td>2.50 / Mt.</td>
+									</tr>
+									<tr>
+										<th>ganze Palette</th>
+										<td>10.00 / Mt.</td>
+										<td>5.00 / Mt.</td>
+									</tr>
+									<tr>
+										<th>doppelte Palette</th>
+										<td>20.00 / Mt.</td>
+										<td>10.00 / Mt.</td>
+									</tr>
+								</tbody>
+							</table>
+							<p class="text-xs opacity-60 px-2 pt-4">* Mitgliedspreise gelten für aktive Vereinsmitglieder. Für Abonnent:innen gelten die normalen Preise.</p>
+						</div>
+					</ul>
+				</div>
+			</div>
+			<button type="submit" class="btn btn-neutral col-span-full">Anfrage absenden</button>
+		</fieldset>
+	</form>
+}
+
+type RequestResponseContent struct {
+	FirstName string
+	Price     bool
+	EstPrice  float64
+	Duration  float64
+}
+
+templ RequestConfirmationPage(response RequestResponseContent, params RequestParams) {
+	@layout.App(false, models.Visitor{}) {
+		<div class="container mx-auto flex flex-col gap-2 max-w-4xl">
+			<div class="prose px-5">
+				<h2 class="pt-6">Danke { response.FirstName } für deine Anfrage</h2>
+				<p>
+					Die Angaben sind an unser Lager-Team weitergeleitet worden und werden geprüft. Du erhältst innert 14 Tagen die Antwort sowie die allfällige Rechnung per E-Mail an { params.Email }.
+				</p>
+				<h3>Angaben</h3>
+				<table class="table table-xs">
+					<tbody>
+						<tr>
+							<th>Zweck</th>
+							<td>{ params.Reason }</td>
+						</tr>
+						<tr>
+							<th>Grösse</th>
+							<td>{ params.Category.CatName }</td>
+						</tr>
+						<tr>
+							<th>Von</th>
+							<td>{ params.StartDate.Format("02.01.2006") }</td>
+						</tr>
+						<tr>
+							<th>Bis</th>
+							<td>{ params.EndDate.Format("02.01.2006") }</td>
+						</tr>
+						<tr>
+							<th>Dauer</th>
+							<td>{ helpers.FormatFloat(response.Duration, 1) } Monate</td>
+						</tr>
+						<tr>
+							<th>Preis</th>
+							if response.Price {
+								<td><span class="text-primary">{ helpers.FormatCurrency(response.EstPrice) }</span>*</td>
+							} else if params.Category.CatName == "Sperrgut" {
+								<td>Wir berechnen den Preis für Sperrgut nach Grösse.</td>
+							} else {
+								<td>kostenlos</td>
+							}
+						</tr>
+					</tbody>
+				</table>
+				if response.Price {
+					<p class="text-xs opacity-60">* Wir erlauben uns diesen Wert und entsprechend den Preis anzupassen, sofern diese Angabe nicht der effektiven Grösse entspricht.</p>
+				}
+				if params.Category.CatName == "Kleingut" {
+					<p class="mt-3 font-bold">Bitte stell das Kleingut angeschrieben in einer Kiste ins Gestell für Kleingut.</p>
+				} else {
+					<p class="mt-3 font-bold">Bitte stelle dein Lagerobjekt in den Wartebereich und schreibe es gut sichtbar mit deinem Namen und deiner Telefonnummer an. Wir weisen dir nach der Prüfung einen Lagerplatz zu und versorgen das Objekt am entsprechenden Ort.</p>
+				}
+			</div>
+		</div>
+	}
+}

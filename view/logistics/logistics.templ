@@ -116,7 +116,7 @@ templ LogisticsList(logistics []models.Logistic, pages int, onpage int, filter s
 				}
 			}}
 			<div
-				class="hover:bg-base-200 cursor-pointer grid grid-cols-9 text-sm p-3 py-4 items-center gap-3 border-dashed border-b border-base-content/50"
+				class="hover:bg-base-200 cursor-pointer grid grid-cols-10 text-sm p-3 py-4 items-center gap-3 border-dashed border-b border-base-content/50"
 			>
 				<div class="col-span-1">{ strconv.Itoa(l.Number) }</div>
 				<div class="col-span-1 text-2xl flex items-center">
@@ -128,6 +128,11 @@ templ LogisticsList(logistics []models.Logistic, pages int, onpage int, filter s
 						}
 					} else {
 						<span class="i-mdi-close-circle-outline"></span>
+					}
+				</div>
+				<div class="col-span-1 text-2xl flex items-center">
+					if l.RequestPending {
+						<span class="i-mdi-comment-question text-secondary"></span>
 					}
 				</div>
 				<div class="col-span-6 md:col-span-1">{ l.Category.CatName }</div>
@@ -259,6 +264,8 @@ templ LogisticsForm(
 		if len(l.Visitor.ID) > 0 {
 			@Label(l)
 		}
+		<!-- store pending request  -->
+		<input type="hidden" id="request_pending" name="request_pending" value={ strconv.FormatBool(l.RequestPending) }/>
 		<!-- toggle fix place or free place, only in creation mode  -->
 		<fieldset class="fieldset col-span-full gap-5">
 			<label class="fieldset-label">
@@ -418,6 +425,14 @@ templ LogisticsForm(
 				</div>
 				<input type="hidden" id="membership" name="membership" value={ strconv.FormatBool(l.Member) }/>
 			</div>
+			<fieldset class="fieldset col-span-full">
+				<legend class="fieldset-legend">Begründung</legend>
+				<textarea
+					id="reason"
+					name="reason"
+					class="textarea w-full"
+				>{ l.Reason }</textarea>
+			</fieldset>
 		</div>
 		<!-- error handling for app and post buttons -->
 		if len(errors.AppError)>0 {
@@ -427,8 +442,16 @@ templ LogisticsForm(
 		}
 		<div class="col-span-full w-full gap-3 flex mt-3 items-center justify-center flex-col md:flex-row">
 			if l.BillID == 0 {
-				<a hx-post={ postUrl } class="btn btn-success" hx-target="#content">
-					Speichern
+				<a
+					hx-post={ postUrl }
+					class="btn btn-success"
+					hx-target="#content"
+				>
+					if l.RequestPending {
+						Anfrage genehmigen
+					} else {
+						Speichern
+					}
 				</a>
 			} else {
 				<div class="btn btn-success" onclick="my_modal_5.showModal()">Speichern</div>

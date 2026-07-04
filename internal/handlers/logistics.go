@@ -2,14 +2,18 @@ package handlers
 
 import (
 	"fmt"
+	"log"
 	"log/slog"
 	"math"
 	"net/http"
+	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/faebut/prozessor_gostack/internal/billing"
 	"github.com/faebut/prozessor_gostack/internal/forms"
+	"github.com/faebut/prozessor_gostack/internal/helpers"
 	"github.com/faebut/prozessor_gostack/internal/labels"
 	"github.com/faebut/prozessor_gostack/internal/logger"
 	"github.com/faebut/prozessor_gostack/internal/mailtemplates"
@@ -18,6 +22,7 @@ import (
 	"github.com/faebut/prozessor_gostack/view/logistics"
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
+	"github.com/joho/godotenv"
 )
 
 // HandleLogisticsIndex is the logistics page handler
@@ -33,7 +38,6 @@ func (m *Repository) HandleLogisticsIndex(w http.ResponseWriter, r *http.Request
 
 	// get categories to pass on
 	categories, err := m.DB.AllLogisticCategories()
-
 	if err != nil {
 		return fmt.Errorf("failed to get categories: %w", err)
 	}
@@ -127,7 +131,6 @@ func (m *Repository) HandleLogisticsListFilter(w http.ResponseWriter, r *http.Re
 func (m *Repository) HandleLogisticsEditIndex(w http.ResponseWriter, r *http.Request) error {
 	// get categories to pass on
 	categories, err := m.DB.AllLogisticCategories()
-
 	if err != nil {
 		return err
 	}
@@ -153,7 +156,6 @@ func (m *Repository) HandleLogisticsEditIndex(w http.ResponseWriter, r *http.Req
 // HandleLogisticsCreateIndex is the handler for the logistic creation form
 func (m *Repository) HandleLogisticsCreateIndex(w http.ResponseWriter, r *http.Request) error {
 	categories, err := m.DB.AllLogisticCategories()
-
 	if err != nil {
 		return fmt.Errorf("failed to get categories: %w", err)
 	}
@@ -169,9 +171,7 @@ func (m *Repository) HandleLogisticsCreateIndex(w http.ResponseWriter, r *http.R
 // HandleLogisticsCreateAndEdit is the handler for posting the logistic creation and edit form
 func (m *Repository) HandleLogisticsCreateAndEdit(w http.ResponseWriter, r *http.Request) error {
 	categories, err := m.DB.AllLogisticCategories()
-
 	// TODO check if enddate is after startdate
-
 	if err != nil {
 		return fmt.Errorf("failed to get categories: %w", err)
 	}
@@ -183,6 +183,16 @@ func (m *Repository) HandleLogisticsCreateAndEdit(w http.ResponseWriter, r *http
 	// get checkboxes
 	assigned := form.BoxValue("assign")
 	freePlace := form.BoxValue("free")
+
+	// get pending request
+	requestPending, err := strconv.ParseBool(r.Form.Get("request_pending"))
+	if err != nil {
+		return fmt.Errorf("failed to parse bool: %w", err)
+	}
+	newLogistic.RequestPending = requestPending
+
+	// get reason
+	newLogistic.Reason = r.Form.Get("reason")
 
 	// check needed values for both usecases
 	if freePlace {
@@ -248,8 +258,8 @@ func (m *Repository) HandleLogisticsCreateAndEdit(w http.ResponseWriter, r *http
 		}
 		newLogistic.Number = number
 
-		if number < 1 || number > 199 {
-			form.Errors.Add("number", "Nummer muss zwischen 1 und 199 liegen")
+		if number < 1 || number > 99 {
+			form.Errors.Add("number", "Nummer muss zwischen 1 und 99 liegen")
 		}
 		catID, err := strconv.Atoi(r.Form.Get("fix_cat"))
 		if err != nil {
@@ -267,6 +277,9 @@ func (m *Repository) HandleLogisticsCreateAndEdit(w http.ResponseWriter, r *http
 			newLogistic.StartDate = start
 			end, _ := time.Parse("2006-01-02", r.Form.Get("enddate"))
 			newLogistic.EndDate = end
+
+			// parse reason
+			newLogistic.Reason = r.Form.Get("reason")
 
 			if !form.Valid() {
 				// get errors and then render form again
@@ -313,6 +326,10 @@ func (m *Repository) HandleLogisticsCreateAndEdit(w http.ResponseWriter, r *http
 
 	id := r.Form.Get("id")
 	newLogistic.ID, _ = strconv.Atoi(id)
+
+	// delete request for all actions
+	newLogistic.RequestPending = false
+
 	if newLogistic.ID > 0 {
 
 		// check if there is a label and if it is true, delete the old label
@@ -348,7 +365,6 @@ func (m *Repository) HandleLogisticsCreateAndEdit(w http.ResponseWriter, r *http
 	// log success
 	visitor, err := m.DB.VisitorByID(newLogistic.Visitor.ID)
 	if err == nil {
-
 		logger.Success(r, m.App.Session,
 			fmt.Sprintf("logistic for visitor %s %s successfully %s", visitor.FirstName, visitor.FamilyName, action))
 	}
@@ -447,7 +463,6 @@ func (m *Repository) HandleLogisticsLabelDelete(w http.ResponseWriter, r *http.R
 	}
 
 	err = labels.DeleteLabel(l)
-
 	if err != nil {
 		return fmt.Errorf("failed to delete label: %w", err)
 	}
@@ -582,7 +597,6 @@ func (m *Repository) HandleLogisticsCreateBillPost(w http.ResponseWriter, r *htt
 		},
 		m.DB,
 	)
-
 	if err != nil {
 		return err
 	}
@@ -595,7 +609,6 @@ func (m *Repository) HandleLogisticsCreateBillPost(w http.ResponseWriter, r *htt
 
 	// write bill id to the logistics
 	err = m.DB.UpdateLogisticsBillID(billID, logSlice)
-
 	if err != nil {
 		return fmt.Errorf("failed to update logistics bill id: %w", err)
 	}
@@ -636,4 +649,239 @@ func (m *Repository) HandleLogisticsCreateBillPost(w http.ResponseWriter, r *htt
 		fmt.Sprintf("bill for %s %s successfully %s", visitor.FirstName, visitor.FamilyName, action))
 
 	return rendering(w, r, layout.Success(messageString))
+}
+
+// HandleLogisticsRequestIndex is the handler for the logistics request index page
+func (m *Repository) HandleLogisticsRequestIndex(w http.ResponseWriter, r *http.Request) error {
+	// get categories to pass on
+	categories, err := m.DB.AllLogisticCategories()
+	if err != nil {
+		return fmt.Errorf("failed to get categories: %w", err)
+	}
+
+	// return the request index page
+	return rendering(w, r, logistics.Request(categories))
+}
+
+// HandleLogisticsRequestForm handles the logistics request form
+func (m *Repository) HandleLogisticsRequestForm(w http.ResponseWriter, r *http.Request) error {
+	err := r.ParseForm()
+	if err != nil {
+		return fmt.Errorf("failed to parse form: %w", err)
+	}
+
+	// build request params
+	var params logistics.RequestParams
+
+	params.Email = strings.TrimSpace(r.Form.Get("email"))
+	params.Reason = strings.TrimSpace(r.Form.Get("reason"))
+	params.Category.ID, err = strconv.Atoi(r.Form.Get("category"))
+	if err != nil {
+		return fmt.Errorf("parse category: %w", err)
+	}
+
+	// parse dates
+	startDate := r.Form.Get("startdate")
+	if len(startDate) > 0 {
+		params.StartDate, err = time.Parse("2006-01-02", startDate)
+		if err != nil {
+			return fmt.Errorf("parse startdate: %w", err)
+		}
+	}
+
+	endDate := r.Form.Get("enddate")
+	if len(endDate) > 0 {
+		params.EndDate, err = time.Parse("2006-01-02", endDate)
+		if err != nil {
+			return fmt.Errorf("parse startdate: %w", err)
+		}
+	}
+
+	// validation
+	form := forms.New(r.PostForm)
+	form.Required("email", "reason", "startdate", "enddate", "category")
+	form.IsEmail("email")
+	form.IsAfter("startdate", "enddate")
+
+	// UniqueMail checks if the mail address is already registered
+	if !form.IsEmpty("email") {
+		uniquemail, _ := m.DB.CheckEmailUnique(params.Email)
+		if uniquemail {
+			form.Errors.Add("email", "E-Mail Addresse ist nicht registriert. Verwende die gleiche Addresse wie bei der Registrierung.")
+		}
+	}
+
+	// check if duration is within allowed range
+	var response logistics.RequestResponseContent
+	response.Duration = calcPrice(params.StartDate, params.EndDate, 1)
+	if response.Duration > 12 {
+		form.Errors.Add("enddate", "Es sind maximal 12 Monate erlaubt.")
+	}
+
+	// get categories
+	categories, err := m.DB.AllLogisticCategories()
+	if err != nil {
+		return fmt.Errorf("failed to get categories: %w", err)
+	}
+
+	// set chosen category to the whole category
+	for _, cat := range categories {
+		if cat.ID == params.Category.ID {
+			params.Category = cat
+		}
+	}
+
+	// check if visitor is member if selected "Kleingut"
+	var visitor models.Visitor
+	if !(len(form.Errors.Get("email")) > 0) {
+
+		visitor, err = m.DB.VisitorByEmail(params.Email)
+		if err != nil {
+			return fmt.Errorf("get visitor: %w", err)
+		}
+
+		if params.Category.CatName == "Kleingut" {
+			if !(visitor.Ressort.ID > 0) {
+				form.Errors.Add("category", "Kleingut ist für Vereinsmitglieder reserviert. Wähle Halbe Palette oder ein grösseres Format.")
+			}
+		}
+	}
+
+	// what to do if form not valid
+	if !form.Valid() {
+		log.Println("not valid")
+
+		// return form with errors and allready filled fields
+		var errs logistics.RequestErrors
+		form.MapErrors(&errs)
+		return rendering(w, r, logistics.RequestForm(
+			params,
+			categories,
+			errs,
+		))
+	}
+
+	// build response
+	response.FirstName = visitor.FirstName
+
+	// calculate unit price
+	var unitPrice float64
+
+	if visitor.Ressort.ID > 0 {
+		unitPrice = params.Category.PriceMember
+	} else {
+		unitPrice = params.Category.Price
+	}
+
+	// get estimated price
+	response.EstPrice = calcPrice(params.StartDate, params.EndDate, unitPrice)
+
+	// set price to true if it can be calculated
+	if params.Category.ID < 4 {
+		response.Price = true
+	}
+
+	// build logistic item
+	newLogistic := models.Logistic{
+		Category:       params.Category,
+		StartDate:      params.StartDate,
+		EndDate:        params.EndDate,
+		Visitor:        visitor,
+		Member:         visitor.Ressort.ID > 0,
+		Reason:         params.Reason,
+		RequestPending: true,
+	}
+
+	// number
+	switch params.Category.CatName {
+	case "Kleingut":
+		newLogistic.Number = 200
+	case "Sperrgut":
+		newLogistic.Number = 300
+	default:
+		newLogistic.Number = 100
+		newLogistic.UnitPrice = unitPrice
+		newLogistic.Price = response.EstPrice
+	}
+
+	// create db entry
+	err = m.DB.CreateLogistic(newLogistic)
+	if err != nil {
+		return fmt.Errorf("failed to create logistic: %w", err)
+	} else {
+		logger.Success(r, m.App.Session,
+			fmt.Sprintf("logistic for visitor %s %s successfully requested", visitor.FirstName, visitor.FamilyName))
+	}
+
+	// create slack message
+	err = godotenv.Load()
+	if err != nil {
+		logger.Fatal("loading .env file", slog.String("error", err.Error()))
+	}
+
+	channelID := os.Getenv("LOGISTIC_SLACK_CHANNEL")
+
+	// construct message string out of all information
+	message := fmt.Sprintf(
+		"<!channel> *Neue Anfrage via QR-Code:*\n\n*Zeitpunkt*\n%s\n\n*Informationen*\n%s\n\n*Einheit*\n%s\n\n*Von*\n%s\n\n*Bis*\n%s\n\n*Dauer in Monaten*\n%s\n\n*Kontaktangaben*\n%s",
+		time.Now().Format("02.01.2006 15:04"),
+		params.Reason,
+		params.Category.CatName,
+		params.StartDate.Format("02.01.2006"),
+		params.EndDate.Format("02.01.2006"),
+		helpers.FormatFloat(response.Duration, 1),
+		fmt.Sprintf(
+			"%s %s: %s",
+			visitor.FirstName,
+			visitor.FamilyName,
+			visitor.Email,
+		),
+	)
+
+	err = m.App.Slack.SendSlack(channelID, message)
+	if err != nil {
+		return fmt.Errorf("creating slack message: %w", err)
+	}
+
+	// store confirmation data in session for PRG redirect
+	m.App.Session.Put(r.Context(), "logistic_request_confirmation", models.LogisticRequestSession{
+		FirstName:    response.FirstName,
+		Email:        params.Email,
+		Reason:       params.Reason,
+		CategoryName: params.Category.CatName,
+		StartDate:    params.StartDate,
+		EndDate:      params.EndDate,
+		Duration:     response.Duration,
+		Price:        response.Price,
+		EstPrice:     response.EstPrice,
+	})
+
+	return hxRedirect(w, r, "/logistics-request/confirmation")
+}
+
+// HandleLogisticsRequestConfirmation renders the confirmation page after a successful request
+func (m *Repository) HandleLogisticsRequestConfirmation(w http.ResponseWriter, r *http.Request) error {
+	session, ok := m.App.Session.Get(r.Context(), "logistic_request_confirmation").(models.LogisticRequestSession)
+	if !ok {
+		return hxRedirect(w, r, "/logistics-request")
+	}
+
+	m.App.Session.Remove(r.Context(), "logistic_request_confirmation")
+
+	response := logistics.RequestResponseContent{
+		FirstName: session.FirstName,
+		Price:     session.Price,
+		EstPrice:  session.EstPrice,
+		Duration:  session.Duration,
+	}
+
+	params := logistics.RequestParams{
+		Email:     session.Email,
+		Reason:    session.Reason,
+		StartDate: session.StartDate,
+		EndDate:   session.EndDate,
+	}
+	params.Category.CatName = session.CategoryName
+
+	return rendering(w, r, logistics.RequestConfirmationPage(response, params))
 }

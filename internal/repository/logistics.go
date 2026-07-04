@@ -35,7 +35,6 @@ func (m *postgresDBRepo) AllLogisticCategories() ([]models.LogisticCategory, err
 			&l.CreatedOn,
 			&l.UpdatedOn,
 		)
-
 		if err != nil {
 			return categories, err
 		}
@@ -54,7 +53,7 @@ func (m *postgresDBRepo) LogisticsByID(id int) (models.Logistic, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	query := `SELECT l.id, l.number, l.start_date, l.end_date, l.reminder, l.member, l.unit_price, l.bill_id, b.paid, l.price, l.label, c.id, c.cat_name, v.id, v.first_name, v.family_name, v.phone, v.email, l.created_on, l.updated_on 
+	query := `SELECT l.id, l.number, l.start_date, l.end_date, l.reminder, l.member, l.unit_price, l.bill_id, l.reason, l.request_pending, b.paid, l.price, l.label, c.id, c.cat_name, v.id, v.first_name, v.family_name, v.phone, v.email, l.created_on, l.updated_on 
     FROM logistics l
     LEFT OUTER JOIN visitors v ON v.id = l.visitor_id
     LEFT OUTER JOIN logistics_categories c ON c.id = l.category
@@ -72,6 +71,7 @@ func (m *postgresDBRepo) LogisticsByID(id int) (models.Logistic, error) {
 	var member sql.NullBool
 	var unitPrice sql.NullFloat64
 	var billID sql.NullInt32
+	var reason sql.NullString
 	var billPaid sql.NullBool
 	var price sql.NullFloat64
 	var label sql.NullString
@@ -90,6 +90,8 @@ func (m *postgresDBRepo) LogisticsByID(id int) (models.Logistic, error) {
 		&member,
 		&unitPrice,
 		&billID,
+		&reason,
+		&l.RequestPending,
 		&billPaid,
 		&price,
 		&label,
@@ -122,6 +124,9 @@ func (m *postgresDBRepo) LogisticsByID(id int) (models.Logistic, error) {
 	}
 	if billID.Valid {
 		l.BillID = int(billID.Int32)
+	}
+	if reason.Valid {
+		l.Reason = reason.String
 	}
 	if billPaid.Valid {
 		l.BillPaid = billPaid.Bool
@@ -188,7 +193,8 @@ func (m *postgresDBRepo) AllLogistics(page int, filter models.LogisticFilter) ([
 		lType = fmt.Sprintf("AND category = %d", filter.Type)
 	}
 
-	countQuery := fmt.Sprintf(`SELECT COUNT(*) FROM logistics l
+	countQuery := fmt.Sprintf(
+		`SELECT COUNT(*) FROM logistics l
   LEFT OUTER JOIN visitors v ON v.id = l.visitor_id
   WHERE (LOWER(v.first_name) LIKE LOWER($1)
   OR LOWER(v.family_name) LIKE LOWER($1) 
@@ -206,7 +212,6 @@ func (m *postgresDBRepo) AllLogistics(page int, filter models.LogisticFilter) ([
 	row := m.DB.QueryRowContext(ctx, countQuery, search)
 
 	err := row.Scan(&count)
-
 	if err != nil {
 		return logistics, count, err
 	}
@@ -214,7 +219,7 @@ func (m *postgresDBRepo) AllLogistics(page int, filter models.LogisticFilter) ([
 	offset := 10 * (page - 1)
 
 	query := fmt.Sprintf(
-		`SELECT l.id, l.number, l.start_date, l.end_date, l.reminder, l.member, l.bill_id, l.price, c.id, c.cat_name, v.id, v.first_name, v.family_name, v.phone, v.email, b.paid
+		`SELECT l.id, l.number, l.start_date, l.end_date, l.reminder, l.member, l.bill_id, l.price, l.request_pending, c.id, c.cat_name, v.id, v.first_name, v.family_name, v.phone, v.email, b.paid
     FROM logistics l
     LEFT OUTER JOIN visitors v ON v.id = l.visitor_id
     LEFT OUTER JOIN logistics_categories c ON c.id = l.category
@@ -268,6 +273,7 @@ func (m *postgresDBRepo) AllLogistics(page int, filter models.LogisticFilter) ([
 			&member,
 			&billID,
 			&price,
+			&l.RequestPending,
 			&l.Category.ID,
 			&l.Category.CatName,
 			&visID,
@@ -330,8 +336,8 @@ func (m *postgresDBRepo) CreateLogistic(l models.Logistic) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	stmt := `INSERT INTO logistics (number, start_date, end_date, category, visitor_id, member, unit_price, bill_id, price, created_on, updated_on)
-  VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`
+	stmt := `INSERT INTO logistics (number, start_date, end_date, category, visitor_id, member, unit_price, bill_id, price, reason, request_pending, created_on, updated_on)
+  VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`
 
 	_, err := m.DB.ExecContext(
 		ctx,
@@ -345,10 +351,11 @@ func (m *postgresDBRepo) CreateLogistic(l models.Logistic) error {
 		l.UnitPrice,
 		NewNullInt(l.BillID),
 		NewNullFloat64(l.Price),
+		NewNullString(l.Reason),
+		l.RequestPending,
 		time.Now(),
 		time.Now(),
 	)
-
 	if err != nil {
 		return err
 	}
@@ -371,8 +378,10 @@ func (m *postgresDBRepo) UpdateLogistic(l models.Logistic) error {
   unit_price = $7, 
   bill_id = $8, 
   price = $9, 
-  updated_on = $10
-  WHERE id = $11`
+	request_pending = $10,
+	reason = $11,
+  updated_on = $12
+  WHERE id = $13`
 
 	_, err := m.DB.ExecContext(
 		ctx,
@@ -386,10 +395,11 @@ func (m *postgresDBRepo) UpdateLogistic(l models.Logistic) error {
 		l.UnitPrice,
 		NewNullInt(l.BillID),
 		NewNullFloat64(l.Price),
+		l.RequestPending,
+		NewNullString(l.Reason),
 		time.Now(),
 		l.ID,
 	)
-
 	if err != nil {
 		return err
 	}
@@ -409,7 +419,6 @@ func (m *postgresDBRepo) DeleteLogistic(id int) error {
 		stmt,
 		id,
 	)
-
 	if err != nil {
 		return err
 	}
@@ -466,7 +475,7 @@ func (m *postgresDBRepo) DeleteLogisticLabel(l models.Logistic) error {
 	return nil
 }
 
-// LogisticsByVisitorID returns al Logistics belonging to one visitor that have a price higher than 0
+// LogisticsByVisitorID returns al Logistics belonging to one visitor that have a price higher than 0 and have no pending request
 func (m *postgresDBRepo) LogisticsByVisitorID(vID string) ([]models.Logistic, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
@@ -483,6 +492,7 @@ func (m *postgresDBRepo) LogisticsByVisitorID(vID string) ([]models.Logistic, er
     WHERE l.visitor_id = $1
     AND l.bill_id IS NULL
     AND l.price > 0
+    AND l.request_pending = false
     ORDER BY 
     l.number ASC`
 
@@ -558,7 +568,6 @@ func (m *postgresDBRepo) UpdateLogisticsBillID(billID int, logistics []int) erro
    WHERE id = ANY($2)
   `
 	_, err := m.DB.ExecContext(ctx, query, billID, logistics)
-
 	if err != nil {
 		return err
 	}

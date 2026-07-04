@@ -28,7 +28,8 @@ func (m *postgresDBRepo) CreateVisitor(v models.Visitor) (string, error) {
 	stmt := `INSERT INTO visitors (id, first_name, family_name, birthdate, phone, email, address, postcode, city, infos, newsletter, created_on, updated_on)
   VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`
 
-	_, err = m.DB.ExecContext(ctx, stmt,
+	_, err = m.DB.ExecContext(
+		ctx, stmt,
 		v.ID,
 		v.FirstName,
 		v.FamilyName,
@@ -103,7 +104,8 @@ func (m *postgresDBRepo) AllVisitors(
 		partners = "AND partner_id IS NOT NULL"
 	}
 
-	countQuery := fmt.Sprintf(`SELECT COUNT(*) FROM visitors v
+	countQuery := fmt.Sprintf(
+		`SELECT COUNT(*) FROM visitors v
   LEFT OUTER JOIN abonnements a ON a.visitor_id = v.id
   LEFT OUTER JOIN badges b ON b.visitor_id = v.id
   LEFT OUTER JOIN visitor_partners vp ON vp.visitor_id = v.id
@@ -414,6 +416,42 @@ func (m *postgresDBRepo) VisitorByID(id string) (models.Visitor, error) {
 	return v, nil
 }
 
+// VisitorByEmail returns a basic user from the database by email
+func (m *postgresDBRepo) VisitorByEmail(email string) (models.Visitor, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	query := `SELECT id, first_name, family_name, email, ressort_id   
+	FROM visitors 
+  WHERE email = $1
+ `
+
+	row := m.DB.QueryRowContext(ctx, query, email)
+
+	var v models.Visitor
+
+	// start handling null types
+	var ressortID sql.NullInt32
+
+	err := row.Scan(
+		&v.ID,
+		&v.FirstName,
+		&v.FamilyName,
+		&v.Email,
+		&ressortID,
+	)
+	if err != nil {
+		return v, err
+	}
+
+	// handling null types
+	if ressortID.Valid {
+		v.Ressort.ID = int(ressortID.Int32)
+	}
+
+	return v, nil
+}
+
 // UpdateVisitor updates a visitor
 func (m *postgresDBRepo) UpdateVisitor(v models.Visitor) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
@@ -437,7 +475,8 @@ func (m *postgresDBRepo) UpdateVisitor(v models.Visitor) error {
   updated_on = $15
   WHERE id = $16`
 
-	_, err := m.DB.ExecContext(ctx, stmt,
+	_, err := m.DB.ExecContext(
+		ctx, stmt,
 		v.FirstName,
 		v.FamilyName,
 		v.Birthdate,
