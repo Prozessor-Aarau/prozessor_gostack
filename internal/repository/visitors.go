@@ -25,8 +25,8 @@ func (m *postgresDBRepo) CreateVisitor(v models.Visitor) (string, error) {
 	// Convert id to string and set it on the user
 	v.ID = id.String()
 
-	stmt := `INSERT INTO visitors (id, first_name, family_name, birthdate, phone, email, address, postcode, city, infos, newsletter, created_on, updated_on)
-  VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`
+	stmt := `INSERT INTO visitors (id, first_name, family_name, birthdate, phone, email, address, postcode, city, infos, newsletter)
+  VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`
 
 	_, err = m.DB.ExecContext(
 		ctx, stmt,
@@ -41,8 +41,6 @@ func (m *postgresDBRepo) CreateVisitor(v models.Visitor) (string, error) {
 		v.City,
 		NewNullString(v.Infos),
 		v.Newsletter,
-		time.Now(),
-		time.Now(),
 	)
 	if err != nil {
 		return "", err
@@ -471,9 +469,8 @@ func (m *postgresDBRepo) UpdateVisitor(v models.Visitor) error {
   password = $11, 
   avatar = $12,
   ressort_id = $13,
-  role_id = $14,
-  updated_on = $15
-  WHERE id = $16`
+  role_id = $14
+  WHERE id = $15`
 
 	_, err := m.DB.ExecContext(
 		ctx, stmt,
@@ -491,7 +488,6 @@ func (m *postgresDBRepo) UpdateVisitor(v models.Visitor) error {
 		NewNullString(v.Avatar),
 		NewNullInt(v.Ressort.ID),
 		NewNullInt(v.RoleID),
-		time.Now(),
 		v.ID,
 	)
 	if err != nil {

@@ -16,15 +16,13 @@ func (m *postgresDBRepo) CreateBadge(b models.Badge) (int, error) {
 
 	var id int
 
-	stmt := `INSERT INTO badges (number, uid, created_on, updated_on)
-  VALUES($1, $2, $3, $4)
+	stmt := `INSERT INTO badges (number, uid)
+  VALUES($1, $2)
   RETURNING id`
 
 	err := m.DB.QueryRowContext(ctx, stmt,
 		b.Number,
 		b.UID,
-		time.Now(),
-		time.Now(),
 	).Scan(&id)
 
 	if err != nil {
@@ -64,9 +62,8 @@ func (m *postgresDBRepo) UpdateBadge(b models.Badge) error {
   extern_city = $6, 
   extern_phone = $7, 
   extern_email = $8, 
-  extern_purpose = $9, 
-  updated_on = $10 
-  WHERE id = $11
+  extern_purpose = $9
+  WHERE id = $10
   `
 
 	_, err := m.DB.ExecContext(
@@ -81,7 +78,6 @@ func (m *postgresDBRepo) UpdateBadge(b models.Badge) error {
 		NewNullString(b.ExternPhone),
 		NewNullString(b.ExternEmail),
 		NewNullString(b.ExternPurpose),
-		time.Now(),
 		b.ID,
 	)
 	if err != nil {
@@ -353,15 +349,13 @@ func (m *postgresDBRepo) ResetBadge(id int) error {
   extern_city = NULL, 
   extern_phone = NULL, 
   extern_email = NULL, 
-  extern_purpose = NULL, 
-  updated_on = $1 
-  WHERE id = $2
+  extern_purpose = NULL
+  WHERE id = $1
   `
 
 	_, err := m.DB.ExecContext(
 		ctx,
 		query,
-		time.Now(),
 		id,
 	)
 	if err != nil {

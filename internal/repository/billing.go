@@ -35,10 +35,8 @@ func (m *postgresDBRepo) CreateBill(b models.BillData) (int, error) {
     message,
     with_reference,
     reference,
-    custom,
-    created_on, 
-    updated_on)
-  VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20)
+    custom)
+  VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
   RETURNING id`
 
 	err := m.DB.QueryRowContext(ctx, stmt,
@@ -60,8 +58,6 @@ func (m *postgresDBRepo) CreateBill(b models.BillData) (int, error) {
 		b.WithReference,
 		NewNullString(b.Reference),
 		b.Custom,
-		time.Now(),
-		time.Now(),
 	).Scan(&id)
 
 	if err != nil {
@@ -542,7 +538,7 @@ func (m *postgresDBRepo) SetBillPayment(b models.BillData) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	stmt := "UPDATE billing SET paid = $1, updated_on = NOW() WHERE id = $2"
+	stmt := "UPDATE billing SET paid = $1 WHERE id = $2"
 
 	_, err := m.DB.ExecContext(ctx, stmt, b.Paid, b.ID)
 
@@ -594,8 +590,7 @@ func (m *postgresDBRepo) UpdateBill(b models.BillData) (string, error) {
     message = $15,
     with_reference = $16,
     reference = $17,
-    custom = $18,
-    updated_on = NOW()
+    custom = $18
   WHERE id = $19
   RETURNING file_name`
 
@@ -675,8 +670,7 @@ func (m *postgresDBRepo) UpdateBill(b models.BillData) (string, error) {
         position = EXCLUDED.position, 
         description = EXCLUDED.description,
         unit_price = EXCLUDED.unit_price,
-        count = EXCLUDED.count, 
-        updated_on = NOW()
+        count = EXCLUDED.count
     `
 
 	_, err = m.DB.ExecContext(ctx, bStmt, ids, billIDs, positions, descriptions, unitPrices, counts)

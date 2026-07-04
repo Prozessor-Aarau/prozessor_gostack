@@ -294,10 +294,8 @@ func (m *postgresDBRepo) CreateNewsletter(n models.Newsletter) error {
 	template_id,
 	recipient_group,
 	color_base,
-	color_accent,
-	updated_on,
-	created_on)
-	VALUES($1, $2, $3, $4, $5, $6, $7, $8)
+	color_accent)
+	VALUES($1, $2, $3, $4, $5, $6)
 	RETURNING id`
 
 	err := m.DB.QueryRowContext(ctx, stmt,
@@ -307,8 +305,6 @@ func (m *postgresDBRepo) CreateNewsletter(n models.Newsletter) error {
 		n.RecipientGroup,
 		n.ColorBase,
 		n.ColorAccent,
-		time.Now(),
-		time.Now(),
 	).Scan(&id)
 
 	if err != nil {
@@ -393,8 +389,7 @@ func (m *postgresDBRepo) UpdateNewsletter(n models.Newsletter) error {
 		template_id = $3,
 		recipient_group = $4,
 		color_base = $5,
-		color_accent = $6,
-		updated_on = NOW()
+		color_accent = $6
 	WHERE id = $7`
 
 	_, err := m.DB.ExecContext(ctx, stmt,
@@ -475,8 +470,7 @@ func (m *postgresDBRepo) UpdateNewsletter(n models.Newsletter) error {
 				content = EXCLUDED.content,
 				url = EXCLUDED.url,
 				upload = EXCLUDED.upload,
-				alt_text = EXCLUDED.alt_text,
-        updated_on = NOW()
+				alt_text = EXCLUDED.alt_text
 		`
 	_, err = m.DB.ExecContext(
 		ctx,

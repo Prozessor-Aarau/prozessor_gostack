@@ -336,8 +336,8 @@ func (m *postgresDBRepo) CreateLogistic(l models.Logistic) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	stmt := `INSERT INTO logistics (number, start_date, end_date, category, visitor_id, member, unit_price, bill_id, price, reason, request_pending, created_on, updated_on)
-  VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`
+	stmt := `INSERT INTO logistics (number, start_date, end_date, category, visitor_id, member, unit_price, bill_id, price, reason, request_pending)
+  VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`
 
 	_, err := m.DB.ExecContext(
 		ctx,
@@ -353,8 +353,6 @@ func (m *postgresDBRepo) CreateLogistic(l models.Logistic) error {
 		NewNullFloat64(l.Price),
 		NewNullString(l.Reason),
 		l.RequestPending,
-		time.Now(),
-		time.Now(),
 	)
 	if err != nil {
 		return err
@@ -379,9 +377,8 @@ func (m *postgresDBRepo) UpdateLogistic(l models.Logistic) error {
   bill_id = $8, 
   price = $9, 
 	request_pending = $10,
-	reason = $11,
-  updated_on = $12
-  WHERE id = $13`
+	reason = $11
+  WHERE id = $12`
 
 	_, err := m.DB.ExecContext(
 		ctx,
@@ -397,7 +394,6 @@ func (m *postgresDBRepo) UpdateLogistic(l models.Logistic) error {
 		NewNullFloat64(l.Price),
 		l.RequestPending,
 		NewNullString(l.Reason),
-		time.Now(),
 		l.ID,
 	)
 	if err != nil {
@@ -432,16 +428,14 @@ func (m *postgresDBRepo) SetLogisticLabel(l models.Logistic) error {
 	defer cancel()
 
 	query := `UPDATE logistics 
-  SET label = $1,
-  updated_on = $2 
-  WHERE id = $3
+  SET label = $1
+  WHERE id = $2
   `
 
 	_, err := m.DB.ExecContext(
 		ctx,
 		query,
 		l.Label,
-		time.Now(),
 		l.ID,
 	)
 	if err != nil {
@@ -457,15 +451,13 @@ func (m *postgresDBRepo) DeleteLogisticLabel(l models.Logistic) error {
 	defer cancel()
 
 	query := `UPDATE logistics 
-  SET label = NULL,
-  updated_on = $1 
-  WHERE id = $2
+  SET label = NULL
+  WHERE id = $1
   `
 
 	_, err := m.DB.ExecContext(
 		ctx,
 		query,
-		time.Now(),
 		l.ID,
 	)
 	if err != nil {

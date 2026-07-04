@@ -15,8 +15,8 @@ func (m *postgresDBRepo) CreateReport(r models.Report) (int, error) {
 
 	var id int
 
-	stmt := `INSERT INTO reports (ressort_id, machine_id, fatal, report_info, report_reporter, created_on, updated_on)
-  VALUES($1, $2, $3, $4, $5, $6, $7)
+	stmt := `INSERT INTO reports (ressort_id, machine_id, fatal, report_info, report_reporter)
+  VALUES($1, $2, $3, $4, $5)
   RETURNING id`
 
 	err := m.DB.QueryRowContext(ctx, stmt,
@@ -25,8 +25,6 @@ func (m *postgresDBRepo) CreateReport(r models.Report) (int, error) {
 		r.Fatal,
 		r.ReportInfo,
 		NewNullString(r.ReportReporter),
-		time.Now(),
-		time.Now(),
 	).Scan(&id)
 
 	if err != nil {
