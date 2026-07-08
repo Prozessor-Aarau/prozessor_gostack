@@ -653,7 +653,7 @@ func (m *postgresDBRepo) NewsletterUnsubscribe(id string, member bool) (models.V
   		first_name, email;`
 	} else {
 		stmt = `DELETE FROM
-			visitors 
+			newsletter_recipients 
 		WHERE 
 			id = $1 
 		RETURNING 
