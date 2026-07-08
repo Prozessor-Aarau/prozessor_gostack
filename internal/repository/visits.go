@@ -187,8 +187,8 @@ func (m *postgresDBRepo) PostVisit(visit models.Visit, ateliers []int) error {
 	visit.Abonnement = visit.Visitor.AboLastValid
 
 	// insert visit into DB and return new ID
-	stmt := `INSERT INTO visits (abonnement, date_in, partner_id, visitor_id, ressort_id, created_on, updated_on)
-    VALUES($1, $2, $3, $4, $5, $6, $7) 
+	stmt := `INSERT INTO visits (abonnement, date_in, partner_id, visitor_id, ressort_id)
+    VALUES($1, $2, $3, $4, $5) 
     RETURNING id
   `
 	var visitID int
@@ -200,8 +200,6 @@ func (m *postgresDBRepo) PostVisit(visit models.Visit, ateliers []int) error {
 		NewNullInt(visit.Partner.ID),
 		visit.Visitor.ID,
 		NewNullInt(visit.Ressort.ID),
-		time.Now(),
-		time.Now(),
 	).Scan(&visitID)
 
 	if err != nil {
@@ -254,9 +252,8 @@ func (m *postgresDBRepo) UpdateVisit(visit models.Visit, ateliers []int, visitID
   SET abonnement = $1, 
   date_in = $2, 
   partner_id = $3, 
-  ressort_id = $4,
-  updated_on = $5
-  WHERE id = $6`
+  ressort_id = $4
+  WHERE id = $5`
 
 	_, err = m.DB.ExecContext(
 		ctx,
@@ -265,7 +262,6 @@ func (m *postgresDBRepo) UpdateVisit(visit models.Visit, ateliers []int, visitID
 		visit.DateIn,
 		NewNullInt(visit.Partner.ID),
 		NewNullInt(visit.Ressort.ID),
-		time.Now(),
 		visitID,
 	)
 

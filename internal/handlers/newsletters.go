@@ -682,6 +682,11 @@ func (m *Repository) HandleNewsletterUnsubscribe(w http.ResponseWriter, r *http.
 	// get id
 	id := chi.URLParam(r, "id")
 
+	if _, err := uuid.Parse(id); err != nil {
+		slog.Error(fmt.Sprintf("unsubscribe called with invalid id %q (possibly URL rewriting by mail relay): %v", id, err))
+		return fmt.Errorf("invalid unsubscribe link")
+	}
+
 	// get if registered or not
 	memberParam := r.URL.Query().Get("registered")
 	mem, err := strconv.ParseBool(memberParam)

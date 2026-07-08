@@ -24,8 +24,8 @@ func (m *postgresDBRepo) CreateMachine(machine models.Machine) (string, error) {
 	// Convert id to string and set it on the user
 	machine.ID = id.String()
 
-	stmt := `INSERT INTO machines (id, ressort_id, machine_name, location, created_on, updated_on)
-  VALUES($1, $2, $3, $4, $5, $6)
+	stmt := `INSERT INTO machines (id, ressort_id, machine_name, location)
+  VALUES($1, $2, $3, $4)
   RETURNING id`
 
 	location := sql.NullString{String: machine.Location, Valid: machine.Location != ""}
@@ -36,8 +36,6 @@ func (m *postgresDBRepo) CreateMachine(machine models.Machine) (string, error) {
 		machine.RessortID,
 		machine.MachineName,
 		location,
-		time.Now(),
-		time.Now(),
 	)
 	if err != nil {
 		return "", err
@@ -54,9 +52,8 @@ func (m *postgresDBRepo) UpdateMachine(machine models.Machine) error {
 	query := `UPDATE machines 
   SET machine_name = $1,
   ressort_id = $2,
-  location = $3,
-  updated_on = $4 
-  WHERE id = $5
+  location = $3
+  WHERE id = $4
   `
 
 	location := sql.NullString{String: machine.Location, Valid: machine.Location != ""}
@@ -67,7 +64,6 @@ func (m *postgresDBRepo) UpdateMachine(machine models.Machine) error {
 		machine.MachineName,
 		machine.RessortID,
 		location,
-		time.Now(),
 		machine.ID,
 	)
 	if err != nil {
@@ -313,16 +309,14 @@ func (m *postgresDBRepo) SetMachineQR(machine models.Machine) error {
 	defer cancel()
 
 	query := `UPDATE machines 
-  SET qr_code = $1,
-  updated_on = $2 
-  WHERE id = $3
+  SET qr_code = $1
+  WHERE id = $2
   `
 
 	_, err := m.DB.ExecContext(
 		ctx,
 		query,
 		machine.QR,
-		time.Now(),
 		machine.ID,
 	)
 	if err != nil {
@@ -338,15 +332,13 @@ func (m *postgresDBRepo) DeleteMachineQR(machine models.Machine) error {
 	defer cancel()
 
 	query := `UPDATE machines 
-  SET qr_code = NULL,
-  updated_on = $1 
-  WHERE id = $2
+  SET qr_code = NULL
+  WHERE id = $1
   `
 
 	_, err := m.DB.ExecContext(
 		ctx,
 		query,
-		time.Now(),
 		machine.ID,
 	)
 	if err != nil {

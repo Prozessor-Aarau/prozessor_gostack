@@ -43,12 +43,11 @@ func (m *postgresDBRepo) CreatePassword(v models.Visitor) error {
 	defer cancel()
 
 	stmt := `UPDATE visitors 
-  SET password = $1, updated_on = $2, register_code = NULL
-  WHERE email = $3`
+  SET password = $1, register_code = NULL
+  WHERE email = $2`
 
 	_, err := m.DB.ExecContext(ctx, stmt,
 		v.Password,
-		time.Now(),
 		v.Email,
 	)
 

@@ -16,8 +16,8 @@ func (m *postgresDBRepo) CreateAbonnement(a models.Abonnement) (int, error) {
 
 	var id int
 
-	stmt := `INSERT INTO abonnements (buydate, partial_payment, visitor_id, member, price, created_on, updated_on)
-  VALUES($1, $2, $3, $4, $5, $6, $7)
+	stmt := `INSERT INTO abonnements (buydate, partial_payment, visitor_id, member, price)
+  VALUES($1, $2, $3, $4, $5)
   RETURNING id`
 
 	err := m.DB.QueryRowContext(ctx, stmt,
@@ -26,8 +26,6 @@ func (m *postgresDBRepo) CreateAbonnement(a models.Abonnement) (int, error) {
 		a.VisitorID,
 		a.Member,
 		a.Price,
-		time.Now(),
-		time.Now(),
 	).Scan(&id)
 
 	if err != nil {
