@@ -225,3 +225,13 @@ FOR EACH ROW EXECUTE FUNCTION set_updated_on();
 > Event triggers (which would attach this automatically on `CREATE TABLE`) require superuser privileges in Postgres and could not be used.
 
 - **Mobile:** drag-to-create doesn't work on touch — use an "add event" button that opens a time picker form instead
+
+---
+
+## Newsletter — Fallback Unsubscribe
+
+Some recipients use mail proxies (self-hosted servers, corporate gateways) that rewrite links and mangle the UUID in the unsubscribe URL. The handler already validates the UUID and logs the corrupted ID, but those users currently see an error and cannot unsubscribe.
+
+- [ ] Add a fallback route `GET /unsubscribe` (no `{id}`) that renders a simple form with an email input
+- [ ] Add handler `POST /unsubscribe` that looks up the email in both `visitors` (set `newsletter = false`) and `newsletter_recipients` (delete row), returning the same confirmation page as the normal unsubscribe flow
+- [ ] When the UUID validation fails in `HandleNewsletterUnsubscribe`, redirect to `/unsubscribe` instead of returning an error
