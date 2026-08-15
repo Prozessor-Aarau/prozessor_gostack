@@ -560,7 +560,7 @@ func (m *postgresDBRepo) CheckinAllVisitors(
     FROM visits
     WHERE DATE(date_in) = CURRENT_DATE)
   ORDER BY 
-   family_name ASC
+	 created_on DESC
   OFFSET $2
   LIMIT 10
   `
