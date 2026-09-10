@@ -12,8 +12,13 @@ templ App(nav bool, visitor models.Visitor) {
 		<head>
 			<meta charset="UTF-8"/>
 			<meta name="viewport" content="width=device-width, initial-scale=1"/>
+			<meta name="apple-mobile-web-app-capable" content="yes"/>
+			<meta name="apple-mobile-web-app-status-bar-style" content="black"/>
+			<meta name="theme-color" content="#000000"/>
 			<title>Prozessor Database</title>
 			<link rel="icon" href="/static/assets/favicon.svg"/>
+			<link rel="manifest" href="/static/manifest.json"/>
+			<link rel="apple-touch-icon" href="/static/assets/icon-192.png"/>
 			<link rel="stylesheet" href="/static/css/tailwind.css"/>
 			<!-- <link rel="stylesheet" href="/static/css/custom.css"/> -->
 			<script src="https://unpkg.com/htmx.org@2.0.4"></script>
