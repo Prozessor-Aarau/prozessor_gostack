@@ -208,7 +208,7 @@ func LetterWithItems(data models.BillData) (*gopdf.GoPdf, error) {
 
 		pdf.SetXY(xHeaderRight, yTitleOneLineThree)
 		pdf.CellWithOption(&gopdf.Rect{W: 70.4, H: 35.2},
-			"IBAN ***REMOVED***",
+			"IBAN "+os.Getenv("BILL_IBAN"),
 			gopdf.CellOption{Align: gopdf.Right})
 	})
 
