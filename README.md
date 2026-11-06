@@ -1,4 +1,4 @@
-# Prozessor GoStack
+/# Prozessor GoStack
 
 Web app for running the Prozessor makerspace: visitor registration and check-in, badges (NFC card reader), machines and defect reports, supervision and opening hours, logistics requests and billing (Swiss QR bills), newsletters, statistics and a public calendar.
 
@@ -114,4 +114,4 @@ Production runs as a systemd service. See `prozessor.service.example` for the un
 - Work on a branch and open a pull request against `main`; all changes require review by the code owner (see `.github/CODEOWNERS`).
 - Run `go fmt ./...` and `go vet ./...` before committing.
 - Schema changes always go into a new migration; never edit existing ones.
-- See `CRUSH.md` for code style conventions and `TODO.md` for planned work.
+- See `AGENTS.md` for code style conventions and `TODO.md` for planned work.
