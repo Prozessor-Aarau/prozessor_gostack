@@ -10,13 +10,13 @@
   "author": "Fabian Trost",
   "license": "ISC",
   "dependencies": {
-    "tailwindcss": "^4.0.14"
+    "tailwindcss": "^4.3.4"
   },
   "devDependencies": {
     "@egoist/tailwindcss-icons": "^1.8.1",
     "@iconify-json/mdi": "^1.2.0",
     "@iconify-json/svg-spinners": "^1.2.0",
-    "@tailwindcss/typography": "^0.5.15",
-    "daisyui": "^5.0.4"
+    "@tailwindcss/typography": "^0.5.20",
+    "daisyui": "^5.7.50"
   }
 }
